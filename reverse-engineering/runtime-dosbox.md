@@ -37,6 +37,16 @@ $D stop
   its code ends the film on any of them once released (discoveries
   "The round"); not yet explained.
 
+- `cycles = fixed 40000` is not always real time: with another DOSBox-X
+  busy on the machine, the BIOS tick (0x46c) came every 76–88 ms of wall
+  time instead of 55 (session 6). Time animations in ticks, read from
+  0x46c next to the memory being polled, not by the wall clock.
+- `dosrun.py` uses QMP 4444 and GDB 2159. When another emulator holds
+  them, a copy of `redcat.conf` with other `qmpserver port` /
+  `gdbserver port` values runs a second DOSBox-X; connect to it with
+  `QmpClient('127.0.0.1', port, 10.0)` and stop it by its own pid
+  (`dosrun.py stop` kills by the config path).
+
 ## Observed
 
 - `RRR /DAVILEX /DEBUG` without the menu: no RRRIO.INF on disk, and RRR

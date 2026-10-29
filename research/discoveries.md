@@ -603,6 +603,14 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `0x13a16`.. `0x13d95`), 10 (prize and face frames `0x18e0b`), 40 (cards
   turning back), 150 (button press), 200 (counter units), 1000, 2000.
   Animations given as "5 ms apart" below are one tick apart.
+- CONFIRMED (DOSBox-X, tick counter 0x46c polled with the face area of
+  [0x66c38], session 6): module 1's face after an answer advances one
+  frame per tick, 16 frames. Each frame (`0x18e0b`) restores and draws
+  the image and presents the whole screen (`0x1de84` → `0x2aa39` over
+  640 × 480) before delay(10). SPECULATIVE: on a 1996 PC with an ISA
+  video card (2–4 MB/s) that present alone takes 75–150 ms, so frames
+  would come two or three ticks apart there; the port plays them two
+  ticks apart (a deliberate choice, port README).
 - CONFIRMED (`0x18e7f`, `0x1910f`): prizes [0x46c86]:
 
   | prize | award | shown as |
