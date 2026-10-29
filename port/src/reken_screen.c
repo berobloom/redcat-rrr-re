@@ -267,6 +267,8 @@ static const help_line help3[] = {
 static const char *const help2_text[3] = { "4 + 3 = 6", "2 x 4 = 7", "8 : 2 = 4" };
 #define HELP2_BAR_X 131
 #define A_TITLE_HELP 58         /* "Help!", 0x19b77 */
+/* the Help button as Help leaves it (else the background's) */
+enum { HELP_RELEASED = 1, HELP_PRESSED };
 /* 0x19b77 swaps the title every 50 passes of 0x19c04's wait loop, which
    has no delay: about every 250 ms under DOSBox-X (redcat.conf) */
 #define HELP_BLINK_MS 250
@@ -508,6 +510,7 @@ void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
     x->help_anim = 0;
     x->help_rows = 0;
     x->help_card[0].on = x->help_card[1].on = 0;
+    x->help_button = 0;
     x->equals_x = x->r.level >= 3 ? 78 : 152;   /* module4_init */
     x->face_anim = A_FACE_RIGHT;    /* module1_init: anim 13, frame 0 */
     x->face_frame = 0;
@@ -658,17 +661,19 @@ static const help_line *help_script(const rc_exercise *x, int *n)
     return help1;
 }
 
-/* After Help, module 1 (0x11e0d): the panel blank, the Help button pressed,
-   the title back, and the sum asked again with an empty answer.  Module 2
-   (0x13575): the rows back where they were, the Uitkomst box, the rows
-   open with the sum's texts, Help pressed, the title back. */
+/* After Help, module 1 (0x11e0d): the panel blank, the Help button pressed
+   again (0x19842, which leaves it so), the title back, and the sum asked
+   again with an empty answer.  Module 2 (0x13575): the rows back where
+   they were, the Uitkomst box, the rows open with the sum's texts, Help
+   released (0x19862: anim 17 frame 0, not quite the background's
+   button), the title back.  Module 3 (0x14a02) as module 2's ending. */
 static void help_end(rc_exercise *x)
 {
     if (x->snd_stop && sound_on(x))
         x->snd_stop(x->snd_ctx, 0);         /* 0x19c04's mix_stop_track */
     x->help_text = NULL;
     x->help_anim = 0;
-    press(x, A_HELP, HELP_X, HELP_Y);
+    x->help_button = x->module == 1 ? HELP_PRESSED : HELP_RELEASED;
     if (x->module == 2) {
         int k;
         x->help_rows = 0;
@@ -834,7 +839,7 @@ static void help_next(rc_exercise *x)
             /* fall through */
         default:
             if (h->op == H_PRESS)
-                press(x, A_HELP, HELP_X, HELP_Y);
+                x->help_button = HELP_PRESSED;  /* 0x19842: 150 ms */
             if (h->op == H_CLOSE_ALL)
                 x->texts_shown = 0;
             x->help_anim = h->op;
@@ -854,6 +859,7 @@ static void help_start(rc_exercise *x)
         x->snd_stop(x->snd_ctx, 0);
     x->help_from = x->state;
     x->help_step = -1;
+    x->help_button = HELP_PRESSED;  /* DOSBox-X: pressed throughout */
     x->help_text = NULL;
     set_state(x, ST_HELP);
     help_next(x);
@@ -1430,6 +1436,8 @@ void rc_exercise_draw(rc_exercise *x)
         draw_at(x, A_OK, 0, OK_X, OK_Y);
         draw_at(x, A_BACK, 0, BACK_X, BACK_Y);
     }
+    if (x->help_button)
+        draw_at(x, A_HELP, x->help_button == HELP_PRESSED, HELP_X, HELP_Y);
     if (x->pressed_ms > 0)
         draw_at(x, x->pressed_anim, 1, x->pressed_x, x->pressed_y);
 

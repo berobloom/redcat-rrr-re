@@ -90,6 +90,7 @@ typedef struct {
     int help_cell_text[RC_MEMORY_CELLS];
     struct { int on, cell, col, row, anim, frame, text; } help_card[2];
     int help_turns;
+    int help_button;            /* drawn released / pressed since Help */
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,
