@@ -37,7 +37,8 @@
 ## Data
 
 8. What is XVGALIB.IMG (three 2,050-byte entries; first u16s read 62×33)?
-9. Format of the `ASCIInn.IMG` fonts and `RRRFONT.IMG`.
+9. **RESOLVED (session 4).** `ASCIInn.IMG` and `RRRFONT.IMG` fonts:
+   file-formats.md "ASCII fonts".
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
 11. What is in `RRRHIGH.DAT` (written at run time, not on the CD)?
 

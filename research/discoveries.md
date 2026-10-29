@@ -422,3 +422,6 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   file, `%8.8d.SMD`) ends with a record holding module 1, 8 sums, 7 correct
   (big-endian-looking u32s), the date as text "29/09/2026" on 29 October
   (LIKELY tm_mon without +1) and the groep. Layout not decoded yet.
+- CONFIRMED (`0x21bc7`; all four font files decode with it, glyphs rendered
+  and legible): the ASCII font format in file-formats.md, 256 flags, w, h,
+  fg, bk and 256 w×h glyphs.

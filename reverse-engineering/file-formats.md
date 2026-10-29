@@ -114,3 +114,20 @@ The state RRRMENU, REKEN and RRR share (REKEN keeps it at 0x534f4): a raw dump o
 | 0x1f8 | 0x75370 | 0 | race done (set by RRR 0x1585e; lets REKEN advance) |
 | 0x1fc | 0x75374 | 0, 2, 4 | start order of the racers |
 | 0x214 | 0x7538c | 0, 0, 0 | points per racer |
+
+## ASCII fonts (`ASCII12/20/30.IMG` in REKEN.IMG and INSTALL.IMG, `RRRFONT.IMG`)
+
+Read by `0x21bc7` (rcascii.c) in REKEN:
+
+```c
+u8  present[256];         /* non-zero: the program keeps this glyph */
+u16 width, height;        /* 8x12, 10x20, 18x29; RRRFONT 10x21 */
+u16 fg;                   /* glyph body colour: 200 (RRRFONT 253) */
+u16 bk;                   /* 255 = transparent */
+u8  glyph[256][height][width];   /* only the first 135 are read */
+```
+
+Pixels other than fg and bk are shading (201 = shadow, 202..223 edge
+tones). The program recolours the loaded glyphs in place: `0x219a0` fg → c,
+`0x21a6b` bk → c, `0x21b36` (c, old) old → c; REKEN sets fg 254, bk 255 and
+201 → 0 after loading.
