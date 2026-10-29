@@ -168,9 +168,16 @@ static const button buttons3[] = {      /* 0x4550c; the grid is patched in */
    tick apart at least (DOSBox-X: module 2's rows close one frame a tick) */
 #define TICK_MS 55
 #define DELAY(ms) (((ms) * 10 + 548) / 549 * TICK_MS)  /* whole ticks */
-#define FRAME_MS DELAY(10)      /* prize and face animations (0x18e0b) */
+/* Each frame of the prize and face animations and each counted unit also
+   presents the whole 640 x 480 screen (0x1de84).  DOSBox does that within
+   the tick; a 1996 PC with an ISA video card (2-4 MB/s) would take one
+   to two ticks more.  The port adds that time, a deliberate difference:
+   one tick a frame, two a unit. */
+#define DRAW_MS TICK_MS
+#define FRAME_MS (DELAY(10) + DRAW_MS)  /* prize and face animations (0x18e0b) */
 #define PRESS_MS DELAY(150)     /* a button shown pressed (0x19842) */
-#define UNIT_MS DELAY(200)      /* one fuel / boost / rocket unit (0x1910f) */
+#define UNIT_MS (DELAY(200) + 2 * DRAW_MS)  /* one fuel / boost / rocket unit
+                                               (0x1910f) */
 #define END_MS DELAY(1000)
 #define BAR_MS DELAY(5)         /* 0x1294b, 0x12b59, 0x129c6 */
 #define SHOW_MS DELAY(1000)     /* the true row after the prize (0x13229);

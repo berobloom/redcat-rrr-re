@@ -129,6 +129,10 @@ original executable it was taken from (for example RRR.EXE `0x57abc` for the
 map → tileset table). Deliberate differences:
 
 - a fixed frame rate (above);
+- the exercises' prize and face animations run a frame every two ticks
+  (110 ms) and count a unit every 330 ms, where the code waits one tick
+  and four ticks: the time a 1996 PC would also have taken to present the
+  whole screen each frame (`src/reken_screen.c` `DRAW_MS`);
 - `racer_contact` tests a turned 100 px square directly instead of the
   original's four cross products (`0x1401d`), whose argument order is not
   fully read yet.
