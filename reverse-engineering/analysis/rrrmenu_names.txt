@@ -20,12 +20,18 @@
 0x11bf7 menu_loop
 0x121b3 init_anims
 0x1232d rrrio_save
+0x12364 rrrio_load          # 0 when missing/invalid ([0x45142])
 0x12548 next_module
 0x125ca next_module_of
 0x12990 rapport_screen
+0x131a4 name_take           # CONFIRMED: MRU of the four names at RRRIO +0x68
+0x13285 name_type           # CONFIRMED: "Hallo, hoe heet jij?" field, 25 cells
+0x133b9 name_list           # CONFIRMED: the four names + "Ik sta er niet bij!"
 0x13cd5 user_exit
+0x13e01 stricmp
 0x17f29 print_at
 0x1b3ef blit
+0x1c5c7 font_window         # CONFIRMED: window of RRRFONT glyphs, style table 0x45c3c
 0x1ce60 key_pressed
 0x1def2 mouse_pos
 0x1e88e delay_cs

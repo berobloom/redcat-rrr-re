@@ -53,9 +53,8 @@
    file-formats.md "ASCII fonts".
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
 21. **RESOLVED.** The name is asked by RRRMENU under MOTOR's `/1` (first
-    menu start), discoveries "The menu: the pupil's name". Open: the
-    window's fill glyph and the field's exact geometry; the port lacks
-    the dialog and MENU.WAV.
+    menu start), discoveries "The menu: the pupil's name"; ported. Open:
+    the cursor's blink rate, and whether the mouse does anything there.
 11. **RESOLVED.** `RRRHIGH.DAT`: file-formats.md, discoveries "High
     scores".
 

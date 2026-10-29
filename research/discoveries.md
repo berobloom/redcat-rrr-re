@@ -900,9 +900,24 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   LIKELY (table 0x45c3c, 15 shorts per style; corners at style base − 8):
   the style in use is 1: top 0x1c/0x1d, bottom 0x1e/0x1f, left 0x7f/0x80,
   right 0x81/0x82, alternating per cell; the fill glyph not yet read.
-  Window (150, 126)..(490, 336) for the list, list rows from y 211, 21 px
-  apart, x 170..470.
-- Not ported yet.
+  Fill: entry 8 + (2 row % 5 + 7 col % 4) % 3 (0x1c840), glyphs
+  0x83..0x85, all colour 169.
+- CONFIRMED (port `menu.c` against the DOSBox screenshots: list, bar
+  moved, field with text and after an insert, the menu after; 0 differing
+  pixels): in cells of 10 x 21, the list window is columns 15..48, rows
+  6..15, the title at (22, 7), the list rows 10..14 at columns 17..46 on
+  black, the bar colour 254; the field's window columns 16..47, rows
+  7..13, title (22, 8), the field row 12, columns 21..45. Letters: RRRFONT
+  253 → 249, 254 → 250, 0 clear. The menu under the dialog has no
+  Bediening or Geluid figure and the groep button unlit (both drawn after,
+  0x10f6a..0x10f74).
+- CONFIRMED (DOSBox from `name_entry`): Backspace deletes before the
+  cursor, Delete at it; Home goes to cell 0, End and → as far as cell 24
+  (the field is 25 space-padded cells; trailing spaces are dropped).
+  The cursor's blink rate was not measured (the port draws it steadily).
+- CONFIRMED (n5 vs port; code 0x10f21, 0x10f95, 0x11d61): at start-up
+  the Race panel shows the header only (`draw_race_panel(1, 0)`); the
+  modules are listed only when race_done is set (0x10fec) or after R.
 
 ## The menu: Rapport
 
