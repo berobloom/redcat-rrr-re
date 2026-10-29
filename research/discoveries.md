@@ -971,9 +971,16 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   Bulldog  :    %3d", "Max de Muis        :    %3d" with the points
   +0x214.. Then `delay_ms(4000)`. The race loop stops at the finish
   itself (no run-out).
-- Observed, not explained: in DOSBox-X the screen kept the last race frame
-  during those 4 s, though the buffer held the podium and `0x1f604`
-  (present the whole screen) runs for flag 8.
+- CONFIRMED (DOSBox-X, session 6; finished flags of RedCat and Brutus poked
+  once the race ran, screenshots every 0.4 s): the podium is on screen
+  0.4 s after the poke at the latest and stays until the DOS prompt
+  returns, 7.0 s after the poke. The 4 s delay accounts for part of that;
+  the rest is LIKELY RRR's exit. `0x1f604` presents from `[0x6110c]`,
+  which at run time equals the screen buffer `[0x7f954]` (0x242038). An
+  earlier note said the screen kept the last race frame. That did not
+  reproduce. LIKELY it came from a poke before the race had started
+  (race_init clears the flags, and `RRR /DEBUG` needs a key on its wait
+  screen once the sounds have loaded).
 - CONFIRMED (strings): after a stage-4 race `0x15a14(2 × points leader)`
   plays `wredcat.smk`, `wbrutus.smk` or `wsnitch.smk` instead (Smacker,
   in RCS). "Max de Muis" is the podium's name for Snitch.
