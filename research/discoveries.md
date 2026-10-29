@@ -617,3 +617,46 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   buttons (= moves to x 78). Keys: × scan 0x49 / 0x2d, : 0x48, + 0x4e,
   − 0x4a, = 0x1c / 0x0d, TERUG 0x0e / 0x14, OPNIEUW 0x18.
 - Help (`0x171ea`) not read or ported.
+
+## The round: MOTOR, RRRMENU, REKEN, RRR
+
+- CONFIRMED (MOTOR.EXE, 16-bit, DGROUP 0x40d; dispatcher at file image
+  0x2ff, loop 0x48f): MOTOR starts code 42 and then runs whatever the
+  last program's exit code names: 40 `rrr.exe`, 42 `rrrmenu.exe`, 43
+  `reken.exe`; 255 and 101 end the game, 100 is returned as is.
+- CONFIRMED (RRRMENU 0x10865): after the menu loop (`0x11bf7`) returns
+  "play", the menu exits 43 (REKEN) if RRRIO +0x1f8 (race_done) is set,
+  else 40 (RRR); otherwise 255. Start! cleared race_done in both runs
+  below (`0x1212c`, under a flag not traced), so it exited 40 both times:
+  the menu hands over to the race of the current stage. Choosing another
+  world in the menu sets stage 0 and calls `0x1099b` (`0x120de`).
+- CONFIRMED (RRRMENU `0x10f95`; DOSBox: RRRIO world 0, stage 3,
+  race_done 1, repair 40 → the menu shows "2: De Rotsvlakte" and saved
+  world 1, stage 0, repair 100, race_done still 1): at start-up, when
+  race_done is set and the world has no module after the stage
+  (`0x125ca`), the menu moves to world (world + 1) % 6, stage 0, and
+  `0x1099b` sets repair 100, the start order +0x1fc 0, 2, 4 and zeroes
+  +0x208..+0x21c (waypoints and points). Fuel, boosts and rockets carry
+  over. With world 0, stage 1, race_done 1 it stays (Handig rekenen shown
+  dimmed, done) and Start! exits 40.
+- CONFIRMED (REKEN main `0x10864`, from 0x10903): load the record, take
+  the next module (`0x10d19` → `0x10cad` with take), level 3 (groep 3)
+  plays module 4 as 3 (the stage stays 4); M1..M4 override it; no module
+  (−1) exits 42 (menu, `0x10a7a`). After the module `0x199cf` saves and
+  REKEN exits 40 (RRR). REKEN does not touch race_done on a normal load
+  (`0x10c29` is the defaults when the file is missing).
+- CONFIRMED (RRR 0x11380..0x11500): Esc (scan 1) or S (0x1f) during the
+  race calls `0x1585e(1)`, which writes nothing, and exits 42 (menu).
+  A finished race calls `0x1585e(0)`: the player's stats record (0x6fbc0
+  + 0x30 k) goes into RRRIO: fuel (+8, 16.16, clamped at 0) to +0x20,
+  boosts +0x0c, +0x10 to +0x18, +0x14 to +0x1c, rockets (+0x1c) to
+  +0x14, damage (+0x28, clamped at 0) to +0x04; the three racers' next
+  waypoint ([0x71444], [0x71920], [0x71dd8]) to +0x208..+0x210; the
+  finishing order (object numbers) to +0x1fc; race_done = 1; 3, 2, 1
+  points to +0x214 + 4 (object / 2) for places 1–3; then saves. Then if
+  `0x1ae67` (in effect stage = 4) `0x15a14(2 × points leader)`, else
+  `0x15a9f`, and exit 43 (REKEN).
+- So a world is: its stage-0 race, then per enabled module REKEN and the
+  race of that stage; after the last REKEN finds no module and goes to
+  the menu, which moves on to the next world, whose stage-0 race the
+  pupil starts with Start!.

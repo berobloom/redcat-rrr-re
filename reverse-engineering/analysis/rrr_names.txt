@@ -4,7 +4,7 @@
 0x1517a find_waypoints       # STRONGLY SUPPORTED: result picks 'Waypoint-search found missing waypoint!'
 0x15c02 init_anims           # LIKELY: logged as 'Init anims.'
 0x1ae44 stage_map_index      # CONFIRMED: table 0x57b8c[group][stage] - 1
-0x1ae67 stage_is_last        # LIKELY: scans 0x57b8c row for the next non-zero stage
+0x1ae67 stage_is_last        # CONFIRMED: scans the 0x57b8c row from the stage itself for a race, 1 if it reaches column 4: in effect stage == 4
 0x1bb27 fopen                # STRONGLY SUPPORTED: (name, "rb") -> FILE*
 0x1be78 rc_error             # STRONGLY SUPPORTED: every '%s(%d) : ...' failure goes here
 0x1c0d1 fread                # STRONGLY SUPPORTED: Watcom regs eax=buf edx=size ebx=n ecx=fp
@@ -76,3 +76,7 @@
 0x18445 new_sign             # CONFIRMED: start (anim 10) / finish (anim 11) signs
 0x17e0b alloc_object         # CONFIRMED: first free slot from 6
 0x17e4d free_object          # CONFIRMED: slots 6..305 only
+0x1585e race_end             # CONFIRMED: player counters, order, points, race_done into RRRIO (discoveries "the round")
+0x15a14 final_ranking        # SPECULATIVE: after a stage-4 race, called with the points leader x 2
+0x15a9f podium               # LIKELY: after the other races
+0x1be17 user_exit            # CONFIRMED: exit(code) for MOTOR.EXE

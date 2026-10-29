@@ -1,0 +1,11 @@
+# RRRMENU.EXE function names (linear addresses as loaded by tools/leparse.py).
+# Read by tools/disasm.py.  Evidence in research/discoveries.md "The round".
+0x10865 main
+0x1099b world_reset
+0x10e2d world_flash
+0x10e69 menu_init
+0x11bf7 menu_loop
+0x1232d rrrio_save
+0x12548 next_module
+0x125ca next_module_of
+0x13cd5 user_exit

@@ -2,9 +2,10 @@
 
 ## Launch / process flow
 
-1. How does MOTOR.EXE choose the next program? (The state file is
-   RRRIO.INF, shared by RRRMENU, REKEN and RRR; discoveries "The session".)
-   Disassemble MOTOR.EXE (16-bit, small) and RRRMENU's writer.
+1. **RESOLVED (session 5)**: by exit codes (discoveries "The round").
+   Open: the flag under which Start! clears race_done (`0x1212c`), so
+   when the menu exits 43 straight to REKEN; what `0x15a14` and `0x15a9f`
+   show (podium, final ranking?).
 2. What does INTRO.EXE do besides playing `rrrintro.smk` with
    `rrrIntro.wav`? Is the intro skipped by `/NOINTRO` (INSTALL.SCR's `rcmin`
    batch) in MOTOR.EXE?

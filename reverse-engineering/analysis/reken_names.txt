@@ -78,4 +78,5 @@
 0x199cf session_save
 0x19cfb smd_find
 0x19f07 smd_append
+0x1a6db user_exit
 0x24741 set_buttons

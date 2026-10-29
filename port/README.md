@@ -16,17 +16,21 @@ Early. What exists:
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
 - `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]`:
-  first an exercise screen of the arithmetic part (`src/reken_screen.c`):
-  module 1 Handig rekenen, 8 sums answered with the digit keys or by
-  clicking the keypad, Backspace/TERUG, Enter/OK; module 2 Wat is waar?,
-  8 rounds of three sums, 1/2/3 or a click picks the true one; module 3
-  Memory, a grid of SOM and ANTWOORD cards turned by mouse, a found pair
-  leaves the grid; module 4 Grote getallenspel, 8 rounds of reaching a
-  target from three or four numbers: 1..4 or a click takes a number, + − ×
-  : (keypad, x, colon) an operator, = or Enter makes the sum, Backspace
-  TERUG, o OPNIEUW. Each right answer, pair or target adds the shown
-  prize. Then that module's stage race starts with the fuel, repair,
-  boosts and rockets earned.
+  the game's round as MOTOR.EXE runs it (no menu yet: Start! is taken at
+  once). A world opens with its race; then for each of its modules the
+  exercise screen of the arithmetic part (`src/reken_screen.c`) and the
+  race of that stage, with the fuel, repair, boosts and rockets earned and
+  the last finishing order as the start order; after the last race the
+  next world. The modules: 1 Handig rekenen, 8 sums answered with the
+  digit keys or by clicking the keypad, Backspace/TERUG, Enter/OK; 2 Wat
+  is waar?, 8 rounds of three sums, 1/2/3 or a click picks the true one;
+  3 Memory, a grid of SOM and ANTWOORD cards turned by mouse, a found
+  pair leaves the grid; 4 Grote getallenspel, 8 rounds of reaching a
+  target from three or four numbers: 1..4 or a click takes a number, + −
+  × : (keypad, x, colon) an operator, = or Enter makes the sum,
+  Backspace TERUG, o OPNIEUW. Each right answer, pair or target adds the
+  shown prize. `--module N` starts with module N in the first world that
+  has it; a map number replaces the next race's map.
   `--race` goes straight to the race. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
   waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
@@ -46,8 +50,9 @@ Early. What exists:
   seed with REKEN.EXE's own code run under Unicorn.
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
-race's end (podium, RRRIO.INF), the menu, the exercises' Help example,
-mouse pointer and spoken feedback, and the module order of a world.
+podium and final ranking (a finished race runs on 4 s instead), saving
+RRRIO.INF, the menu, the exercises' Help example, mouse pointer and spoken
+feedback.
 
 ### Frame rate
 

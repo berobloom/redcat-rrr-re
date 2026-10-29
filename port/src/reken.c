@@ -994,6 +994,8 @@ static void put32(uint8_t *p, int32_t v)
 
 static void session_fields(rc_session *s)
 {
+    int i;
+
     s->version = get32(s->raw);
     s->repair = get32(s->raw + 0x04);
     s->boosts = get32(s->raw + 0x0c);
@@ -1003,11 +1005,20 @@ static void session_fields(rc_session *s)
     s->groep = get32(s->raw + 0x28);
     s->world = get32(s->raw + 0x2c);
     s->speech = get32(s->raw + 0x30);
+    s->stat18 = get32(s->raw + 0x18);
+    s->stat1c = get32(s->raw + 0x1c);
     s->race_done = get32(s->raw + 0x1f8);
+    for (i = 0; i < 3; i++) {
+        s->order[i] = get32(s->raw + 0x1fc + 4 * i);
+        s->progress[i] = get32(s->raw + 0x208 + 4 * i);
+        s->points[i] = get32(s->raw + 0x214 + 4 * i);
+    }
 }
 
 void rc_session_store(rc_session *s)
 {
+    int i;
+
     put32(s->raw, s->version);
     put32(s->raw + 0x04, s->repair);
     put32(s->raw + 0x0c, s->boosts);
@@ -1017,7 +1028,14 @@ void rc_session_store(rc_session *s)
     put32(s->raw + 0x28, s->groep);
     put32(s->raw + 0x2c, s->world);
     put32(s->raw + 0x30, s->speech);
+    put32(s->raw + 0x18, s->stat18);
+    put32(s->raw + 0x1c, s->stat1c);
     put32(s->raw + 0x1f8, s->race_done);
+    for (i = 0; i < 3; i++) {
+        put32(s->raw + 0x1fc + 4 * i, s->order[i]);
+        put32(s->raw + 0x208 + 4 * i, s->progress[i]);
+        put32(s->raw + 0x214 + 4 * i, s->points[i]);
+    }
 }
 
 void rc_session_default(rc_session *s)
@@ -1067,6 +1085,31 @@ int rc_next_module(rc_session *s, int take)
             s->stage = m;
     }
     return m;
+}
+
+int rc_pick_module(rc_session *s)
+{
+    int m = rc_next_module(s, 1);
+
+    return m == 4 && s->groep == 3 ? 3 : m;
+}
+
+int rc_world_next(rc_session *s)
+{
+    int i;
+
+    if (!s->race_done || rc_next_module(s, 0) != -1)
+        return 0;
+    s->world = (s->world + 1) % 6;
+    s->stage = 0;
+    s->repair = 100;
+    for (i = 0; i < 3; i++) {
+        s->order[i] = 2 * i;
+        s->progress[i] = 0;
+        s->points[i] = 0;
+    }
+    rc_session_store(s);
+    return 1;
 }
 
 static int groep_level(int groep)

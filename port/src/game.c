@@ -1,5 +1,8 @@
-/* redcat: the arithmetic part's first exercises, then a race with what
-   they earned, as REKEN.EXE and RRR.EXE run them.
+/* redcat: the game's round as MOTOR.EXE runs it: each world opens with a
+   race, then for each of its modules the exercises (REKEN.EXE) and the
+   race (RRR.EXE) of that stage, with what they earned; after the last
+   one the next world.  There is no menu yet: RRRMENU's Start! is taken
+   at once.
 
    usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
                  [--module 1..4] [--fps N]
@@ -11,8 +14,8 @@
    ends it early; module 4 (Grote getallenspel): 1..4 take a number,
    + - x : (keypad too) an operator, Enter or = works it out, Backspace
    or T is TERUG, O is OPNIEUW.  S or Stop quits.
-   --race skips them; the map defaults to the stage's race (world 0,
-   stage 1: track1b).
+   --module starts with that module (in the first world that has it);
+   --race only races, the map given or track1a, without the exercises.
 
    Race keys (RRRIO.INF defaults): arrows steer and accelerate, right Shift
    boost, Enter rocket, F1/F2/F3 follow RedCat/Brutus/Snitch, Esc quits.
@@ -66,6 +69,9 @@ static struct {
     rc_race race;
     int map_index;
     int exercising;             /* the exercise screen is up */
+    int flow;                   /* the round, not just one race */
+    int map_override;           /* the next race's map, -1: the stage's */
+    Uint32 race_end;            /* when the finished race gives way */
     rc_archive reken, menu;
     rc_exercise ex;
     rc_session session;
@@ -113,11 +119,15 @@ static int load_sprites(void)
 
 static int start_race(int index)
 {
-    static const int start_order[RC_RACERS] = { 0, 1, 2 };
+    int start_order[RC_RACERS] = { 0, 1, 2 }, k;
     uint32_t ms, ts;
     const uint8_t *md, *td;
 
+    if (g.flow)                 /* race_init: RRRIO.INF +0x1fc */
+        for (k = 0; k < RC_RACERS; k++)
+            start_order[k] = g.session.order[k] / 2 % RC_RACERS;
     rc_race_free(&g.race);
+    g.race_end = 0;
     g.map_index = (index + RC_NUM_MAPS) % RC_NUM_MAPS;
     md = rc_archive_find(&g.rcs, rc_map_files[g.map_index], &ms);
     td = rc_archive_find(&g.rcs, rc_map_tilesets[g.map_index], &ts);
@@ -315,8 +325,79 @@ static int exercise_key(SDL_Keycode k)
     return 0;
 }
 
-/* After the last sum: REKEN writes the counters back (0x199cf) and the
-   race starts with them. */
+static void to_menu(void);
+
+/* RRR.EXE: the stage's race with the counters of RRRIO.INF. */
+static void play_race(void)
+{
+    int map = g.map_override >= 0 ? g.map_override
+                                  : rc_stage_map(g.session.world, g.session.stage);
+
+    g.map_override = -1;
+    printf("world %d, stage %d\n", g.session.world, g.session.stage);
+    if (map < 0 || start_race(map) != 0) {
+        g.running = 0;
+        return;
+    }
+    rc_race_set_player(&g.race, g.session.fuel, g.session.repair,
+                       g.session.boosts, g.session.rockets);
+}
+
+/* REKEN.EXE: the next module of the world, or back to the menu. */
+static void to_reken(int module)
+{
+    if (module < 0)
+        module = rc_pick_module(&g.session);
+    if (module < 0) {
+        to_menu();
+        return;
+    }
+    rc_exercise_start(&g.ex, &g.session, module, (uint32_t)time(NULL));
+    g.logged_sum = 0;
+    g.exercising = 1;
+}
+
+/* RRRMENU.EXE: moves on to the next world once the last race of one is
+   run (0x10f95), and Start! (0x1212c) clears race_done, so it hands over
+   to RRR: the stage's race again, or the new world's first. */
+static void to_menu(void)
+{
+    if (rc_world_next(&g.session))
+        printf("on to world %d\n", g.session.world);
+    g.session.race_done = 0;
+    rc_session_store(&g.session);
+    play_race();
+}
+
+/* race end 0x1585e: the player's counters back into RRRIO.INF, the
+   finishing order, 3 / 2 / 1 points, race_done. */
+static void race_result(void)
+{
+    const rc_stats *p = &g.race.stats[RC_REDCAT];
+    rc_session *s = &g.session;
+    int k;
+
+    s->fuel = p->fuel < 0 ? 0 : p->fuel >> 16;
+    s->boosts = p->boosts;
+    s->stat18 = p->f10;
+    s->stat1c = p->f14;
+    s->rockets = p->rockets;
+    s->repair = p->damage < 0 ? 0 : p->damage;
+    for (k = 0; k < RC_RACERS; k++) {
+        s->progress[k] = g.race.wp_next[k];
+        s->order[k] = g.race.order[k];
+        s->points[g.race.order[k] / 2 % RC_RACERS] += 3 - k;
+    }
+    s->race_done = 1;
+    rc_session_store(s);
+    printf("finish: %d %d %d; points %d %d %d; fuel %d, repair %d, "
+           "boosts %d, rockets %d\n", s->order[0] / 2, s->order[1] / 2,
+           s->order[2] / 2, s->points[0], s->points[1], s->points[2],
+           s->fuel, s->repair, s->boosts, s->rockets);
+}
+
+/* After the last sum: REKEN writes the counters back (0x199cf) and exits
+   to RRR. */
 static void finish_exercises(void)
 {
     const rc_reken *r = &g.ex.r;
@@ -331,12 +412,7 @@ static void finish_exercises(void)
            r->correct, g.ex.module == 3 ? r->asked : RC_SUMS_PER_ROUND,
            r->fuel, r->repair, r->boosts,
            r->rockets);
-    if (start_race(g.map_index) != 0) {
-        g.running = 0;
-        return;
-    }
-    rc_race_set_player(&g.race, g.session.fuel, g.session.repair,
-                       g.session.boosts, g.session.rockets);
+    play_race();
 }
 
 static void exercise_frame(void)
@@ -430,6 +506,15 @@ static void frame(void)
         }
         if (steps > 4)
             g.next_frame = now;
+        /* The podium (0x15a9f) and the world's final ranking (0x15a14)
+           are not drawn yet: the race runs on a few seconds instead. */
+        if (g.flow && !g.race_end && rc_race_over(&g.race)) {
+            race_result();
+            g.race_end = now + 4000;
+        } else if (g.race_end && (Sint32)(now - g.race_end) >= 0) {
+            g.race_end = 0;
+            to_reken(-1);
+        }
     }
     compose();
     present();
@@ -443,7 +528,7 @@ static void frame(void)
 
 int main(int argc, char **argv)
 {
-    int map = -1, fps = 30, groep = 6, module = 1, race_only = 0, i;
+    int map = -1, fps = 30, groep = 6, module = 0, race_only = 0, i;
     uint32_t size;
     const uint8_t *d;
 
@@ -484,24 +569,21 @@ int main(int argc, char **argv)
     if (!d || rc_pcx_decode(&g.hud, d, size) != 0 || g.hud.w != SCREEN_W ||
         g.hud.h != SCREEN_H)
         rc_pcx_free(&g.hud);
-    /* A new pupil's session (RRRIO.INF defaults): world 0, stage 0; the
-       first module after the welcome race is Handig rekenen, stage 1.
-       The race after a module is the one of its stage. */
+    /* A new pupil's session (RRRIO.INF defaults): world 0, stage 0, so
+       the round opens with De Welkomstrace's race. */
     rc_session_default(&g.session);
     if (groep >= 3 && groep <= 8)
         g.session.groep = groep;
-    rc_next_module(&g.session, 1);
     /* --module: the first world that plays it, at its stage */
-    if (module >= 1 && module <= 4 && module != g.session.stage)
+    if (module >= 1 && module <= 4)
         for (i = 0; i < 6; i++)
             if (rc_stage_map(i, module) >= 0) {
                 g.session.world = i;
                 g.session.stage = module;
                 break;
             }
-    if (map < 0)
-        map = race_only ? 0 : rc_stage_map(g.session.world, g.session.stage);
-    g.map_index = map;
+    rc_session_store(&g.session);
+    g.map_override = map;
     if (!race_only && (rc_archive_open(&g.reken, g.dir, "REKEN") != 0 ||
                        rc_archive_open(&g.menu, g.dir, "MENU") != 0 ||
                        rc_exercise_load(&g.ex, &g.reken, &g.menu) != 0)) {
@@ -509,13 +591,17 @@ int main(int argc, char **argv)
                 "racing only\n", g.dir);
         race_only = 1;
     }
+    g.flow = !race_only;
+    g.running = 1;
     if (race_only) {
-        if (start_race(map) != 0)
+        if (start_race(map < 0 ? 0 : map) != 0)
             return 1;
-    } else {
-        rc_exercise_start(&g.ex, &g.session, module, (uint32_t)time(NULL));
-        g.exercising = 1;
-    }
+    } else if (module >= 1 && module <= 4)
+        to_reken(module == 4 && g.session.groep == 3 ? 3 : module);
+    else
+        to_menu();
+    if (!g.running)
+        return 1;
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
@@ -528,7 +614,6 @@ int main(int argc, char **argv)
     SDL_RenderSetLogicalSize(g.ren, SCREEN_W, SCREEN_H);
     g.tex = SDL_CreateTexture(g.ren, SDL_PIXELFORMAT_ARGB8888,
                               SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
-    g.running = 1;
     g.last_tick = SDL_GetTicks();
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(frame, 0, 1);

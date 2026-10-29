@@ -33,7 +33,11 @@ typedef struct {
     int32_t groep;              /* +0x28: 3..8 */
     int32_t world;              /* +0x2c: 0..5 */
     int32_t speech;             /* +0x30 */
+    int32_t stat18, stat1c;     /* +0x18, +0x1c: the player's stats +0x10, +0x14 */
     int32_t race_done;          /* +0x1f8 */
+    int32_t order[3];           /* +0x1fc: finishing order, object numbers */
+    int32_t progress[3];        /* +0x208: each racer's next waypoint */
+    int32_t points[3];          /* +0x214: per racer, 3 / 2 / 1 a race */
     uint8_t raw[RC_SESSION_SIZE];   /* the whole file, other fields kept */
 } rc_session;
 
@@ -45,6 +49,15 @@ void rc_session_store(rc_session *s);           /* fields back into raw */
 /* The module played after this stage (0x10cad): 1..4, or -1 when the world
    is done.  With take set, it becomes the new stage. */
 int rc_next_module(rc_session *s, int take);
+
+/* REKEN's choice (0x10903): rc_next_module taken, module 4 played as 3 by
+   groep 3; -1 sends the pupil back to the menu. */
+int rc_pick_module(rc_session *s);
+
+/* RRRMENU at start-up (0x10f95): after the last race of a world, the next
+   world (after 5: 0) from stage 0 with repair 100, the start order 0, 2, 4
+   and no points (0x1099b).  1 if it moved on. */
+int rc_world_next(rc_session *s);
 
 /* The race of a stage (0x44f5c = RRR 0x57b8c): map 0..22, or -1 when the
    stage has none. */
