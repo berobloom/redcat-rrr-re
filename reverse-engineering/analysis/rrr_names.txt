@@ -42,3 +42,13 @@
 0x1709c obj_callback_1709c   # CONFIRMED: callback set by 0x17e87/0x17faa
 0x16a63 obj_callback_16a63   # CONFIRMED: callback set by 0x181ba
 0x16ad9 obj_callback_16ad9   # CONFIRMED: callback set by 0x18324
+0x1889d ground_check         # CONFIRMED: blocks cells with z < level*1000, wall slide tables 0x721e0..
+0x1404a racer_contact        # CONFIRMED: racer-racer overlap test (4 corner points 50 px ahead)
+0x14534 racer_bounce         # CONFIRMED: merges headings via 0x72de0, averages speeds
+0x18ae5 cell_checks          # CONFIRMED: five points per racer -> cell_effect
+0x18b8d cell_effect          # CONFIRMED: switch on cell type (map.c, > 21 is an error)
+0x1467c ai_unstick           # CONFIRMED: vx=vy=0 for 21 frames -> random heading
+0x1af83 ai_waypoint_action   # CONFIRMED: script lookup, else random drop (10%) / boost (9%)
+0x1aedf ai_script_find       # CONFIRMED: finds waypoint in 0x57c90 / 0x5bd40 scripts
+0x13e3d aim_at_player        # LIKELY: heading from atan via 0x73ee0 toward racer 0
+0x18759 spawn_dropped_object # CONFIRMED: anim 16, 25 px ahead, speed 25, life 150

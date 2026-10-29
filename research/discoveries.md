@@ -193,6 +193,37 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: the computer racers' top speed comes from 0x57b18 indexed by the
   map number (13, 13, 14, 14, 14, 15, 15, 15 px/frame for maps 0–7).
 
+## The race: computer racers (bull_tick 0x12826, muis_tick 0x130f8)
+
+- CONFIRMED: Brutus and Snitch run the player's physics (same acceleration
+  30/mass, friction, gravity, landing, walls, cells, anim poses) with
+  steering replaced. The two functions are the same code with separate
+  globals: waypoint index/count [0x71920]/[0x7191c] and list 0x71468 (8-byte
+  x,y pairs) for Brutus, [0x71dd8]/[0x71dd4] and 0x71924 for Snitch; flags
+  0x55fec..0x56008 vs 0x56010..0x5602c; boost below 0x1c0000 vs 0x1a0000.
+- CONFIRMED: they always accelerate. Each frame the next waypoint counts as
+  reached within 40 px (|dx|+|dy|; the player uses 120), and the heading
+  steps once through the turn table 0x71de0 toward `direction_to_waypoint`
+  (the player steps twice).
+- CONFIRMED: stuck check `0x1467c`: with vx = vy = 0 for 21 frames the
+  racer turns to a random heading (heading + 8 + rand()%40, mod 32) and skips
+  steering that frame.
+- CONFIRMED: on reaching a waypoint `0x1af83` looks the waypoint up in a
+  per-racer script (0x57c90 Brutus, 0x5bd40 Snitch; 24-byte entries
+  {waypoint, action, …}, 30 per block, block [0x751a4]; actions 1 rocket
+  aimed by `0x13e3d`, 2 drop, 3 boost, 4 wait). Both tables are empty in
+  the EXE (each block starts with −1) and stay empty at run time (read at
+  0x20dc90 during the TRACK1A race), so only the fallback runs:
+  rand()%100 < 10 → an object from `0x18759` (kind 0 or 4, half each; needs
+  stats +0x20 ≠ 0 and damage ≥ 0); otherwise rand()%100 < 10 → a boost
+  (speed and vz +8 px/frame, one boost used). Computer racers never fire
+  rockets.
+- CONFIRMED: `0x18759` spawns an object with anim 16 in the racer's heading,
+  25 px ahead, height 40, speed 25 px/frame, lifetime 150 frames (+0x24);
+  callback 0x17b61 (kind 0), 0x178f6 (kind 2) or 0x17c74 (others).
+- CONFIRMED: damage or fuel below 0 sets [0x56080] (Brutus) / [0x5607c]
+  (Snitch).
+
 ## The race: speed
 
 - CONFIRMED (experiment): the race loop is not tied to vsync or a timer.
