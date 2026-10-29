@@ -1,13 +1,13 @@
 #!/bin/sh
-# Build the WebAssembly viewer (port/web/out/rcview.{html,js,wasm,data}).
-# The C sources are the desktop port's own; the web-only part is the
-# __EMSCRIPTEN__ main loop in main.c.
+# Build the WebAssembly race and viewer (port/web/out/redcat.* and
+# rcview.*). The C sources are the desktop port's own; the web-only part is
+# the __EMSCRIPTEN__ main loop in game.c and main.c.
 #
 #   port/web/build.sh <game data dir>   (needs Emscripten: source emsdk_env.sh
 #                                         first, or have it in .work/emsdk)
-#   port/web/serve.sh                   then open http://localhost:8080/
+#   port/web/serve.sh                   then open http://localhost:8080/redcat.html
 #
-# The game data is packed into out/rcview.data. It is the original game's:
+# The game data is packed into out/*.data. It is the original game's:
 # never publish out/.
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -25,28 +25,39 @@ if ! command -v emcc >/dev/null 2>&1; then
     fi
 fi
 
-# the source lists of rccore and rcview in CMakeLists.txt
+# the source list of a CMake target in CMakeLists.txt
 sources() {
     sed -n "/add_$1($2/,/)/p" "$PORT/CMakeLists.txt" | tr -d ' ' | grep '\.c$'
 }
-SRC=$( (sources library rccore; sources executable rcview) | sort -u)
 
-# only the archives the viewer opens, under the names it asks for
-PRELOAD=""
-for base in RCS RRRMENU REKEN; do
-    for ext in IND IMG; do
-        f=$(find "$DATA" -maxdepth 1 -iname "$base.$ext" | head -n 1)
-        [ -n "$f" ] || { echo "$base.$ext not in $DATA" >&2; exit 1; }
-        PRELOAD="$PRELOAD --preload-file $f@/data/$base.$ext"
+# preload flags for the named files (archives as BASE.IND + BASE.IMG)
+preload() {
+    for f in "$@"; do
+        case $f in
+        *.*) names=$f ;;
+        *) names="$f.IND $f.IMG" ;;
+        esac
+        for n in $names; do
+            src=$(find "$DATA" -maxdepth 1 -iname "$n" | head -n 1)
+            [ -n "$src" ] || { echo "$n not in $DATA" >&2; exit 1; }
+            printf ' --preload-file %s@/data/%s' "$src" "$n"
+        done
     done
-done
+}
 
 OUT="$HERE/out"
 mkdir -p "$OUT"
 cd "$PORT"
-# shellcheck disable=SC2086
-emcc -O2 -std=gnu99 -Isrc $SRC \
-    -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 \
-    --shell-file "$HERE/shell.html" $PRELOAD \
-    -o "$OUT/rcview.html"
-echo "built $OUT/rcview.html"
+CORE=$(sources library rccore)
+build() {
+    name=$1; shift
+    files=$1; shift
+    # shellcheck disable=SC2046,SC2086
+    emcc -O2 -std=gnu99 -Isrc $CORE $(sources executable "$name") \
+        -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 \
+        --shell-file "$HERE/shell.html" $(preload $files) \
+        -o "$OUT/$name.html"
+    echo "built $OUT/$name.html"
+}
+build redcat "RCS RC TRANS.DAT"
+build rcview "RCS RRRMENU REKEN"

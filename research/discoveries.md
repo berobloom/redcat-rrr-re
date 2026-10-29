@@ -166,6 +166,21 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: fuel or damage below 0 ends the race for the player
   (`[0x56078] = 1`).
 
+- CONFIRMED (formulas checked against run-time dumps, 0 mismatches): the
+  tables built at start-up:
+  - cos/sin 0x73de0/0x73e60 (`0x13c34`): a = −(h+8)·π/16,
+    cos[h] = (int)(cos a·65536), sin[h] = (int)(sin a·65536), truncated.
+  - turn table 0x71de0 (`0x13f00`), 32×32, [target][current]: current if
+    equal, else one step toward target the short way (+1 when exactly 16
+    apart). Its rows 0/8/16/24 are the "wall slide" tables 0x71de0, 0x721e0,
+    0x725e0, 0x729e0: one step toward up/left/down/right.
+  - merge table 0x72de0 (`0x13f91`): the same, one step away from target.
+  - direction table 0x73ee0 (`0x13cba`), 33×33, [r][c] =
+    (56 − trunc(atan2(c−16, r−16)·16/π + 16.5)) & 31.
+    `direction_to_waypoint` (0x13d60): with dx, dy = racer − waypoint
+    (pixels, float), d = √(dx²+dy²) (0 → heading 0), r = trunc((dx/d+1)·16)
+    % 33, c = trunc((dy/d+1)·16) % 33.
+
 ## The race: map cells
 
 - CONFIRMED: of a cell's 6 bytes, byte 5 is the ground level. A racer whose
@@ -223,6 +238,47 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   callback 0x17b61 (kind 0), 0x178f6 (kind 2) or 0x17c74 (others).
 - CONFIRMED: damage or fuel below 0 sets [0x56080] (Brutus) / [0x5607c]
   (Snitch).
+
+## The race: start, crashes, objects
+
+- CONFIRMED (`init_objects` 0x148db): slot i of the start order (RRRIO.INF
+  0x1fc) stands on waypoint 0 of list i (REDCAT, BULL, MUIS lists); every
+  racer then heads for its own waypoint 1. RedCat drives anim 2, Brutus
+  anim 0, Snitch anim 1; shadows anim 4. RedCat: mass 60, fuel 75 (from
+  RRRIO), damage 100, top 16. Brutus: mass 90, Snitch: mass 60; both fuel
+  100, damage 100, 3 boosts, top speed from 0x57b18.
+- CONFIRMED: a racer whose damage or fuel drops below 0 is out
+  ([0x56078]/[0x56080]/[0x5607c]). Next frame `switch_anims` (0x15084,
+  one racer per frame) calls `start_crash` (0x14f3e): top speed −2 px/frame,
+  frame 0, and a crash callback for the rest of the race. A computer
+  racer's damage is set back to 100. RedCat (`player_crash_tick` 0x19497)
+  drives as a wreck with anim heading + 22 (8 frames), acceleration
+  65/mass, friction 0.9 (stop below 2 px/frame), boosts free of charge.
+  Brutus/Snitch (`bull_crash_tick` 0x19c8c, `muis_crash_tick` 0x1a42a) keep
+  their AI without the out check, anim heading/2 + 54 or + 70. The other
+  `switch_anims` helpers only page crash images in and out.
+- CONFIRMED (experiment): on TRACK1B (RRRIO.INF stage 1) Snitch drives into
+  a corridor of type-12 cells, reaches damage −10 at frame 141, crashes and
+  goes on with damage 60 and top speed 8; Brutus ends at damage −221. The
+  port's trace matches the original's samples within about one frame up to
+  frame 890 and both finish in the same 80-frame sample windows.
+- CONFIRMED: map objects (`find_bonus_objects`) sit at the cell centre:
+  type 10 anim 5 (life rand&255 + 100), 12 mine anim 6 (life 10, counted
+  down by `mine_tick` 0x16b53, drawn under everything), 13 boost anim 8,
+  15/16 cactus anim 12 at +16, −10 px (life −1; a hit sets 5, counted down,
+  then removed), 19 start sign anim 10, 18 finish sign anim 11. The anim
+  table is static data at 0x57798 (87 entries; identical to the run-time
+  capture).
+- CONFIRMED: sprite hotspots are the RC.IMG headers' x, y as signed 16-bit
+  values (544 of 544 loaded images match the run-time records).
+- CONFIRMED: the race palette is the tileset's (identical to RACESCR3.PCX's;
+  all 169 colours of a race screenshot are in it). `race_init` loads
+  wacht.pcx's palette first, for the loading screen.
+- CONFIRMED: start lights: anim 86's frames (images 32, 43–46) drawn into
+  the view buffer at (226, 50) for 1500, 1000, 1000, 1000, 500 ms.
+- CONFIRMED: draw order (`sort_draw_order` 0x11b0e): descending key
+  (1000 − x)·10 − 1000·y − z − prio, with prio −100000 for shadows and
+  mines.
 
 ## The race: drawing (draw_view 0x11526, new2io.c)
 

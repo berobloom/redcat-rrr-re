@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Drive the web build in headless Chromium: serve port/web/out, open
-rcview.html, follow a script of waits and keys, screenshot the canvas and
-print the program's console output.
+redcat.html (or $RC_PAGE), follow a script of waits and keys, screenshot the
+canvas and print the program's console output.
 
 Usage: test_web.py <out dir> [step ...]
   steps:  wait:<s>  shot:<name>  key:<Key> (Playwright key name)
@@ -39,7 +39,8 @@ with sync_playwright() as p:
     page = b.new_page(viewport={'width': 1300, 'height': 980})
     page.on('console', lambda m: print('console:', m.text))
     page.on('pageerror', lambda e: print('pageerror:', e))
-    page.goto('http://127.0.0.1:%d/rcview.html' % srv.server_address[1])
+    page.goto('http://127.0.0.1:%d/%s' % (srv.server_address[1],
+                                          os.environ.get('RC_PAGE', 'redcat.html')))
     for step in sys.argv[2:]:
         kind, _, arg = step.partition(':')
         if kind == 'wait':

@@ -113,7 +113,7 @@ static void draw_map(void)
                 break;
             c = &g.map.cells[ty * g.map.w + tx];
             g.fb[y * SCREEN_W + x] =
-                g.tiles.tiles[(c->tile & 0xFF) * RC_TILE_W * RC_TILE_H +
+                g.tiles.tiles[c->tile * RC_TILE_W * RC_TILE_H +
                               (my % RC_TILE_H) * RC_TILE_W + mx % RC_TILE_W];
         }
     }

@@ -20,7 +20,8 @@ int rc_pcx_decode(rc_pcx *out, const uint8_t *data, uint32_t size);
 void rc_pcx_free(rc_pcx *p);
 
 typedef struct {
-    int w, h, x, y;         /* x, y: hotspot */
+    int w, h, x, y;         /* x, y: hotspot, signed (RRR's image record
+                               +8, +10; checked for all 544 race images) */
     const uint8_t *pixels;  /* points into the archive */
 } rc_sprite;
 
@@ -41,7 +42,12 @@ typedef struct {
 int rc_tileset_parse(rc_tileset *t, const uint8_t *data, uint32_t size);
 
 typedef struct {
-    uint16_t tile, f1, f2;  /* f1, f2: not understood yet */
+    uint8_t tile;
+    uint8_t object;         /* 0 in the files; the race stores an object here */
+    uint8_t waypoint;       /* number, when racer != 0 */
+    uint8_t racer;          /* 1 REDCAT, 2 BULL, 4 MUIS: whose waypoint */
+    uint8_t type;           /* object/surface type 0..21 */
+    uint8_t level;          /* ground level: blocks z < level*1000 */
 } rc_cell;
 
 typedef struct {

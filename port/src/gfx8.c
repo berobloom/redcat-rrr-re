@@ -80,8 +80,8 @@ int rc_sprite_parse(rc_sprite *s, const uint8_t *d, uint32_t size)
         return -1;
     s->w = rd16(d);
     s->h = rd16(d + 2);
-    s->x = rd16(d + 4);
-    s->y = rd16(d + 6);
+    s->x = (int16_t)rd16(d + 4);
+    s->y = (int16_t)rd16(d + 6);
     if (8 + (uint32_t)s->w * s->h != size)
         return -1;
     s->pixels = d + 8;
@@ -117,9 +117,13 @@ int rc_map_parse(rc_map *m, const uint8_t *d, uint32_t size)
     if (!m->cells)
         return -1;
     for (i = 0; i < m->w * m->h; i++) {
-        m->cells[i].tile = rd16(d + 4 + 6 * i);
-        m->cells[i].f1 = rd16(d + 6 + 6 * i);
-        m->cells[i].f2 = rd16(d + 8 + 6 * i);
+        const uint8_t *c = d + 4 + 6 * i;
+        m->cells[i].tile = c[0];
+        m->cells[i].object = c[1];
+        m->cells[i].waypoint = c[2];
+        m->cells[i].racer = c[3];
+        m->cells[i].type = c[4];
+        m->cells[i].level = c[5];
     }
     return 0;
 }
