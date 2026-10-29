@@ -220,6 +220,14 @@ enum {
     H_TURN,             /* 0x13abb: the card at column n, row m turns */
     H_MISS,             /* 0x13d95(1): the two turned cards turn back */
     H_PAIR,             /* 0x13d95(0): they leave */
+    H_M4,               /* module 4: the slots column cleared, four empty
+                           slots, box and work panel (0x14fe3) */
+    H_SLOT,             /* slot n gets text (NULL: emptied) */
+    H_BOX,              /* the Uitkomst box gets text */
+    H_WORK,             /* the work panel redrawn with text (or empty) */
+    H_DOWN,             /* 0x19842: button anim n pressed, 150 ms */
+    H_UP,               /* 0x19862: released */
+    H_WAIT,             /* 0x249f3(n) */
 };
 typedef struct {
     int op, n, m;
@@ -229,6 +237,11 @@ typedef struct {
 #define SHOW(t, w) { H_SHOW, 0, 0, t, w }
 #define DO(op, n) { op, n, 0, NULL, NULL }
 #define TURN(col, row) { H_TURN, col, row, NULL, NULL }
+#define SLOT(i, t) { H_SLOT, i, 0, t, NULL }
+#define BOX(t) { H_BOX, 0, 0, t, NULL }
+#define WORK(t) { H_WORK, 0, 0, t, NULL }
+#define DOWN(anim) { H_DOWN, anim, 0, NULL, NULL }
+#define UP DO(H_UP, 0)
 
 static const help_line help1[] = {     /* 0x11a6a */
     SAY(3), SAY(4), SAY(5), SAY(6),
@@ -262,6 +275,29 @@ static const help_line help3[] = {
 };
 /* 0x14492's demo: card 0 "2 + 3" (5), card 2 "4 + 4" (8), card 3 the
    ANTWOORD 8 */
+/* module 4: 0x16651 presses Help and sets the slot count [0x45c30] to 4,
+   then 0x171ea: 2 + 2 = 4 twice, then 4 + 4 = 8 */
+static const help_line help4[] = {
+    DO(H_PRESS, 0), DO(H_M4, 0),
+    SAY(26), SAY(27), SAY(28), SAY(29),
+    DO(H_M4, 0), BOX("8"), SLOT(0, "2"), SLOT(1, "2"), SLOT(2, "2"), SLOT(3, "2"),
+    SAY(30), SAY(31), SAY(32),
+    SLOT(0, NULL), WORK("2"), SAY(33),
+    DOWN(A_PLUS), WORK("2 +"), UP, SAY(34),
+    SLOT(3, NULL), WORK("2 + 2"), SAY(35),
+    DOWN(A_EQUALS), SAY(36),
+    WORK(NULL), SLOT(0, "4"), UP, SAY(37), SAY(38),
+    SLOT(1, NULL), WORK("2"), SAY(39),
+    DOWN(A_PLUS), WORK("2 +"), UP, SAY(40),
+    SLOT(2, NULL), WORK("2 + 2"), SAY(41),
+    DOWN(A_EQUALS), SAY(42),
+    UP, WORK(NULL), SLOT(1, "4"), SAY(43), SAY(44), SAY(45),
+    SLOT(0, NULL), WORK("4"), SAY(46),
+    DOWN(A_PLUS), WORK("4 +"), UP, SAY(47),
+    SLOT(1, NULL), WORK("4 + 4"), SAY(48),
+    DOWN(A_EQUALS), SAY(49),
+    UP, WORK("8"), { H_WAIT, 2000, 0, NULL, NULL },
+};
 
 /* each centred as written, but the second by "2 * 4 = 7" (0x12ca2) */
 static const char *const help2_text[3] = { "4 + 3 = 6", "2 x 4 = 7", "8 : 2 = 4" };
@@ -511,6 +547,7 @@ void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
     x->help_rows = 0;
     x->help_card[0].on = x->help_card[1].on = 0;
     x->help_button = 0;
+    x->help4 = x->help4_down = 0;
     x->equals_x = x->r.level >= 3 ? 78 : 152;   /* module4_init */
     x->face_anim = A_FACE_RIGHT;    /* module1_init: anim 13, frame 0 */
     x->face_frame = 0;
@@ -657,6 +694,10 @@ static const help_line *help_script(const rc_exercise *x, int *n)
         *n = (int)(sizeof help3 / sizeof help3[0]);
         return help3;
     }
+    if (x->module == 4) {
+        *n = (int)(sizeof help4 / sizeof help4[0]);
+        return help4;
+    }
     *n = (int)(sizeof help1 / sizeof help1[0]);
     return help1;
 }
@@ -674,6 +715,8 @@ static void help_end(rc_exercise *x)
     x->help_text = NULL;
     x->help_anim = 0;
     x->help_button = x->module == 1 ? HELP_PRESSED : HELP_RELEASED;
+    x->help4 = 0;                       /* 0x1667f: all drawn anew */
+    x->help4_down = 0;
     if (x->module == 2) {
         int k;
         x->help_rows = 0;
@@ -774,8 +817,10 @@ static int help_animate(rc_exercise *x)
 {
     int k;
 
-    if (x->help_anim == H_PRESS)
+    if (x->help_anim == H_PRESS || x->help_anim == H_DOWN)
         return x->state_ms >= PRESS_MS;
+    if (x->help_anim == H_WAIT)
+        return x->state_ms >= DELAY(x->help_row);
     if (x->help_anim == H_OPEN)
         return open_rows(x);
     if (x->help_anim == H_TURN)
@@ -828,6 +873,23 @@ static void help_next(rc_exercise *x)
         case H_DEAL:
             help_deal(x);
             break;
+        case H_M4:
+            x->help4 = 1;
+            memset(x->help4_slot, 0, sizeof x->help4_slot);
+            x->help4_box = x->help4_work = NULL;
+            break;
+        case H_SLOT:
+            x->help4_slot[h->n] = h->text;
+            break;
+        case H_BOX:
+            x->help4_box = h->text;
+            break;
+        case H_WORK:
+            x->help4_work = h->text;
+            break;
+        case H_UP:
+            x->help4_down = 0;
+            break;
 
         case H_OPEN:
             for (k = 0; k < 3; k++)
@@ -840,6 +902,8 @@ static void help_next(rc_exercise *x)
         default:
             if (h->op == H_PRESS)
                 x->help_button = HELP_PRESSED;  /* 0x19842: 150 ms */
+            if (h->op == H_DOWN)
+                x->help4_down = h->n;
             if (h->op == H_CLOSE_ALL)
                 x->texts_shown = 0;
             x->help_anim = h->op;
@@ -1111,9 +1175,9 @@ void rc_exercise_key(rc_exercise *x, int key)
         return;
     }
     if (key == RC_KEY_HELP) {
-        if (x->module <= 3 && x->state == ST_INPUT)
+        if (x->state == ST_INPUT)
             help_start(x);
-        else    /* module 4's examples are not ported */
+        else
             press(x, A_HELP, HELP_X, HELP_Y);
         return;
     }
@@ -1373,7 +1437,9 @@ static void draw_big(rc_exercise *x)            /* 0x14fe3, 0x161d3 */
     char s[64];
     int i, n;
 
-    for (i = 0; i < x->r.count; i++)
+    int count = x->help4 ? 4 : x->r.count;  /* Help: [0x45c30] = 4 */
+
+    for (i = 0; i < count; i++)
         draw_at(x, A_SLOT, i, SLOT_X, SLOT_Y + SLOT_DY * i);
     draw_at(x, A_BOX, 0, BOX4_X, BOX4_Y);
     draw_at(x, A_PANEL4, 0, WORK_X, WORK_Y);
@@ -1384,6 +1450,21 @@ static void draw_big(rc_exercise *x)            /* 0x14fe3, 0x161d3 */
         draw_at(x, A_DIVIDE, 0, 78, 425);
     }
     draw_at(x, A_EQUALS, 0, x->equals_x, 368);
+    if (x->help4_down)
+        draw_at(x, x->help4_down, 1, x->help4_down == A_EQUALS ? x->equals_x : 8, 368);
+    if (x->help4) {
+        for (i = 0; i < 4; i++)
+            if (x->help4_slot[i])
+                draw_text(x, f, 30 + (182 - (int)strlen(x->help4_slot[i]) * f->w) / 2,
+                          169 + SLOT_DY * i + (41 - f->h) / 2, x->help4_slot[i], -1);
+        if (x->help4_box)
+            draw_text(x, f, BOX4_X + (132 - (int)strlen(x->help4_box) * f->w) / 2,
+                      209 + (144 - f->h) / 2, x->help4_box, -1);
+        if (x->help4_work)
+            draw_text(x, f, WORK_X + (WORK_W - (int)strlen(x->help4_work) * f->w) / 2,
+                      WORK_Y + (WORK_H - f->h) / 2, x->help4_work, -1);
+        return;
+    }
     if (r->asked == 0)          /* before the first round's numbers */
         return;
     for (i = 0; i < r->count; i++) {

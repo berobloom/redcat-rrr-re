@@ -74,8 +74,8 @@ Early. What exists:
   seed with REKEN.EXE's own code run under Unicorn.
 
 Not ported yet: the winner's film after a stage-4 race (the podium stands
-in), the closing film (EINDANI2.SMK), the menu's joystick set-up, the
-Help example of module 4, and the exercises' mouse pointer.
+in), the closing film (EINDANI2.SMK), the menu's joystick set-up and
+the exercises' mouse pointer.
 
 ### Frame rate
 

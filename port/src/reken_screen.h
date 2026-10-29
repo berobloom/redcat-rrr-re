@@ -91,6 +91,10 @@ typedef struct {
     struct { int on, cell, col, row, anim, frame, text; } help_card[2];
     int help_turns;
     int help_button;            /* drawn released / pressed since Help */
+    /* module 4: what Help shows in the slots, the box and the work panel,
+       and the operator button it holds down */
+    int help4, help4_down;
+    const char *help4_slot[4], *help4_box, *help4_work;
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,
