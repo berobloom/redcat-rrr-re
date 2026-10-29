@@ -1094,14 +1094,31 @@ int rc_pick_module(rc_session *s)
     return m == 4 && s->groep == 3 ? 3 : m;
 }
 
+int32_t rc_session_get(const rc_session *s, int offset)
+{
+    return offset >= 0 && offset + 4 <= RC_SESSION_SIZE ? get32(s->raw + offset) : 0;
+}
+
+void rc_session_set(rc_session *s, int offset, int32_t v)
+{
+    if (offset >= 0 && offset + 4 <= RC_SESSION_SIZE)
+        put32(s->raw + offset, v);
+}
+
 int rc_world_next(rc_session *s)
 {
-    int i;
-
     if (!s->race_done || rc_next_module(s, 0) != -1)
         return 0;
     s->world = (s->world + 1) % 6;
     s->stage = 0;
+    rc_world_reset(s);
+    return 1;
+}
+
+void rc_world_reset(rc_session *s)
+{
+    int i;
+
     s->repair = 100;
     for (i = 0; i < 3; i++) {
         s->order[i] = 2 * i;
@@ -1109,7 +1126,6 @@ int rc_world_next(rc_session *s)
         s->points[i] = 0;
     }
     rc_session_store(s);
-    return 1;
 }
 
 static int groep_level(int groep)

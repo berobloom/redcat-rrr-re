@@ -684,3 +684,55 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED (strings): after a stage-4 race `0x15a14(2 × points leader)`
   plays `wredcat.smk`, `wbrutus.smk` or `wsnitch.smk` instead (Smacker,
   in RCS). "Max de Muis" is the podium's name for Snitch.
+
+## The menu (RRRMENU.EXE)
+
+- CONFIRMED (DOSBox: the screen buffer [0x5cf94] dumped with RRRIO
+  defaults, after R, 4, G, and after R R 3; port `menu.c` renders each
+  pixel-identical): menubs01.pcx (RRRMENU.IMG) with its palette, sprites
+  from RRRANIM.IMG through the static anim table 0x457bc (9 anims; copied
+  to [0x5e2f8] at run time, so `[0x5e2f8] + 8 a + 4` is anim a's frame
+  list), blitted with their top-left at the given point, 0xff clear (the
+  hotspot is not used). Start!'s RedCat is part of the picture.
+- CONFIRMED: the parts. Groep buttons anim 0 (selected) / anim 1 frame
+  groep − 3 at (342 + 50 i, 108). Bediening (`0x10d67`) anim 2 at (26,
+  270): frame 11 (Brutus with the keyboard) without joystick, frame 0
+  with. Geluid (`0x10db8`) at (176, 300): anim 7 frame 0 for sound mode 0
+  (or no sound card), anim 6 for 1, anim 5 for 3 (Snitch with the
+  guitar). The Race panel (`0x10c18`) in RRRFONT, opaque on black: "%d:"
+  at (380, 205) and the world name (0x4589c) at (420, 205); the enabled
+  modules (0x4558e, as REKEN's 0x45000) at x 400 from y 265 every 30,
+  then blank lines up to y 360; groep 3 shows Memory for Grote
+  getallenspel. Colours: `0x10a84` recolours the font from the current
+  pair to one of 0x4556e {253, 254}, {249, 250}, {247, 248}, {251, 252};
+  the header uses pair 0 (white), the modules pair 3 (dark yellow) until
+  the next module, from which on pair 1 (yellow); when the world shown is
+  not the record's, all modules are pair 1. The pointer is image 28 (the
+  paw, anim 8).
+- CONFIRMED (0x45244, set by `0x1f080`; read at run time): buttons turn a
+  click into a key (`0x1f1e5`): Start! S (0x1f) (22, 105)–(133, 216), the
+  Race panel R (0x13) (360, 162)–(632, 418), Rapport P (0x19)
+  (181, 103)–(253, 224), Bediening B (0x30) (26, 268)–(157, 431), Geluid
+  G (0x22) (177, 301)–(255, 425), Einde E (0x12) (561, 436)–(628, 464),
+  groep 3..8 keys 4..9, 36 × 36 at (342 + 50 i, 108).
+- CONFIRMED (`0x11bf7`): S or Enter plays anim 3 (RedCat drives off) at
+  (22, 94) and leaves; E leaves without playing (then `0x119cc` plays
+  EINDANI2.SMK, exit 255); R shows the next world ((w + 1) % 6) without
+  touching the record; 3..8 redraw the groep buttons and the panel; G
+  cycles the sound mode 3 → 1 → 0 → 3 playing anim 5, 6 or 7 forward at
+  (176, 300). Leaving (`0x120de`): a world other than the record's sets
+  stage 0 and calls `0x1099b`; groep → +0x28, sound → +0x30 (so +0x30,
+  REKEN's [0x46c87], is the sound mode), joystick → +0x34, the name →
+  +0x68 ("RedCat" if empty); Start! clears race_done. DOSBox, after
+  R R R 3 G S: world 3, stage 0, groep 3, sound 1, race_done 0, name
+  RedCat.
+- CONFIRMED (`0x11056`): play_anim(x, y, anim, step, n) blits frames 0..n−1
+  (or back), each followed by a present and `0x1e88e(1)`, which waits n
+  hundredths of a second (LIKELY, from its × 100 compare); world_flash
+  draws the panel 20 times alternating (header yellow / modules white)
+  with 10 hundredths between. The idle blink (anim 4 at (22, 94)) comes
+  after 20000 + rand() % 10000 loop passes without the mouse moving
+  (seen about 25 s in under DOSBox).
+- On the first pass of the loop the groep variable is −1, so it takes
+  the groep branch and draws the panel with its modules; `menu_init`
+  itself draws them only after a finished race.

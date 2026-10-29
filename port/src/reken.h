@@ -32,7 +32,7 @@ typedef struct {
     int32_t stage;              /* +0x24: map column = module last played */
     int32_t groep;              /* +0x28: 3..8 */
     int32_t world;              /* +0x2c: 0..5 */
-    int32_t speech;             /* +0x30 */
+    int32_t speech;             /* +0x30: the menu's sound mode, 3 / 1 / 0 */
     int32_t stat18, stat1c;     /* +0x18, +0x1c: the player's stats +0x10, +0x14 */
     int32_t race_done;          /* +0x1f8 */
     int32_t order[3];           /* +0x1fc: finishing order, object numbers */
@@ -53,6 +53,14 @@ int rc_next_module(rc_session *s, int take);
 /* REKEN's choice (0x10903): rc_next_module taken, module 4 played as 3 by
    groep 3; -1 sends the pupil back to the menu. */
 int rc_pick_module(rc_session *s);
+
+/* Other fields of the record, by offset (+0x34 joystick, ...). */
+int32_t rc_session_get(const rc_session *s, int offset);
+void rc_session_set(rc_session *s, int offset, int32_t v);
+
+/* RRRMENU 0x1099b, a world (re)started: repair 100, the start order 0, 2, 4,
+   no waypoints or points. */
+void rc_world_reset(rc_session *s);
 
 /* RRRMENU at start-up (0x10f95): after the last race of a world, the next
    world (after 5: 0) from stage 0 with repair 100, the start order 0, 2, 4

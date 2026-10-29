@@ -59,5 +59,5 @@ build() {
         -o "$OUT/$name.html"
     echo "built $OUT/$name.html"
 }
-build redcat "RCS RC TRANS.DAT REKEN MENU"
+build redcat "RCS RC TRANS.DAT REKEN MENU RRRMENU RRRANIM RRRFONT.IMG"
 build rcview "RCS RRRMENU REKEN"

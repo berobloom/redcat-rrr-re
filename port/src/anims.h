@@ -1,7 +1,9 @@
-/* RRR.EXE's animation table (0x57798) and REKEN.EXE's (0x4660c), generated
-   into anims_tab.c and menu_anims_tab.c by port/tools/gen_anims.py.  Race
+/* RRR.EXE's animation table (0x57798), REKEN.EXE's (0x4660c) and RRRMENU's
+   (0x457bc), generated into anims_tab.c, menu_anims_tab.c and
+   rrrmenu_anims_tab.c by port/tools/gen_anims.py.  Race
    frame kinds: 1, 2 opaque; 4, 5, 6 drawn through the TRANS.DAT blend
-   table.  Image i is RC.IMG (race) or MENU.IMG (REKEN) entry i - 1. */
+   table.  Image i is RC.IMG (race), MENU.IMG (REKEN) or RRRANIM.IMG
+   (RRRMENU) entry i - 1. */
 #ifndef RC_ANIMS_H
 #define RC_ANIMS_H
 
@@ -21,5 +23,9 @@ extern const rc_anim rc_anims[RC_ANIM_COUNT];
 #define RC_MENU_ANIM_COUNT 59
 
 extern const rc_anim rc_menu_anims[RC_MENU_ANIM_COUNT];
+
+#define RC_RRRMENU_ANIM_COUNT 9
+
+extern const rc_anim rc_rrrmenu_anims[RC_RRRMENU_ANIM_COUNT];
 
 #endif

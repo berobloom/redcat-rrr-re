@@ -17,7 +17,9 @@ add_library(rccore STATIC
   src/gfx8.c
   src/race.c
   src/reken.c
+  src/menu.c
   src/podium.c
+  src/rrrmenu_anims_tab.c
   src/reken_screen.c
   src/menu_anims_tab.c
 )

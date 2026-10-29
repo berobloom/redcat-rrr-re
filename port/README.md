@@ -16,8 +16,10 @@ Early. What exists:
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
 - `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]`:
-  the game's round as MOTOR.EXE runs it (no menu yet: Start! is taken at
-  once). A world opens with its race; then for each of its modules the
+  the game's round as MOTOR.EXE runs it, from the menu (`src/menu.c`:
+  Start! S/Enter, R or a click on the Race panel the next world, 3..8 the
+  groep, G the sound, E Einde; Esc in a race returns to it). A world opens
+  with its race; then for each of its modules the
   exercise screen of the arithmetic part (`src/reken_screen.c`) and the
   race of that stage, with the fuel, repair, boosts and rockets earned and
   the last finishing order as the start order, each race followed by the
@@ -52,8 +54,8 @@ Early. What exists:
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
 winner's film after a stage-4 race (the podium stands in), the high scores,
-saving RRRIO.INF, the menu, the exercises' Help example, mouse pointer and
-spoken feedback.
+saving RRRIO.INF, the menu's Rapport and Bediening screens, the exercises'
+Help example, mouse pointer and spoken feedback.
 
 ### Frame rate
 

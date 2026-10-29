@@ -1,5 +1,6 @@
 """Write port/src/anims_tab.c from RRR.EXE's static anim table (0x57798) and
-port/src/menu_anims_tab.c from REKEN.EXE's (0x4660c, MENU.IMG images).
+port/src/menu_anims_tab.c from REKEN.EXE's (0x4660c, MENU.IMG images) and
+port/src/rrrmenu_anims_tab.c from RRRMENU.EXE's (0x457bc, RRRANIM.IMG).
 
 Each entry is {short frames, short flag, ptr} and each frame {short kind,
 short image}; image i is RC.IMG entry i-1.  The table ends at -1.
@@ -16,6 +17,8 @@ from lelib import Image  # noqa: E402
 TABLES = [  # program, table, output file, C array, count macro
     ('rrr', 0x57798, 'anims_tab.c', 'rc_anims', 'RC_ANIM_COUNT'),
     ('reken', 0x4660c, 'menu_anims_tab.c', 'rc_menu_anims', 'RC_MENU_ANIM_COUNT'),
+    ('rrrmenu', 0x457bc, 'rrrmenu_anims_tab.c', 'rc_rrrmenu_anims',
+     'RC_RRRMENU_ANIM_COUNT'),
 ]
 
 

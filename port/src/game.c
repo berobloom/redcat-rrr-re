@@ -1,8 +1,9 @@
 /* redcat: the game's round as MOTOR.EXE runs it: each world opens with a
    race, then for each of its modules the exercises (REKEN.EXE) and the
    race (RRR.EXE) of that stage, with what they earned; after the last
-   one the next world.  There is no menu yet: RRRMENU's Start! is taken
-   at once.
+   one the next world.  It opens with RRRMENU's screen (menu.c): S or
+   Enter Start!, R the next world, 3..8 the groep, G the sound, E Einde;
+   Esc in a race goes back to it.
 
    usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
                  [--module 1..4] [--fps N]
@@ -36,6 +37,7 @@
 #include "anims.h"
 #include "archive.h"
 #include "gfx8.h"
+#include "menu.h"
 #include "podium.h"
 #include "race.h"
 #include "reken.h"
@@ -74,6 +76,8 @@ static struct {
     int map_override;           /* the next race's map, -1: the stage's */
     Uint32 race_end;            /* while the podium shows: when it goes */
     rc_podium podium;
+    rc_menu mainmenu;           /* RRRMENU */
+    int have_menu, in_menu;
     rc_archive reken, menu;
     rc_exercise ex;
     rc_session session;
@@ -360,15 +364,72 @@ static void to_reken(int module)
 }
 
 /* RRRMENU.EXE: moves on to the next world once the last race of one is
-   run (0x10f95), and Start! (0x1212c) clears race_done, so it hands over
-   to RRR: the stage's race again, or the new world's first. */
+   run (0x10f95); Start! (0x1212c) clears race_done, so it hands over to
+   RRR: the stage's race again, or the new world's first.  Without the
+   RRRMENU files Start! is taken at once. */
 static void to_menu(void)
 {
+    if (g.have_menu) {
+        rc_menu_start(&g.mainmenu, &g.session, (uint32_t)time(NULL));
+        g.in_menu = 1;
+        return;
+    }
     if (rc_world_next(&g.session))
         printf("on to world %d\n", g.session.world);
     g.session.race_done = 0;
     rc_session_store(&g.session);
     play_race();
+}
+
+static int menu_scan(SDL_Keycode k)
+{
+    if (k >= SDLK_3 && k <= SDLK_8)
+        return 4 + (int)(k - SDLK_3);
+    if (k >= SDLK_KP_3 && k <= SDLK_KP_8)
+        return 4 + (int)(k - SDLK_KP_3);
+    switch (k) {
+    case SDLK_s: return 0x1f;
+    case SDLK_RETURN: case SDLK_KP_ENTER: return 0x1c;
+    case SDLK_r: return 0x13;
+    case SDLK_e: return 0x12;
+    case SDLK_p: return 0x19;
+    case SDLK_b: return 0x30;
+    case SDLK_g: return 0x22;
+    }
+    return 0;
+}
+
+static void menu_frame(void)
+{
+    rc_menu *m = &g.mainmenu;
+    SDL_Event e;
+    Uint32 now = SDL_GetTicks();
+
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT ||
+            (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE))
+            g.running = 0;
+        else if (e.type == SDL_KEYDOWN && !e.key.repeat)
+            rc_menu_key(m, menu_scan(e.key.keysym.sym));
+        else if (e.type == SDL_MOUSEMOTION)
+            rc_menu_mouse(m, e.motion.x, e.motion.y);
+        else if (e.type == SDL_MOUSEBUTTONDOWN &&
+                 e.button.button == SDL_BUTTON_LEFT)
+            rc_menu_click(m, e.button.x, e.button.y);
+    }
+    rc_menu_tick(m, (int)(now - g.last_tick));
+    g.last_tick = now;
+    rc_menu_draw(m);
+    memcpy(g.fb, m->fb, sizeof g.fb);
+    memcpy(g.pal, m->pal, sizeof g.pal);
+    present();
+    if (m->result == RC_MENU_START) {
+        g.in_menu = 0;
+        printf("menu: world %d, groep %d\n", g.session.world,
+               g.session.groep);
+        play_race();
+    } else if (m->result == RC_MENU_QUIT)
+        g.running = 0;
 }
 
 /* race end 0x1585e: the player's counters back into RRRIO.INF, the
@@ -465,8 +526,11 @@ static void frame(void)
     SDL_Event e;
     Uint32 now;
 
-    if (g.exercising) {
-        exercise_frame();
+    if (g.in_menu || g.exercising) {
+        if (g.in_menu)
+            menu_frame();
+        else
+            exercise_frame();
 #ifdef __EMSCRIPTEN__
         if (!g.running)
             emscripten_cancel_main_loop();
@@ -482,7 +546,12 @@ static void frame(void)
         if (e.type != SDL_KEYDOWN)
             continue;
         switch (e.key.keysym.sym) {
-        case SDLK_ESCAPE: g.running = 0; break;
+        case SDLK_ESCAPE:       /* RRR: to the menu, nothing saved */
+            if (g.flow && g.have_menu && !g.race_end)
+                to_menu();
+            else
+                g.running = 0;
+            break;
         case SDLK_PAGEUP: start_race(g.map_index - 1); break;
         case SDLK_PAGEDOWN: start_race(g.map_index + 1); break;
         }
@@ -610,6 +679,10 @@ int main(int argc, char **argv)
         race_only = 1;
     }
     g.flow = !race_only;
+    if (g.flow && rc_menu_load(&g.mainmenu, g.dir) != 0)
+        fprintf(stderr, "RRRMENU files not found in %s; no menu\n", g.dir);
+    else if (g.flow)
+        g.have_menu = 1;
     g.running = 1;
     if (race_only) {
         if (start_race(map < 0 ? 0 : map) != 0)
