@@ -15,10 +15,11 @@ Early. What exists:
 - `rcview <data dir> [map]`: an SDL2 viewer at the original's 640×480 in 8-bit
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
-- `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]`:
-  the game's round as MOTOR.EXE runs it, from the menu (`src/menu.c`: Start!
-  S/Enter, R or a click on the Race panel the next world, 3..8 the groep, G
-  the sound, B the race keys, E Einde; Esc in a race returns to it). A world
+- `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]
+  [--save DIR]`: the game's round as MOTOR.EXE runs it, from the menu
+  (`src/menu.c`: Start! S/Enter, R or a click on the Race panel the next
+  world, 3..8 the groep, G the sound, B the race keys, P the Rapport (T
+  back), E Einde; Esc in a race returns to it). A world
   opens with its race; then for each of its modules the exercise screen of
   the arithmetic part (`src/reken_screen.c`) and the race of that stage,
   with the fuel, repair, boosts and rockets earned and the last finishing
@@ -34,7 +35,12 @@ Early. What exists:
   answer, pair or target adds the shown prize. `--module N` starts with
   module N in the first world that has it; a map number replaces the next
   race's map.
-  `--race` goes straight to the race. The race (`src/race.c`, `src/game.c`):
+  `--race` goes straight to the race. The record (RRRIO.INF) and the
+  pupil's results (`%8.8d.SMD`, one record per module played, `src/smd.c`;
+  the files are the original's format) are kept in the save directory:
+  `--save`, else SDL's preferences path (on Linux
+  `~/.local/share/Davilex/RedCat`); in the browser in IndexedDB. The game
+  data directory is only read. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
   waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
   crashes, the finish line, the camera. The keys are the record's, set in
@@ -56,7 +62,7 @@ Early. What exists:
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
 winner's film after a stage-4 race (the podium stands in), the high scores,
-saving RRRIO.INF, the menu's Rapport and the joystick set-up, the exercises'
+the menu's joystick set-up, the exercises'
 Help example, mouse pointer and spoken feedback.
 
 ### Frame rate

@@ -19,6 +19,7 @@ add_library(rccore STATIC
   src/reken.c
   src/menu.c
   src/podium.c
+  src/smd.c
   src/rrrmenu_anims_tab.c
   src/reken_screen.c
   src/menu_anims_tab.c

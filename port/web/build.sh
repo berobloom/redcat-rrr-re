@@ -54,10 +54,11 @@ build() {
     files=$1; shift
     # shellcheck disable=SC2046,SC2086
     emcc -O2 -std=gnu99 -Isrc $CORE $(sources executable "$name") \
-        -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 \
+        -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 "$@" \
         --shell-file "$HERE/shell.html" $(preload $files) \
         -o "$OUT/$name.html"
     echo "built $OUT/$name.html"
 }
-build redcat "RCS RC TRANS.DAT REKEN MENU RRRMENU RRRANIM RRRFONT.IMG"
+build redcat "RCS RC TRANS.DAT REKEN MENU RRRMENU RRRANIM RRRFONT.IMG" \
+    -lidbfs.js --pre-js "$HERE/save.js"
 build rcview "RCS RRRMENU REKEN"

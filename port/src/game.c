@@ -2,11 +2,15 @@
    race, then for each of its modules the exercises (REKEN.EXE) and the
    race (RRR.EXE) of that stage, with what they earned; after the last
    one the next world.  It opens with RRRMENU's screen (menu.c): S or
-   Enter Start!, R the next world, 3..8 the groep, G the sound, E Einde;
-   Esc in a race goes back to it.
+   Enter Start!, R the next world, 3..8 the groep, G the sound, P the
+   Rapport, E Einde; Esc in a race goes back to it.
 
    usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
-                 [--module 1..4] [--fps N]
+                 [--module 1..4] [--fps N] [--save DIR]
+
+   The record (RRRIO.INF) and the pupil files (%8.8d.SMD) are kept in the
+   save directory: --save, else SDL's preferences path; in the browser
+   /save, kept in IndexedDB.  The game data directory is only read.
 
    Exercises: module 1 (Handig rekenen): digits (keys or the keypad)
    answer, Backspace or TERUG takes one back, Enter or OK confirms; module 2
@@ -43,6 +47,7 @@
 #include "race.h"
 #include "reken.h"
 #include "reken_screen.h"
+#include "smd.h"
 
 #define SCREEN_W 640
 #define SCREEN_H 480
@@ -58,6 +63,7 @@ static const int light_ms[5] = { 1500, 1000, 1000, 1000, 500 };
 
 static struct {
     const char *dir;
+    char save[1024];            /* RRRIO.INF and the SMD files; "" none */
     SDL_Window *win;
     SDL_Renderer *ren;
     SDL_Texture *tex;
@@ -384,6 +390,49 @@ static int exercise_key(SDL_Keycode k)
 
 static void to_menu(void);
 
+/* The browser's /save lives in IndexedDB: write it back (save.js). */
+static void save_sync(void)
+{
+#ifdef __EMSCRIPTEN__
+    EM_ASM(FS.syncfs(false, function (e) { if (e) console.log(e); }););
+#endif
+}
+
+/* RRRIO.INF into the save directory, as each program writes it on exit */
+static void save_session(void)
+{
+    char path[1100];
+    FILE *f;
+
+    if (!*g.save)
+        return;
+    rc_session_store(&g.session);
+    snprintf(path, sizeof path, "%s/RRRIO.INF", g.save);
+    if (!(f = fopen(path, "wb")) ||
+        fwrite(g.session.raw, RC_SESSION_SIZE, 1, f) != 1)
+        fprintf(stderr, "cannot write %s\n", path);
+    if (f)
+        fclose(f);
+    save_sync();
+}
+
+static int load_session(void)
+{
+    char path[1100];
+    uint8_t d[RC_SESSION_SIZE];
+    FILE *f;
+    int ok;
+
+    if (!*g.save)
+        return -1;
+    snprintf(path, sizeof path, "%s/RRRIO.INF", g.save);
+    if (!(f = fopen(path, "rb")))
+        return -1;
+    ok = fread(d, 1, sizeof d, f) == sizeof d;
+    fclose(f);
+    return ok ? rc_session_parse(&g.session, d, sizeof d) : -1;
+}
+
 /* RRR.EXE: the stage's race with the counters of RRRIO.INF. */
 static void play_race(void)
 {
@@ -463,9 +512,12 @@ static void menu_frame(void)
         g.in_menu = 0;
         printf("menu: world %d, groep %d\n", g.session.world,
                g.session.groep);
+        save_session();
         play_race();
-    } else if (m->result == RC_MENU_QUIT)
+    } else if (m->result == RC_MENU_QUIT) {
+        save_session();
         g.running = 0;
+    }
 }
 
 /* race end 0x1585e: the player's counters back into RRRIO.INF, the
@@ -489,6 +541,7 @@ static void race_result(void)
     }
     s->race_done = 1;
     rc_session_store(s);
+    save_session();
     printf("finish: %d %d %d; points %d %d %d; fuel %d, repair %d, "
            "boosts %d, rockets %d\n", s->order[0] / 2, s->order[1] / 2,
            s->order[2] / 2, s->points[0], s->points[1], s->points[2],
@@ -507,6 +560,20 @@ static void finish_exercises(void)
         return;
     }
     rc_reken_finish(r, &g.session);
+    /* smd_append (0x19f07) at the end of each module: module 0..3 as
+       played, the sums asked (Memory: the pairs tried) and right; module
+       4 hands over [0x5c094], which nothing counts up, so 0 */
+    if (*g.save) {
+        const char *name = (const char *)g.session.raw + 0x68;
+        char date[11];
+        rc_smd_date(date);
+        if (rc_smd_append(g.save, *name ? name : "RedCat", g.ex.module - 1,
+                          g.ex.module == 3 ? r->asked : RC_SUMS_PER_ROUND,
+                          g.ex.module == 4 ? 0 : r->correct,
+                          g.session.groep, date) != 0)
+            fprintf(stderr, "cannot write the SMD file in %s\n", g.save);
+    }
+    save_session();
     printf("%d of %d right: fuel %d, repair %d, boosts %d, rockets %d\n",
            r->correct, g.ex.module == 3 ? r->asked : RC_SUMS_PER_ROUND,
            r->fuel, r->repair, r->boosts,
@@ -651,7 +718,8 @@ out:
 
 int main(int argc, char **argv)
 {
-    int map = -1, fps = 30, groep = 6, module = 0, race_only = 0, i;
+    int map = -1, fps = 30, groep = 0, module = 0, race_only = 0, i;
+    const char *save = NULL;
     uint32_t size;
     const uint8_t *d;
 
@@ -660,7 +728,8 @@ int main(int argc, char **argv)
 #else
     if (argc < 2) {
         fprintf(stderr, "usage: %s <data dir> [map 0..22] [--race] "
-                "[--groep 3..8] [--module 1..4] [--fps N]\n", argv[0]);
+                "[--groep 3..8] [--module 1..4] [--fps N] [--save DIR]\n",
+                argv[0]);
         return 2;
     }
     g.dir = argv[1];
@@ -672,6 +741,8 @@ int main(int argc, char **argv)
             groep = atoi(argv[++i]);
         else if (strcmp(argv[i], "--module") == 0 && i + 1 < argc)
             module = atoi(argv[++i]);
+        else if (strcmp(argv[i], "--save") == 0 && i + 1 < argc)
+            save = argv[++i];
         else if (strcmp(argv[i], "--race") == 0)
             race_only = 1;
         else
@@ -692,9 +763,29 @@ int main(int argc, char **argv)
     if (!d || rc_pcx_decode(&g.hud, d, size) != 0 || g.hud.w != SCREEN_W ||
         g.hud.h != SCREEN_H)
         rc_pcx_free(&g.hud);
-    /* A new pupil's session (RRRIO.INF defaults): world 0, stage 0, so
-       the round opens with De Welkomstrace's race. */
-    rc_session_default(&g.session);
+#ifdef __EMSCRIPTEN__
+    save = "/save";             /* mounted by save.js */
+#else
+    if (!save) {
+        char *pref = SDL_GetPrefPath("Davilex", "RedCat");
+        if (pref) {
+            size_t n = strlen(pref);
+            if (n && (pref[n - 1] == '/' || pref[n - 1] == '\\'))
+                pref[n - 1] = 0;
+            snprintf(g.save, sizeof g.save, "%s", pref);
+            SDL_free(pref);
+        }
+    } else
+#endif
+        snprintf(g.save, sizeof g.save, "%s", save);
+    if (race_only)
+        *g.save = 0;
+    /* The saved record, else a new pupil's (RRRIO.INF defaults): world 0,
+       stage 0, so the round opens with De Welkomstrace's race. */
+    if (load_session() == 0)
+        printf("record: %s/RRRIO.INF\n", g.save);
+    else
+        rc_session_default(&g.session);
     if (groep >= 3 && groep <= 8)
         g.session.groep = groep;
     /* --module: the first world that plays it, at its stage */
@@ -719,6 +810,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "RRRMENU files not found in %s; no menu\n", g.dir);
     else if (g.flow)
         g.have_menu = 1;
+    g.mainmenu.save_dir = g.save;
     g.running = 1;
     if (race_only) {
         if (start_race(map < 0 ? 0 : map) != 0)

@@ -24,6 +24,8 @@ typedef struct {
     rc_archive rrrmenu, rrranim;
     rc_pcx bg;                  /* menubs01.pcx */
     rc_pcx keys_bg;             /* MENUKEY.PCX */
+    rc_pcx rapport_bg;          /* rapport.pcx */
+    const char *save_dir;       /* where the SMD files are; "." if unset */
     rc_sprite img[RC_RRRMENU_IMAGES + 1];   /* by image number */
     rc_font font;               /* RRRFONT.IMG */
     uint8_t *font_data;
@@ -41,6 +43,7 @@ typedef struct {
     int keys_n, keys_taken[6];  /* Bediening: table indices chosen */
     uint32_t rng;
     int mouse_x, mouse_y;
+    int pen_x, pen_y;           /* Rapport's line drawing */
     int result;
 
     uint8_t screen[640 * 480];  /* what the menu has drawn */
@@ -55,7 +58,7 @@ void rc_menu_free(rc_menu *m);
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed);
 /* A key by its PC scan code (0x1f S, 0x1c Enter, 0x13 R, 0x12 E, 0x19 P,
    0x30 B, 0x22 G, 4..9 the digits 3..8; on the Bediening screen any of
-   rc_menu_keys, 1 Esc aborting). */
+   rc_menu_keys, 1 Esc aborting; on Rapport 0x14 T back). */
 int rc_menu_key(rc_menu *m, int scan);   /* 1 if the menu used it */
 void rc_menu_click(rc_menu *m, int x, int y);
 void rc_menu_mouse(rc_menu *m, int x, int y);

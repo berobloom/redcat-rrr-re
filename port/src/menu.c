@@ -2,21 +2,22 @@
    anim table 0x457bc (rrrmenu_anims_tab.c), RRRFONT.IMG for the Race panel.
    Sprites are drawn with their top-left at the given point (the hotspot is
    not used), 0xff clear.  Bediening (0x1118f) is the keyboard half: the
-   joystick set-up is not ported, nor Rapport (P, 0x12990), the sounds
-   (0x10b4f) and the closing film. */
+   joystick set-up is not ported, nor the sounds (0x10b4f) and the closing
+   film.  Rapport (P, 0x12990) reads the pupil's SMD file (smd.c). */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "anims.h"
 #include "menu.h"
+#include "smd.h"
 
 #define W 640
 #define H 480
 #define FRAME_MS 20             /* a frame, present and delay(1) (0x11056) */
 #define FLASH_MS 100            /* world_flash: delay(10), hundredths */
 
-enum { ST_IDLE, ST_ANIM, ST_FLASH, ST_KEYS, ST_KEYS_WAIT };
+enum { ST_IDLE, ST_ANIM, ST_FLASH, ST_KEYS, ST_KEYS_WAIT, ST_RAPPORT };
 enum { AFTER_NONE, AFTER_START };
 
 /* menu buttons 0x45244: scan code and rectangle */
@@ -43,6 +44,12 @@ static const char *const module_names[4] = {        /* 0x45888 */
     "Handig rekenen    ", "Wat is waar?      ", "Memory            ",
     "Grote getallenspel",
 };
+/* Rapport: the text column (0x45914), the graphs' left edge (0x45918),
+   each module's top (0x4591c) */
+#define RAPPORT_X 36
+#define GRAPH_X 310
+static const int rapport_y[4] = { 111, 192, 274, 354 };
+
 static const char *const world_names[6] = {         /* 0x4589c */
     "De Welkomstrace   ", "De Rotsvlakte     ", "De Snelweg        ",
     "De Puzzelkloof    ", "De Cactusvallei   ", "De Laatste Kans   ",
@@ -114,6 +121,10 @@ int rc_menu_load(rc_menu *m, const char *dir)
     if (!d || rc_pcx_decode(&m->bg, d, size) != 0 || m->bg.w != W ||
         m->bg.h != H)
         return -1;
+    d = rc_archive_find(&m->rrrmenu, "rapport.pcx", &size);
+    if (!d || rc_pcx_decode(&m->rapport_bg, d, size) != 0 ||
+        m->rapport_bg.w != W || m->rapport_bg.h != H)
+        return -1;
     d = rc_archive_find(&m->rrrmenu, "MENUKEY.PCX", &size);
     if (!d || rc_pcx_decode(&m->keys_bg, d, size) != 0 || m->keys_bg.w != W ||
         m->keys_bg.h != H)
@@ -132,6 +143,7 @@ void rc_menu_free(rc_menu *m)
 {
     rc_pcx_free(&m->bg);
     rc_pcx_free(&m->keys_bg);
+    rc_pcx_free(&m->rapport_bg);
     rc_font_free(&m->font);
     free(m->font_data);
 }
@@ -323,6 +335,126 @@ static void keys_take(rc_menu *m, int scan)
     m->state = ST_KEYS_WAIT;
 }
 
+/* 0x1f46e moveto, 0x1f485 lineto: Bresenham from the current point */
+static void line_to(rc_menu *m, int x1, int y1, int c)
+{
+    int x0 = m->pen_x, y0 = m->pen_y;
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+
+    m->pen_x = x1;
+    m->pen_y = y1;
+    for (;;) {
+        int e2 = 2 * err;
+        if (x0 >= 0 && x0 < W && y0 >= 0 && y0 < H)
+            m->screen[y0 * W + x0] = (uint8_t)c;
+        if (x0 == x1 && y0 == y1)
+            break;
+        if (e2 >= dy) {
+            err += dy;
+            x0 += sx;
+        }
+        if (e2 <= dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+static void move_to(rc_menu *m, int x, int y)
+{
+    m->pen_x = x;
+    m->pen_y = y;
+}
+
+/* a score's height in the graph: 0 at y + 48, 100 clamped to y */
+static int graph_y(int y, int score)
+{
+    int v = y + 0x30 - score / 2;
+    return v < y ? y : v;
+}
+
+/* 0x12722: grid lines every 5 px (the middle one 0x40), a vertical line
+   per record when they are more than 1 px apart, the record's scores in
+   white (0xfd) and the running total in yellow (0xf9), both from the
+   bottom-left corner */
+static void rapport_graph(rc_menu *m, const rc_smd *p, int module)
+{
+    int n = rc_smd_count(p, module), y = rapport_y[module];
+    int step, i, x;
+
+    if (!n)
+        return;
+    for (step = 300 / n; step > 1 && step * n >= 300; step--)
+        ;
+    for (i = 0; i < 10; i++) {
+        move_to(m, GRAPH_X, y + 0x30 - 5 * i);
+        line_to(m, GRAPH_X + 300, y + 0x30 - 5 * i, i == 5 ? 0x40 : 0x10);
+    }
+    if (step > 1)
+        for (i = 0; i <= n; i++) {
+            move_to(m, GRAPH_X + i * step, y + 0x30);
+            line_to(m, GRAPH_X + i * step, y, 0x10);
+        }
+    move_to(m, GRAPH_X, y + 0x30);
+    for (i = 0, x = GRAPH_X; i < p->count; i++) {
+        const rc_smd_record *r = &p->rec[i];
+        if (r->module != module)
+            continue;
+        x += step;
+        if (x - GRAPH_X <= 300)
+            line_to(m, x, graph_y(y, r->asked ? r->correct * 100 / r->asked
+                                  : 0), 0xfd);
+    }
+    move_to(m, GRAPH_X, y + 0x30);
+    for (i = 0, x = GRAPH_X; i < n; i++) {
+        x += step;
+        if (x - GRAPH_X <= 300)
+            line_to(m, x, graph_y(y, rc_smd_total(p, module, i + 1)), 0xf9);
+    }
+}
+
+/* Rapport (0x12990): rapport.pcx, per module the last score and the total
+   as a mark out of 10 with the graph, the pupil's name */
+static void rapport_start(rc_menu *m)
+{
+    const char *name = (const char *)m->s->raw + 0x68;
+    char line[64];
+    rc_smd p;
+    int i;
+
+    memcpy(m->screen, m->rapport_bg.pixels, sizeof m->screen);
+    memcpy(m->pal, m->rapport_bg.palette, sizeof m->pal);
+    if (!*name)
+        name = "RedCat";
+    rc_smd_load(&p, m->save_dir ? m->save_dir : ".", name);
+    m->colour = 2;                      /* 0x1294e */
+    text(m, 0x26, 0x1b6, "Rapport van");
+    m->colour = 0;
+    snprintf(line, sizeof line, "%.31s", name);
+    text(m, 0x9c, 0x1b6, line);
+    for (i = 0; i < 4; i++) {
+        int last = rc_smd_last(&p, i), total = rc_smd_total(&p, i, -1);
+        m->colour = 2;
+        text(m, RAPPORT_X, rapport_y[i], module_names[i]);
+        if (last < 0) {
+            m->colour = 0;
+            text(m, RAPPORT_X, rapport_y[i] + 0x19, "Nog niet gedaan");
+            continue;
+        }
+        m->colour = 0;                  /* 0x12673 */
+        snprintf(line, sizeof line, "Cijfer:%2d", last / 10);
+        text(m, RAPPORT_X, rapport_y[i] + 0x19, line);
+        m->colour = 1;
+        snprintf(line, sizeof line, "Totaal:%2d", total / 10);
+        text(m, RAPPORT_X + 0x78, rapport_y[i] + 0x19, line);
+        rapport_graph(m, &p, i);
+    }
+    rc_smd_free(&p);
+    m->state = ST_RAPPORT;
+}
+
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed)
 {
     m->s = s;
@@ -390,6 +522,15 @@ int rc_menu_key(rc_menu *m, int scan)
         }
         return 1;
     }
+    if (m->state == ST_RAPPORT) {
+        if (scan == 0x14) {     /* Terug: menubs01.pcx, menu_init(0, 1) */
+            main_screen(m);
+            panel(m, 1, 1);
+            m->state = ST_IDLE;
+            idle_wait(m);
+        }
+        return 1;
+    }
     if (m->state != ST_IDLE || m->result)
         return 0;
     switch (scan) {
@@ -398,6 +539,9 @@ int rc_menu_key(rc_menu *m, int scan)
         break;
     case 0x12:                  /* Einde */
         leave(m, 0);
+        break;
+    case 0x19:                  /* Rapport */
+        rapport_start(m);
         break;
     case 0x30:                  /* Bediening: no joystick here */
         keys_start(m);
@@ -435,6 +579,11 @@ void rc_menu_click(rc_menu *m, int x, int y)
 {
     size_t i;
 
+    if (m->state == ST_RAPPORT) {       /* 0x4592c: Terug */
+        if (x >= 561 && x <= 628 && y >= 436 && y <= 464)
+            rc_menu_key(m, 0x14);
+        return;
+    }
     for (i = 0; i < sizeof buttons / sizeof buttons[0]; i++)
         if (x >= buttons[i].x0 && x <= buttons[i].x1 &&
             y >= buttons[i].y0 && y <= buttons[i].y1) {
