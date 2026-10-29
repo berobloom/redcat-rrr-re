@@ -29,8 +29,9 @@
 
 16. Module 1's generators are **RESOLVED (session 4)** (discoveries, checked
     under Unicorn); module 2's `0x12068`.. family too (session 5).
-17. The exercises' Help examples (`0x11a6a`, `0x12ca2`, `0x147a9`,
-    `0x171ea`). Modules 2–4 themselves are **RESOLVED (session 5)**.
+17. The exercises' Help examples: module 1's (`0x11a6a`) **RESOLVED**
+    and ported; open: `0x12ca2`, `0x147a9`, `0x171ea`. Modules 2–4
+    themselves are **RESOLVED (session 5)**.
 20. **RESOLVED.** REKEN aborts on module 2's divide by zero: DOS/4GW
     error 2001, exit code 209, and MOTOR ends the game (discoveries
     "module 2").

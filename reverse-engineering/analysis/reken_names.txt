@@ -74,12 +74,16 @@
 0x1910f prize_award
 0x19471 prize_none
 0x195e3 draw_status
+0x19842 button_press        # CONFIRMED: frame 1, present, delay 150
 0x198c7 session_load
 0x199cf session_save
+0x19a50 module_intro         # CONFIRMED: speaks the module's phrases (0x4693c) on track 0; Esc/Enter/S stop
+0x19af7 title_draw
+0x19b77 help_title          # CONFIRMED: title anim 43 / 58 by counter
+0x19c04 help_say            # CONFIRMED: (n, times) REKENSND n+18 on track 0, waited; Esc/Enter/S abort
 0x19cfb smd_find
 0x19f07 smd_append
 0x1a6db user_exit
-0x24741 set_buttons
-0x19a50 module_intro         # CONFIRMED: speaks the module's phrases (0x4693c) on track 0; Esc/Enter/S stop
 0x1b69e mix_stop_track       # CONFIRMED: sndbuf.c track table 0x66454 (0x12 bytes)
 0x1d244 mix_play_direct      # STRONGLY SUPPORTED: (sample, vol, track, ...) plays if the track is free, past sndman's table
+0x24741 set_buttons

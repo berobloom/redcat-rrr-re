@@ -492,6 +492,21 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   sums `0x19f07` appends to the pupil's `NNNNNNNN.SMD` and REKEN exits.
   Run (groep 6): 8 sums, 7 correct, fuel 75 → 120, rockets 10 → 20, each
   award matching the shown prize.
+- CONFIRMED (`0x11a6a`, `0x11de6`; DOSBox screenshots during Help, port
+  pixel-identical for the panel and both titles): H while a sum is asked
+  clears the sum panel (anim 32 at (8, 168)) and runs a script.
+  `0x19c04(n, times)` plays REKENSND n + 18 on track 0 (only if free) and
+  waits for the track; Esc, Enter or S end the whole Help; meanwhile
+  `0x19b77([0x46c88])` shows the title anim 43 or, for counter ≥ 50, anim
+  58 ("Help!") at (183, 10), the counter going 0..99 once per pass (no
+  delay: ~200 passes/s under redcat.conf). Without sound it returns at once,
+  so Help flashes by. Module 1's script: say 3, 4, 5, 6; show "2 + 7 + 8 +
+  3 = ?"; say 7..10; show "2 + 8 = ?    7 + 3 = ?" (centred by the width of
+  "2 + 8  +  7 + 3 = ?"); say 11; "10 + 10 = ?"; say 12, 13; "10 + 10 =
+  20"; say 14. Examples in the current font (30), '?' printed, centred in
+  624 x 168 from (8, 168). After it: the panel blank, the Help button
+  pressed (0x19842: frame 1, delay 150), the title back (0x19af7), and the
+  same sum asked again with an empty answer.
 - CONFIRMED (`0x18e7f`, `0x1910f`): prizes [0x46c86]:
 
   | prize | award | shown as |
