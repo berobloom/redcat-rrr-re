@@ -907,14 +907,27 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   MOTOR's main path reads only the /DAVILEX and /NI flags (0x43f,
   0x480); the dispatcher passes its arguments on to every program it runs
   (0x341..0x369), so /M1../M4 etc. reach REKEN and the others.
-- STRONGLY SUPPORTED (INTRO.EXE 0x105b7, 0x106d8; not run with these
-  options): INTRO opens intro.img / introsnd.img (the sound archive holds
-  rrrintro.wav, table 0x2d42e), plays rrrintro.smk (0x16da3) and then
-  ends; its wait for Esc, Space or Enter (0x10688) comes after the film,
-  and is skipped when its flag [0x4366c] is set or track 0 is free, so
-  keys cannot cut the film short (as observed). /NOSMACK (0x159de(0))
-  turns the Smacker player off; /VBUF sets a buffer flag; /NOSOUND,
-  /STEREO and /DMA: /SBP: /IRQ: set up the sound card.
+- STRONGLY SUPPORTED (INTRO.EXE code 0x105b7, 0x1036c, 0x16da3; not run
+  in this session): INTRO sets up its Sound Blaster at 22050 Hz with one
+  track (0x1053b, [0x43717] = 1), sets VGA mode 13h (0x13f14(0x13)) and a
+  320 × 200 screen, opens intro.img / introsnd.img (rrrIntro.wav: 22050
+  Hz, 8-bit mono, 75.8 s), and plays rrrintro.smk (SMK2, 320 × 200, 1119
+  frames at 15 fps = 74.6 s, no audio track) through 0x16da3 with flags
+  6, track 0 and sound 2. The player starts the sound on track 0 with
+  the first frame (0x16f1c) and then holds or skips frames to keep to the
+  sound's position (0x11b3c). On every frame it checks Enter, Space and
+  Esc (0x16f95..0x16fe1): one of them, once released, ends the film. F1
+  and F2 are debug keys ("doei"). After the film (0x10688) it waits until
+  track 0 is free or Enter, Space or Esc is pressed and released; when
+  the sound card could not be set up ([0x4366c] = 1) it skips the wait.
+  /NOSMACK (0x159de(0)) turns the player off; /VBUF sets a buffer flag;
+  /NOSOUND, /STEREO and /DMA: /SBP: /IRQ: set up the sound card. Against
+  the keys: runtime-dosbox.md notes that the intro did not skip on Esc,
+  Space or Enter (QMP taps of 80 ms under MOTOR); not yet explained.
+- Port: `game.c` plays the film before the first menu, stretched to
+  640 × 480 as mode 13h fills a 4:3 screen, with `smacker.c` (from the
+  A2 port; all five of the game's films decode identically to ffmpeg).
+  It keeps to the clock instead of the sound's position.
 - CONFIRMED (RRRMENU 0x10865): after the menu loop (`0x11bf7`) returns
   "play", the menu exits 43 (REKEN) if RRRIO +0x1f8 (race_done) is set,
   else 40 (RRR); otherwise 255. CONFIRMED (code): the flag at `0x1212c`

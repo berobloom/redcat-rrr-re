@@ -10,6 +10,11 @@
    ends; MOTOR runs it unless `/NI` (`/NOINTRO` does not match).
    Discoveries "The round".
 
+23. INTRO.EXE's film loop ends on Enter, Space or Esc (0x16f95), yet
+    under MOTOR in DOSBox-X it did not skip on them. Check with a key
+    held longer than one frame, and whether INTRO's keyboard handler
+    ([0x14023]) is in place (discoveries "The round").
+
 ## Race
 
 3. **RESOLVED (session 2).** Map cell bytes: 2-3 waypoint, 4 object or

@@ -33,7 +33,9 @@ $D stop
   image (RRR: code 0x10000 -> 0x1d4000, data 0x50000 -> 0x206000 under
   `redcat.conf`, memsize 16). Changing memsize or what runs first moves them;
   `locate` finds them by searching fixup-free byte windows.
-- The intro does not skip on Esc, Space or Enter (mouse not tried).
+- The intro did not skip on Esc, Space or Enter (mouse not tried), though
+  its code ends the film on any of them once released (discoveries
+  "The round"); not yet explained.
 
 ## Observed
 
