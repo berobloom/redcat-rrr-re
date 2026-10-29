@@ -57,6 +57,16 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   RC (1056) and RRRANIM (72) is a sprite `u16 w, h, x, y; u8 pixels[w*h]`:
   `8 + w*h` equals the entry size for all 1,717 entries. XVGALIB's three
   entries (2,050 bytes each) are something else.
+- CONFIRMED (data, rendered with HIGHSCOR.PCX's palette): XVGALIB's
+  entries are `u16 w, h; u8 pixels[w*h]` (62 × 33, 0xFF clear): three
+  message-box buttons, "OK", "JA", "NEE", the first letter lighter. All
+  four programs name xvgalib.img/.ind; RRRMENU's button library
+  (rcbutton.c, `0x1ef3a`, run by `set_buttons`) loads them on its first
+  use, and a button record of type 4 (word 2) would draw its look from
+  that set (`0x1ee80`). LIKELY unused: every button table found is type 5
+  (rectangles that stand for keys; a scan of RRRMENU, REKEN, RRR and INTRO
+  data for 22-byte records finds no real type-4 one), and no message box
+  appears in the game.
 - CONFIRMED: named archives hold ordinary PCX (640×480×8), RIFF WAV and
   Smacker 2 files (`rrrintro.smk`; `wbrutus/wredcat/wsnitch.smk` 320×200, 160
   frames), plus the game's own `.MAP`, tileset `.img` and font `ASCIInn.IMG`.

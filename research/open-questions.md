@@ -48,7 +48,9 @@
 
 ## Data
 
-8. What is XVGALIB.IMG (three 2,050-byte entries; first u16s read 62×33)?
+8. **RESOLVED.** XVGALIB.IMG holds the button library's OK / JA / NEE
+   message-box buttons, loaded but (LIKELY) never drawn; discoveries
+   "archives".
 9. **RESOLVED (session 4).** `ASCIInn.IMG` and `RRRFONT.IMG` fonts:
    file-formats.md "ASCII fonts".
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".

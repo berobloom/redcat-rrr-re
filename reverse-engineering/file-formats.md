@@ -39,7 +39,7 @@ u32 offset[count];
 | RRRMSND | named | 12 | menu sounds and music |
 | SNDINST | named | 1 | installer sound test |
 | SNDRCS | named | 39 | race sounds |
-| XVGALIB | indexed | 3 | unknown, 2,050 bytes each |
+| XVGALIB | indexed | 3 | `u16 w, h` + 62 × 33 pixels: OK, JA, NEE buttons (unused) |
 
 `port/rctools` lists and extracts them: `python3 port/rctools list RCS`.
 
