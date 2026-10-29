@@ -421,6 +421,17 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   120000. All movement is per frame (`player_tick`), so the original game ran
   faster on a faster PC. (The `out 0x43` code at 0x26b65 drives the PC
   speaker, channel 2, not the frame clock.)
+- STRONGLY SUPPORTED (static scan of RRR for every clock source): no frame
+  cap at any rate. 0x32cce is the C library's clock() (INT 21h AH=2Ch via
+  0x3696b → 0x36905), called only from `delay_ms` (0x26bfe, 0x26c08),
+  whose callers are the start lights, the finish and a fade. Port 0x3DA
+  (retrace) is polled only in six palette routines (0x20e31, 0x21658,
+  0x2933f, 0x3211f, 0x3249d, 0x368c2: wait for bit 3 if [0x60aa0], then
+  the DAC at 0x3C7/0x3C8/0x3C9). INT 1Ah (0x32173, 0x3688c) counts
+  0xFFFF-pass loops between two reads of the timer (calibration); 0x35e81
+  reads 0x46c and sets PIT channel 0 back to mode 2, count 0 (18.2 Hz).
+  Together with the measured 105 frames/s (above any 70 Hz retrace): the
+  speed was whatever the PC gave.
 
 ## The session: worlds, stages, modules
 

@@ -65,12 +65,9 @@
     `.work/ghidra/<prog>.c`. Ghidra has no Watcom register convention, so
     register arguments show as `in_EAX`/`extraout_ECX`; check details in
     `disasm.py`.
-13. **RESOLVED (session 2): none.** The race runs as fast as the CPU allows
-    (discoveries "The race: speed"). Open: what rate did the designers
-    tune for? `delay_ms` (0x26beb) is no frame cap (its direct callers
-    are the start lights, the finish and a fade loop; discoveries "start
-    lights"); 0x32cce also holds a clock: is there a cap there above
-    ~105 frames/s?
+13. **RESOLVED: none.** The race runs as fast as the CPU allows and
+    nothing in RRR caps it (discoveries "The race: speed"). What rate the
+    designers tuned for is not recorded in the binary.
 14. What do the rest of the cell types do: 10, 15, 16, 21, 22 (0x16), and
     the five check points of `0x18ae5`?
 15. **RESOLVED.** Rockets, explosions, exhaust and over-speed objects:
