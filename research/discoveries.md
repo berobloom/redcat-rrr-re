@@ -735,6 +735,24 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   0x2ff, loop 0x48f): MOTOR starts code 42 and then runs whatever the
   last program's exit code names: 40 `rrr.exe`, 42 `rrrmenu.exe`, 43
   `reken.exe`; 255 and 101 end the game, 100 is returned as is.
+- CONFIRMED (MOTOR main 0x41f, option table 0x64c: 14 names of 8 bytes,
+  each followed by its flag word, set by 0x4e2 with an exact,
+  case-blind compare 0x1202): /DAVILEX /3 /4 /5 /V /S /MENU /NI /RESULT
+  /MBRK /M1 /M2 /M3 /M4. Without /DAVILEX MOTOR prints its banner, "U kunt
+  het spel opstarten door RACE in te typen" and stops (0x195). Unless /NI,
+  0x27d runs intro.exe first if the file exists, passing MOTOR's own
+  arguments on, then the round starts with code 42. `/NOINTRO`, in
+  INSTALL.SCR's `rcmin` line (a Windows icon's batch file, not among the
+  installed ones), does not match /NI, so it would not skip the intro.
+  The flags of /3../M4 are not read in MOTOR's dispatcher.
+- STRONGLY SUPPORTED (INTRO.EXE 0x105b7, 0x106d8; not run with these
+  options): INTRO opens intro.img / introsnd.img (the sound archive holds
+  rrrintro.wav, table 0x2d42e), plays rrrintro.smk (0x16da3) and then
+  ends; its wait for Esc, Space or Enter (0x10688) comes after the film,
+  and is skipped when its flag [0x4366c] is set or track 0 is free, so
+  keys cannot cut the film short (as observed). /NOSMACK (0x159de(0))
+  turns the Smacker player off; /VBUF sets a buffer flag; /NOSOUND,
+  /STEREO and /DMA: /SBP: /IRQ: set up the sound card.
 - CONFIRMED (RRRMENU 0x10865): after the menu loop (`0x11bf7`) returns
   "play", the menu exits 43 (REKEN) if RRRIO +0x1f8 (race_done) is set,
   else 40 (RRR); otherwise 255. CONFIRMED (code): the flag at `0x1212c`

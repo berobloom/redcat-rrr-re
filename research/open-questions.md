@@ -5,9 +5,9 @@
 1. **RESOLVED (session 5)**: by exit codes (discoveries "The round").
    The flag at `0x1212c` is Start! itself: the menu never exits 43.
    Open: why DOSBox-X did not show the podium (discoveries "podium").
-2. What does INTRO.EXE do besides playing `rrrintro.smk` with
-   `rrrIntro.wav`? Is the intro skipped by `/NOINTRO` (INSTALL.SCR's `rcmin`
-   batch) in MOTOR.EXE?
+2. **RESOLVED.** INTRO.EXE plays rrrintro.smk with rrrintro.wav and
+   ends; MOTOR runs it unless `/NI` (`/NOINTRO` does not match).
+   Discoveries "The round".
 
 ## Race
 
