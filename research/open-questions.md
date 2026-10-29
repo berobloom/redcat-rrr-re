@@ -3,9 +3,8 @@
 ## Launch / process flow
 
 1. **RESOLVED (session 5)**: by exit codes (discoveries "The round").
-   Open: the flag under which Start! clears race_done (`0x1212c`), so
-   when the menu exits 43 straight to REKEN. Why DOSBox-X did not show
-   the podium (discoveries "podium").
+   The flag at `0x1212c` is Start! itself: the menu never exits 43.
+   Open: why DOSBox-X did not show the podium (discoveries "podium").
 2. What does INTRO.EXE do besides playing `rrrintro.smk` with
    `rrrIntro.wav`? Is the intro skipped by `/NOINTRO` (INSTALL.SCR's `rcmin`
    batch) in MOTOR.EXE?

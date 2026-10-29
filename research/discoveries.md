@@ -737,9 +737,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `reken.exe`; 255 and 101 end the game, 100 is returned as is.
 - CONFIRMED (RRRMENU 0x10865): after the menu loop (`0x11bf7`) returns
   "play", the menu exits 43 (REKEN) if RRRIO +0x1f8 (race_done) is set,
-  else 40 (RRR); otherwise 255. Start! cleared race_done in both runs
-  below (`0x1212c`, under a flag not traced), so it exited 40 both times:
-  the menu hands over to the race of the current stage. Choosing another
+  else 40 (RRR); otherwise 255. CONFIRMED (code): the flag at `0x1212c`
+  is menu_loop's "play" local ([esp + 8], set to 1 only by Start! at
+  0x11d02, where a pushed argument shifts it to [esp + 0xc]), so Start!
+  always clears race_done and the menu always exits 40: the 43 branch is
+  never taken. The menu hands over to the race of the current stage. Choosing another
   world in the menu sets stage 0 and calls `0x1099b` (`0x120de`).
 - CONFIRMED (RRRMENU `0x10f95`; DOSBox: RRRIO world 0, stage 3,
   race_done 1, repair 40 → the menu shows "2: De Rotsvlakte" and saved
@@ -876,8 +878,8 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED (MOTOR 0x3de: [0x63a] starts 1 and is cleared after use;
   RRRMENU main 0x108f0 sets [0x44700]): MOTOR passes `/1` to rrrmenu.exe on
   its first start only. Under `/1` menu_init (0x10f2f) asks the name, and
-  afterwards plays MENU.WAV on track [0x45190] until it ends or a key is
-  pressed (0x1100d..0x11047). It also skips the world advance at start-up
+  afterwards plays MENU.WAV on track [0x45190] until it ends or Esc is
+  pressed (0x1100d..0x11047; DOSBox: other keys are ignored there). It also skips the world advance at start-up
   unless [0x45562] (read only there, 0 at run time).
 - CONFIRMED (code 0x131a4, 0x133b9, 0x13285; DOSBox `MOTOR /DAVILEX` with
   an RRRIO.INF holding four names, states `name_dialog`, `name_list4`,
@@ -947,7 +949,9 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   plain Bresenham in every pixel compared.
 - CONFIRMED (0x4592c, DOSBox): one button, T (0x14) on Terug (561, 436)–
   (628, 464); T reloads menubs01.pcx and calls menu_init(0, 1): the main
-  screen and the panel as after Bediening (port pixel-identical).
+  screen and the panel as after Bediening (port pixel-identical): back in
+  menu_loop (0x11e17 → 0x11d5f) `draw_race_panel(1, 1)` lists the modules
+  whatever race_done is (DOSBox, race_done 0).
 - CONFIRMED (DOSBox): a file written by the port (8 records, then a second
   pupil's file 00000002.SMD) shows in the original's Rapport exactly as in
   the port's.
