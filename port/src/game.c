@@ -26,6 +26,10 @@
 #define SCREEN_H 480
 #define RC_IMAGES 1056
 #define LIGHTS_ANIM 86          /* start_lights 0x1103e: [0x804bc] + 0x2b4 */
+#define DIGITS_ANIM 18          /* hud_update 0x1918d: anims 18..21 */
+#define SPEEDO_ANIM 19
+#define FUEL_ANIM 20
+#define DAMAGE_ANIM 21
 
 /* start_lights: lamp images and how long each stays, ms */
 static const int light_ms[5] = { 1500, 1000, 1000, 1000, 500 };
@@ -170,9 +174,52 @@ static void draw_view(void)     /* 0x11526 */
         draw_sprite(o->image, o->kind, o->sx - g.race.scroll_x,
                     o->sy - g.race.scroll_y);
     }
-    if (g.light < 5) {
-        int image = rc_anims[LIGHTS_ANIM].frames[g.light].image;
-        draw_sprite(image, 2, 226, 50);
+}
+
+/* 0x2425d: an image at screen (x, y), 0xFF transparent (0x32c78) */
+static void draw_image(int image, int x, int y)
+{
+    const rc_sprite *s = &g.sprite[image];
+    int sx, sy;
+
+    if (image <= 0 || image > RC_IMAGES || !s->pixels)
+        return;
+    for (sy = 0; sy < s->h && y + sy < SCREEN_H; sy++)
+        for (sx = 0; sx < s->w && x + sx < SCREEN_W; sx++) {
+            uint8_t c = s->pixels[sy * s->w + sx];
+            if (c != RC_SPRITE_CLEAR && x + sx >= 0 && y + sy >= 0)
+                g.fb[(y + sy) * SCREEN_W + x + sx] = c;
+        }
+}
+
+static int anim_image(int anim, int frame, int max)
+{
+    if (frame > max) frame = max;
+    if (frame < 0) frame = 0;
+    return rc_anims[anim].frames[frame].image;
+}
+
+/* hud_update (0x1918d): the player's gauges and counters.  The original
+   redraws each only when its value changes; the images are opaque
+   rectangles, so drawing them every frame looks the same. */
+static void draw_hud(void)
+{
+    const rc_stats *s = &g.race.stats[RC_REDCAT];
+    int32_t v = (int32_t)(((int64_t)g.race.body[0].speed * 11) >> 16);
+    int speed = (int)(short)(v / 20), fuel = (int)(short)(s->fuel >> 16);
+    int counter[2], k;
+
+    if (speed < 0)
+        speed = -speed;
+    draw_image(anim_image(DAMAGE_ANIM, s->damage / 10, 9), 217, 438);
+    draw_image(anim_image(FUEL_ANIM, fuel / 16, 8), 110, 422);
+    draw_image(anim_image(SPEEDO_ANIM, speed, 10), 20, 414);
+    counter[0] = s->boosts;     /* 0x19391(13) */
+    counter[1] = s->rockets;    /* 0x19391(0x17) */
+    for (k = 0; k < 2; k++) {
+        int x = k ? 494 : 389;
+        draw_image(anim_image(DIGITS_ANIM, counter[k] / 10 % 10, 9), x, 415);
+        draw_image(anim_image(DIGITS_ANIM, counter[k] % 10, 9), x + 16, 415);
     }
 }
 
@@ -188,6 +235,9 @@ static void compose(void)
     for (y = 0; y < RC_VIEW_H; y++)
         memcpy(g.fb + (RC_VIEW_Y + y) * SCREEN_W + RC_VIEW_X,
                g.view + y * RC_VIEW_W, RC_VIEW_W);
+    draw_hud();
+    if (g.light < 5)            /* screen coordinates: box at x 226 */
+        draw_image(anim_image(LIGHTS_ANIM, g.light, 4), 226, 50);
 }
 
 static void present(void)

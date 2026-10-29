@@ -5,7 +5,7 @@ canvas and print the program's console output.
 
 Usage: test_web.py <out dir> [step ...]
   steps:  wait:<s>  shot:<name>  key:<Key> (Playwright key name)
-          hold:<Key>:<s>
+          hold:<Key>:<s>  click (focus the canvas)
 Needs: pip install playwright (any cached Chromium; set RC_CHROME to pick one)
 """
 import functools
@@ -47,6 +47,8 @@ with sync_playwright() as p:
             time.sleep(float(arg))
         elif kind == 'shot':
             page.locator('canvas').screenshot(path=os.path.join(out, arg + '.png'))
+        elif kind == 'click':
+            page.locator('canvas').click()
         elif kind == 'key':
             page.keyboard.press(arg)
         elif kind == 'hold':

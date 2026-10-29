@@ -15,6 +15,8 @@
 #define FX(n) ((int32_t)((n) * 65536))
 #define TILE_W 32
 #define TILE_H 40
+#define VIEW_COLS 19
+#define VIEW_ROWS 10
 
 int32_t rc_cos[32], rc_sin[32];
 uint8_t rc_turn[32][32], rc_merge[32][32], rc_dir[33][33];
@@ -792,6 +794,21 @@ static void init_racer(rc_race *r, int k, int32_t mass, int32_t fuel,
     r->body[n + 1].stats = -1;
 }
 
+/* 0x1475f, after init_objects: centre on the player, clamped */
+static void camera_start(rc_race *r)
+{
+    const rc_body *b = &r->body[0];
+    int max_x = (r->map.w - (VIEW_COLS + 1)) * TILE_W;
+    int max_y = (r->map.h - (VIEW_ROWS + 1)) * TILE_H;
+
+    r->scroll_x = (short)(b->x >> 16) - VIEW_COLS * TILE_W / 2;
+    if (r->scroll_x < 0) r->scroll_x = 0;
+    if (r->scroll_x > max_x) r->scroll_x = max_x;
+    r->scroll_y = (short)(b->y >> 16) - VIEW_ROWS * TILE_H / 2;
+    if (r->scroll_y < 0) r->scroll_y = 0;
+    if (r->scroll_y > max_y) r->scroll_y = max_y;
+}
+
 int rc_race_init(rc_race *r, const uint8_t *map_data, uint32_t map_size,
                  int map_index, const rc_hotspot *hotspots,
                  const int start_order[RC_RACERS])
@@ -839,14 +856,9 @@ int rc_race_init(rc_race *r, const uint8_t *map_data, uint32_t map_size,
     find_bonus_objects(r);
     for (i = 0; i < RC_RACERS; i++)
         r->order[i] = -1;
+    camera_start(r);
     rc_race_tick(r, &(rc_input){ 0 });  /* place sprites before the lights */
     r->frame_count = 0;
-    {
-        /* start the camera on the player */
-        const rc_body *b = &r->body[0];
-        r->scroll_x = (b->x >> 16) - (RC_VIEW_W / TILE_W + 1) * 16;
-        r->scroll_y = ((b->y - b->z) >> 16) - (RC_VIEW_H / TILE_H + 1) * 20;
-    }
     return 0;
 }
 
@@ -856,11 +868,12 @@ void rc_race_free(rc_race *r)
 }
 
 /* camera_follow (0x138ed): eases 1/16 toward the racer, leading 128 px
-   horizontally and 160 px vertically in the direction of motion. */
+   horizontally and 160 px vertically in the direction of motion.  The view
+   counts as 19 x 10 tiles ([0x60044], [0x60048], set in race_init). */
 static void camera_follow(rc_race *r)
 {
     const rc_body *b = &r->body[r->camera_racer * 2];
-    int cols = RC_VIEW_W / TILE_W, rows = RC_VIEW_H / TILE_H;
+    int cols = VIEW_COLS, rows = VIEW_ROWS;
     int sx = b->vx < 0 ? -1 : b->vx > 0;
     int sy = b->vy < 0 ? -1 : b->vy > 0;
     int tx = (short)((b->x >> 16) - (cols + 1) * 16 + sx * 128);

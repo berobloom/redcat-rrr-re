@@ -274,8 +274,9 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: the race palette is the tileset's (identical to RACESCR3.PCX's;
   all 169 colours of a race screenshot are in it). `race_init` loads
   wacht.pcx's palette first, for the loading screen.
-- CONFIRMED: start lights: anim 86's frames (images 32, 43–46) drawn into
-  the view buffer at (226, 50) for 1500, 1000, 1000, 1000, 500 ms.
+- CONFIRMED: start lights: anim 86's frames (images 32, 43–46) drawn at
+  screen (226, 50) for 1500, 1000, 1000, 1000, 500 ms (the port's start
+  frame matches an original screenshot pixel for pixel).
 - CONFIRMED: draw order (`sort_draw_order` 0x11b0e): descending key
   (1000 − x)·10 − 1000·y − z − prio, with prio −100000 for shadows and
   mines.
@@ -299,6 +300,22 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   type 4–6 sprites are 50% blends (shadows, smoke).
 - CONFIRMED: a racer's sprite position is x − hotspot_x − 16, y − z −
   hotspot_y (image record +8, +10), from `bull_tick` / `player_tick`.
+
+## The race: HUD and camera
+
+- CONFIRMED (`hud_update` 0x1918d; port start frame and boosted frame match
+  the original's layout): the gauges are anim frames drawn by `0x2425d` →
+  `0x32c78` (screen coordinates, 0xFF transparent) over RACESCR3.PCX:
+  speedometer anim 19, frame |((speed·11) >> 16) / 20| (max 10) at
+  (20, 414); fuel anim 20, frame (fuel >> 16) / 16 (max 8) at (110, 422);
+  damage anim 21, frame damage / 10 (max 9) at (217, 438); boosts and rockets
+  as two anim-18 digits (tens at x, ones at x + 16, y 415), x 389 for boosts
+  and 494 for rockets.
+- CONFIRMED: the camera starts on the player (0x1475f, after
+  `init_objects`): scroll = (x − 304, y − 200), clamped to 0 ..
+  (map size − view − 1 tile). `race_init` sets the view to 19 × 10 tiles
+  ([0x60044], [0x60048]); `camera_follow` (0x138ed) eases 1/16 per frame
+  toward x − 320 + 128·sx, y − z − 220 + 160·sy.
 
 ## The race: speed
 

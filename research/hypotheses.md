@@ -16,6 +16,11 @@ Confidence levels per AGENTS.md.
 
 ## Game structure
 
+- STRONGLY SUPPORTED (the user, who knows the game): the arithmetic part
+  (REKEN.EXE) comes first; solving problems earns fuel and repair (damage)
+  points, and then the race starts with them. Fits RRRIO.INF carrying fuel
+  (0x20) and damage (0x04) into the race. Not yet traced in REKEN.EXE.
+
 - LIKELY: a session is a series of races (the "stages" of table 0x57b8c,
   indexed by [0x7519c]) for one school group ([0x751a4], groepen 3–8 on the
   menu screen), with arithmetic exercises (REKEN.EXE) between them. A 0 in the
