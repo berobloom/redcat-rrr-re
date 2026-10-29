@@ -115,6 +115,17 @@ The state RRRMENU, REKEN and RRR share (REKEN keeps it at 0x534f4): a raw dump o
 | 0x1fc | 0x75374 | 0, 2, 4 | start order of the racers |
 | 0x214 | 0x7538c | 0, 0, 0 | points per racer |
 
+## RRRHIGH.DAT
+
+Ten entries of 0x26 bytes, best first (RRR 0x1b6bf, RRRMENU 0x136eb; 380
+bytes). CONFIRMED.
+
+| offset | size | meaning |
+|---|---|---|
+| 0x00 | 30 | name, NUL-terminated (strcpy: old bytes may follow) |
+| 0x1e | 4 | score: the racer's world points (RRRIO +0x214) |
+| 0x22 | 4 | world 0–5 |
+
 ## Pupil files (`%8.8d.SMD`)
 
 One file per pupil in the game directory, written by REKEN at the end of

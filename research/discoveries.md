@@ -677,7 +677,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   during `RRR /DAVILEX /DEBUG`, then the 640 × 480 screen buffer
   [0x7f954] dumped during the 4 s wait; port `podium.c` draws it
   pixel-identical): after `race_end` (and `0x1b6bf`, which logs "Save score
-  3 for" / "New place = 9", LIKELY the RRRHIGH.DAT table) the podium
+  3 for" / "New place = 9", the RRRHIGH.DAT table, see "High scores") the podium
   loads `xyz.pcx` from RCS for the first two places (r RedCat, b Brutus,
   s Snitch: rbs, rsb, brs, bsr, srb, sbr) with its palette (flags 0xf:
   picture, palette, shown), then in Ascii20 recoloured fg → 0xd0, bk
@@ -726,8 +726,8 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   G (0x22) (177, 301)–(255, 425), Einde E (0x12) (561, 436)–(628, 464),
   groep 3..8 keys 4..9, 36 × 36 at (342 + 50 i, 108).
 - CONFIRMED (`0x11bf7`): S or Enter plays anim 3 (RedCat drives off) at
-  (22, 94) and leaves; E leaves without playing (then `0x119cc` plays
-  EINDANI2.SMK, exit 255); R shows the next world ((w + 1) % 6) without
+  (22, 94) and leaves; E leaves without playing (then main shows the
+  high scores, `0x119cc`, plays EINDANI2.SMK and exits 255); R shows the next world ((w + 1) % 6) without
   touching the record; 3..8 redraw the groep buttons and the panel; G
   cycles the sound mode 3 → 1 → 0 → 3 playing anim 5, 6 or 7 forward at
   (176, 300). Leaving (`0x120de`): a world other than the record's sets
@@ -806,3 +806,29 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   it saved before the graph, so a graph line through the pointer's top
   row is missing there (18 pixels in the test). The port draws the pointer
   over the screen and does not copy this.
+
+## High scores (RRRHIGH.DAT)
+
+- CONFIRMED (RRR `0x1b6bf` called at 0x114aa after race_end, `0x1b82c`):
+  after every finished race RRR loads RRRHIGH.DAT (layout in
+  file-formats.md) and puts RedCat's points of the world so far
+  ([0x7538c], RRRIO +0x214) under the record's name (+0x68) and world
+  (+0x2c) before the first entry with a lower score (strictly), moving the
+  rest down one and dropping the tenth; then writes the file ("r+b", else
+  "wb"). Nothing is written when no entry is lower. So the same pupil
+  enters again after each race of a world whose total still beats an
+  entry. Names move by strcpy: a shorter name leaves the old one's tail
+  in the file (the DOSBox file had "\0edCat", an empty name over RedCat).
+- CONFIRMED (RRR `0x1b82c`, RRRMENU `0x136eb`; DOSBox without the file):
+  with no file the table is made up: entry i has score 10 − i, the name
+  of racer rand() % 3 (RedCat, Brutus, Snitch) and world rand() % 6; then
+  entry 0's name is set to RedCat. The menu does not write it.
+- CONFIRMED (RRRMENU `0x119cc`; DOSBox: the run's file, a port-written
+  one; port pixel-identical): Einde, after the record is written, hides
+  the pointer, shows highscor.pcx with its palette and `0x10a04` makes the
+  font's background clear (colour 0 → 0xff, without updating [0x4556a]).
+  Each entry is a line built in a 46-byte buffer of 40 spaces + "%3d  ":
+  the name at column 2, the world name (0x4589c) at 21, the score through
+  the "%3d". RRRFONT pair 1 at (51, 101 + 30 i), then pair 0 at (50,
+  100 + 30 i). The pointer comes back; one button (0x455ee) Enter over the
+  whole screen; Enter or E goes on to EINDANI2.SMK (not ported).

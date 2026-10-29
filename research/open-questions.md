@@ -45,11 +45,11 @@
 9. **RESOLVED (session 4).** `ASCIInn.IMG` and `RRRFONT.IMG` fonts:
    file-formats.md "ASCII fonts".
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
-21. The high score screen (HIGHSCOR.PCX) and where the pupil's name is
-    typed: none of RRRMENU's screens asks for it. Rapport and Bediening
-    are **RESOLVED** (discoveries).
-11. What is in `RRRHIGH.DAT` (written at run time, not on the CD)? LIKELY
-    RRR `0x1b6bf` writes it after each race ("Save score", "New place").
+21. Where the pupil's name is typed: none of RRRMENU's screens asks for
+    it. Rapport, Bediening and the high score screen are **RESOLVED**
+    (discoveries).
+11. **RESOLVED.** `RRRHIGH.DAT`: file-formats.md, discoveries "High
+    scores".
 
 ## Tooling
 
