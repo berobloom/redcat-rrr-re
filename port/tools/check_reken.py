@@ -23,12 +23,18 @@ TEXT, ANSWER = 0x5371c, 0x537e4
 FUEL, REPAIR, BOOSTS, ROCKETS = 0x46938, 0x468fc, 0x46910, 0x46924
 PRIZE, SPEECH = 0x46c86, 0x46c87
 
-e = Emu('reken')
-e.stub(0x22bd2, e.watcom_rand)
-e.stub(0x1a1ee, e.sprintf)
-e.stub(0x18e0b, lambda e: None)       # shows the prize picture
-e.stub(0x1d8f3, lambda e: None)       # debug printf
-e.uc.mem_write(SPEECH, b'\0')         # no sound calls
+
+def new_emu():
+    e = Emu('reken')
+    e.stub(0x22bd2, e.watcom_rand)
+    e.stub(0x1a1ee, e.sprintf)
+    e.stub(0x18e0b, lambda e: None)   # shows the prize picture
+    e.stub(0x1d8f3, lambda e: None)   # debug printf
+    e.uc.mem_write(SPEECH, b'\0')     # no sound calls
+    return e
+
+
+e = new_emu()
 
 
 def sim(*args):
@@ -64,8 +70,11 @@ for level in range(6):
         try:
             e.call(0x12844, eax=level)
         except UcError:
-            # 0x123cf divides by zero when the span of quotients is empty
+            # 0x123cf divides by zero when the span of quotients is empty;
+            # the fault leaves the machine mid-call, so start a fresh one
             crashes.append((level, 1 + i, hex(e.uc.reg_read(UC_X86_REG_EIP))))
+            e = new_emu()
+            e.uc.mem_write(LEVEL, bytes([level]))
             continue
         orig = ''.join('%s|%d|' % (e.cstr(CHOICE + 100 * k), e.i32(VALUE + 4 * k))
                        for k in range(3)) + str(e.seed)
