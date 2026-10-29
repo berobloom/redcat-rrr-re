@@ -32,19 +32,19 @@
     under Unicorn); module 2's `0x12068`.. family too (session 5).
 17. The exercises' Help examples (`0x11a6a`, `0x12ca2`, `0x147a9`,
     `0x171ea`). Modules 2–4 themselves are **RESOLVED (session 5)**.
-20. Does REKEN abort when module 2's `0x123cf` divides by zero (level 5,
-    R = 11; discoveries "module 2")?
+20. **RESOLVED.** REKEN aborts on module 2's divide by zero: DOS/4GW
+    error 2001, exit code 209, and MOTOR ends the game (discoveries
+    "module 2").
 18. **RESOLVED.** `NNNNNNNN.SMD`: file-formats.md "Pupil files"; the
     number is one past the last file's when no name matches. Not checked
     at run time: REKEN's own second append (the full-stride rewrite is
     read from the code).
 19. **RESOLVED.** +0x30 / [0x46c87] is the sound mode: bit 0 effects (and
     sound at all), bit 1 music (discoveries "Sound").
-22. `check_reken.py` (500 seeds per case) finds 4 of 25000 cases that
-    differ, all module 2 at level 5 (seeds 395, 442, 445, 470): the port's
-    second and third choices differ from the original's (port "8 : 2"
-    where the original has another sum). Already so before the sound work;
-    LIKELY the 8 : 2 fallback taken where the original's draw succeeds.
+22. **RESOLVED: a fault in the check.** The 4 differing module 2 cases were
+    seeds whose run in the original faults (as #20); after a Unicorn fault
+    the check went on in the half-run machine. With a fresh emulator per
+    fault: 0 of 25000 differ, 6 faults.
 
 ## Data
 

@@ -43,6 +43,7 @@ XDISPLAY = os.environ.get('RC_XDISPLAY', ':57')
 
 QCODE = {' ': 'spc', '/': 'slash', '\\': 'backslash', '.': 'dot',
          ':': ('shift', 'semicolon'), '-': 'minus', '_': ('shift', 'minus'),
+         '>': ('shift', 'dot'), '<': ('shift', 'comma'),
          '\n': 'ret'}
 
 

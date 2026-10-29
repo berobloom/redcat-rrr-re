@@ -607,10 +607,20 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - STRONGLY SUPPORTED (Unicorn faults in `0x123cf` at level 5 for some
   seeds): when the span above is empty (R = 11: max(9, 2) = min(13, 9)),
   `rand() % 0` divides by zero. R = 11 happens when choice 0 is a + at
-  level 5 (R + 3 with R = 8) and choice 1 is a division (row 213). Whether
-  DOS/4GW then aborts REKEN was not tried. The port takes the 8 : 2
-  fallback there. A span below the range (R > hi + 2) still draws (idiv
+  level 5 (R + 3 with R = 8) and choice 1 is a division (row 213): 6 of
+  the 3000 module 2 seeds `check_reken.py` runs (500 per level, all at
+  level 5; seed 182 the first). The port takes the 8 : 2 fallback there. A span below the range (R > hi + 2) still draws (idiv
   keeps the remainder positive) and ends in the fallback.
+- CONFIRMED (DOSBox: `REKEN /DAVILEX`, rand() at 0x22bd2 patched at run
+  time to `xor ecx, ecx; div ecx`, then a sum answered): an integer divide
+  error ends REKEN. DOS/4GW reports "DOS/4GW error (2001): exception 00h
+  (divide by zero)" with a register dump on stdout and exits with code
+  209; the screen keeps REKEN's last picture in the graphics mode, and the
+  DOS prompt waits behind it: no handler of REKEN's catches the exception.
+- STRONGLY SUPPORTED (MOTOR.EXE dispatcher 0x2ff, default case 0x408; not
+  run): MOTOR, given 209, prints its banner and "Motor error : onbekend
+  argument van rrrmenu.exe ( 209 )" (the name is always rrrmenu.exe,
+  0x492) and exits 0, so the game ends, behind the same frozen picture.
 - CONFIRMED (`0x13229`, screenshots): per round: "Aantal sommen" (8 down to
   1), the prize (`0x18e7f`), the rows open (`0x1294b`: frames 5 → 0, 5 ms
   apart; frame 5 is white, 0 black), the true row r = rand() % 3
