@@ -1065,13 +1065,21 @@ static void shadow_tick(rc_race *r, int n)     /* follower_tick 0x167aa */
 /* Map objects: boosts, mines, signs, cacti.  Their callbacks (0x16a63,
    0x16b53, 0x16c5d, 0x16d30, 0x17236) place the sprite.  The cactus one
    counts its hit timer down and removes it at 0; the mine one counts its
-   arming timer (life 10) down and draws the mine under everything. */
+   arming timer (life 10) down and draws the mine under everything.  The
+   type-10 bomb (0x16d30) counts its life down and goes off at 0. */
 static void map_object_tick(rc_race *r, int n)
 {
     rc_body *b = &r->body[n];
 
     b->prio = 0;
-    if (r->obj[n].anim == 12) {
+    if (r->obj[n].anim == 5) {
+        if (--b->life <= 0) {
+            explode(r, n);
+            free_object(r, n);
+            return;
+        }
+        b->prio = -100000;
+    } else if (r->obj[n].anim == 12) {
         if (b->life == -1) {
             r->obj[n].frame = 0;
         } else if (b->life <= 0) {

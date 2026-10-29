@@ -46,7 +46,7 @@ Early. What exists:
   `src/highscore.c`), as RRR does. The game
   data directory is only read. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
-  waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
+  waypoints, walls, jumps, mines, time bombs, boosts, cacti, ramps, racer contact,
   crashes, the finish line, rockets and their explosions, the missiles
   Brutus and Snitch drop, exhaust smoke (fire when damaged), the
   after-images of a boost, the camera. The keys are the record's, set in
