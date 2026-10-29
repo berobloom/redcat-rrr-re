@@ -161,6 +161,11 @@ static int snd_busy(int track)
     return r;
 }
 
+/* REKEN's sounds through the exercise screen's hooks */
+static int ex_busy(void *ctx, int track) { return snd_busy(track); }
+static void ex_play(void *ctx, int track, int sample) { snd_play(track, sample); }
+static void ex_stop(void *ctx, int track) { snd_stop(track); }
+
 /* RRR: effects with Geluid bit 0 ([0x751a8] & 1, sound initialised at
    all), music with bit 1 as well */
 static int race_fx(void)
@@ -578,8 +583,8 @@ static void to_reken(int module)
         to_menu();
         return;
     }
-    rc_exercise_start(&g.ex, &g.session, module, (uint32_t)time(NULL));
     audio_setup(&g.bank_reken, 2, 22050);
+    rc_exercise_start(&g.ex, &g.session, module, (uint32_t)time(NULL));
     g.logged_sum = 0;
     g.exercising = 1;
 }
@@ -1007,6 +1012,9 @@ int main(int argc, char **argv)
     else if (g.flow)
         g.have_menu = 1;
     g.mainmenu.save_dir = g.save;
+    g.ex.snd_busy = ex_busy;
+    g.ex.snd_play = ex_play;
+    g.ex.snd_stop = ex_stop;
     g.running = 1;
     /* the sound archives; without them the game is silent */
     if (rc_archive_open(&g.sndrcs, g.dir, "SNDRCS") == 0)

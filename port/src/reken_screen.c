@@ -173,7 +173,26 @@ static const button buttons3[] = {      /* 0x4550c; the grid is patched in */
 #define CARD_MS 5               /* 0x13abb, 0x13a16, 0x13d95 */
 #define BACK_MS 40              /* 0x13d95 */
 
+/* REKENSND sample numbers */
+#define S_CLICK 0
+#define S_FUEL 1
+#define S_FOUT 2
+#define S_DOING 4
+#define S_NOISE 5
+#define S_WHIZZ 6
+#define S_KNOPPR 7
+#define S_ROLL 8
+#define S_YIHA 9
+
+/* 0x19a50: what each module says first (0x4693c: count, REKENSND
+   number - 18), phrase by phrase; Esc, Enter or S stop it */
+static const int intro_say[4][6] = {
+    { 4, 3, 4, 5, 6 }, { 5, 15, 16, 17, 18, 19 }, { 4, 51, 52, 53, 54 },
+    { 4, 26, 27, 28, 29 }
+};
+
 enum {
+    ST_INTRO,
     ST_PRIZE, ST_INPUT, ST_PRESS_OK, ST_FACE, ST_AWARD, ST_DONE, ST_OVER,
     ST_OPEN, ST_CLOSE_WRONG, ST_SHOW, ST_CLOSE,     /* module 2 */
     ST_REFUSE, ST_TURN, ST_VANISH, ST_TURN_BACK,    /* module 3 */
@@ -305,11 +324,55 @@ void rc_exercise_free(rc_exercise *x)
     rc_font_free(&x->font30);
 }
 
+/* sndman: play only on a free track; the "cut" form first stops the
+   track (0x1b69e) as REKEN does before most sounds */
+static int sound_on(const rc_exercise *x)
+{
+    return x->snd_play && x->r.speech;
+}
+
+static void snd(rc_exercise *x, int track, int sample)
+{
+    if (sound_on(x))
+        x->snd_play(x->snd_ctx, track, sample);
+}
+
+static void snd_cut(rc_exercise *x, int track, int sample)
+{
+    if (sound_on(x)) {
+        x->snd_stop(x->snd_ctx, track);
+        x->snd_play(x->snd_ctx, track, sample);
+    }
+}
+
+static int snd_busy(const rc_exercise *x, int track)
+{
+    return sound_on(x) && x->snd_busy(x->snd_ctx, track);
+}
+
 static void set_state(rc_exercise *x, int st)
 {
     x->state = st;
     x->state_ms = 0;
     x->frame = 0;
+    if (st == ST_FACE)
+        x->said = 0;
+    /* m3_pair_done 0x13d95: a found pair goes with doing.wav, a missed
+       one turns back with noise.wav */
+    if (st == ST_VANISH)
+        snd(x, 1, S_DOING);
+    else if (st == ST_TURN_BACK)
+        snd(x, 1, S_NOISE);
+}
+
+/* prize_choose (0x18e7f): the prize and, cutting off track 0, its phrase */
+static void show_prize(rc_exercise *x)
+{
+    x->prize_frame = 0;
+    x->prize = x->r.prize;
+    x->prize_say = x->r.prize_say;
+    snd_cut(x, 0, x->prize_say);
+    set_state(x, ST_PRIZE);
 }
 
 static void next_sum(rc_exercise *x)
@@ -336,9 +399,18 @@ static void next_sum(rc_exercise *x)
         x->typed[0] = 0;
         x->field = snprintf(digits, sizeof digits, "%d", x->r.answer);
     }
-    x->prize_frame = 0;
-    x->prize = x->r.prize;
-    set_state(x, ST_PRIZE);
+    show_prize(x);
+}
+
+/* the module intro done or stopped: the first sum (Memory: the grid) */
+static void after_intro(rc_exercise *x)
+{
+    if (sound_on(x))
+        x->snd_stop(x->snd_ctx, 0);
+    if (x->module == 3)
+        show_prize(x);
+    else
+        next_sum(x);
 }
 
 void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
@@ -371,12 +443,13 @@ void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
             x->cell_frame[k] = 0;
             x->cell_text[k] = 0;
         }
-        x->prize_frame = 0;
-        x->prize = x->r.prize;
-        set_state(x, ST_PRIZE);
-        return;
     }
-    next_sum(x);
+    x->intro = 0;
+    if (sound_on(x)) {
+        set_state(x, ST_INTRO);
+        snd(x, 0, 18 + intro_say[x->module - 1][1]);
+    } else
+        after_intro(x);
 }
 
 /* Module 3: step the cards in anim_cell through frames 0..count - 1, each
@@ -446,9 +519,7 @@ static void memory_tick(rc_exercise *x)
             x->cell_anim[x->anim_cell[k]] = -1;
         x->anim_cells = 0;
         if (x->r.left) {
-            x->prize_frame = 0;
-            x->prize = x->r.prize;
-            set_state(x, ST_PRIZE);
+            show_prize(x);
         } else {
             set_state(x, ST_OVER);
         }
@@ -494,6 +565,14 @@ void rc_exercise_tick(rc_exercise *x, int ms)
     if (x->module == 3)
         memory_tick(x);
     switch (x->state) {
+    case ST_INTRO:
+        if (snd_busy(x, 0))
+            break;
+        if (++x->intro < intro_say[x->module - 1][0])
+            snd(x, 0, 18 + intro_say[x->module - 1][1 + x->intro]);
+        else
+            after_intro(x);
+        break;
     case ST_PRIZE:
         while (x->state_ms >= FRAME_MS && x->prize_frame < PRIZE_FRAMES - 1) {
             x->state_ms -= FRAME_MS;
@@ -559,17 +638,33 @@ void rc_exercise_tick(rc_exercise *x, int ms)
         }
         break;
     case ST_FACE:
+        /* prize_award 0x1910f / prize_none 0x19471: once track 1 is
+           free, "goed" or "fout" on track 0, then the face; the count
+           waits for the phrase to end */
+        if (!x->said) {
+            if (snd_busy(x, 1)) {
+                x->state_ms = 0;
+                break;
+            }
+            snd_cut(x, 0, x->r.verdict_say);
+            x->said = 1;
+        }
         while (x->state_ms >= FRAME_MS && x->face_frame < FACE_FRAMES - 1) {
             x->state_ms -= FRAME_MS;
             x->face_frame++;
         }
-        if (x->face_frame == FACE_FRAMES - 1)
+        if (x->face_frame == FACE_FRAMES - 1 && !snd_busy(x, 0))
             set_state(x, ST_AWARD);
         break;
     case ST_AWARD:
         /* 0x1910f counts fuel, boosts and rockets one per 200 ms; repair
-           goes up in one step */
+           goes up in one step.  yiha.wav when the counter was below its
+           top, then a roll.wav per boost or rocket (track 1), fuel.wav per
+           unit of fuel (track 0) or for the repair (track 1); then it
+           waits for track 0 */
         if (!counting(x)) {
+            if (snd_busy(x, 0))
+                break;
             if (x->module == 3)
                 set_state(x, x->picked ? ST_VANISH : ST_SHOW);
             else if (x->module == 4)
@@ -581,7 +676,19 @@ void rc_exercise_tick(rc_exercise *x, int ms)
         } else if (x->state_ms >= UNIT_MS || x->frame == 0) {
             if (x->frame)
                 x->state_ms -= UNIT_MS;
+            else if ((x->prize == RC_PRIZE_BOOSTS && x->shown_boosts < 99) ||
+                     (x->prize == RC_PRIZE_ROCKETS && x->shown_rockets < 99) ||
+                     ((x->prize == RC_PRIZE_REPAIR ||
+                       x->prize == RC_PRIZE_REPAIR_FULL) &&
+                      x->shown_repair < 100))
+                snd(x, 0, S_YIHA);
             x->frame = 1;
+            if (x->prize == RC_PRIZE_BOOSTS || x->prize == RC_PRIZE_ROCKETS)
+                snd(x, 1, S_ROLL);
+            else if (x->prize == RC_PRIZE_REPAIR)
+                snd(x, 1, S_FUEL);
+            else if (x->prize >= RC_PRIZE_FUEL5)
+                snd(x, 0, S_FUEL);      /* 0x1d244: past sndman */
             x->shown_fuel = step_to(x->shown_fuel, x->r.fuel);
             x->shown_boosts = step_to(x->shown_boosts, x->r.boosts);
             x->shown_rockets = step_to(x->shown_rockets, x->r.rockets);
@@ -604,7 +711,12 @@ static void big_key(rc_exercise *x, int key)
         return;
     switch (key) {
     case '1': case '2': case '3': case '4':
-        rc_module4_number(&x->r, key - '1');
+        /* 0x166e2: a number with click.wav, one not allowed now fout1 */
+        res = rc_module4_number(&x->r, key - '1');
+        if (res == RC_BIG_TAKEN)
+            snd_cut(x, 0, S_CLICK);
+        else if (res == RC_BIG_REFUSED)
+            snd(x, 1, S_FOUT);
         return;
     case RC_KEY_PLUS:
     case RC_KEY_MINUS:
@@ -619,22 +731,33 @@ static void big_key(rc_exercise *x, int key)
         int i;
         for (i = 0; ops[i].key != key; i++)
             ;
-        if (rc_module4_op(&x->r, ops[i].op) == RC_BIG_TAKEN)
+        if (rc_module4_op(&x->r, ops[i].op) == RC_BIG_TAKEN) {
+            snd_cut(x, 0, S_CLICK);
             press(x, ops[i].anim, ops[i].x, ops[i].y);
+        } else
+            snd(x, 1, S_FOUT);
         return;
     }
-    case RC_KEY_BACK:
-        if (rc_module4_back(&x->r) == RC_BIG_TAKEN)
+    case RC_KEY_BACK:           /* 0x16b9e: a number flies back (whizz) */
+        if (rc_module4_back(&x->r) == RC_BIG_TAKEN) {
+            snd_cut(x, 0, S_KNOPPR);
+            snd_cut(x, 1, S_WHIZZ);
             press(x, A_BACK, BUTTON4_X, 368);
+        } else
+            snd_cut(x, 0, S_FOUT);
         return;
     case RC_KEY_AGAIN:
+        snd_cut(x, 0, S_KNOPPR);
         press(x, A_AGAIN, BUTTON4_X, 424);
         rc_module4_again(&x->r);
         return;
     case RC_KEY_OK:
         res = rc_module4_equals(&x->r);
-        if (res == RC_BIG_REFUSED)
+        if (res == RC_BIG_REFUSED) {
+            snd(x, 0, S_FOUT);  /* 0x171aa: no whole sum yet */
             return;
+        }
+        snd_cut(x, 0, S_KNOPPR);
         press(x, A_EQUALS, x->equals_x, 368);
         if (res == RC_BIG_RIGHT || res == RC_BIG_WRONG) {
             x->face_anim = res == RC_BIG_RIGHT ? A_FACE_RIGHT : A_FACE_WRONG;
@@ -649,6 +772,11 @@ void rc_exercise_key(rc_exercise *x, int key)
 {
     int n = (int)strlen(x->typed);
 
+    if (x->state == ST_INTRO) {
+        if (key == RC_KEY_OK || key == RC_KEY_STOP)
+            after_intro(x);
+        return;
+    }
     if (key == RC_KEY_STOP) {
         x->stopped = 1;
         set_state(x, ST_OVER);
@@ -675,6 +803,7 @@ void rc_exercise_key(rc_exercise *x, int key)
     if (x->module == 2) {
         if (key >= '1' && key <= '3') {
             x->picked = key - '1';
+            snd_cut(x, 0, S_CLICK);     /* module2_ask 0x133d2 */
             set_state(x, ST_CLOSE_WRONG);
         }
         return;
@@ -701,7 +830,7 @@ void rc_exercise_key(rc_exercise *x, int key)
 static void memory_click(rc_exercise *x, int sx, int sy)
 {
     const rc_grid *g = rc_module3_grid(x->r.level);
-    int col, row, cell;
+    int col, row, cell, first;
 
     if (x->state != ST_INPUT || sx < g->x || sy < g->y)
         return;
@@ -712,11 +841,19 @@ static void memory_click(rc_exercise *x, int sx, int sy)
         g->y + row * (g->h + g->gap_y) + g->h <= sy)
         return;
     cell = row * g->cols + col;
+    first = x->r.first == -1;
+    /* 0x14967: the first card cuts track 0 for its click, the second
+       clicks on track 1; a card refused gives fout1 on track 1 */
     switch (rc_module3_pick(&x->r, cell)) {
     case RC_PICK_REFUSED:
+        snd(x, 1, S_FOUT);
         set_state(x, ST_REFUSE);
         break;
     case RC_PICK_TURNED:
+        if (first)
+            snd_cut(x, 0, S_CLICK);
+        else
+            snd(x, 1, S_CLICK);
         set_state(x, ST_TURN);
         break;
     default:

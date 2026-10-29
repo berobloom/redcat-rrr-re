@@ -98,6 +98,9 @@ typedef struct {
     int speech;                 /* [0x46c87] (RRRIO +0x30) */
     int fuel, repair, boosts, rockets;
     int prize;
+    /* REKENSND sample numbers of what the drawn rand() picks to say: the
+       prize (0x18e7f) and "goed" / "fout" (0x1910f, 0x19471) */
+    int prize_say, verdict_say;
     char text[100];             /* 0x5371c */
     int answer;                 /* [0x537e4] */
     int asked, correct;         /* [0x537e8] */

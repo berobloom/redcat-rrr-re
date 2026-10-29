@@ -68,6 +68,15 @@ typedef struct {
        in (the original redraws the numbers after it) */
     rc_reken shown;
     int equals_x;               /* [0x457cc]: 78 for groep 3..5, else 152 */
+    /* sound: the caller's two tracks; without snd_play, or with the
+       record's sound mode 0, REKEN is silent and never waits */
+    void *snd_ctx;
+    int (*snd_busy)(void *ctx, int track);
+    void (*snd_play)(void *ctx, int track, int sample);  /* if free */
+    void (*snd_stop)(void *ctx, int track);
+    int intro;                  /* module intro: the phrase playing */
+    int prize_say;              /* the shown prize's phrase */
+    int said;                   /* the face: "goed" / "fout" started */
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,

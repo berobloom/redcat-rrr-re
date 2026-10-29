@@ -59,6 +59,8 @@ static const range2 sub_rows[6] = {
 /* 0x46c8c, 0x46cac: prizes when repair is full / when fuel or repair is low */
 static const uint8_t prize_full[16] = { 5, 6, 5, 1, 4, 0, 6, 1, 6, 4, 5, 6, 0, 1, 1, 1 };
 static const uint8_t prize_low[16] = { 3, 6, 3, 5, 3, 6, 6, 6, 1, 3, 5, 3, 3, 5, 6, 3 };
+static const uint8_t prize_phrase[4][2] = { { 73, 81 }, { 67, 75 }, { 68, 78 },
+                                            { 69, 76 } };
 
 /* 0x45000: exercise modules 1..4 per world */
 static const uint8_t world_modules[6][4] = {
@@ -263,8 +265,12 @@ void rc_prize_choose(rc_reken *r)
         r->prize = RC_PRIZE_BOOSTS;
     if (r->prize == RC_PRIZE_BOOSTS && r->boosts == 99)
         r->prize = RC_PRIZE_ROCKETS;
+    /* what is said: one of two phrases (0x46a8c, 0x46ae0, 0x46b34,
+       0x46b88; REKENSND number - 18), for fuel rc9..rc11 */
     if (r->prize <= RC_PRIZE_REPAIR)
-        rc_rand(r);             /* which spoken phrase goes with it */
+        r->prize_say = 18 + prize_phrase[r->prize][rc_rand(r) % 2];
+    else
+        r->prize_say = 16 + r->prize - RC_PRIZE_FUEL5;
 }
 
 static void prize_award(rc_reken *r)            /* 0x1910f */
@@ -318,7 +324,8 @@ int rc_module1_next(rc_reken *r)
 
 static int answered(rc_reken *r, int right)
 {
-    rc_rand(r);                 /* the spoken "goed" or "fout" (0x1910f, 0x19471) */
+    /* "goed" rc3..rc5 (0x46bdc) or "fout" rc6..rc8 (0x46c30) */
+    r->verdict_say = (right ? 10 : 13) + rc_rand(r) % 3;
     if (right) {
         prize_award(r);
         r->correct++;

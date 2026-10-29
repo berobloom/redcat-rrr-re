@@ -52,9 +52,12 @@ Early. What exists:
   Shift fires a rocket; T is the horn. F1/F2/F3 pick the racer to follow,
   PgUp/PgDn change map, Esc quits (in the round: back to the menu).
   Sound (`src/audio.c`, the original's Sound Blaster mixer, from the
-  SNDRCS and RRRMSND archives): the race's effects, start jingle, music
-  and finish tune, the menu's effects and music, as the menu's Geluid
-  (G) sets them: effects and music, effects, nothing.
+  SNDRCS, RRRMSND and REKENSND archives): the race's effects, start
+  jingle, music and finish tune, the menu's effects and music, the
+  exercises' spoken introductions, prizes and "goed" / "fout" and their
+  button sounds, as the menu's Geluid (G) sets them: effects and music,
+  effects, nothing. With sound on the exercises wait for what is said,
+  as the original does; Enter or S cuts a module's introduction short.
 - `race_sim <data dir> [map|all] [frames] [trace N]`: races without a
   screen; reports whether the computer racers finish each map.
 - `reken_sim play [groep] [seed]`: the arithmetic part's first module,
@@ -68,10 +71,10 @@ Early. What exists:
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 
-Not ported yet: the exercises' sounds and spoken feedback (REKENSND), the
-winner's film after a stage-4 race (the podium stands in), the closing film
-(EINDANI2.SMK), the menu's joystick set-up and MENU.WAV (played under
-`/1`), the exercises' Help example and mouse pointer.
+Not ported yet: the winner's film after a stage-4 race (the podium stands
+in), the closing film (EINDANI2.SMK), the menu's joystick set-up and
+MENU.WAV (played under `/1`), the exercises' Help example and mouse
+pointer.
 
 ### Frame rate
 
