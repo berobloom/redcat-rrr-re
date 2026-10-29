@@ -2,8 +2,8 @@
    muis_tick (0x130f8) and their helpers.  research/discoveries.md has the
    evidence; comments here name the original's addresses.
 
-   Not yet ported: rockets (0x185d4), dropped objects (0x18759), exhaust and
-   explosion objects (0x17e87, 0x17faa), over-speed (0x180d3), sounds. */
+   Not yet ported: dropped objects (0x18759), exhaust (0x17e87), over-speed
+   (0x180d3), sounds. */
 #include "race.h"
 
 #include <math.h>
@@ -288,6 +288,32 @@ static int racer_contact(rc_race *r, int a, int bn)
     return iabs(along) < 50 && iabs(across) < 50;
 }
 
+/* hit_test (0x1430e): is the centre or a corner of racer bn's 60 x 60
+   square, turned to its heading, strictly inside the box of half size
+   size around object a?  0 if either object is free. */
+static int hit_test(rc_race *r, int a, int bn, int size)
+{
+    const rc_body *A = &r->body[a], *B = &r->body[bn];
+    int h = r->stats[B->stats].heading, p = (h + 40) & 31, i;
+    int32_t d = FX(size), x0 = A->x - d, x1 = A->x + d, y0 = A->y - d,
+            y1 = A->y + d;
+    int32_t c = fxmul(FX(30), rc_cos[h]), sn = fxmul(FX(30), rc_sin[h]);
+    int32_t pc = fxmul(FX(30), rc_cos[p]), ps = fxmul(FX(30), rc_sin[p]);
+    int32_t px[5], py[5];
+
+    if (r->obj[a].period == -1 || r->obj[bn].period == -1)
+        return 0;
+    px[0] = B->x + c + pc; py[0] = B->y + sn + ps;
+    px[1] = B->x + c - pc; py[1] = B->y + sn - ps;
+    px[2] = B->x - c - pc; py[2] = B->y - sn - ps;
+    px[3] = B->x - c + pc; py[3] = B->y - sn + ps;
+    px[4] = B->x;          py[4] = B->y;
+    for (i = 0; i < 5; i++)
+        if (x0 < px[i] && px[i] < x1 && y0 < py[i] && py[i] < y1)
+            return i + 1;
+    return 0;
+}
+
 static void racer_bounce(rc_race *r, int a, int bn)    /* 0x14534 */
 {
     rc_stats *sa = &r->stats[r->body[a].stats];
@@ -358,6 +384,125 @@ static void clamp_and_pose(rc_race *r, int n)
     place_sprite(r, n);
 }
 
+/* explosion_tick (0x1709c): anim 17 where it was set off, 17 frames */
+static void explosion_tick(rc_race *r, int n)
+{
+    rc_body *b = &r->body[n];
+
+    if (--b->life <= 0) {
+        free_object(r, n);
+        return;
+    }
+    b->prio = -10;
+    r->obj[n].anim = 17;
+    b->x += b->vx;
+    b->y += b->vy;
+    b->z += b->vz;
+    b->vx = fxmul(b->vx, 0xe666);
+    b->vy = fxmul(b->vy, 0xe666);
+    b->vz = fxmul(b->vz, 0xe666);
+    place_sprite(r, n);
+}
+
+/* explode (0x17faa with one object): an explosion at object at's place.
+   It takes the first free slot, often the one just freed. */
+static void explode(rc_race *r, int at)
+{
+    int n = alloc_object(r);
+    rc_body *b;
+
+    if (n < 0)
+        return;
+    r->obj[n].period = 1;
+    r->obj[n].tick = explosion_tick;
+    r->obj[n].anim = 17;
+    r->obj[n].frame = 0;
+    b = &r->body[n];
+    b->x = r->body[at].x;
+    b->y = r->body[at].y;
+    b->z = r->body[at].z;
+    b->vx = b->vy = b->vz = 0;
+    b->life = 18;
+}
+
+/* rocket_tick (0x175b4).  The heading is kept in the body's stats field.
+   After its first two frames it hits Brutus or Snitch (box 20: damage
+   -15) or RedCat (box 15: -10); a cell with a ground level above 0 sets
+   it off, and so does a cactus, which goes too. */
+static void rocket_tick(rc_race *r, int n)
+{
+    static const int target[3] = { 2, 4, 0 }, box[3] = { 20, 20, 15 },
+                     damage[3] = { 15, 15, 10 };
+    rc_body *b = &r->body[n];
+    rc_object *o = &r->obj[n];
+    const rc_hotspot *h;
+    rc_cell *c;
+    int k;
+
+    if (--b->life <= 0) {
+        free_object(r, n);
+        explode(r, n);
+        return;
+    }
+    b->prio = 0;
+    o->anim = 15;
+    o->frame = (short)b->stats;
+    h = &r->hotspots[obj_frame(o)->image];
+    if (b->life < 98)
+        for (k = 0; k < 3; k++)
+            if (hit_test(r, n, target[k], box[k])) {
+                free_object(r, n);
+                explode(r, target[k]);
+                r->stats[r->body[target[k]].stats].damage -= damage[k];
+                return;
+            }
+    /* the original also runs ground_check here, with the heading as the
+       stats index; only its wall slide could change anything, and the
+       rocket goes off there anyway */
+    c = cell_at(r, px_to_cx(b->x + b->vx), px_to_cy(b->y + b->vy));
+    if (c->level > 0) {
+        free_object(r, n);
+        explode(r, n);
+        return;
+    }
+    if (c->type == 15 || c->type == 16) {
+        r->body[c->object].life = 5;
+        c->type = 0;
+        free_object(r, n);
+        explode(r, n);  /* and on: slot n may be the explosion now */
+    }
+    b->x += b->vx;
+    b->y += b->vy;
+    b->vx = fxmul(b->vx, 0xff3b);
+    b->vy = fxmul(b->vy, 0xff3b);
+    o->sx = (short)((b->x >> 16) - h->hx - 16);
+    o->sy = (short)((b->y >> 16) - (b->z >> 16) - h->hy);
+}
+
+/* fire_rocket (0x185d4): 25 px ahead of racer n, 20 higher, 25 px/frame
+   in its heading, 100 frames */
+static void fire_rocket(rc_race *r, int n)
+{
+    int m = alloc_object(r), hd = r->stats[r->body[n].stats].heading;
+    rc_body *b;
+
+    if (m < 0)
+        return;
+    r->obj[m].period = 1;
+    r->obj[m].tick = rocket_tick;
+    r->obj[m].anim = 15;
+    r->obj[m].frame = (short)hd;
+    b = &r->body[m];
+    memset(b, 0, sizeof *b);
+    b->stats = hd;
+    b->vx = fxmul(FX(25), rc_cos[hd]);
+    b->vy = fxmul(FX(25), rc_sin[hd]);
+    b->x = r->body[n].x + b->vx;
+    b->y = r->body[n].y + b->vy;
+    b->z = r->body[n].z + FX(20);
+    b->life = 100;
+}
+
 static void player_tick(rc_race *r, int n)     /* 0x11eb5 */
 {
     rc_body *b = &r->body[n];
@@ -387,7 +532,10 @@ static void player_tick(rc_race *r, int n)     /* 0x11eb5 */
             r->rocket_latch = 0;
         else if (!r->rocket_latch) {
             r->rocket_latch = 1;
-            /* 0x185d4 would fire a rocket here (not ported yet) */
+            if (s->rockets != 0) {
+                fire_rocket(r, n);
+                s->rockets--;
+            }
         }
         if (!boost)
             r->boost_latch = 0;
@@ -474,8 +622,13 @@ static void player_wreck_tick(rc_race *r, int n)
 
         if (!(r->started && in->rocket))
             r->rocket_latch = 0;
-        else if (!r->rocket_latch)
-            r->rocket_latch = 1;        /* 0x185d4: rocket, not ported */
+        else if (!r->rocket_latch) {
+            r->rocket_latch = 1;
+            if (s->rockets != 0) {
+                fire_rocket(r, n);
+                s->rockets--;
+            }
+        }
         if (!boost)
             r->boost_latch = 0;
         else if (!r->boost_latch && b->z < FX(40)) {
