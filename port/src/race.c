@@ -2,8 +2,7 @@
    muis_tick (0x130f8) and their helpers.  research/discoveries.md has the
    evidence; comments here name the original's addresses.
 
-   Not yet ported: dropped objects (0x18759), exhaust (0x17e87), over-speed
-   (0x180d3), sounds. */
+   Not yet ported: exhaust (0x17e87), over-speed (0x180d3), sounds. */
 #include "race.h"
 
 #include <math.h>
@@ -479,6 +478,73 @@ static void rocket_tick(rc_race *r, int n)
     o->sy = (short)((b->y >> 16) - (b->z >> 16) - h->hy);
 }
 
+/* The missiles Brutus and Snitch drop (0x18759): by kind, the two racers
+   they hit and the one they were meant to chase. */
+static const int drop_hits[3][2] = { { 0, 4 }, { 2, 4 }, { 2, 4 } };
+
+/* dropped0_tick 0x17b61, dropped2_tick 0x178f6, dropped4_tick 0x17c74:
+   gone when life or speed (< 2 px/frame) runs out; a hit (box 10) costs
+   the racer 10.  They steer through aim_at_player (0x13e3d), which
+   subtracts each coordinate from itself (FSUB ST(0), ST(0)) and so always
+   answers heading 0: every missile turns toward heading 0. */
+static void dropped_tick(rc_race *r, int n, int kind)
+{
+    rc_body *b = &r->body[n];
+    int k;
+
+    if (--b->life <= 0 || b->speed < FX(2)) {
+        free_object(r, n);
+        explode(r, n);
+        return;
+    }
+    b->prio = 0;
+    for (k = 0; k < 2; k++)
+        if (hit_test(r, n, drop_hits[kind][k], 10)) {
+            free_object(r, n);
+            explode(r, n);
+            r->stats[r->body[drop_hits[kind][k]].stats].damage -= 10;
+            return;
+        }
+    if (b->stats != 0)
+        b->stats = rc_turn[0][b->stats];
+    b->vx = fxmul(b->speed, rc_cos[b->stats]);
+    b->vy = fxmul(b->speed, rc_sin[b->stats]);
+    b->x += b->vx;
+    b->y += b->vy;
+    b->speed = fxmul(b->speed, 0xffbe);
+    r->obj[n].anim = 16;
+    r->obj[n].frame = (short)b->stats;
+    place_sprite(r, n);
+}
+
+static void dropped0_tick(rc_race *r, int n) { dropped_tick(r, n, 0); }
+static void dropped2_tick(rc_race *r, int n) { dropped_tick(r, n, 1); }
+static void dropped4_tick(rc_race *r, int n) { dropped_tick(r, n, 2); }
+
+/* spawn_dropped_object (0x18759): 25 px ahead of racer n at height 40,
+   speed 25 px/frame, 150 frames; the heading in the stats field */
+static void spawn_dropped(rc_race *r, int n, int kind)
+{
+    int m = alloc_object(r), hd = r->stats[r->body[n].stats].heading;
+    rc_body *b;
+
+    if (m < 0)
+        return;
+    r->obj[m].period = 1;
+    r->obj[m].tick = kind == 2 ? dropped2_tick : kind == 0 ? dropped0_tick
+                                                           : dropped4_tick;
+    r->obj[m].anim = 16;
+    r->obj[m].frame = (short)hd;
+    b = &r->body[m];
+    memset(b, 0, sizeof *b);
+    b->stats = hd;
+    b->x = r->body[n].x + fxmul(FX(25), rc_cos[hd]);
+    b->y = r->body[n].y + fxmul(FX(25), rc_sin[hd]);
+    b->z = FX(40);
+    b->speed = FX(25);
+    b->life = 150;
+}
+
 /* fire_rocket (0x185d4): 25 px ahead of racer n, 20 higher, 25 px/frame
    in its heading, 100 frames */
 static void fire_rocket(rc_race *r, int n)
@@ -695,15 +761,18 @@ static int ai_unstick(rc_race *r, int n)
     return 1;
 }
 
-/* 0x1af83 with the (empty) per-map scripts: 10% drop an object, else 10%
-   boost.  Dropping is not ported yet; the rand() calls are kept. */
+/* 0x1af83 with the (empty) per-map scripts: 10% drop a missile (kind 0
+   or 4, half each; the drop count, 3, is never used up), else 10%
+   boost. */
 static void ai_waypoint_action(rc_race *r, int n)
 {
     rc_body *b = &r->body[n];
     rc_stats *s = &r->stats[b->stats];
 
     if (rc_rand(r) % 100 < 10) {
-        rc_rand(r);
+        int kind = rc_rand(r) % 100 < 50 ? 0 : 4;
+        if (s->drops != 0 && s->damage >= 0)
+            spawn_dropped(r, n, kind);
         return;
     }
     if (rc_rand(r) % 100 < 10 && s->boosts != 0) {

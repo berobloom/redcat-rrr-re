@@ -45,7 +45,8 @@ Early. What exists:
   data directory is only read. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
   waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
-  crashes, the finish line, rockets and their explosions, the camera. The keys are the record's, set in
+  crashes, the finish line, rockets and their explosions, the missiles
+  Brutus and Snitch drop, the camera. The keys are the record's, set in
   the menu's Bediening (B); by default arrows drive, Enter boosts, right
   Shift fires a rocket. F1/F2/F3 pick the racer to follow, PgUp/PgDn
   change map, Esc quits (in the round: back to the menu).
@@ -62,7 +63,7 @@ Early. What exists:
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 
-Not ported yet: dropped objects, exhaust and explosions, sound, the
+Not ported yet: exhaust and explosions, sound, the
 winner's film after a stage-4 race (the podium stands in), the closing film
 (EINDANI2.SMK), the menu's joystick set-up, the exercises'
 Help example, mouse pointer and spoken feedback.
