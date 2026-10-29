@@ -16,7 +16,10 @@ Early. What exists:
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
 - `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]
-  [--save DIR]`: the game's round as MOTOR.EXE runs it, from the menu,
+  [--save DIR] [--no-intro]`: the game's round as MOTOR.EXE runs it. It
+  opens with the intro film (INTRO.EXE's rrrintro.smk with rrrintro.wav,
+  `src/smacker.c`; Enter, Space or Esc ends it; `--no-intro` as MOTOR's
+  `/NI`), then the menu,
   which first asks the pupil's name (the last four from RRRIO.INF, ↑/↓ and
   Enter, or typed; Esc gives RedCat) and plays MENU.WAV (Esc skips it)
   (`src/menu.c`: Start! S/Enter, R or a click on the Race panel the next
@@ -73,8 +76,7 @@ Early. What exists:
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 
-Not ported yet: the intro film (INTRO.EXE: rrrintro.smk with rrrintro.wav,
-before the first menu), the winner's film after a stage-4 race (the podium stands
+Not ported yet: the winner's film after a stage-4 race (the podium stands
 in), the closing film (EINDANI2.SMK), the menu's joystick set-up and
 the exercises' mouse pointer.
 

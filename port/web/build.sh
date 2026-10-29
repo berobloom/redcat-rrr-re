@@ -59,6 +59,6 @@ build() {
         -o "$OUT/$name.html"
     echo "built $OUT/$name.html"
 }
-build redcat "RCS RC TRANS.DAT REKEN MENU RRRMENU RRRANIM RRRFONT.IMG SNDRCS RRRMSND REKENSND" \
+build redcat "RCS RC TRANS.DAT REKEN MENU RRRMENU RRRANIM RRRFONT.IMG SNDRCS RRRMSND REKENSND INTRO INTROSND" \
     -lidbfs.js --pre-js "$HERE/save.js"
 build rcview "RCS RRRMENU REKEN"

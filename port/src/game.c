@@ -6,7 +6,11 @@
    Rapport, E Einde (the high scores); Esc in a race goes back to it.
 
    usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
-                 [--module 1..4] [--fps N] [--save DIR]
+                 [--module 1..4] [--fps N] [--save DIR] [--no-intro]
+
+   The round starts as MOTOR's does: the intro film (INTRO.EXE; Enter,
+   Space or Esc ends it), unless --no-intro (MOTOR's /NI), --race or
+   --module.
 
    The record (RRRIO.INF) and the pupil files (%8.8d.SMD) are kept in the
    save directory: --save, else SDL's preferences path; in the browser
@@ -53,6 +57,7 @@
 #include "race.h"
 #include "reken.h"
 #include "reken_screen.h"
+#include "smacker.h"
 #include "smd.h"
 
 #define SCREEN_W 640
@@ -113,6 +118,16 @@ static struct {
     int race_intro;             /* start.wav before a world's first race */
     int race_rcend;             /* the finish: 1 rcend.wav plays, 2 done */
     int menu_sound;             /* the Geluid setting the menu last had */
+
+    /* INTRO.EXE, run by MOTOR before the first menu unless /NI */
+    rc_archive intro_arc, introsnd;
+    rc_soundbank bank_intro;
+    smk *film;
+    int intro;                  /* 1 the film, 2 the wait after it */
+    int film_frame;             /* frames decoded */
+    Uint32 film_start;
+    Uint32 intro_ms;            /* rrrintro.wav's length; 0 without it */
+    SDL_Scancode intro_key;     /* Esc, Space or Enter held down */
 } g;
 
 static void audio_callback(void *u, Uint8 *stream, int len)
@@ -792,10 +807,133 @@ static void exercise_frame(void)
         finish_exercises();
 }
 
+/* INTRO.EXE (0x105b7): VGA mode 13h, its one Sound Blaster track at
+   22050 Hz, then rrrintro.smk played by 0x16da3 (flags 6: the film's own
+   palette, all 200 lines) with rrrintro.wav started on track 0 at the
+   first frame.  The original holds or skips frames to keep to the sound's
+   position (0x11b3c); the port keeps to the clock, which the sound follows
+   too.  Enter, Space or Esc ends the film once released (0x16f95..);
+   after the last frame the same keys or the sound's end (0x10688; at
+   once without sound, [0x4366c]) end the intro. */
+static const char *const intro_sound_names[] = { "rrrintro.wav" };
+
+static int start_intro(void)
+{
+    uint32_t size;
+    const uint8_t *d;
+
+    if (rc_archive_open(&g.intro_arc, g.dir, "INTRO") != 0)
+        return -1;
+    d = rc_archive_find(&g.intro_arc, "rrrintro.smk", &size);
+    if (!d || !(g.film = smk_open(d, size))) {
+        rc_archive_close(&g.intro_arc);
+        return -1;
+    }
+    if (rc_archive_open(&g.introsnd, g.dir, "INTROSND") == 0)
+        rc_soundbank_load(&g.bank_intro, &g.introsnd, intro_sound_names, 1);
+    audio_setup(&g.bank_intro, 1, 22050);
+    g.intro_ms = g.bank_intro.count && g.bank_intro.wave[0].pcm ?
+        (Uint32)((uint64_t)g.bank_intro.wave[0].len * 1000 / 22050) : 0;
+    g.intro = 1;
+    g.film_frame = 0;
+    g.film_start = 0;
+    g.intro_key = SDL_SCANCODE_UNKNOWN;
+    return 0;
+}
+
+static void end_intro(void)
+{
+    snd_stop(0);
+    smk_close(g.film);
+    g.film = NULL;
+    g.intro = 0;
+    to_menu();
+    g.last_tick = SDL_GetTicks();
+}
+
+/* mode 13h's 320 x 200 fills the 4:3 screen: each pixel 2 wide, 2.4 high */
+static void draw_film(void)
+{
+    const uint8_t *px = smk_pixels(g.film), *pal = smk_palette(g.film);
+    int w = smk_width(g.film), h = smk_height(g.film), x, y;
+
+    for (y = 0; y < SCREEN_H; y++) {
+        const uint8_t *src = px + y * h / SCREEN_H * w;
+        for (x = 0; x < SCREEN_W; x++)
+            g.fb[y * SCREEN_W + x] = src[x * w / SCREEN_W];
+    }
+    for (x = 0; x < 256; x++) {
+        g.pal[x].r = pal[3 * x];
+        g.pal[x].g = pal[3 * x + 1];
+        g.pal[x].b = pal[3 * x + 2];
+    }
+}
+
+static void intro_frame(void)
+{
+    SDL_Event e;
+    Uint32 now = SDL_GetTicks();
+    int due, drawn = 0;
+
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT)
+            g.running = 0;
+        else if (e.type == SDL_KEYDOWN && !e.key.repeat) {
+            switch (e.key.keysym.scancode) {
+            case SDL_SCANCODE_ESCAPE: case SDL_SCANCODE_SPACE:
+            case SDL_SCANCODE_RETURN: case SDL_SCANCODE_KP_ENTER:
+                g.intro_key = e.key.keysym.scancode;
+                break;
+            default:
+                break;
+            }
+        } else if (e.type == SDL_KEYUP &&
+                   e.key.keysym.scancode == g.intro_key) {
+            end_intro();
+            return;
+        }
+    }
+    /* the sound's end; also by the clock, for a browser that has not
+       started its sound yet */
+    if (g.intro == 2) {
+        if (!g.audio || !snd_busy(0) || now - g.film_start >= g.intro_ms)
+            end_intro();
+        return;
+    }
+    if (!g.film_start) {
+        g.film_start = now ? now : 1;
+        snd_play(0, 0);
+    }
+    due = (int)((now - g.film_start) / smk_frame_ms(g.film)) + 1;
+    while (g.film_frame < due) {
+        if (smk_next(g.film) != 0) {
+            g.intro = 2;
+            return;
+        }
+        g.film_frame++;
+        drawn = 1;
+    }
+    if (drawn) {
+        draw_film();
+        present();
+    }
+}
+
 static void frame(void)
 {
     SDL_Event e;
     Uint32 now;
+
+    if (g.intro) {
+        intro_frame();
+#ifdef __EMSCRIPTEN__
+        if (!g.running)
+            emscripten_cancel_main_loop();
+#else
+        SDL_Delay(5);
+#endif
+        return;
+    }
 
     if (g.in_menu || g.exercising) {
         if (g.in_menu)
@@ -926,6 +1064,7 @@ out:
 int main(int argc, char **argv)
 {
     int map = -1, fps = 30, groep = 0, module = 0, race_only = 0, fresh = 0;
+    int no_intro = 0;
     int i;
     const char *save = NULL;
     uint32_t size;
@@ -936,7 +1075,8 @@ int main(int argc, char **argv)
 #else
     if (argc < 2) {
         fprintf(stderr, "usage: %s <data dir> [map 0..22] [--race] "
-                "[--groep 3..8] [--module 1..4] [--fps N] [--save DIR]\n",
+                "[--groep 3..8] [--module 1..4] [--fps N] [--save DIR] "
+                "[--no-intro]\n",
                 argv[0]);
         return 2;
     }
@@ -953,6 +1093,8 @@ int main(int argc, char **argv)
             save = argv[++i];
         else if (strcmp(argv[i], "--race") == 0)
             race_only = 1;
+        else if (strcmp(argv[i], "--no-intro") == 0)
+            no_intro = 1;
         else
             map = atoi(argv[i]);
     }
@@ -1048,7 +1190,7 @@ int main(int argc, char **argv)
         race_sound_start();
     } else if (module >= 1 && module <= 4)
         to_reken(module == 4 && g.session.groep == 3 ? 3 : module);
-    else
+    else if (no_intro || start_intro() != 0)
         to_menu();
     if (!g.running)
         return 1;
