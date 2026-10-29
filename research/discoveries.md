@@ -192,3 +192,12 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   average.
 - CONFIRMED: the computer racers' top speed comes from 0x57b18 indexed by the
   map number (13, 13, 14, 14, 14, 15, 15, 15 px/frame for maps 0–7).
+
+## The race: speed
+
+- CONFIRMED (experiment): the race loop is not tied to vsync or a timer.
+  Counting `objects_tick`'s counter [0x600c4] against the BIOS tick at 0x46c
+  over 5 s: 29.4 frames/s at DOSBox `cycles=fixed 40000`, 105 frames/s at
+  120000. All movement is per frame (`player_tick`), so the original game ran
+  faster on a faster PC. (The `out 0x43` code at 0x26b65 drives the PC
+  speaker, channel 2, not the frame clock.)

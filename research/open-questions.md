@@ -37,7 +37,10 @@
     `.work/ghidra/<prog>.c`. Ghidra has no Watcom register convention, so
     register arguments show as `in_EAX`/`extraout_ECX`; check details in
     `disasm.py`.
-13. What sets the frame rate of the race (timer interrupt, vsync, or none)?
+13. **RESOLVED (session 2): none.** The race runs as fast as the CPU allows
+    (discoveries "The race: speed"). Open: what rate did the designers
+    tune for? `delay_ms` (0x26beb) and 0x32cce hold a clock; is there a
+    frame cap anywhere above ~105 frames/s?
 14. What do the rest of the cell types do: 10, 15, 16, 21, 22 (0x16), and
     the five check points of `0x18ae5`?
 15. The rocket (0x185d4), the exhaust (0x17e87), over-speed (0x180d3) and
