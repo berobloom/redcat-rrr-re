@@ -2,8 +2,8 @@
 
 ## Launch / process flow
 
-1. How does MOTOR.EXE choose the next program, and which file carries the
-   state between the menu, the race and the arithmetic part (rrrio.inf?)?
+1. How does MOTOR.EXE choose the next program? (The state file is
+   RRRIO.INF, shared by RRRMENU, REKEN and RRR; discoveries "The session".)
    Disassemble MOTOR.EXE (16-bit, small) and RRRMENU's writer.
 2. What does INTRO.EXE do besides playing `rrrintro.smk` with
    `rrrIntro.wav`? Is the intro skipped by `/NOINTRO` (INSTALL.SCR's `rcmin`
@@ -20,9 +20,20 @@
    per racer)?
 6. What do the 19 `.MAP` files' different sizes mean for play: is the whole
    map one lap, or a point-to-point course?
-7. Where do the arithmetic questions enter the race, if at all (the HUD,
-   RACESCR3.PCX, has a speedometer, fuel gauge and boost/rocket buttons:
-   "SAM BOOST", "MINI RAKETTEN")?
+7. **RESOLVED (session 4).** Not in the race: REKEN awards fuel, repair,
+   boosts and rockets per correct sum and passes them in RRRIO.INF;
+   discoveries "The arithmetic part".
+
+## Arithmetic (REKEN.EXE)
+
+16. The exact sum generators (`0x11496`, `0x11619`, `0x1122e`, `0x1179e`
+    and the `0x12068`.. family for the other modules): Ghidra drops their
+    Watcom register arguments; read them from the disassembly.
+17. Modules 2–4 (Wat is waar?, Memory, Grote getallenspel): screens, rules,
+    prizes.
+18. `NNNNNNNN.SMD` layout and how a pupil's number is chosen (Naam is
+    empty under `REKEN /DAVILEX`).
+19. What +0x30 / [0x46c87] (default 3) means; it gates the prize sounds.
 
 ## Data
 

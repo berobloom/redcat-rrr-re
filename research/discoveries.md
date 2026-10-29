@@ -78,8 +78,8 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `rand() % 22`. Map file names are at 0x57a60[23], their tilesets at
   0x57abc[23].
 - CONFIRMED: the table at 0x57b8c, six rows of five, decoded to map names
-  (— = entry 0). That row r is groep r+3 is LIKELY (six rows, groepen 3–8 on
-  the menu screen); see hypotheses.
+  (— = entry 0). The row is the world (RRRIO +0x2c), not the groep; see
+  "The session".
 
   | row | maps by column |
   |---|---|
@@ -325,3 +325,82 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   120000. All movement is per frame (`player_tick`), so the original game ran
   faster on a faster PC. (The `out 0x43` code at 0x26b65 drives the PC
   speaker, channel 2, not the frame clock.)
+
+## The session: worlds, stages, modules
+
+- CONFIRMED (REKEN 0x10ac9 / 0x198c7, RRR 0x1abb6 / 0x1585e; RRRIO.INF
+  before and after a REKEN run): REKEN and RRR share RRRIO.INF. REKEN reads
+  damage (+0x04), boosts (+0x0c), rockets (+0x14), fuel (+0x20), groep
+  (+0x28), stage (+0x24), world (+0x2c) and +0x30 (copied to [0x46c87]; the
+  prize/sound code checks it, 3 by default), and writes the first four back
+  in `0x199cf`. RRR's race end `0x1585e` writes fuel, boosts, rockets, damage
+  (and stats +0x10, +0x14) back, sets +0x1f8 = 1, stores the finishing order
+  at +0x1fc and adds 3, 2, 1 points to +0x214[racer] for places 1, 2, 3.
+- CONFIRMED: +0x28 is the groep (3–8). REKEN maps it to a level byte
+  [0x46c84]: groep 3, 4, 5 → 3, 4, 5 and groep 6, 7, 8 → 0, 1, 2 (and back
+  in `0x199cf`); the screen shows "Groep: 6" for +0x28 = 6. Command-line
+  `G3`..`G8` override it, `M1`..`M4` force a module.
+- STRONGLY SUPPORTED: +0x2c is the world, not "groep − 3": six rows in the
+  stage tables match six world names (REKEN 0x44fe8, RRR 0x57c18: De
+  Welkomstrace, De Rotsvlakte, De Snelweg, De Puzzelkloof, De Cactusvallei,
+  De Laatste Kans), and row 0 holds the track1 maps.
+- CONFIRMED: per world (REKEN 0x45000 = RRR 0x57c30, rows of 4) the enabled
+  exercise modules 1–4 (Handig rekenen, Wat is waar?, Memory, Grote
+  getallenspel; names at 0x44fd4):
+
+  | world | modules | maps by stage 0..4 (0x44f5c = RRR 0x57b8c) |
+  |---|---|---|
+  | 0 | 1, 3 | 1, 2, —, 3, — |
+  | 1 | 2, 3 | 4, —, 5, 6, — |
+  | 2 | 1, 2, 3 | 7, 8, 9, 10, — |
+  | 3 | 1, 3, 4 | 11, 12, —, 13, 14 |
+  | 4 | 2, 3, 4 | 15, —, 16, 17, 18 |
+  | 5 | 1, 2, 3, 4 | 19, 20, 21, 22, 23 |
+
+- CONFIRMED (`0x10cad` in REKEN, the same code at RRR 0x1ad9a): the next
+  module is the first enabled one after the stage, taken only when the stage
+  is 0 or +0x1f8 (race done) is set; REKEN stores it as the new stage
+  (run: stage 0 → 1 after Handig rekenen). Module 4 with groep 3 becomes
+  module 3. So stage s's race follows module s: a world is the welcome race
+  (stage 0), then per enabled module the exercises and the race in that
+  column. Map column and module column line up (zero map ⇔ module off).
+
+## The arithmetic part (REKEN.EXE)
+
+- CONFIRMED (screenshots): REKEN shows RedCat, a fuel counter, the repair
+  bar, the prize in a white box, boosts and rockets, Naam / Groep / "Aantal
+  sommen" (sums left, from 8), a keypad 0–9, TERUG and OK, Stop and Help.
+  Keys 0–9, Backspace and Enter work too (a key must be held ~0.2 s under
+  the harness).
+- CONFIRMED: module 1 "Handig rekenen" (`0x11ea2`) asks 8 sums. Each sum
+  picks a generator from `0x4539c[level]` (4 slots, −1 = unused; levels 0–2
+  and 5 use all four, level 3 {2, 3}, level 4 {0, 2, 3}): 0 `0x11496` ×,
+  1 `0x11619` :, 2 `0x1122e` + (two or four terms), 3 `0x1179e` −. The
+  text goes to 0x5371c, the answer to [0x537e4].
+- CONFIRMED (`0x11cfd`, run): per sum, `0x18e7f` picks a prize and shows it;
+  answer −2 is Help (`0x11a6a`, an example); a correct answer runs the award
+  `0x1910f` and counts [0x537e8], a wrong one `0x19471` (no prize). After 8
+  sums `0x19f07` appends to the pupil's `NNNNNNNN.SMD` and REKEN exits.
+  Run (groep 6): 8 sums, 7 correct, fuel 75 → 120, rockets 10 → 20, each
+  award matching the shown prize.
+- CONFIRMED (`0x18e7f`, `0x1910f`): prizes [0x46c86]:
+
+  | prize | award | shown as |
+  |---|---|---|
+  | 0 | boosts +5 (max 99) | |
+  | 1 | rockets +5 (max 99) | Mini-Raket |
+  | 2 | repair to 100 | |
+  | 3 | repair +30 (max 100) | |
+  | 4, 5, 6 | fuel +5, +10, +15 (max 150), one unit per 200 ms | Benzine 5 / 10 / 15 |
+
+  Choice: index rand() % 16 into 0x46c8c {5,6,5,1,4,0,6,1,6,4,5,6,0,1,1,1}
+  when repair is 100, or into 0x46cac {3,6,3,5,3,6,6,6,1,3,5,3,3,5,6,3}
+  when fuel < 60 or repair < 100 (the second draw wins when both hold);
+  repair 0 forces 2; a repair prize at repair 100 becomes rand() % 2;
+  rockets at 99 turn 1 into 0, boosts at 99 turn 0 into 1.
+- CONFIRMED: answer ranges per level `0x45480`: (15, 50), (15, 100),
+  (15, 150) for levels 0–2 (groep 6–8), (2, 9) for levels 3–5.
+- CONFIRMED (file after the run): `NNNNNNNN.SMD` (`0x19cfb` finds the pupil's
+  file, `%8.8d.SMD`) ends with a record holding module 1, 8 sums, 7 correct
+  (big-endian-looking u32s), the date as text "29/09/2026" on 29 October
+  (LIKELY tm_mon without +1) and the groep. Layout not decoded yet.

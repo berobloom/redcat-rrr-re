@@ -16,15 +16,12 @@ Confidence levels per AGENTS.md.
 
 ## Game structure
 
-- STRONGLY SUPPORTED (the user, who knows the game): the arithmetic part
-  (REKEN.EXE) comes first; solving problems earns fuel and repair (damage)
-  points, and then the race starts with them. Fits RRRIO.INF carrying fuel
-  (0x20) and damage (0x04) into the race. Not yet traced in REKEN.EXE.
+- CONFIRMED (session 4, was the user's description): the arithmetic part
+  earns the race's fuel, repair, boosts and rockets; see discoveries "The
+  arithmetic part".
+- SUPERSEDED (session 4): "row of 0x57b8c = groep". The row is the world
+  (+0x2c) and the groep is +0x28; discoveries "The session".
 
-- LIKELY: a session is a series of races (the "stages" of table 0x57b8c,
-  indexed by [0x7519c]) for one school group ([0x751a4], groepen 3–8 on the
-  menu screen), with arithmetic exercises (REKEN.EXE) between them. A 0 in the
-  table means that slot has no race; `0x1ae67` steps over zero entries.
 - LIKELY: the three racers are RedCat, Brutus and Snitch. RRR logs "RC", "BULL"
   and "MUIS" drive anims; the podium screens are named for the six finishing
   orders (`rbs.pcx`, `rsb.pcx`, `brs.pcx`, `bsr.pcx`, `sbr.pcx`, `srb.pcx`).

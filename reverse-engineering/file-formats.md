@@ -92,7 +92,7 @@ tables (discoveries "Race tracks").
 
 ## RRRIO.INF
 
-The state RRRMENU and RRR share: a raw dump of RRR's globals
+The state RRRMENU, REKEN and RRR share (REKEN keeps it at 0x534f4): a raw dump of RRR's globals
 0x75178..0x753a0 (0x228 bytes). Defaults from `rrrio_load` (0x1abb6):
 
 | offset | RRR global | default | meaning |
@@ -104,12 +104,13 @@ The state RRRMENU and RRR share: a raw dump of RRR's globals
 | 0x18 | 0x75190 | 0 | ? (stats +0x10) |
 | 0x1c | 0x75194 | 0 | ? (stats +0x14) |
 | 0x20 | 0x75198 | 75 | fuel |
-| 0x24 | 0x7519c | 0 | stage (column of the map table) |
-| 0x28 | 0x751a0 | 6 | ? |
-| 0x2c | 0x751a4 | 0 | group row (groep − 3, LIKELY) |
-| 0x30 | 0x751a8 | 3 | ? |
+| 0x24 | 0x7519c | 0 | stage: map column, = the module REKEN last played |
+| 0x28 | 0x751a0 | 6 | groep 3–8 |
+| 0x2c | 0x751a4 | 0 | world 0–5 (row of the map and module tables) |
+| 0x30 | 0x751a8 | 3 | ? (REKEN [0x46c87], gates prize sounds) |
 | 0x34 | 0x751ac | 0 | joystick on |
 | 0x50 | 0x751c8 | 0x1c, 0x36, 0x4b, 0x4d, 0x48, 0x50 | key scancodes: Enter, right Shift, ←, →, ↑, ↓ |
 | 0x68 | 0x751e0 | | four 400-byte records (cleared) |
+| 0x1f8 | 0x75370 | 0 | race done (set by RRR 0x1585e; lets REKEN advance) |
 | 0x1fc | 0x75374 | 0, 2, 4 | start order of the racers |
 | 0x214 | 0x7538c | 0, 0, 0 | points per racer |
