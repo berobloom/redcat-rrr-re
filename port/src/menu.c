@@ -1,8 +1,9 @@
 /* RRRMENU.EXE's main screen: menubs01.pcx, RRRANIM.IMG sprites through the
    anim table 0x457bc (rrrmenu_anims_tab.c), RRRFONT.IMG for the Race panel.
    Sprites are drawn with their top-left at the given point (the hotspot is
-   not used), 0xff clear.  Not ported: Rapport (P, 0x12990), the Bediening
-   screen (B, 0x1118f), the sounds (0x10b4f) and the closing film. */
+   not used), 0xff clear.  Bediening (0x1118f) is the keyboard half: the
+   joystick set-up is not ported, nor Rapport (P, 0x12990), the sounds
+   (0x10b4f) and the closing film. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +16,7 @@
 #define FRAME_MS 20             /* a frame, present and delay(1) (0x11056) */
 #define FLASH_MS 100            /* world_flash: delay(10), hundredths */
 
-enum { ST_IDLE, ST_ANIM, ST_FLASH };
+enum { ST_IDLE, ST_ANIM, ST_FLASH, ST_KEYS, ST_KEYS_WAIT };
 enum { AFTER_NONE, AFTER_START };
 
 /* menu buttons 0x45244: scan code and rectangle */
@@ -51,6 +52,35 @@ static const uint8_t world_modules[6][4] = {        /* 0x4558e */
     { 1, 0, 1, 1 }, { 0, 1, 1, 1 }, { 1, 1, 1, 1 },
 };
 
+/* 0x453e2: the keys Bediening takes, scan code and name; 0 (Esc) aborts */
+const rc_menu_keyname rc_menu_keys[RC_MENU_KEYS] = {
+    { 1, "       " }, { 30, "A      " }, { 48, "B      " }, { 46, "C      " },
+    { 32, "D      " }, { 18, "E      " }, { 33, "F      " }, { 34, "G      " },
+    { 35, "H      " }, { 23, "I      " }, { 36, "J      " }, { 37, "K      " },
+    { 38, "L      " }, { 50, "M      " }, { 49, "N      " }, { 24, "O      " },
+    { 25, "P      " }, { 16, "Q      " }, { 19, "R      " }, { 31, "S      " },
+    { 20, "T      " }, { 22, "U      " }, { 47, "V      " }, { 17, "W      " },
+    { 45, "X      " }, { 21, "Y      " }, { 44, "Z      " }, { 79, "End    " },
+    { 80, "Omlaag " }, { 81, "PgDn   " }, { 75, "Links  " }, { 76, "5      " },
+    { 77, "Rechts " }, { 71, "HOME   " }, { 72, "Omhoog " }, { 73, "PgUp   " },
+    { 82, "INS    " }, { 83, "DEL    " }, { 57, "SPATIE " }, { 28, "ENTER  " },
+    { 42, "L SHIFT" }, { 54, "R SHIFT" }, { 29, "CTRL   " }, { 56, "ALT    " },
+    { 58, "CAPS LK" }, { 15, "TAB    " },
+};
+
+/* Bediening's prompts and where each key goes in RRRIO.INF */
+static const struct {
+    const char *label;
+    int offset;
+} key_slots[6] = {
+    { "Linksaf:                     ", 0x58 },
+    { "Rechtsaf:                    ", 0x5c },
+    { "Vooruit:                     ", 0x60 },
+    { "Achteruit:                   ", 0x64 },
+    { "Turbo Boost:                 ", 0x50 },
+    { "Raket:                       ", 0x54 },
+};
+
 static uint8_t *read_file(const char *dir, const char *name, uint32_t *size)
 {
     FILE *f = rc_fopen_nocase(dir, name, "rb");
@@ -84,6 +114,10 @@ int rc_menu_load(rc_menu *m, const char *dir)
     if (!d || rc_pcx_decode(&m->bg, d, size) != 0 || m->bg.w != W ||
         m->bg.h != H)
         return -1;
+    d = rc_archive_find(&m->rrrmenu, "MENUKEY.PCX", &size);
+    if (!d || rc_pcx_decode(&m->keys_bg, d, size) != 0 || m->keys_bg.w != W ||
+        m->keys_bg.h != H)
+        return -1;
     for (i = 1; i <= RC_RRRMENU_IMAGES && i - 1 < m->rrranim.count; i++)
         if (!(d = rc_archive_get(&m->rrranim, i - 1, &size)) ||
             rc_sprite_parse(&m->img[i], d, size) != 0)
@@ -97,6 +131,7 @@ int rc_menu_load(rc_menu *m, const char *dir)
 void rc_menu_free(rc_menu *m)
 {
     rc_pcx_free(&m->bg);
+    rc_pcx_free(&m->keys_bg);
     rc_font_free(&m->font);
     free(m->font_data);
 }
@@ -233,6 +268,61 @@ static void play(rc_menu *m, int anim, int x, int y, int step, int after)
     draw_frame(m, anim, m->frame, x, y);
 }
 
+/* menubs01.pcx and what menu_init draws on it */
+static void main_screen(rc_menu *m)
+{
+    memcpy(m->screen, m->bg.pixels, sizeof m->screen);
+    memcpy(m->pal, m->bg.palette, sizeof m->pal);
+    draw_groep(m, 1);
+    draw_bediening(m);
+    draw_geluid(m);
+}
+
+/* Bediening without a joystick (0x1150e): MENUKEY.PCX and the prompts */
+static void keys_start(rc_menu *m)
+{
+    m->colour = 0;
+    memcpy(m->screen, m->keys_bg.pixels, sizeof m->screen);
+    memcpy(m->pal, m->keys_bg.palette, sizeof m->pal);
+    text(m, 0xc9, 0xca, "Geef 1 voor 1 de toetsen voor");
+    text(m, 0xc9, 0xde, key_slots[0].label);
+    m->keys_n = 0;
+    m->state = ST_KEYS;
+}
+
+/* 0x10add: a key of the table not taken yet */
+static void keys_take(rc_menu *m, int scan)
+{
+    int i, k, n = m->keys_n;
+
+    for (i = 0; i < RC_MENU_KEYS && rc_menu_keys[i].scan != scan; i++)
+        ;
+    if (i == RC_MENU_KEYS)
+        return;
+    if (i == 0) {               /* Esc: nothing is kept */
+        text(m, 0xc9, 0x142, "Afgebroken!                  ");
+        text(m, 0xc9, 0x156, "Druk op [Enter]              ");
+        m->state = ST_KEYS_WAIT;
+        return;
+    }
+    for (k = 0; k < n; k++)
+        if (m->keys_taken[k] == i)
+            return;
+    m->keys_taken[n] = i;
+    m->colour = 1;
+    text(m, 0x141, 0xde + 20 * n, rc_menu_keys[i].name);
+    m->colour = 0;
+    if (++m->keys_n < 6) {
+        text(m, 0xc9, 0xde + 20 * m->keys_n, key_slots[m->keys_n].label);
+        return;
+    }
+    for (k = 0; k < 6; k++)
+        rc_session_set(m->s, key_slots[k].offset,
+                       rc_menu_keys[m->keys_taken[k]].scan);
+    text(m, 0xc9, 0x156, "Druk op [Enter]              ");
+    m->state = ST_KEYS_WAIT;
+}
+
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed)
 {
     m->s = s;
@@ -285,16 +375,32 @@ static void leave(rc_menu *m, int start)
     m->result = start ? RC_MENU_START : RC_MENU_QUIT;
 }
 
-void rc_menu_key(rc_menu *m, int scan)
+int rc_menu_key(rc_menu *m, int scan)
 {
+    if (m->state == ST_KEYS) {
+        keys_take(m, scan);
+        return 1;
+    }
+    if (m->state == ST_KEYS_WAIT) {
+        if (scan == 0x1c) {     /* back: 0x1198c */
+            main_screen(m);
+            panel(m, 1, 1);
+            m->state = ST_IDLE;
+            idle_wait(m);
+        }
+        return 1;
+    }
     if (m->state != ST_IDLE || m->result)
-        return;
+        return 0;
     switch (scan) {
     case 0x1c: case 0x1f:       /* Start!: RedCat drives off */
         play(m, 3, 22, 94, 1, AFTER_START);
         break;
     case 0x12:                  /* Einde */
         leave(m, 0);
+        break;
+    case 0x30:                  /* Bediening: no joystick here */
+        keys_start(m);
         break;
     case 0x13:                  /* the next world */
         m->world = (m->world + 1) % 6;
@@ -318,9 +424,11 @@ void rc_menu_key(rc_menu *m, int scan)
             m->groep = scan - 4;
             draw_groep(m, 1);
             panel(m, 1, 1);
-        }
+        } else if (scan < 4 || scan > 9)
+            return 0;
         break;
     }
+    return 1;
 }
 
 void rc_menu_click(rc_menu *m, int x, int y)
@@ -385,6 +493,8 @@ void rc_menu_draw(rc_menu *m)
     int i, j;
 
     memcpy(m->fb, m->screen, sizeof m->fb);
+    if (m->state == ST_KEYS || m->state == ST_KEYS_WAIT)
+        return;                 /* 0x1e3b1 hides it there */
     for (j = 0; j < p->h; j++)
         for (i = 0; i < p->w; i++) {
             int c = p->pixels[j * p->w + i];

@@ -5,6 +5,7 @@
 0x10a38 font_bk_black
 0x10a5e font_bk_clear
 0x10a84 set_text_colour
+0x10add key_wait
 0x10b4f menu_sound
 0x10bb9 draw_groep_off
 0x10bfe draw_groep_on

@@ -12,9 +12,18 @@
 
 enum { RC_MENU_NONE, RC_MENU_START, RC_MENU_QUIT };
 
+/* 0x453e2: the keys Bediening accepts (PC scan code, name) */
+#define RC_MENU_KEYS 46
+typedef struct {
+    int scan;
+    const char *name;
+} rc_menu_keyname;
+extern const rc_menu_keyname rc_menu_keys[RC_MENU_KEYS];
+
 typedef struct {
     rc_archive rrrmenu, rrranim;
     rc_pcx bg;                  /* menubs01.pcx */
+    rc_pcx keys_bg;             /* MENUKEY.PCX */
     rc_sprite img[RC_RRRMENU_IMAGES + 1];   /* by image number */
     rc_font font;               /* RRRFONT.IMG */
     uint8_t *font_data;
@@ -29,6 +38,7 @@ typedef struct {
     int state, after;
     int anim, ax, ay, frame, step, end;
     int timer, flashes, idle;
+    int keys_n, keys_taken[6];  /* Bediening: table indices chosen */
     uint32_t rng;
     int mouse_x, mouse_y;
     int result;
@@ -44,8 +54,9 @@ void rc_menu_free(rc_menu *m);
    one, the screen. */
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed);
 /* A key by its PC scan code (0x1f S, 0x1c Enter, 0x13 R, 0x12 E, 0x19 P,
-   0x30 B, 0x22 G, 4..9 the digits 3..8). */
-void rc_menu_key(rc_menu *m, int scan);
+   0x30 B, 0x22 G, 4..9 the digits 3..8; on the Bediening screen any of
+   rc_menu_keys, 1 Esc aborting). */
+int rc_menu_key(rc_menu *m, int scan);   /* 1 if the menu used it */
 void rc_menu_click(rc_menu *m, int x, int y);
 void rc_menu_mouse(rc_menu *m, int x, int y);
 void rc_menu_tick(rc_menu *m, int ms);

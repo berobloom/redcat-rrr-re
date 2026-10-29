@@ -18,8 +18,9 @@
    --module starts with that module (in the first world that has it);
    --race only races, the map given or track1a, without the exercises.
 
-   Race keys (RRRIO.INF defaults): arrows steer and accelerate, right Shift
-   boost, Enter rocket, F1/F2/F3 follow RedCat/Brutus/Snitch, Esc quits.
+   Race keys: those of RRRIO.INF, set in the menu's Bediening (defaults:
+   arrows steer and accelerate, Enter boost, right Shift rocket);
+   F1/F2/F3 follow RedCat/Brutus/Snitch, Esc goes back to the menu.
 
    The original's frame loop has no timer (research/discoveries.md "The
    race: speed"): it ran 29 frames/s at DOSBox cycles=40000 and faster on
@@ -292,17 +293,67 @@ static void present(void)
     SDL_RenderPresent(g.ren);
 }
 
+/* PC scan codes (set 1, extended keys as their keypad twins, as the
+   original's keyboard handler sees them) of the SDL keys */
+static int pc_scan(SDL_Scancode c)
+{
+    static const char letters[] = {
+        30, 48, 46, 32, 18, 33, 34, 35, 23, 36, 37, 38, 50,   /* a..m */
+        49, 24, 25, 16, 19, 31, 20, 22, 47, 17, 45, 21, 44,   /* n..z */
+    };
+
+    if (c >= SDL_SCANCODE_A && c <= SDL_SCANCODE_Z)
+        return letters[c - SDL_SCANCODE_A];
+    if (c >= SDL_SCANCODE_1 && c <= SDL_SCANCODE_0)
+        return 2 + (int)(c - SDL_SCANCODE_1);
+    switch (c) {
+    case SDL_SCANCODE_ESCAPE: return 1;
+    case SDL_SCANCODE_BACKSPACE: return 14;
+    case SDL_SCANCODE_TAB: return 15;
+    case SDL_SCANCODE_RETURN: case SDL_SCANCODE_KP_ENTER: return 28;
+    case SDL_SCANCODE_LCTRL: case SDL_SCANCODE_RCTRL: return 29;
+    case SDL_SCANCODE_LSHIFT: return 42;
+    case SDL_SCANCODE_RSHIFT: return 54;
+    case SDL_SCANCODE_LALT: case SDL_SCANCODE_RALT: return 56;
+    case SDL_SCANCODE_SPACE: return 57;
+    case SDL_SCANCODE_CAPSLOCK: return 58;
+    case SDL_SCANCODE_HOME: case SDL_SCANCODE_KP_7: return 71;
+    case SDL_SCANCODE_UP: case SDL_SCANCODE_KP_8: return 72;
+    case SDL_SCANCODE_PAGEUP: case SDL_SCANCODE_KP_9: return 73;
+    case SDL_SCANCODE_LEFT: case SDL_SCANCODE_KP_4: return 75;
+    case SDL_SCANCODE_KP_5: return 76;
+    case SDL_SCANCODE_RIGHT: case SDL_SCANCODE_KP_6: return 77;
+    case SDL_SCANCODE_END: case SDL_SCANCODE_KP_1: return 79;
+    case SDL_SCANCODE_DOWN: case SDL_SCANCODE_KP_2: return 80;
+    case SDL_SCANCODE_PAGEDOWN: case SDL_SCANCODE_KP_3: return 81;
+    case SDL_SCANCODE_INSERT: case SDL_SCANCODE_KP_0: return 82;
+    case SDL_SCANCODE_DELETE: case SDL_SCANCODE_KP_PERIOD: return 83;
+    default: return 0;
+    }
+}
+
+static int pc_down(const Uint8 *k, int scan)
+{
+    int c;
+
+    for (c = 0; c < SDL_NUM_SCANCODES; c++)
+        if (k[c] && pc_scan((SDL_Scancode)c) == scan)
+            return 1;
+    return 0;
+}
+
 static void step(void)
 {
     const Uint8 *k = SDL_GetKeyboardState(NULL);
     rc_input in;
 
-    in.up = k[SDL_SCANCODE_UP];
-    in.down = k[SDL_SCANCODE_DOWN];
-    in.left = k[SDL_SCANCODE_LEFT];
-    in.right = k[SDL_SCANCODE_RIGHT];
-    in.boost = k[SDL_SCANCODE_RSHIFT];
-    in.rocket = k[SDL_SCANCODE_RETURN];
+    /* the keys of RRRIO.INF (RRR 0x1b469; set in the menu's Bediening) */
+    in.left = pc_down(k, rc_session_get(&g.session, 0x58));
+    in.right = pc_down(k, rc_session_get(&g.session, 0x5c));
+    in.up = pc_down(k, rc_session_get(&g.session, 0x60));
+    in.down = pc_down(k, rc_session_get(&g.session, 0x64));
+    in.boost = pc_down(k, rc_session_get(&g.session, 0x50));
+    in.rocket = pc_down(k, rc_session_get(&g.session, 0x54));
     if (k[SDL_SCANCODE_F1]) g.race.camera_racer = RC_REDCAT;
     if (k[SDL_SCANCODE_F2]) g.race.camera_racer = RC_BULL;
     if (k[SDL_SCANCODE_F3]) g.race.camera_racer = RC_MUIS;
@@ -381,24 +432,6 @@ static void to_menu(void)
     play_race();
 }
 
-static int menu_scan(SDL_Keycode k)
-{
-    if (k >= SDLK_3 && k <= SDLK_8)
-        return 4 + (int)(k - SDLK_3);
-    if (k >= SDLK_KP_3 && k <= SDLK_KP_8)
-        return 4 + (int)(k - SDLK_KP_3);
-    switch (k) {
-    case SDLK_s: return 0x1f;
-    case SDLK_RETURN: case SDLK_KP_ENTER: return 0x1c;
-    case SDLK_r: return 0x13;
-    case SDLK_e: return 0x12;
-    case SDLK_p: return 0x19;
-    case SDLK_b: return 0x30;
-    case SDLK_g: return 0x22;
-    }
-    return 0;
-}
-
 static void menu_frame(void)
 {
     rc_menu *m = &g.mainmenu;
@@ -406,11 +439,14 @@ static void menu_frame(void)
     Uint32 now = SDL_GetTicks();
 
     while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT ||
-            (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE))
+        if (e.type == SDL_QUIT)
             g.running = 0;
-        else if (e.type == SDL_KEYDOWN && !e.key.repeat)
-            rc_menu_key(m, menu_scan(e.key.keysym.sym));
+        else if (e.type == SDL_KEYDOWN && !e.key.repeat) {
+            int scan = pc_scan(e.key.keysym.scancode);
+            /* Esc aborts Bediening; on the main screen the port quits */
+            if (!rc_menu_key(m, scan) && scan == 1)
+                g.running = 0;
+        }
         else if (e.type == SDL_MOUSEMOTION)
             rc_menu_mouse(m, e.motion.x, e.motion.y);
         else if (e.type == SDL_MOUSEBUTTONDOWN &&

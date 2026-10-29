@@ -736,3 +736,26 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - On the first pass of the loop the groep variable is −1, so it takes
   the groep branch and draws the panel with its modules; `menu_init`
   itself draws them only after a finished race.
+
+## The menu: Bediening
+
+- CONFIRMED (`0x1118f`; DOSBox: B, then A D W S Space Ctrl, the buffer
+  dumped before and after Enter, port pixel-identical; RRRIO after Start!):
+  without a joystick ([0x5246c], [0x52470] zero; `0x11e42`) Bediening shows
+  MENUKEY.PCX with its palette, hides the pointer and asks in RRRFONT pair
+  0 at (201, 202) "Geef 1 voor 1 de toetsen voor", then per line
+  (y = 222 + 20 k) "Linksaf:", "Rechtsaf:", "Vooruit:", "Achteruit:",
+  "Turbo Boost:", "Raket:". `0x10add` waits for any key of the table
+  0x453e2 (46 {scan, name}: letters, the cursor/keypad keys, Space, Enter,
+  Shifts, Ctrl, Alt, Caps Lock, Tab) not chosen yet and prints its name in
+  pair 1 at (321, y). Entry 0 is Esc: "Afgebroken!" at (201, 322), nothing
+  kept. After the sixth, the keys go into RRRIO: +0x58 left, +0x5c right,
+  +0x60 forward, +0x64 back, +0x50 Turbo Boost, +0x54 Raket, and "Druk op
+  [Enter]" at (201, 342); Enter redraws the main screen and the panel
+  (1, 1). DOSBox: +0x50.. = 0x39 0x1d 0x1e 0x20 0x11 0x1f.
+- CONFIRMED (RRR 0x1b469 copies +0x50 to [0x71450], the boost binding, and
+  +0x54 to [0x7144c], the rocket's): with the defaults Enter (0x1c) boosts
+  and right Shift (0x36) fires a rocket. The port had them the other way.
+- With a joystick (not ported) it shows MENUJOY.PCX and calibrates: centre,
+  top left, bottom right, a rocket button and a boost button
+  ("Joystick is ingesteld!"), into +0x3c.. and +0x220.

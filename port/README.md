@@ -16,29 +16,31 @@ Early. What exists:
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
 - `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]`:
-  the game's round as MOTOR.EXE runs it, from the menu (`src/menu.c`:
-  Start! S/Enter, R or a click on the Race panel the next world, 3..8 the
-  groep, G the sound, E Einde; Esc in a race returns to it). A world opens
-  with its race; then for each of its modules the
-  exercise screen of the arithmetic part (`src/reken_screen.c`) and the
-  race of that stage, with the fuel, repair, boosts and rockets earned and
-  the last finishing order as the start order, each race followed by the
-  podium with the world's points (`src/podium.c`); after the last race the
-  next world. The modules: 1 Handig rekenen, 8 sums answered with the
-  digit keys or by clicking the keypad, Backspace/TERUG, Enter/OK; 2 Wat
-  is waar?, 8 rounds of three sums, 1/2/3 or a click picks the true one;
-  3 Memory, a grid of SOM and ANTWOORD cards turned by mouse, a found
-  pair leaves the grid; 4 Grote getallenspel, 8 rounds of reaching a
-  target from three or four numbers: 1..4 or a click takes a number, + −
-  × : (keypad, x, colon) an operator, = or Enter makes the sum,
-  Backspace TERUG, o OPNIEUW. Each right answer, pair or target adds the
-  shown prize. `--module N` starts with module N in the first world that
-  has it; a map number replaces the next race's map.
+  the game's round as MOTOR.EXE runs it, from the menu (`src/menu.c`: Start!
+  S/Enter, R or a click on the Race panel the next world, 3..8 the groep, G
+  the sound, B the race keys, E Einde; Esc in a race returns to it). A world
+  opens with its race; then for each of its modules the exercise screen of
+  the arithmetic part (`src/reken_screen.c`) and the race of that stage,
+  with the fuel, repair, boosts and rockets earned and the last finishing
+  order as the start order, each race followed by the podium with the
+  world's points (`src/podium.c`); after the last race the next world. The
+  modules: 1 Handig rekenen, 8 sums answered with the digit keys or by
+  clicking the keypad, Backspace/TERUG, Enter/OK; 2 Wat is waar?, 8 rounds
+  of three sums, 1/2/3 or a click picks the true one; 3 Memory, a grid of
+  SOM and ANTWOORD cards turned by mouse, a found pair leaves the grid; 4
+  Grote getallenspel, 8 rounds of reaching a target from three or four
+  numbers: 1..4 or a click takes a number, + − × : (keypad, x, colon) an
+  operator, = or Enter makes the sum, Backspace TERUG, o OPNIEUW. Each right
+  answer, pair or target adds the shown prize. `--module N` starts with
+  module N in the first world that has it; a map number replaces the next
+  race's map.
   `--race` goes straight to the race. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
   waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
-  crashes, the finish line, the camera. Arrows drive, right Shift boosts,
-  F1/F2/F3 pick the racer to follow, PgUp/PgDn change map, Esc quits.
+  crashes, the finish line, the camera. The keys are the record's, set in
+  the menu's Bediening (B); by default arrows drive, Enter boosts, right
+  Shift fires a rocket. F1/F2/F3 pick the racer to follow, PgUp/PgDn
+  change map, Esc quits (in the round: back to the menu).
 - `race_sim <data dir> [map|all] [frames] [trace N]`: races without a
   screen; reports whether the computer racers finish each map.
 - `reken_sim play [groep] [seed]`: the arithmetic part's first module,
@@ -54,7 +56,7 @@ Early. What exists:
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
 winner's film after a stage-4 race (the podium stands in), the high scores,
-saving RRRIO.INF, the menu's Rapport and Bediening screens, the exercises'
+saving RRRIO.INF, the menu's Rapport and the joystick set-up, the exercises'
 Help example, mouse pointer and spoken feedback.
 
 ### Frame rate
