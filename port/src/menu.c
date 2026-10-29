@@ -18,8 +18,12 @@
 
 #define W 640
 #define H 480
-#define FRAME_MS 20             /* a frame, present and delay(1) (0x11056) */
-#define FLASH_MS 100            /* world_flash: delay(10), hundredths */
+/* 0x1e88e(ms) ends on a BIOS tick (18.2 a second; discoveries "Delays"),
+   so delay(1) and delay(10) both last a tick: DOSBox-X shows Geluid's
+   frames one a tick */
+#define TICK_MS 55
+#define FRAME_MS TICK_MS        /* a frame, present and delay(1) (0x11056) */
+#define FLASH_MS TICK_MS        /* world_flash: delay(10) */
 
 enum { ST_IDLE, ST_ANIM, ST_FLASH, ST_KEYS, ST_KEYS_WAIT, ST_RAPPORT,
        ST_HIGH, ST_NAME_LIST, ST_NAME_EDIT, ST_JINGLE };

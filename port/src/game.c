@@ -66,8 +66,10 @@
 
 #define AUDIO_RATE 22050        /* the device; the mixer resamples */
 
-/* start_lights: lamp images and how long each stays, ms */
-static const int light_ms[5] = { 1500, 1000, 1000, 1000, 500 };
+/* start_lights: lamp images and how long each stays: delay_ms 1500,
+   1000, 1000, 1000, 500, each ending on a BIOS tick (55 ms; discoveries
+   "Delays") */
+static const int light_ms[5] = { 28 * 55, 19 * 55, 19 * 55, 19 * 55, 10 * 55 };
 
 static struct {
     const char *dir;
@@ -906,7 +908,7 @@ static void frame(void)
                            g.session.order, g.session.points,
                            *name ? name : "RedCat", g.fb, g.pal);
             present();
-            g.race_end = now + 4000;
+            g.race_end = now + 73 * 55;     /* delay_ms(4000), whole ticks */
             goto out;
         }
     }
