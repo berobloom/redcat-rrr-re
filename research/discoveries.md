@@ -103,6 +103,26 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: tilesets per map (table 0x57abc): `track1.img` for track1a,
   track1c, track2a/b/c and track3a; `track2.img` for track1b and every map
   from track3b on.
+- CONFIRMED: a race is one pass of the course, not laps. The type-20 case of
+  `0x18b8d` (0x19152) sets the racer's finished flag ([0x55fbc], [0x55ff0],
+  [0x56014] for racers 0, 2, 4) on first contact, with no check of
+  waypoints or a lap count, and `finish_check` (0x10eff) only collects the
+  order; "Finish line not complete!" (0x10fff) is an assertion that it holds
+  three racers. No string or counter for laps exists in RRR.
+- CONFIRMED (map data, all 19 maps): the racers start on waypoint 0 of their
+  lists, and on every map Brutus's and Snitch's last waypoint lies on (0–5
+  cells from) the type-20 cells. A map's size is just the room its course
+  needs: Snitch's waypoint path runs from 153 cells (track2c) to 1136
+  (track4c), so maps from world 4 on hold courses about three times longer
+  than world 1's.
+- STRONGLY SUPPORTED: the finish can't be reached from the start except by
+  driving the course. A flood fill from Snitch's waypoint 0 that only steps
+  to cells of equal or lower ground level (byte 5) reaches the first
+  type-20 cell after 118–543 steps. track4a is a loop whose finish lies
+  8 cells from the start in a straight line, but 351 steps away by ground.
+  Stray type-20 cells (track3c (13..14,0); track3d (67..70,2..6), beside the
+  start) are not reachable this way. The fill ignores jumps off ramps
+  (type 14).
 
 ## Running the original
 

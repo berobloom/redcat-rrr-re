@@ -19,8 +19,9 @@
    never used up.
 5. **RESOLVED.** RC.IMG's layout follows the anim table: RedCat 32
    headings per pose, Brutus and Snitch 16 (discoveries "map objects").
-6. What do the 19 `.MAP` files' different sizes mean for play: is the whole
-   map one lap, or a point-to-point course?
+6. **RESOLVED.** One pass, no laps: the first touch of a type-20 cell
+   finishes a racer, and the sizes follow course length (discoveries "Race
+   tracks").
 7. **RESOLVED (session 4).** Not in the race: REKEN awards fuel, repair,
    boosts and rockets per correct sum and passes them in RRRIO.INF;
    discoveries "The arithmetic part".
