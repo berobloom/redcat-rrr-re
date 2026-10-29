@@ -15,8 +15,9 @@
 3. **RESOLVED (session 2).** Map cell bytes: 2-3 waypoint, 4 object or
    surface type, 5 ground level. Discoveries "The race: map cells".
 4. **RESOLVED (session 3).** The computer racers steer toward their
-   waypoints; discoveries "computer racers". Open: what the 0x18759
-   objects are (mines? oil?) and what stats +0x20 counts.
+   waypoints; discoveries "computer racers". The 0x18759 objects are
+   missiles (discoveries "dropped missiles"); stats +0x20 is their count,
+   never used up.
 5. How are the racers' sprites laid out in RC.IMG (1056 entries; rotations
    per racer)?
 6. What do the 19 `.MAP` files' different sizes mean for play: is the whole

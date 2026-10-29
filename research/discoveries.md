@@ -235,7 +235,9 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   rockets.
 - CONFIRMED: `0x18759` spawns an object with anim 16 in the racer's heading,
   25 px ahead, height 40, speed 25 px/frame, lifetime 150 frames (+0x24);
-  callback 0x17b61 (kind 0), 0x178f6 (kind 2) or 0x17c74 (others).
+  callback 0x17b61 (kind 0), 0x178f6 (kind 2) or 0x17c74 (others). The
+  drop count (stats +0x20, 3 for both) is checked but never decremented.
+  See "rockets and explosions" for what the objects do.
 - CONFIRMED: damage or fuel below 0 sets [0x56080] (Brutus) / [0x5607c]
   (Snitch).
 
@@ -319,6 +321,29 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `0x103d1(1, distance to the camera racer)`, LIKELY its sound.
 - Computer racers never fire (their scripts are empty; see above), so
   rockets are RedCat's alone.
+
+## The race: dropped missiles
+
+- CONFIRMED (`0x17b61`, `0x178f6`, `0x17c74`, sharing a tail at 0x17a11):
+  each frame life − 1; at 0, or below 2 px/frame of speed (+0x18), the
+  object is freed and explodes. prio 0. It hits (`hit_test`, box 10) two
+  racers, by kind: 0 RedCat or Snitch, 2 Brutus or Snitch, 4 Brutus or
+  Snitch; a hit frees it, explodes it where it is and takes 10 damage off
+  the racer. Then it steers: `aim_at_player(n, target)` with target 0, 2,
+  4 by kind, and when the answer is neither its heading nor −1, heading =
+  turn[answer][heading] (0x71de0); velocity = speed along the heading,
+  position += velocity, speed × 0xffbe/0x10000 (≈ 0.999); anim 16, frame
+  = heading. Height stays 40 (no ground or wall test).
+- CONFIRMED (`0x13e3d`, bytes D8 E0 at 0x13e56 and 0x13e69): aim_at_player
+  computes dx and dy as `x·2⁻¹⁶` followed by FSUB ST(0), ST(0), i.e. 0; the
+  distance is 0 and it returns heading 0, never using the target. So the
+  "homing" missiles all turn toward heading 0 (up the screen). DOSBox (body
+  dumps over a TRACK1A race with RedCat standing): missiles with headings
+  13 and 15 turn one table step a frame to 0 and fly on straight; speed
+  25 → 21.5 over 150 frames, height 40, then the slot holds an explosion
+  (life 18).
+- So a Brutus missile of kind 0 can hit RedCat or Snitch, one of kind 4
+  Brutus himself or Snitch; Snitch's own missiles can hit him either way.
 
 ## The race: drawing (draw_view 0x11526, new2io.c)
 
