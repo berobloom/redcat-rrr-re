@@ -802,7 +802,20 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   TERUG 19 (503, 368), OPNIEUW 20 (503, 424). Groep 3–5 have no × and :
   buttons (= moves to x 78). Keys: × scan 0x49 / 0x2d, : 0x48, + 0x4e,
   − 0x4a, = 0x1c / 0x0d, TERUG 0x0e / 0x14, OPNIEUW 0x18.
-- Help (`0x171ea`) not read or ported.
+- CONFIRMED (`0x16620`, `0x171ea`; DOSBox-X, REKEN /DAVILEX M4, groep 6,
+  port frames pixel-identical): Help in module 4. H stops track 0, presses
+  Help, sets the slot count [0x45c30] to 4 and calls `0x171ea`:
+  restore_rect(8, 168, 204, …) and `0x14fe3` (four empty slots, box, work
+  panel, buttons); say 26..29; redraw, "8" in the box, "2" in slots 1–4;
+  say 30..32; slot 1 emptied (anim 21 frame i), "2" in the work panel; say
+  33; + pressed (`0x19842`, anim 24 at (8, 368)), panel "2 +", released;
+  say 34; slot 4 emptied, "2 + 2"; say 35; = pressed (anim 16 at
+  ([0x457cc], 368)) and held; say 36; panel cleared, "4" in slot 1, =
+  released; say 37, 38; the same with slots 2 and 3 giving "4" in slot 2
+  (say 39..42); say 43..45; slot 1 emptied, "4"; say 46; +, "4 +"; say 47;
+  slot 2 emptied, "4 + 4"; say 48; = held; say 49; released, "8" in the
+  panel; delay(2000). Then the count back, Help released (`0x19862`), the
+  title, and the round redrawn as it was.
 
 ## The round: MOTOR, RRRMENU, REKEN, RRR
 
