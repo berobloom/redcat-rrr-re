@@ -28,7 +28,7 @@
 
 8. What is XVGALIB.IMG (three 2,050-byte entries; first u16s read 62×33)?
 9. Format of the `ASCIInn.IMG` fonts and `RRRFONT.IMG`.
-10. Format of `TRANS.DAT` (65,025 bytes = 255×255: a colour blend table?).
+10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
 11. What is in `RRRHIGH.DAT` (written at run time, not on the CD)?
 
 ## Tooling

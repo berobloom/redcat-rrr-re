@@ -224,6 +224,26 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: damage or fuel below 0 sets [0x56080] (Brutus) / [0x5607c]
   (Snitch).
 
+## The race: drawing (draw_view 0x11526, new2io.c)
+
+- CONFIRMED: the view is drawn into an off-screen buffer and copied to the
+  screen rectangle x 20..620, y 0..400 (inclusive bounds, from `0x26ef4`'s
+  arguments; the screenshot's map pixels end at those columns and rows).
+  `draw_view` also has 540×360 at (50,20) and 480×320 at (80,40) for
+  [0x55fb8] = 1, 2, but `race_init` sets it to 0 and nothing else writes it.
+- CONFIRMED: sprites are drawn in the order of the sort list (0x6fc70,
+  0x6fc74 = next) with their top-left at the object's (x, y) minus the
+  scroll. Kinds (+8 of a sprite slot): 1, 2 opaque with 0xFF transparent
+  (`0x11bb4`); 4, 5, 6 translucent (`0x17d94`): dst = trans[dst·256 + src].
+  Other kinds are an error ("unknown type").
+- CONFIRMED: the trans table: 255 rows of 255 bytes from TRANS.DAT
+  (`0x11e2a`) at row·256 + column, column 255 = row. When the file is
+  missing `0x11ca2` builds it: entry (a, b) is the palette colour nearest to
+  the average of colours a and b, (a, a) = a; then `0x11db8` saves it. So
+  type 4–6 sprites are 50% blends (shadows, smoke).
+- CONFIRMED: a racer's sprite position is x − hotspot_x − 16, y − z −
+  hotspot_y (image record +8, +10), from `bull_tick` / `player_tick`.
+
 ## The race: speed
 
 - CONFIRMED (experiment): the race loop is not tied to vsync or a timer.

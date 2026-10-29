@@ -52,3 +52,9 @@
 0x1aedf ai_script_find       # CONFIRMED: finds waypoint in 0x57c90 / 0x5bd40 scripts
 0x13e3d aim_at_player        # LIKELY: heading from atan via 0x73ee0 toward racer 0
 0x18759 spawn_dropped_object # CONFIRMED: anim 16, 25 px ahead, speed 25, life 150
+0x11bb4 blit_sprite          # CONFIRMED: opaque copy, skips 0xFF
+0x17d94 blit_sprite_trans    # CONFIRMED: dst = trans[dst*256 + src], skips 0xFF
+0x11e2a trans_load           # CONFIRMED: reads 255x255 TRANS.DAT (shade.c)
+0x11ca2 trans_generate       # CONFIRMED: nearest colour to the average of two
+0x11db8 trans_save           # CONFIRMED: writes the generated table
+0x26ef4 present_view         # LIKELY: copies the view buffer to screen (x0,x1,y0,y1,...)
