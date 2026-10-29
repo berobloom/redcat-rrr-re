@@ -58,9 +58,8 @@
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
 21. **RESOLVED.** The name is asked by RRRMENU under MOTOR's `/1` (first
     menu start), discoveries "The menu: the pupil's name"; ported. The
-    cursor's blink is measured. Open: whether the pointer shows during the
-    name list and a click there takes a name, as the code says (untested:
-    DOSBox-X's mouse cannot be moved in the game's VESA mode).
+    cursor's blink is measured; the mouse does nothing in the dialog (the
+    pointer has no sprite until after it).
 11. **RESOLVED.** `RRRHIGH.DAT`: file-formats.md, discoveries "High
     scores".
 

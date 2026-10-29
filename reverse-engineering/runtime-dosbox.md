@@ -46,9 +46,24 @@ $D stop
 
 ## Mouse
 
-Not usable for experiments. QMP `input-send-event` accepts `rel` and `btn`
-events, but the game runs in VESA mode 0x101 (DOSBox-X's mode 0x69), which
-the built-in INT 33h driver does not handle ("MOUSE: Unhandled videomode 69
-on reset" in dosbox.log); relative moves, with `mouse_emulation=always`
-too, left REKEN's pointer where it was. Mouse behaviour is read from the
-code only.
+QMP `input-send-event` `rel` events do not move the game's pointer, with
+either driver: DOSBox-X counts mickeys only while the window holds the
+mouse (`user_cursor_locked`), and QMP moves never take it. The
+built-in INT 33h driver also logs "MOUSE: Unhandled videomode 69 on
+reset" for the game's VESA mode 0x101.
+
+What works (session 6, RRRMENU's paw followed it; position read from
+[0x5e328] / [0x5e324]):
+
+1. add `[dos]` `int33=false` to `.work/dos/redcat.conf` (generated; the
+   template is unchanged), start, and load the CD's driver: `type
+   'D:\GMOUSE'` ("Personal System II Mouse driver installed");
+2. capture the mouse with real X input on the Xvfb display:
+   `DISPLAY=:57 xdotool key --window $(xdotool search --name DOSBox-X)
+   ctrl+F10` (the title then ends in "[Ctrl+F10 releases mouse]");
+3. move with `xdotool mousemove_relative -- dx dy` and click with
+   `xdotool click 1`. In small steps one X pixel moved the pointer about
+   2 game pixels across and 1 down; larger steps are accelerated.
+
+Save states made under the default config don't carry the driver, so
+take the route from a fresh start.
