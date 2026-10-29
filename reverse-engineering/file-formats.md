@@ -110,10 +110,37 @@ The state RRRMENU, REKEN and RRR share (REKEN keeps it at 0x534f4): a raw dump o
 | 0x30 | 0x751a8 | 3 | ? (REKEN [0x46c87], gates prize sounds) |
 | 0x34 | 0x751ac | 0 | joystick on |
 | 0x50 | 0x751c8 | 0x1c, 0x36, 0x4b, 0x4d, 0x48, 0x50 | key scancodes: Enter, right Shift, ←, →, ↑, ↓ |
-| 0x68 | 0x751e0 | | four 400-byte records (cleared) |
+| 0x68 | 0x751e0 | | the pupil's name, a C string (RRRMENU 0x10ed1 puts "RedCat" when empty); the 400 bytes up to 0x1f8 are cleared by default |
 | 0x1f8 | 0x75370 | 0 | race done (set by RRR 0x1585e; lets REKEN advance) |
 | 0x1fc | 0x75374 | 0, 2, 4 | start order of the racers |
 | 0x214 | 0x7538c | 0, 0, 0 | points per racer |
+
+## Pupil files (`%8.8d.SMD`)
+
+One file per pupil in the game directory, written by REKEN at the end of
+each module (`smd_append` 0x19f07) and read by the menu's Rapport (RRRMENU
+0x12afd). Both executables carry the same code ("somdata.c"). CONFIRMED
+from the code and, for the reading side, by DOSBox runs with crafted files.
+
+| offset | size | meaning |
+|---|---|---|
+| 0 | 255 | the pupil's name (RRRIO +0x68), zero-padded |
+| 0xff | 4 | record count n (little-endian) |
+| 0x103 | | n records, 0x5b (91) bytes apart; the last one may be only 27 bytes |
+
+A record: +0 module 0..3 (the one played: groep 3's Memory instead of
+Grote getallenspel records 2), +4 sums asked (Memory: pairs tried), +8
+right (Grote getallenspel: always 0, see discoveries), +12 the date as
+"dd/mm/yyyy\0" (11 bytes; the month is `tm_mon`, counted from 0), +23 the
+groep. The 64 bytes after +27 are not used.
+
+Finding the file (`smd_find` 0x19cfb): `*.SMD` in directory order; the
+first whose name matches (case-insensitive, 0x1a807) is the pupil's. If none
+matches, the new file's number is one past the number of the last file seen
+(1 if none). Appending reads the n records (n × 0x5b bytes; a short last
+record reads short), then rewrites the file: the name, n + 1, the n records
+at the full stride (bytes past each record's 27 are whatever the buffer
+held), and the new record's 27 bytes.
 
 ## ASCII fonts (`ASCII12/20/30.IMG` in REKEN.IMG and INSTALL.IMG, `RRRFONT.IMG`)
 

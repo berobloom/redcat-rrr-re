@@ -418,10 +418,20 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   rockets at 99 turn 1 into 0, boosts at 99 turn 0 into 1.
 - CONFIRMED: answer ranges per level `0x45480`: (15, 50), (15, 100),
   (15, 150) for levels 0–2 (groep 6–8), (2, 9) for levels 3–5.
-- CONFIRMED (file after the run): `NNNNNNNN.SMD` (`0x19cfb` finds the pupil's
-  file, `%8.8d.SMD`) ends with a record holding module 1, 8 sums, 7 correct
-  (big-endian-looking u32s), the date as text "29/09/2026" on 29 October
-  (LIKELY tm_mon without +1) and the groep. Layout not decoded yet.
+- CONFIRMED (`0x19cfb`, `0x19f07`, the file after the run): the pupil's
+  `%8.8d.SMD` (layout in file-formats.md "Pupil files") gets a record per
+  module: module − 1 ([0x46c85]), asked, right, the date, the groep
+  (+0x28). The run's file: name empty (REKEN /DAVILEX), 1 record, module 0,
+  8 asked, 7 right, "29/09/2026" on 29 October (CONFIRMED by `0x19cb6`:
+  `tm_mon` is printed without + 1), groep 6. Asked/right per module: 1:
+  8, [0x537e8]; 2: 8, [0x53c78]; 3: [0x5bcf0], [0x5bcec] (pairs tried,
+  found); 4: 8, [0x5c094].
+- STRONGLY SUPPORTED (code; the read side checked in DOSBox): records are
+  read back at a 0x5b stride but appended as 27 bytes. Each append rewrites
+  the earlier records at the full stride, so the file stays readable: all
+  records but the last take 0x5b bytes (the extra 64 hold stale buffer
+  bytes), the last 27. A crafted file with 27-byte records throughout is
+  misread by Rapport: only records at multiples of 0x5b count.
 - CONFIRMED (`0x21bc7`; all four font files decode with it, glyphs rendered
   and legible): the ASCII font format in file-formats.md, 256 flags, w, h,
   fg, bk and 256 w×h glyphs.
@@ -759,3 +769,40 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - With a joystick (not ported) it shows MENUJOY.PCX and calibrates: centre,
   top left, bottom right, a rocket button and a boost button
   ("Joystick is ingesteld!"), into +0x38..+0x4c, +0x220 and +0x224.
+
+## The menu: Rapport
+
+- CONFIRMED (`0x12990`; DOSBox with crafted SMD files: three buffers, port
+  pixel-identical but for the pointer row noted below): P (or a click on
+  RedCat) shows rapport.pcx with its palette, the pointer stays. The file
+  is looked up by the menu's name ([0x528f4], "RedCat" when the record's
+  is empty): a file with an empty name is not found. In RRRFONT, pair 2
+  (green) "Rapport van" at (38, 438), pair 0 the name at (156, 438). Per
+  module i (0x45888 names; top y 111, 192, 274, 354 at 0x4591c; text x 36
+  at 0x45914): the name in pair 2 at (36, y); without records "Nog niet
+  gedaan" in pair 0 at (36, y + 25); else (`0x12673`) "Cijfer:%2d" in pair
+  0 at (36, y + 25) and "Totaal:%2d" in pair 1 at (156, y + 25), with
+  the graph (`0x12722`). Cijfer is the last record's right × 100 / asked,
+  divided by 10 (`0x12e8d`); Totaal the module's records together: Σ right
+  × 100 / Σ asked, / 10 (`0x12e12`, not an average of marks).
+- CONFIRMED (`0x12722`): the graph from x 310 ([0x45918]), 300 wide: n =
+  the module's records; step = 300 / n, lowered while > 1 and step × n ≥
+  300. Ten horizontal lines at y + 48 − 5 k (colour 0x40 for k = 5, else
+  0x10); when step > 1 a vertical line (0x10) from y + 48 to y at each
+  310 + i × step, i = 0..n. Then from (310, y + 48) a polyline in 0xfd
+  (white) through each record's score (right × 100 / asked) at x = 310 +
+  i × step, height y + 48 − score / 2 clamped to ≥ y; then from (310,
+  y + 48) one in 0xf9 (yellow) through the running Totaal of the first i
+  records. Points past x 610 are skipped. The lines are the graphics
+  library's `0x1f46e` moveto / `0x1f485` lineto (clipped), matching a
+  plain Bresenham in every pixel compared.
+- CONFIRMED (0x4592c, DOSBox): one button, T (0x14) on Terug (561, 436)–
+  (628, 464); T reloads menubs01.pcx and calls menu_init(0, 1): the main
+  screen and the panel as after Bediening (port pixel-identical).
+- CONFIRMED (DOSBox): a file written by the port (8 records, then a second
+  pupil's file 00000002.SMD) shows in the original's Rapport exactly as in
+  the port's.
+- Where the pointer stands, the original's save-under puts back the black
+  it saved before the graph, so a graph line through the pointer's top
+  row is missing there (18 pixels in the test). The port draws the pointer
+  over the screen and does not copy this.

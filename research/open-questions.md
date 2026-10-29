@@ -33,8 +33,10 @@
     `0x171ea`). Modules 2–4 themselves are **RESOLVED (session 5)**.
 20. Does REKEN abort when module 2's `0x123cf` divides by zero (level 5,
     R = 11; discoveries "module 2")?
-18. `NNNNNNNN.SMD` layout and how a pupil's number is chosen (Naam is
-    empty under `REKEN /DAVILEX`).
+18. **RESOLVED.** `NNNNNNNN.SMD`: file-formats.md "Pupil files"; the
+    number is one past the last file's when no name matches. Not checked
+    at run time: REKEN's own second append (the full-stride rewrite is
+    read from the code).
 19. What +0x30 / [0x46c87] (default 3) means; it gates the prize sounds.
 
 ## Data
@@ -43,9 +45,9 @@
 9. **RESOLVED (session 4).** `ASCIInn.IMG` and `RRRFONT.IMG` fonts:
    file-formats.md "ASCII fonts".
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
-21. The menu's Rapport (`0x12990`, rapport.pcx), the Bediening screen
-    (`0x1118f`, MENUKEY/MENUJOY.PCX) and the high score screen
-    (HIGHSCOR.PCX): not read yet. Where the pupil's name is typed.
+21. The high score screen (HIGHSCOR.PCX) and where the pupil's name is
+    typed: none of RRRMENU's screens asks for it. Rapport and Bediening
+    are **RESOLVED** (discoveries).
 11. What is in `RRRHIGH.DAT` (written at run time, not on the CD)? LIKELY
     RRR `0x1b6bf` writes it after each race ("Save score", "New place").
 
