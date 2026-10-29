@@ -26,9 +26,8 @@
 
 ## Arithmetic (REKEN.EXE)
 
-16. The exact sum generators (`0x11496`, `0x11619`, `0x1122e`, `0x1179e`
-    and the `0x12068`.. family for the other modules): Ghidra drops their
-    Watcom register arguments; read them from the disassembly.
+16. Module 1's generators are **RESOLVED (session 4)** (discoveries, checked
+    under Unicorn). Open: the `0x12068`.. family the other modules use.
 17. Modules 2–4 (Wat is waar?, Memory, Grote getallenspel): screens, rules,
     prizes.
 18. `NNNNNNNN.SMD` layout and how a pupil's number is chosen (Naam is

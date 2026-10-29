@@ -377,6 +377,24 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   and 5 use all four, level 3 {2, 3}, level 4 {0, 2, 3}): 0 `0x11496` ×,
   1 `0x11619` :, 2 `0x1122e` + (two or four terms), 3 `0x1179e` −. The
   text goes to 0x5371c, the answer to [0x537e4].
+- CONFIRMED (port `src/reken.c` = the original code under Unicorn for 500
+  seeds × 4 generators × 6 levels and 8 prize states, `check_reken.py`): the
+  generators, with `0x111e0` = lo + rand() % (hi − lo):
+  - + (`0x1122e`, rows of 9 bytes {lo, hi, n} at 0x452b0, row 2L and
+    2L + 1): levels 3–5 a + b. Levels 0–2, rand() % 2 = 0: two round numbers
+    v = multiplier (0x451ae {5, 10, 15}, first n) × between(lo, hi), each
+    split as (v − d, d) with d = rand() % (v − 5) + 2, the four parts in one
+    of four orders ("handig": 3 + 26 + 14 + 87 = 90 + 40); otherwise one
+    round number split in two.
+  - × (`0x11496`, 18-byte rows at 0x4531c): level 0 a small factor (0x45388,
+    20 entries) × a round number; levels 1–2 (a1 + a2) × round number;
+    levels 4–5 a × b; level 3 none.
+  - : (`0x11619`, 17-byte rows at 0x4524a): the quotient and divisor are
+    drawn and the dividend is their product (level 0 quotient a × {5, 10},
+    levels 1–2 divisor × {10, 5, 10}); level 3 none.
+  - − (`0x1179e`, 18-byte rows at 0x451de): round numbers at levels 0–2
+    (levels 1–2 off by a small ± amount), plain at 3–5; the larger always
+    first, equal values nudged apart.
 - CONFIRMED (`0x11cfd`, run): per sum, `0x18e7f` picks a prize and shows it;
   answer −2 is Help (`0x11a6a`, an example); a correct answer runs the award
   `0x1910f` and counts [0x537e8], a wrong one `0x19471` (no prize). After 8

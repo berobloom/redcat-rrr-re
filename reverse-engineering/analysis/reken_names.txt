@@ -1,3 +1,5 @@
+# REKEN.EXE function names (linear addresses as loaded by tools/leparse.py).
+# Read by tools/disasm.py.  Evidence in research/discoveries.md "The arithmetic part".
 0x10654 init_screen_and_sound
 0x10864 main
 0x10a92 rrrio_save

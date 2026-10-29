@@ -15,7 +15,7 @@ LEDIR = os.path.join(ROOT, '.work', 'le')
 class Image:
     def __init__(self, name):
         self.name = name
-        meta = json.load(open(os.path.join(LEDIR, name + '.json')))
+        meta = self.meta = json.load(open(os.path.join(LEDIR, name + '.json')))
         self.entry = meta['entry']
         self.objs = []
         for o in meta['objects']:

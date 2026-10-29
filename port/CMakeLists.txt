@@ -16,6 +16,7 @@ add_library(rccore STATIC
   src/archive.c
   src/gfx8.c
   src/race.c
+  src/reken.c
 )
 target_include_directories(rccore PUBLIC src)
 target_link_libraries(rccore PUBLIC m)
@@ -25,6 +26,9 @@ target_link_libraries(rc_dump PRIVATE rccore)
 
 add_executable(race_sim src/race_sim.c)
 target_link_libraries(race_sim PRIVATE rccore)
+
+add_executable(reken_sim src/reken_sim.c)
+target_link_libraries(reken_sim PRIVATE rccore)
 
 # The viewer needs SDL2; skip it (with a note) when it is missing so the core
 # and rc_dump still build.

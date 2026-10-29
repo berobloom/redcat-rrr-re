@@ -22,10 +22,16 @@ Early. What exists:
   F1/F2/F3 pick the racer to follow, PgUp/PgDn change map, Esc quits.
 - `race_sim <data dir> [map|all] [frames] [trace N]`: races without a
   screen; reports whether the computer racers finish each map.
+- `reken_sim play [groep] [seed]`: the arithmetic part's first module,
+  Handig rekenen, in the terminal (`src/reken.c`): 8 sums for the groep, a
+  prize per sum (fuel, repair, boosts, rockets), the totals at the end.
+  `reken_sim gen` / `prize` print generator output for
+  `tools/check_reken.py`, which compares it seed by seed with REKEN.EXE's own
+  code run under Unicorn.
 
-Not ported yet: the HUD's live values (speed, fuel, damage, counters),
-rockets, dropped objects, exhaust and explosions, sound, the race's end
-(podium, RRRIO.INF), the menu and the arithmetic part.
+Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
+race's end (podium, RRRIO.INF), the menu, the arithmetic part's screen and
+its modules 2–4.
 
 ### Frame rate
 
