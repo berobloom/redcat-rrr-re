@@ -4,8 +4,8 @@
 
 1. **RESOLVED (session 5)**: by exit codes (discoveries "The round").
    Open: the flag under which Start! clears race_done (`0x1212c`), so
-   when the menu exits 43 straight to REKEN; what `0x15a14` and `0x15a9f`
-   show (podium, final ranking?).
+   when the menu exits 43 straight to REKEN. Why DOSBox-X did not show
+   the podium (discoveries "podium").
 2. What does INTRO.EXE do besides playing `rrrintro.smk` with
    `rrrIntro.wav`? Is the intro skipped by `/NOINTRO` (INSTALL.SCR's `rcmin`
    batch) in MOTOR.EXE?
@@ -43,7 +43,8 @@
 9. **RESOLVED (session 4).** `ASCIInn.IMG` and `RRRFONT.IMG` fonts:
    file-formats.md "ASCII fonts".
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
-11. What is in `RRRHIGH.DAT` (written at run time, not on the CD)?
+11. What is in `RRRHIGH.DAT` (written at run time, not on the CD)? LIKELY
+    RRR `0x1b6bf` writes it after each race ("Save score", "New place").
 
 ## Tooling
 

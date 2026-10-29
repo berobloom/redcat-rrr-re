@@ -36,6 +36,7 @@
 #include "anims.h"
 #include "archive.h"
 #include "gfx8.h"
+#include "podium.h"
 #include "race.h"
 #include "reken.h"
 #include "reken_screen.h"
@@ -71,7 +72,8 @@ static struct {
     int exercising;             /* the exercise screen is up */
     int flow;                   /* the round, not just one race */
     int map_override;           /* the next race's map, -1: the stage's */
-    Uint32 race_end;            /* when the finished race gives way */
+    Uint32 race_end;            /* while the podium shows: when it goes */
+    rc_podium podium;
     rc_archive reken, menu;
     rc_exercise ex;
     rc_session session;
@@ -486,6 +488,13 @@ static void frame(void)
         }
     }
     now = SDL_GetTicks();
+    if (g.race_end) {           /* the podium stays up */
+        if ((Sint32)(now - g.race_end) >= 0) {
+            g.race_end = 0;
+            to_reken(-1);
+        }
+        goto out;
+    }
     if (g.light < 5) {
         /* race_main draws one frame, then start_lights blocks */
         if (!g.light_until)
@@ -506,18 +515,27 @@ static void frame(void)
         }
         if (steps > 4)
             g.next_frame = now;
-        /* The podium (0x15a9f) and the world's final ranking (0x15a14)
-           are not drawn yet: the race runs on a few seconds instead. */
-        if (g.flow && !g.race_end && rc_race_over(&g.race)) {
+        /* The race stops at the finish (0x11364); after race_end the
+           podium for 4 s (0x15a9f).  After a stage-4 race the original
+           plays the winner's film instead (0x15a14, w*.smk), which is not
+           ported: the podium stands in. */
+        if (g.flow && rc_race_over(&g.race)) {
+            char name[32];      /* RRRIO +0x68; RRRMENU puts RedCat if empty */
+            snprintf(name, sizeof name, "%.31s",
+                     (const char *)g.session.raw + 0x68);
             race_result();
+            compose();
+            rc_podium_draw(&g.podium, &g.rcs, g.session.world,
+                           g.session.order, g.session.points,
+                           *name ? name : "RedCat", g.fb, g.pal);
+            present();
             g.race_end = now + 4000;
-        } else if (g.race_end && (Sint32)(now - g.race_end) >= 0) {
-            g.race_end = 0;
-            to_reken(-1);
+            goto out;
         }
     }
     compose();
     present();
+out:
 #ifdef __EMSCRIPTEN__
     if (!g.running)
         emscripten_cancel_main_loop();

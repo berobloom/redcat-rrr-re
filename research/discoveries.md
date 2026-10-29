@@ -660,3 +660,27 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   race of that stage; after the last REKEN finds no module and goes to
   the menu, which moves on to the next world, whose stage-0 race the
   pupil starts with Start!.
+
+## The race: podium
+
+- CONFIRMED (`0x15a9f`; DOSBox: finished flags of RedCat and Brutus poked
+  during `RRR /DAVILEX /DEBUG`, then the 640 × 480 screen buffer
+  [0x7f954] dumped during the 4 s wait; port `podium.c` draws it
+  pixel-identical): after `race_end` (and `0x1b6bf`, which logs "Save score
+  3 for" / "New place = 9", LIKELY the RRRHIGH.DAT table) the podium
+  loads `xyz.pcx` from RCS for the first two places (r RedCat, b Brutus,
+  s Snitch: rbs, rsb, brs, bsr, srb, sbr) with its palette (flags 0xf:
+  picture, palette, shown), then in Ascii20 recoloured fg → 0xd0, bk
+  0xff clear, 201 kept as shadow: "Punten Totaal voor %s" (world name of
+  `0x57c18`, padded to 16) at (150, 20), and at x = 200, y = 50 / 70 / 90
+  "%-15s    :    %3d" (the name at RRRIO +0x68, empty under /DAVILEX;
+  RRRMENU puts "RedCat" there when it is empty, `0x10ed1`), "Brutus de
+  Bulldog  :    %3d", "Max de Muis        :    %3d" with the points
+  +0x214.. Then `delay_ms(4000)`. The race loop stops at the finish
+  itself (no run-out).
+- Observed, not explained: in DOSBox-X the screen kept the last race frame
+  during those 4 s, though the buffer held the podium and `0x1f604`
+  (present the whole screen) runs for flag 8.
+- CONFIRMED (strings): after a stage-4 race `0x15a14(2 × points leader)`
+  plays `wredcat.smk`, `wbrutus.smk` or `wsnitch.smk` instead (Smacker,
+  in RCS). "Max de Muis" is the podium's name for Snitch.

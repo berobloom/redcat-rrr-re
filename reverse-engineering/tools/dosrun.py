@@ -15,6 +15,7 @@ usage: dosrun.py start                 launch (no-op if running)
        dosrun.py find hexbytes [start len]   search linear memory
        dosrun.py save name | load name save states in .work/dos/states/
        dosrun.py regs                  halt, print registers, resume
+       dosrun.py poke 0xADDR hexbytes  halt, write linear memory, resume
        dosrun.py locate rrr            where DOS/4GW loaded rrr's objects
 
 As a module: `with Dos() as d: d.type_line(...); d.mem(...)`.
@@ -215,12 +216,24 @@ def regs():
         r.close()
 
 
+def poke(addr, data):
+    r = RspClient('127.0.0.1', 2159, 10.0)
+    try:
+        r.halt(5.0)
+        r.write_memory(addr, data)
+        r.continue_nowait()
+    finally:
+        r.close()
+
+
 def main(argv):
     cmd, args = argv[1], argv[2:]
     if cmd == 'start':
         print(start())
     elif cmd == 'stop':
         stop()
+    elif cmd == 'poke':
+        poke(int(args[0], 0), bytes.fromhex(args[1]))
     elif cmd == 'regs':
         for k, v in regs().items():
             print('%-6s %08x' % (k, v))

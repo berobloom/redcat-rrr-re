@@ -12,6 +12,7 @@ $D key ret                                     # leave the wait screen
 $D shot out.png
 $D locate rrr                                  # run-time object addresses
 $D mem 0x22b1a4 16                             # read a variable (linear)
+$D poke 0x20bfbc 01000000                       # write one (GDB stub)
 $D save name / $D load name                    # .work/dos/states/
 $D stop
 ```

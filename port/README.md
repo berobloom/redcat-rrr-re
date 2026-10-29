@@ -20,7 +20,8 @@ Early. What exists:
   once). A world opens with its race; then for each of its modules the
   exercise screen of the arithmetic part (`src/reken_screen.c`) and the
   race of that stage, with the fuel, repair, boosts and rockets earned and
-  the last finishing order as the start order; after the last race the
+  the last finishing order as the start order, each race followed by the
+  podium with the world's points (`src/podium.c`); after the last race the
   next world. The modules: 1 Handig rekenen, 8 sums answered with the
   digit keys or by clicking the keypad, Backspace/TERUG, Enter/OK; 2 Wat
   is waar?, 8 rounds of three sums, 1/2/3 or a click picks the true one;
@@ -50,9 +51,9 @@ Early. What exists:
   seed with REKEN.EXE's own code run under Unicorn.
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
-podium and final ranking (a finished race runs on 4 s instead), saving
-RRRIO.INF, the menu, the exercises' Help example, mouse pointer and spoken
-feedback.
+winner's film after a stage-4 race (the podium stands in), the high scores,
+saving RRRIO.INF, the menu, the exercises' Help example, mouse pointer and
+spoken feedback.
 
 ### Frame rate
 
