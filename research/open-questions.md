@@ -40,6 +40,11 @@
     read from the code).
 19. **RESOLVED.** +0x30 / [0x46c87] is the sound mode: bit 0 effects (and
     sound at all), bit 1 music (discoveries "Sound").
+22. `check_reken.py` (500 seeds per case) finds 4 of 25000 cases that
+    differ, all module 2 at level 5 (seeds 395, 442, 445, 470): the port's
+    second and third choices differ from the original's (port "8 : 2"
+    where the original has another sum). Already so before the sound work;
+    LIKELY the 8 : 2 fallback taken where the original's draw succeeds.
 
 ## Data
 

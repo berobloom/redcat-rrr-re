@@ -1003,3 +1003,34 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   groep KNOPPR, P RAPPORT and Terug from Rapport WHIZZ, B BEDIEN1, E WHIZZ
   (waited for). Geluid to 1 stops track 0, to 0 both. Under `/1` (from
   MOTOR) menu_init plays MENU.WAV and waits for it or Esc.
+- CONFIRMED (code; REKEN's calls of `0x10350(track, sample)`, all under
+  [0x46c87] ≠ 0, so modes 1 and 3 sound alike and REKEN has no music):
+  - each module's init calls `0x19a50` (0x11fa0, 0x136cb, 0x14fcb,
+    0x17ed2): phrases from 0x4693c + 0x54 (module − 1) (count, then
+    REKENSND number − 18) on track 0, one after another, each waited for;
+    Esc, Enter or S end it, then track 0 is stopped. Module 1 says 03–06,
+    module 2 15–19, Memory 51–54, module 4 26–29.
+  - `prize_choose` (0x18e7f) stops track 0 and plays the prize's phrase
+    there without waiting: rand() % 2 picks one of two (boosts 72/80,
+    rockets 66/74, full repair 67/77, repair 68/75, by the tables
+    0x46a8c..0x46b88), fuel 5/10/15 say rc9/rc10/rc11.
+  - `prize_award` (0x1910f) and `prize_none` (0x19471) wait for track 1,
+    stop track 0, play "goed" (rand() % 3: rc3–rc5) or "fout" (rc6–rc8)
+    there, show the face and wait for track 0. The award then plays
+    yiha.wav on track 0 if the counter was below its top, and per unit
+    roll.wav on track 1 (boosts, rockets), fuel.wav on track 1 (repair
+    +30) or fuel.wav on track 0 through `0x1d244` (fuel, past sndman's
+    table); at the end it waits for track 0 again.
+  - module 2: picking a row stops track 0 and plays click.wav there.
+  - Memory (`0x14967`): the first card stops track 0 and clicks there, the
+    second clicks on track 1, a refused card plays fout1.wav on track 1;
+    `0x13d95` waits for track 0, then doing.wav (pair found) or noise.wav
+    (turned back) on track 1.
+  - module 4 (`0x165fb`): a number or operator taken stops track 0 and
+    clicks; one not allowed plays fout1.wav on track 1; TERUG stops track
+    0 for knoppr.wav and track 1 for whizz.wav (fout1.wav on track 0 when
+    there is nothing to undo); OPNIEUW and = knoppr.wav on track 0; =
+    before a whole sum fout1.wav on track 0 (not stopping it).
+  - The functions around 0x18500 (after `module4_init`, calls 0x1859f..
+    0x18a7d) and `m4_alt_screen_dead` play the same sounds for a scripted
+    example; not traced further.
