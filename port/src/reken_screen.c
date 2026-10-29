@@ -196,7 +196,34 @@ enum {
     ST_PRIZE, ST_INPUT, ST_PRESS_OK, ST_FACE, ST_AWARD, ST_DONE, ST_OVER,
     ST_OPEN, ST_CLOSE_WRONG, ST_SHOW, ST_CLOSE,     /* module 2 */
     ST_REFUSE, ST_TURN, ST_VANISH, ST_TURN_BACK,    /* module 3 */
+    ST_HELP,
 };
+
+/* Help, module 1 (0x11a6a): phrases (REKENSND number - 18, each played on
+   track 0 if it is free and waited for by 0x19c04) and the examples shown
+   between them in the sum panel, each centred by the width of its second
+   string.  Without sound nothing waits and Help passes at once. */
+typedef struct {
+    int say;
+    const char *text, *width;
+} help_line;
+#define SAY(n) { n, NULL, NULL }
+
+static const help_line help1[] = {
+    SAY(3), SAY(4), SAY(5), SAY(6),
+    { 0, "2 + 7 + 8 + 3 = ?", "2 + 7 + 8 + 3 = ?" },
+    SAY(7), SAY(8), SAY(9), SAY(10),
+    { 0, "2 + 8 = ?    7 + 3 = ?", "2 + 8  +  7 + 3 = ?" },
+    SAY(11),
+    { 0, "10 + 10 = ?", "10 + 10 = ?" },
+    SAY(12), SAY(13),
+    { 0, "10 + 10 = 20", "10 + 10 = 20" },
+    SAY(14),
+};
+#define A_TITLE_HELP 58         /* "Help!", 0x19b77 */
+/* 0x19b77 swaps the title every 50 passes of 0x19c04's wait loop, which
+   has no delay: about every 250 ms under DOSBox-X (redcat.conf) */
+#define HELP_BLINK_MS 250
 
 static int anim_image(int anim, int frame)
 {
@@ -250,16 +277,17 @@ static void draw_centred(rc_exercise *x, int anim, int frame, int px, int py)
         blit(x, s, px + 1 - s->x, py - s->y);
 }
 
-/* 0x1e929 / 0x1ea52: text in the current font; '?' leaves its cell empty.
-   bk < 0 keeps the glyphs' background clear, as set_bk(0xff) does. */
-static void draw_text(rc_exercise *x, const rc_font *f, int px, int py,
-                      const char *s, int bk)
+/* 0x1e929 / 0x1ea52: text in the current font; in sums '?' leaves its
+   cell empty (draw_text), Help prints it (draw_text_q).  bk < 0 keeps the
+   glyphs' background clear, as set_bk(0xff) does. */
+static void glyphs(rc_exercise *x, const rc_font *f, int px, int py,
+                   const char *s, int bk, int qmark)
 {
     for (; *s; s++, px += f->w) {
         const uint8_t *g = f->glyphs + (uint8_t)*s * f->w * f->h;
         int gx, gy;
 
-        if (*s == '?' || !f->present[(uint8_t)*s])
+        if ((*s == '?' && !qmark) || !f->present[(uint8_t)*s])
             continue;
         for (gy = 0; gy < f->h; gy++)
             for (gx = 0; gx < f->w; gx++) {
@@ -270,6 +298,12 @@ static void draw_text(rc_exercise *x, const rc_font *f, int px, int py,
                     x->fb[Y * SCREEN_W + X] = (uint8_t)c;
             }
     }
+}
+
+static void draw_text(rc_exercise *x, const rc_font *f, int px, int py,
+                      const char *s, int bk)
+{
+    glyphs(x, f, px, py, s, bk, 0);
 }
 
 static int load_font(rc_font *f, const rc_archive *a, const char *name)
@@ -546,6 +580,47 @@ static void press(rc_exercise *x, int anim, int px, int py)
     x->pressed_ms = PRESS_MS;
 }
 
+/* After Help (0x11e0d): the panel blank, the Help button pressed, the
+   title back, and the sum asked again with an empty answer */
+static void help_end(rc_exercise *x)
+{
+    if (x->snd_stop && sound_on(x))
+        x->snd_stop(x->snd_ctx, 0);         /* 0x19c04's mix_stop_track */
+    x->help_text = NULL;
+    x->typed[0] = 0;
+    press(x, A_HELP, HELP_X, HELP_Y);
+    set_state(x, x->help_from);
+}
+
+/* the script's next step: examples go up at once, a phrase is waited for */
+static void help_next(rc_exercise *x)
+{
+    const int n = (int)(sizeof help1 / sizeof help1[0]);
+
+    while (++x->help_step < n) {
+        const help_line *h = &help1[x->help_step];
+        if (h->say) {
+            snd(x, 0, 18 + h->say);
+            if (snd_busy(x, 0))
+                return;
+        } else {
+            x->help_text = h->text;
+            x->help_width = h->width;
+        }
+    }
+    help_end(x);
+}
+
+/* 0x11de6: H while a sum is asked */
+static void help_start(rc_exercise *x)
+{
+    x->help_from = x->state;
+    x->help_step = -1;
+    x->help_text = NULL;
+    set_state(x, ST_HELP);
+    help_next(x);
+}
+
 static int counting(const rc_exercise *x)
 {
     return x->shown_fuel != x->r.fuel || x->shown_repair != x->r.repair ||
@@ -572,6 +647,12 @@ void rc_exercise_tick(rc_exercise *x, int ms)
             snd(x, 0, 18 + intro_say[x->module - 1][1 + x->intro]);
         else
             after_intro(x);
+        break;
+    case ST_HELP:
+        if (snd_busy(x, 0))
+            x->help_ms += ms;
+        else
+            help_next(x);
         break;
     case ST_PRIZE:
         while (x->state_ms >= FRAME_MS && x->prize_frame < PRIZE_FRAMES - 1) {
@@ -782,8 +863,17 @@ void rc_exercise_key(rc_exercise *x, int key)
         set_state(x, ST_OVER);
         return;
     }
+    if (x->state == ST_HELP) {
+        /* 0x19c04: Esc, Enter or S ends it */
+        if (key == RC_KEY_OK || key == RC_KEY_STOP)
+            help_end(x);
+        return;
+    }
     if (key == RC_KEY_HELP) {
-        press(x, A_HELP, HELP_X, HELP_Y);   /* the example (0x11a6a) is not ported */
+        if (x->module == 1 && x->state == ST_INPUT)
+            help_start(x);
+        else    /* the examples of modules 2..4 are not ported */
+            press(x, A_HELP, HELP_X, HELP_Y);
         return;
     }
     if (x->module == 4) {
@@ -1055,7 +1145,10 @@ void rc_exercise_draw(rc_exercise *x)
     int d, left = RC_SUMS_PER_ROUND - x->r.asked + 1;
 
     memcpy(x->fb, m3 ? x->bg3.pixels : x->bg.pixels, sizeof x->fb);
-    draw_at(x, A_TITLE, x->module - 1, 183, 10);
+    if (x->state == ST_HELP && x->help_ms / HELP_BLINK_MS % 2)
+        draw_at(x, A_TITLE_HELP, 0, 183, 10);
+    else
+        draw_at(x, A_TITLE, x->module - 1, 183, 10);
     draw_centred(x, x->face_anim, x->face_frame, m3 ? FACE3_X : FACE_X,
                  m3 ? FACE3_Y : FACE_Y);
     draw_gauges(x);
@@ -1092,6 +1185,12 @@ void rc_exercise_draw(rc_exercise *x)
 
     if (x->module == 2)
         draw_choices(x);
-    else if (x->module == 1)
+    else if (x->module == 1 && x->state == ST_HELP) {
+        const rc_font *f = &x->font30;
+        draw_at(x, A_PANEL, 0, PANEL_X, PANEL_Y);
+        if (x->help_text)
+            glyphs(x, f, PANEL_X + (PANEL_W - (int)strlen(x->help_width) * f->w) / 2,
+                   PANEL_Y + (PANEL_H - f->h) / 2, x->help_text, -1, 1);
+    } else if (x->module == 1)
         draw_sum(x);
 }

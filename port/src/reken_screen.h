@@ -77,6 +77,9 @@ typedef struct {
     int intro;                  /* module intro: the phrase playing */
     int prize_say;              /* the shown prize's phrase */
     int said;                   /* the face: "goed" / "fout" started */
+    int help_step, help_from;   /* Help: the script's step, the state after */
+    int help_ms;                /* time spoken in Help: the title blinks */
+    const char *help_text, *help_width;  /* the example shown */
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,
