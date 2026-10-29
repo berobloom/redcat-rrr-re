@@ -52,9 +52,10 @@
 9. **RESOLVED (session 4).** `ASCIInn.IMG` and `RRRFONT.IMG` fonts:
    file-formats.md "ASCII fonts".
 10. **RESOLVED (session 3).** `TRANS.DAT` is a 255×255 50% blend table; discoveries "drawing".
-21. Where the pupil's name is typed: none of RRRMENU's screens asks for
-    it. Rapport, Bediening and the high score screen are **RESOLVED**
-    (discoveries).
+21. **RESOLVED.** The name is asked by RRRMENU under MOTOR's `/1` (first
+    menu start), discoveries "The menu: the pupil's name". Open: the
+    window's fill glyph and the field's exact geometry; the port lacks
+    the dialog and MENU.WAV.
 11. **RESOLVED.** `RRRHIGH.DAT`: file-formats.md, discoveries "High
     scores".
 

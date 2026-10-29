@@ -871,6 +871,39 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   top left, bottom right, a rocket button and a boost button
   ("Joystick is ingesteld!"), into +0x38..+0x4c, +0x220 and +0x224.
 
+## The menu: the pupil's name
+
+- CONFIRMED (MOTOR 0x3de: [0x63a] starts 1 and is cleared after use;
+  RRRMENU main 0x108f0 sets [0x44700]): MOTOR passes `/1` to rrrmenu.exe on
+  its first start only. Under `/1` menu_init (0x10f2f) asks the name, and
+  afterwards plays MENU.WAV on track [0x45190] until it ends or a key is
+  pressed (0x1100d..0x11047). It also skips the world advance at start-up
+  unless [0x45562] (read only there, 0 at run time).
+- CONFIRMED (code 0x131a4, 0x133b9, 0x13285; DOSBox `MOTOR /DAVILEX` with
+  an RRRIO.INF holding four names, states `name_dialog`, `name_list4`,
+  `name_entry`): RRRIO +0x68 is not one name but four of 100 bytes
+  (+0x68, +0xcc, +0x130, +0x194), most recent first. A dialog titled
+  "Hallo, hoe heet jij?" (RRRFONT, yellow, 10 x 21 cells) lists them, cut
+  to 30 characters, then "Ik sta er niet bij!". Up/Down move a grey bar
+  and wrap; Enter on a non-empty name takes it. Esc, an empty name or
+  "Ik sta er niet bij!" open a one-line field instead (also shown straight
+  away when RRRIO.INF was missing or invalid, [0x45142]). The field takes
+  25 characters in insert mode, with a blinking `_` drawn over the
+  character at the cursor; when full, a new character replaces the last.
+  Esc there or an empty / space-led name gives "RedCat". The chosen name
+  moves to the front of the list (`0x131a4`: a known one swaps with the
+  first, a new one pushes the others down and the fourth drops off) and
+  is copied to [0x528f4], the name Rapport and the SMD files use.
+- CONFIRMED (screenshot vs RRRFONT.IMG): the window is built from RRRFONT
+  glyphs by `0x1c5c7`: corners 0x18 (top left), 0x19, 0x1a, 0x1b; glyph
+  0x18 matches the screen pixel for pixel at cell (15, 6), i.e. (150, 126).
+  LIKELY (table 0x45c3c, 15 shorts per style; corners at style base − 8):
+  the style in use is 1: top 0x1c/0x1d, bottom 0x1e/0x1f, left 0x7f/0x80,
+  right 0x81/0x82, alternating per cell; the fill glyph not yet read.
+  Window (150, 126)..(490, 336) for the list, list rows from y 211, 21 px
+  apart, x 170..470.
+- Not ported yet.
+
 ## The menu: Rapport
 
 - CONFIRMED (`0x12990`; DOSBox with crafted SMD files: three buffers, port
