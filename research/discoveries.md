@@ -744,7 +744,9 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   arguments on, then the round starts with code 42. `/NOINTRO`, in
   INSTALL.SCR's `rcmin` line (a Windows icon's batch file, not among the
   installed ones), does not match /NI, so it would not skip the intro.
-  The flags of /3../M4 are not read in MOTOR's dispatcher.
+  MOTOR's main path reads only the /DAVILEX and /NI flags (0x43f,
+  0x480); the dispatcher passes its arguments on to every program it runs
+  (0x341..0x369), so /M1../M4 etc. reach REKEN and the others.
 - STRONGLY SUPPORTED (INTRO.EXE 0x105b7, 0x106d8; not run with these
   options): INTRO opens intro.img / introsnd.img (the sound archive holds
   rrrintro.wav, table 0x2d42e), plays rrrintro.smk (0x16da3) and then
