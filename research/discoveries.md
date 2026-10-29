@@ -737,6 +737,24 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   turns cards to the spoken explanation with the title "Help!", and puts
   the grid back. Not ported.
 
+- CONFIRMED (`0x149c4`, `0x14492`, `0x147a9`, `0x14683`; DOSBox-X,
+  REKEN /DAVILEX M3 at groep 6 and G3, port frames pixel-identical): Help
+  in Memory. H stops track 0, presses Help, waits for release; `0x14492`
+  sets [0x457c8] = 1 (no mouse hiding, no sounds in `0x13d95`), saves the
+  100 cards (to 0x5a640), the strings (0x56878 → 0x53e28) and the turned
+  cards' indices, then deals a demo: every cell's kind SOM, ANTWOORD, SOM,
+  ... (pairs already found come back), card 0 "2 + 3" (5), card 2 "4 + 4"
+  (8), card 3 the ANTWOORD 8, nothing turned, and redraws the grid.
+  `0x147a9`: say 51..56; turn (col 0, row 0); say 57; turn (3, 0); say
+  58; `0x13d95(1)`: both turn back; say 59, 60; turn (2, 0) (with the
+  kind of card 2 × cols, a SOM); say 61, 62; turn (3, 0); say 63;
+  `0x13d95(0)`: both leave (anim 7, then the background). `0x13abb` takes
+  column and row, not a cell: in groep 3's grid of three columns (3, 0)
+  lies outside it, so a fourth card shows card 3's value (8) against the
+  side panel while card 3 itself (row 1) stays face down. `0x14683`
+  restores the grid area, the cards and the turned indices and redraws
+  (turned cards face up), then Help is pressed and the title comes back.
+
 ## The arithmetic part: module 4 "Grote getallenspel"
 
 - CONFIRMED (`0x17c57`, port = original under Unicorn for 100 seeds per
