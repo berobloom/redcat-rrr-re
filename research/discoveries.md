@@ -232,6 +232,25 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   At load, `find_bonus_objects` (0x15597) creates objects for 10, 12, 13
   (boosts), 15, 16 (cacti), 18 (finish sign), 19 (start sign) and stores the
   object number in byte 1.
+- CONFIRMED (`0x18ae5`): the five points are the racer's cell (x / 32,
+  y / 40, rounded toward zero) and its four neighbours, in the order centre,
+  right, below, left, above, sharing one `rand() % 100` (the ramp's chance).
+- CONFIRMED (dispatch at `0x18c49`): types 10, 17, 18, 19 and 21 have no
+  effect under a racer, apart from the rule before the switch that takes 3
+  off speeds above 12 on any cell but type 11. The
+  case for 22 (`0x18d62`: ping_m, the object freed, stats +0x18 + 1, the
+  cell cleared) is dead code: the range check at 0x18bb4 rejects
+  anything above 21 first. No map holds 17, 21 or 22 (the 19 maps: 252
+  cells of type 10, 318 of 11, 705 of 12, 353 of 13, 1144 of 14, 251 of
+  15, 1013 of 16, 9 of 18, 33 of 19, 707 of 20).
+- CONFIRMED (code `0x16d30`; DOSBox on track1b): type 10 is a time bomb
+  (anim 5: a dark mine with a blinking light, RC entries 32–36). Its
+  object runs every 3 frames with life rand() & 255 + 100. Each run
+  takes one off; at 0 it explodes (`0x17faa(1, bomb)`, explo_m) and is
+  freed, so it goes off 300–1065 frames into the race. It sits at prio
+  −100000 (under everything). Driving over it does nothing, and the
+  explosion does no damage. Measured: track1b's 11 bombs lost life at
+  about 9.3 per second, and each vanished when its life reached 0.
 - CONFIRMED: racer–racer contact (`0x1404a`): within 60 height units and
   300 px, four corner tests 50 px along the heading; on contact (`0x14534`)
   headings merge through the table at 0x72de0 and both speeds become their

@@ -73,8 +73,9 @@
 13. **RESOLVED: none.** The race runs as fast as the CPU allows and
     nothing in RRR caps it (discoveries "The race: speed"). What rate the
     designers tuned for is not recorded in the binary.
-14. What do the rest of the cell types do: 10, 15, 16, 21, 22 (0x16), and
-    the five check points of `0x18ae5`?
+14. **RESOLVED.** 10 is a time bomb that goes off by itself, 15/16 cacti;
+    17, 21 and 22 occur in no map (22's case is dead code); the five points
+    are the racer's cell and its four neighbours (discoveries "map cells").
 15. **RESOLVED.** Rockets, explosions, exhaust and over-speed objects:
     discoveries "rockets and explosions", "exhaust, smoke and
     after-images".

@@ -63,13 +63,13 @@
 0x19c8c bull_crash_tick      # CONFIRMED: Brutus' callback set by 0x14f3e
 0x1a42a muis_crash_tick      # CONFIRMED: Snitch's callback set by 0x14f3e
 0x16b53 mine_tick            # CONFIRMED: anim 6, counts life (+0x24) down, prio -100000
-0x16d30 type10_tick          # CONFIRMED: callback of type-10 cell objects (0x18502, anim 5)
+0x16d30 bomb_tick            # CONFIRMED: type-10 time bomb: life-1 per run, explodes at 0
 0x16c5d sign_tick            # CONFIRMED: callback of start/finish signs (0x18445)
 0x17236 cactus_tick          # CONFIRMED: life -1 frame 0; >0 counts down; 0 removes
 0x17b61 dropped0_tick        # CONFIRMED: 0x18759 kind 0 callback
 0x178f6 dropped2_tick        # CONFIRMED: 0x18759 kind 2 callback
 0x17c74 dropped4_tick        # CONFIRMED: 0x18759 other kinds' callback
-0x18502 new_type10_object    # CONFIRMED: cell type 10 -> anim 5, period 3, life rand&255+100
+0x18502 new_bomb             # CONFIRMED: cell type 10 -> anim 5, period 3, life rand&255+100
 0x1836d new_mine             # CONFIRMED: 'object %d created mijn': anim 6, period 3, life 10
 0x181ba new_boost_pickup     # CONFIRMED: cell type 13 -> anim 8, period 2
 0x18276 new_cactus           # CONFIRMED: cell 15/16 -> anim 12 at +16,-10 px, life -1
