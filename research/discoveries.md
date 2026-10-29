@@ -425,3 +425,34 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED (`0x21bc7`; all four font files decode with it, glyphs rendered
   and legible): the ASCII font format in file-formats.md, 256 flags, w, h,
   fg, bk and 256 w×h glyphs.
+
+## The arithmetic part: screen
+
+- CONFIRMED (port render vs the original's screenshots: identical except
+  the mouse pointer, for the first sum and while typing): module 1 draws
+  mod_124.pcx (its palette is the screen's), then MENU.IMG images through
+  the anim table 0x4660c (59 anims; image i = MENU entry i − 1).
+  `0x10dd8(anim, frame, x, y)` puts an image's top-left at (x, y);
+  `0x10f78` puts its hotspot at (x + 1, y) (it increments x) after restoring
+  the old frame's area. Positions (modules 1, 2, 4; Memory has its own in
+  each record's first two words):
+  - face: anim 13 frame 0 at centre (51, 83); after an answer anim 13
+    (right, record 0x4680c) or 15 (wrong, 0x467f0) plays 16 frames;
+  - gauges (`0x18d8a`): repair anim 4 frame repair / 10 − 1 (0..9) at
+    (114, 48); boosts and rockets anim 1 digits at (385, 79) / (385, 125)
+    and x + 17; fuel anim 3 digits at (10, 125), +22, +44;
+  - prize: 20 frames of anim 45 (rockets), 47 (boosts), 49 (repair), 51
+    (full repair), 53 / 55 / 57 (fuel 5 / 10 / 15) centred at (230, 100),
+    10 ms apart; the label is part of the image;
+  - title bar anim 43 frame module − 1 at (183, 10); keypad anims 33–41
+    (keys 1–9) and 42 (0) at the positions of `0x110e2`; TERUG anim 19 at
+    (502, 368), OK anim 18 at (502, 424), Help anim 17 at (564, 3); frame 1
+    is the pressed look, held 150 ms;
+  - sum panel anim 32 at (8, 168), 624 × 168; the sum in ASCII30 centred in
+    it with one '?' per answer digit appended, the '?' cells becoming the
+    answer field: typed digits and blanks on colour 0x36, the next cell '_'
+    on 0x90 (`0x17f7b`, `0x17f81` in module1_init);
+  - ASCII12 text: Groep at (520, 105), Naam at (520, 76), sums left
+    ("%d " on black) at (576, 134).
+- CONFIRMED (`0x1847e`): keys S (Stop, −1), H (Help, −2), Enter or O
+  (OK; ignored while the field is empty), digit keys and keypad.

@@ -96,6 +96,11 @@ int rc_race_init(rc_race *r, const uint8_t *map_data, uint32_t map_size,
                  const int start_order[RC_RACERS]);
 void rc_race_free(rc_race *r);
 
+/* The player's counters from RRRIO.INF (race_init reads fuel +0x20, damage
+   +0x04, boosts +0x0c, rockets +0x14); rc_race_init uses the defaults. */
+void rc_race_set_player(rc_race *r, int fuel, int repair, int boosts,
+                        int rockets);
+
 /* One frame of race_main's loop. */
 void rc_race_tick(rc_race *r, const rc_input *in);
 

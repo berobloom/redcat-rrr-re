@@ -862,6 +862,17 @@ int rc_race_init(rc_race *r, const uint8_t *map_data, uint32_t map_size,
     return 0;
 }
 
+void rc_race_set_player(rc_race *r, int fuel, int repair, int boosts,
+                        int rockets)
+{
+    rc_stats *s = &r->stats[RC_REDCAT];
+
+    s->fuel = FX(fuel);
+    s->damage = repair;
+    s->boosts = boosts;
+    s->rockets = rockets;
+}
+
 void rc_race_free(rc_race *r)
 {
     rc_map_free(&r->map);

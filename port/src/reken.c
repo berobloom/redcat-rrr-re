@@ -66,6 +66,19 @@ static const uint8_t world_modules[6][4] = {
     { 1, 0, 1, 1 }, { 0, 1, 1, 1 }, { 1, 1, 1, 1 },
 };
 
+/* 0x44f5c: map number + 1 per world and stage, 0 = no race */
+static const uint8_t stage_maps[6][5] = {
+    { 1, 2, 0, 3, 0 }, { 4, 0, 5, 6, 0 }, { 7, 8, 9, 10, 0 },
+    { 11, 12, 0, 13, 14 }, { 15, 0, 16, 17, 18 }, { 19, 20, 21, 22, 23 },
+};
+
+int rc_stage_map(int world, int stage)
+{
+    if (world < 0 || world > 5 || stage < 0 || stage > 4)
+        return -1;
+    return stage_maps[world][stage] - 1;
+}
+
 int rc_rand(rc_reken *r)
 {
     r->seed = r->seed * 0x41c64e6du + 0x3039;

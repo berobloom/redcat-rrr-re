@@ -30,6 +30,20 @@ typedef struct {
 /* One entry of RC/MENU/RRRANIM/INSTMNU: u16 w,h,x,y + w*h bytes. */
 int rc_sprite_parse(rc_sprite *s, const uint8_t *data, uint32_t size);
 
+/* ASCII12/20/30.IMG, RRRFONT.IMG (file-formats.md "ASCII fonts"): 256
+   glyphs of w*h bytes.  Pixel fg is the glyph body, bk (255) clear, the rest
+   shading.  The glyphs are a copy, so they can be recoloured as the
+   original does (0x219a0, 0x21b36). */
+typedef struct {
+    int w, h, fg, bk;
+    uint8_t present[256];
+    uint8_t *glyphs;
+} rc_font;
+
+int rc_font_parse(rc_font *f, const uint8_t *data, uint32_t size);
+void rc_font_recolor(rc_font *f, uint8_t from, uint8_t to);
+void rc_font_free(rc_font *f);
+
 #define RC_TILE_W 32
 #define RC_TILE_H 40
 

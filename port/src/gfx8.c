@@ -88,6 +88,43 @@ int rc_sprite_parse(rc_sprite *s, const uint8_t *d, uint32_t size)
     return 0;
 }
 
+int rc_font_parse(rc_font *f, const uint8_t *d, uint32_t size)
+{
+    uint32_t n;
+
+    memset(f, 0, sizeof *f);
+    if (size < 264)
+        return -1;
+    memcpy(f->present, d, 256);
+    f->w = rd16(d + 256);
+    f->h = rd16(d + 258);
+    f->fg = rd16(d + 260);
+    f->bk = rd16(d + 262);
+    n = 256u * f->w * f->h;
+    if (f->w < 1 || f->w > 100 || f->h < 1 || f->h > 100 || size != 264 + n)
+        return -1;
+    f->glyphs = malloc(n);
+    if (!f->glyphs)
+        return -1;
+    memcpy(f->glyphs, d + 264, n);
+    return 0;
+}
+
+void rc_font_recolor(rc_font *f, uint8_t from, uint8_t to)
+{
+    uint32_t i, n = 256u * f->w * f->h;
+
+    for (i = 0; i < n; i++)
+        if (f->glyphs[i] == from)
+            f->glyphs[i] = to;
+}
+
+void rc_font_free(rc_font *f)
+{
+    free(f->glyphs);
+    f->glyphs = NULL;
+}
+
 int rc_tileset_parse(rc_tileset *t, const uint8_t *d, uint32_t size)
 {
     int i;

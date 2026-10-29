@@ -1,9 +1,14 @@
-/* redcat: a race, as RRR.EXE runs one.
+/* redcat: the arithmetic part's first exercises, then a race with what
+   they earned, as REKEN.EXE and RRR.EXE run them.
 
-   usage: redcat <data dir> [map 0..22] [--fps N]
+   usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8] [--fps N]
 
-   Keys (RRRIO.INF defaults): arrows steer and accelerate, right Shift boost,
-   Enter rocket, F1/F2/F3 follow RedCat/Brutus/Snitch, Esc quits.
+   Exercises: digits (keys or the keypad) answer, Backspace or TERUG takes
+   one back, Enter or OK confirms, S or Stop quits.  --race skips them; the
+   map defaults to the stage's race (world 0, stage 1: track1b).
+
+   Race keys (RRRIO.INF defaults): arrows steer and accelerate, right Shift
+   boost, Enter rocket, F1/F2/F3 follow RedCat/Brutus/Snitch, Esc quits.
 
    The original's frame loop has no timer (research/discoveries.md "The
    race: speed"): it ran 29 frames/s at DOSBox cycles=40000 and faster on
@@ -12,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -21,6 +27,8 @@
 #include "archive.h"
 #include "gfx8.h"
 #include "race.h"
+#include "reken.h"
+#include "reken_screen.h"
 
 #define SCREEN_W 640
 #define SCREEN_H 480
@@ -50,6 +58,12 @@ static struct {
     rc_hotspot hotspot[RC_IMAGES + 1];
     rc_race race;
     int map_index;
+    int exercising;             /* the exercise screen is up */
+    rc_archive reken, menu;
+    rc_exercise ex;
+    rc_session session;
+    Uint32 last_tick;
+    int logged_sum;
     int light;                  /* lamp shown, 5 once the race runs */
     Uint32 light_until, next_frame, frame_ms;
     int running;
@@ -273,10 +287,91 @@ static void step(void)
     rc_race_over(&g.race);
 }
 
+static int exercise_key(SDL_Keycode k)
+{
+    if (k >= SDLK_0 && k <= SDLK_9)
+        return '0' + (int)(k - SDLK_0);
+    if (k >= SDLK_KP_1 && k <= SDLK_KP_9)
+        return '1' + (int)(k - SDLK_KP_1);
+    switch (k) {
+    case SDLK_KP_0: return '0';
+    case SDLK_BACKSPACE: case SDLK_t: return RC_KEY_BACK;
+    case SDLK_RETURN: case SDLK_KP_ENTER: case SDLK_o: return RC_KEY_OK;
+    case SDLK_h: return RC_KEY_HELP;
+    case SDLK_s: return RC_KEY_STOP;
+    }
+    return 0;
+}
+
+/* After the last sum: REKEN writes the counters back (0x199cf) and the
+   race starts with them. */
+static void finish_exercises(void)
+{
+    const rc_reken *r = &g.ex.r;
+
+    g.exercising = 0;
+    if (g.ex.stopped) {
+        g.running = 0;
+        return;
+    }
+    rc_reken_finish(r, &g.session);
+    printf("%d of %d right: fuel %d, repair %d, boosts %d, rockets %d\n",
+           r->correct, RC_SUMS_PER_ROUND, r->fuel, r->repair, r->boosts,
+           r->rockets);
+    if (start_race(g.map_index) != 0) {
+        g.running = 0;
+        return;
+    }
+    rc_race_set_player(&g.race, g.session.fuel, g.session.repair,
+                       g.session.boosts, g.session.rockets);
+}
+
+static void exercise_frame(void)
+{
+    SDL_Event e;
+    Uint32 now = SDL_GetTicks();
+
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT ||
+            (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE))
+            g.running = 0;
+        else if (e.type == SDL_KEYDOWN && !e.key.repeat) {
+            int k = exercise_key(e.key.keysym.sym);
+            if (k)
+                rc_exercise_key(&g.ex, k);
+        } else if (e.type == SDL_MOUSEBUTTONDOWN &&
+                   e.button.button == SDL_BUTTON_LEFT)
+            rc_exercise_click(&g.ex, e.button.x, e.button.y);
+    }
+    rc_exercise_tick(&g.ex, (int)(now - g.last_tick));
+    g.last_tick = now;
+    if (g.ex.r.asked != g.logged_sum) {     /* as REKEN /DEBUG logs it */
+        g.logged_sum = g.ex.r.asked;
+        printf("sum %d: %s%d\n", g.ex.r.asked, g.ex.r.text, g.ex.r.answer);
+    }
+    rc_exercise_draw(&g.ex);
+    memcpy(g.fb, g.ex.fb, sizeof g.fb);
+    memcpy(g.pal, g.ex.pal, sizeof g.pal);
+    present();
+    if (rc_exercise_done(&g.ex))
+        finish_exercises();
+}
+
 static void frame(void)
 {
     SDL_Event e;
     Uint32 now;
+
+    if (g.exercising) {
+        exercise_frame();
+#ifdef __EMSCRIPTEN__
+        if (!g.running)
+            emscripten_cancel_main_loop();
+#else
+        SDL_Delay(5);
+#endif
+        return;
+    }
 
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT)
@@ -323,7 +418,7 @@ static void frame(void)
 
 int main(int argc, char **argv)
 {
-    int map = 0, fps = 30, i;
+    int map = -1, fps = 30, groep = 6, race_only = 0, i;
     uint32_t size;
     const uint8_t *d;
 
@@ -331,8 +426,8 @@ int main(int argc, char **argv)
     g.dir = "/data";            /* preloaded by port/web/build.sh */
 #else
     if (argc < 2) {
-        fprintf(stderr, "usage: %s <data dir> [map 0..22] [--fps N]\n",
-                argv[0]);
+        fprintf(stderr, "usage: %s <data dir> [map 0..22] [--race] "
+                "[--groep 3..8] [--fps N]\n", argv[0]);
         return 2;
     }
     g.dir = argv[1];
@@ -340,6 +435,10 @@ int main(int argc, char **argv)
     for (i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--fps") == 0 && i + 1 < argc)
             fps = atoi(argv[++i]);
+        else if (strcmp(argv[i], "--groep") == 0 && i + 1 < argc)
+            groep = atoi(argv[++i]);
+        else if (strcmp(argv[i], "--race") == 0)
+            race_only = 1;
         else
             map = atoi(argv[i]);
     }
@@ -358,8 +457,29 @@ int main(int argc, char **argv)
     if (!d || rc_pcx_decode(&g.hud, d, size) != 0 || g.hud.w != SCREEN_W ||
         g.hud.h != SCREEN_H)
         rc_pcx_free(&g.hud);
-    if (start_race(map) != 0)
-        return 1;
+    /* A new pupil's session (RRRIO.INF defaults): world 0, stage 0; the
+       first module after the welcome race is Handig rekenen, stage 1. */
+    rc_session_default(&g.session);
+    if (groep >= 3 && groep <= 8)
+        g.session.groep = groep;
+    rc_next_module(&g.session, 1);
+    if (map < 0)
+        map = race_only ? 0 : rc_stage_map(g.session.world, g.session.stage);
+    g.map_index = map;
+    if (!race_only && (rc_archive_open(&g.reken, g.dir, "REKEN") != 0 ||
+                       rc_archive_open(&g.menu, g.dir, "MENU") != 0 ||
+                       rc_exercise_load(&g.ex, &g.reken, &g.menu) != 0)) {
+        fprintf(stderr, "REKEN and MENU archives not found in %s; "
+                "racing only\n", g.dir);
+        race_only = 1;
+    }
+    if (race_only) {
+        if (start_race(map) != 0)
+            return 1;
+    } else {
+        rc_exercise_start(&g.ex, &g.session, (uint32_t)time(NULL));
+        g.exercising = 1;
+    }
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
@@ -373,6 +493,7 @@ int main(int argc, char **argv)
     g.tex = SDL_CreateTexture(g.ren, SDL_PIXELFORMAT_ARGB8888,
                               SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
     g.running = 1;
+    g.last_tick = SDL_GetTicks();
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(frame, 0, 1);
 #else

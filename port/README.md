@@ -15,7 +15,12 @@ Early. What exists:
 - `rcview <data dir> [map]`: an SDL2 viewer at the original's 640×480 in 8-bit
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
-- `redcat <data dir> [map] [--fps N]`: a race (`src/race.c`, `src/game.c`):
+- `redcat <data dir> [map] [--race] [--groep N] [--fps N]`: first the
+  arithmetic part's Handig rekenen screen (`src/reken_screen.c`): 8 sums,
+  answered with the digit keys or by clicking the keypad, Backspace/TERUG,
+  Enter/OK; each right answer adds the shown prize. Then the stage's race
+  (track1b) starts with the fuel, repair, boosts and rockets earned.
+  `--race` goes straight to the race. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
   waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
   crashes, the finish line, the camera. Arrows drive, right Shift boosts,
@@ -25,13 +30,15 @@ Early. What exists:
 - `reken_sim play [groep] [seed]`: the arithmetic part's first module,
   Handig rekenen, in the terminal (`src/reken.c`): 8 sums for the groep, a
   prize per sum (fuel, repair, boosts, rockets), the totals at the end.
-  `reken_sim gen` / `prize` print generator output for
+  `reken_sim shot <data dir> out.ppm [ms] [keys] [sum answer prize]` renders
+  the exercise screen headless. `reken_sim gen` / `prize` print generator
+  output for
   `tools/check_reken.py`, which compares it seed by seed with REKEN.EXE's own
   code run under Unicorn.
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
-race's end (podium, RRRIO.INF), the menu, the arithmetic part's screen and
-its modules 2–4.
+race's end (podium, RRRIO.INF), the menu, the exercises' Help example,
+mouse pointer and spoken feedback, and modules 2–4.
 
 ### Frame rate
 

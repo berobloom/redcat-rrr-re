@@ -17,6 +17,8 @@ add_library(rccore STATIC
   src/gfx8.c
   src/race.c
   src/reken.c
+  src/reken_screen.c
+  src/menu_anims_tab.c
 )
 target_include_directories(rccore PUBLIC src)
 target_link_libraries(rccore PUBLIC m)

@@ -43,6 +43,10 @@ void rc_session_store(rc_session *s);           /* fields back into raw */
    is done.  With take set, it becomes the new stage. */
 int rc_next_module(rc_session *s, int take);
 
+/* The race of a stage (0x44f5c = RRR 0x57b8c): map 0..22, or -1 when the
+   stage has none. */
+int rc_stage_map(int world, int stage);
+
 typedef struct {
     uint32_t seed;              /* Watcom rand() state */
     int level;                  /* [0x46c84]: groep 6,7,8 -> 0,1,2; 3,4,5 */
