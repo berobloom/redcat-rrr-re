@@ -758,4 +758,4 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   and right Shift (0x36) fires a rocket. The port had them the other way.
 - With a joystick (not ported) it shows MENUJOY.PCX and calibrates: centre,
   top left, bottom right, a rocket button and a boost button
-  ("Joystick is ingesteld!"), into +0x3c.. and +0x220.
+  ("Joystick is ingesteld!"), into +0x38..+0x4c, +0x220 and +0x224.
