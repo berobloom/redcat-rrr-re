@@ -75,7 +75,7 @@ Early. What exists:
 
 Not ported yet: the winner's film after a stage-4 race (the podium stands
 in), the closing film (EINDANI2.SMK), the menu's joystick set-up, the
-Help examples of modules 3 and 4, and the exercises' mouse pointer.
+Help example of module 4, and the exercises' mouse pointer.
 
 ### Frame rate
 

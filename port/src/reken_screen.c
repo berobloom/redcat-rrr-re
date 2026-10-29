@@ -216,14 +216,19 @@ enum {
     H_OPEN,             /* 0x1294b at x = 131 (0x83) */
     H_TEXTS,            /* the examples in the rows */
     H_CLOSE,            /* 0x129c6 on row n */
+    H_DEAL,             /* module 3 (0x14492): the grid saved, a demo dealt */
+    H_TURN,             /* 0x13abb: the card at column n, row m turns */
+    H_MISS,             /* 0x13d95(1): the two turned cards turn back */
+    H_PAIR,             /* 0x13d95(0): they leave */
 };
 typedef struct {
-    int op, n;
+    int op, n, m;
     const char *text, *width;   /* H_SHOW: centred by the width of the second */
 } help_line;
-#define SAY(n) { H_SAY, n, NULL, NULL }
-#define SHOW(t, w) { H_SHOW, 0, t, w }
-#define DO(op, n) { op, n, NULL, NULL }
+#define SAY(n) { H_SAY, n, 0, NULL, NULL }
+#define SHOW(t, w) { H_SHOW, 0, 0, t, w }
+#define DO(op, n) { op, n, 0, NULL, NULL }
+#define TURN(col, row) { H_TURN, col, row, NULL, NULL }
 
 static const help_line help1[] = {     /* 0x11a6a */
     SAY(3), SAY(4), SAY(5), SAY(6),
@@ -244,6 +249,20 @@ static const help_line help2[] = {
     SAY(21), SAY(22), SAY(23),
     DO(H_CLOSE, 0), SAY(24), DO(H_CLOSE, 1), SAY(25), DO(H_CLOSE, 2),
 };
+/* module 3: 0x14967 presses Help, 0x14492 deals, then 0x147a9.  The turns
+   are at fixed columns of row 0: in groep 3's grid of three columns the
+   "card 3" turned at column 3 lies outside it (its text is card 3's, the
+   first of row 1, which stays face down). */
+static const help_line help3[] = {
+    DO(H_PRESS, 0), DO(H_DEAL, 0),
+    SAY(51), SAY(52), SAY(53), SAY(54), SAY(55), SAY(56),
+    TURN(0, 0), SAY(57), TURN(3, 0), SAY(58), DO(H_MISS, 0),
+    SAY(59), SAY(60), TURN(2, 0), SAY(61), SAY(62), TURN(3, 0), SAY(63),
+    DO(H_PAIR, 0),
+};
+/* 0x14492's demo: card 0 "2 + 3" (5), card 2 "4 + 4" (8), card 3 the
+   ANTWOORD 8 */
+
 /* each centred as written, but the second by "2 * 4 = 7" (0x12ca2) */
 static const char *const help2_text[3] = { "4 + 3 = 6", "2 x 4 = 7", "8 : 2 = 4" };
 #define HELP2_BAR_X 131
@@ -488,6 +507,7 @@ void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
     x->box_value = -1;
     x->help_anim = 0;
     x->help_rows = 0;
+    x->help_card[0].on = x->help_card[1].on = 0;
     x->equals_x = x->r.level >= 3 ? 78 : 152;   /* module4_init */
     x->face_anim = A_FACE_RIGHT;    /* module1_init: anim 13, frame 0 */
     x->face_frame = 0;
@@ -630,6 +650,10 @@ static const help_line *help_script(const rc_exercise *x, int *n)
         *n = (int)(sizeof help2 / sizeof help2[0]);
         return help2;
     }
+    if (x->module == 3) {
+        *n = (int)(sizeof help3 / sizeof help3[0]);
+        return help3;
+    }
     *n = (int)(sizeof help1 / sizeof help1[0]);
     return help1;
 }
@@ -657,8 +681,87 @@ static void help_end(rc_exercise *x)
         set_state(x, ST_OPEN);
         return;
     }
+    if (x->module == 3) {               /* 0x14683: the grid as it was */
+        x->r = x->help_r;
+        memcpy(x->cell_anim, x->help_cell_anim, sizeof x->cell_anim);
+        memcpy(x->cell_frame, x->help_cell_frame, sizeof x->cell_frame);
+        memcpy(x->cell_text, x->help_cell_text, sizeof x->cell_text);
+        x->help_card[0].on = x->help_card[1].on = 0;
+    }
     x->typed[0] = 0;
     set_state(x, x->help_from);
+}
+
+/* 0x14492: every cell SOM, ANTWOORD, SOM, ... (found pairs come back),
+   three cards rewritten, nothing turned */
+static void help_deal(rc_exercise *x)
+{
+    rc_reken *r = &x->r;
+    int k;
+
+    x->help_r = *r;
+    memcpy(x->help_cell_anim, x->cell_anim, sizeof x->cell_anim);
+    memcpy(x->help_cell_frame, x->cell_frame, sizeof x->cell_frame);
+    memcpy(x->help_cell_text, x->cell_text, sizeof x->cell_text);
+    for (k = 0; k < r->cells; k++) {
+        r->card[k].kind = k % 2 ? RC_CARD_ANTWOORD : RC_CARD_SOM;
+        x->cell_anim[k] = k % 2 ? A_CARD_ANTWOORD : A_CARD_SOM;
+        x->cell_frame[k] = 0;
+        x->cell_text[k] = 0;
+    }
+    snprintf(r->card[0].text, sizeof r->card[0].text, "2 + 3");
+    r->card[0].value = 5;
+    snprintf(r->card[2].text, sizeof r->card[2].text, "4 + 4");
+    r->card[2].value = 8;
+    snprintf(r->card[3].text, sizeof r->card[3].text, "8");
+    r->card[3].value = 8;
+    r->first = r->second = -1;
+    x->help_turns = 0;
+    x->help_card[0].on = x->help_card[1].on = 0;
+}
+
+/* the next of Help's two cards goes to (col, row); the card it was is left
+   on the grid as it looks */
+static void help_take_slot(rc_exercise *x, int col, int row)
+{
+    const rc_grid *g = rc_module3_grid(x->r.level);
+    int slot = x->help_turns++ % 2;
+    int old = x->help_card[slot].cell;
+
+    if (x->help_card[slot].on && x->help_card[slot].col < g->cols) {
+        x->cell_anim[old] = x->help_card[slot].anim;
+        x->cell_frame[old] = x->help_card[slot].frame;
+        x->cell_text[old] = x->help_card[slot].text;
+    }
+    x->help_card[slot].on = 1;
+    x->help_card[slot].col = col;
+    x->help_card[slot].row = row;
+    x->help_card[slot].cell = row * g->cols + col;
+}
+
+/* Help's cards: frames 0..count - 1, one per ms, as animate_cards */
+static int help_cards(rc_exercise *x, int count, int ms)
+{
+    int k, from = x->help_anim == H_TURN ? (x->help_turns - 1) % 2 : 0;
+    int to = x->help_anim == H_TURN ? from + 1 : 2;
+
+    while (x->state_ms >= ms && x->frame < count) {
+        x->state_ms -= ms;
+        x->frame++;
+    }
+    for (k = from; k < to; k++) {
+        int som = x->r.card[x->help_card[k].cell].kind == RC_CARD_SOM;
+        x->help_card[k].anim = x->help_anim == H_TURN ? (som ? A_CARD_SOM : A_CARD_ANTWOORD) :
+                               x->help_anim == H_PAIR ? A_CARD_GONE :
+                               som ? A_BACK_SOM : A_BACK_ANTWOORD;
+        x->help_card[k].frame = x->frame < count ? x->frame : count - 1;
+        x->help_card[k].text = 0;
+        if (x->frame >= count && x->help_anim == H_TURN)
+            x->help_card[k].text = som ? 1 : 2;
+        if (x->frame >= count && x->help_anim == H_PAIR)
+            x->help_card[k].anim = -1;      /* restore_frame_rect */
+    }
+    return x->frame >= count;
 }
 
 /* a row animation of the script, BAR_MS a frame; 1 when done */
@@ -670,6 +773,12 @@ static int help_animate(rc_exercise *x)
         return x->state_ms >= PRESS_MS;
     if (x->help_anim == H_OPEN)
         return open_rows(x);
+    if (x->help_anim == H_TURN)
+        return help_cards(x, CARD_FRAMES, CARD_MS);
+    if (x->help_anim == H_MISS)
+        return help_cards(x, BACK_FRAMES, BACK_MS);
+    if (x->help_anim == H_PAIR)
+        return help_cards(x, GONE_FRAMES, CARD_MS);
     while (x->state_ms >= BAR_MS) {
         x->state_ms -= BAR_MS;
         if (++x->frame > BAR_FRAMES)
@@ -711,9 +820,17 @@ static void help_next(rc_exercise *x)
         case H_TEXTS:
             x->texts_shown = 1;
             break;
+        case H_DEAL:
+            help_deal(x);
+            break;
+
         case H_OPEN:
             for (k = 0; k < 3; k++)
                 x->bar_frame[k] = BAR_FRAMES - 1;
+            /* fall through */
+        case H_TURN:
+            if (h->op == H_TURN)
+                help_take_slot(x, h->n, h->m);
             /* fall through */
         default:
             if (h->op == H_PRESS)
@@ -733,7 +850,7 @@ static void help_next(rc_exercise *x)
 /* 0x11de6, 0x13502: H while a sum is asked */
 static void help_start(rc_exercise *x)
 {
-    if (x->module == 2 && x->snd_stop && sound_on(x))
+    if (x->module >= 2 && x->snd_stop && sound_on(x))
         x->snd_stop(x->snd_ctx, 0);
     x->help_from = x->state;
     x->help_step = -1;
@@ -988,9 +1105,9 @@ void rc_exercise_key(rc_exercise *x, int key)
         return;
     }
     if (key == RC_KEY_HELP) {
-        if (x->module <= 2 && x->state == ST_INPUT)
+        if (x->module <= 3 && x->state == ST_INPUT)
             help_start(x);
-        else    /* the examples of modules 3 and 4 are not ported */
+        else    /* module 4's examples are not ported */
             press(x, A_HELP, HELP_X, HELP_Y);
         return;
     }
@@ -1131,29 +1248,56 @@ static void draw_gauges(rc_exercise *x)         /* 0x18d8a */
     }
 }
 
-static void draw_cards(rc_exercise *x)          /* 0x1410a, 0x13abb */
+/* a card at (cx, cy) with, after it has turned, its text (1) or value (2) */
+static void draw_card(rc_exercise *x, int cell, int anim, int frame, int text,
+                      int cx, int cy)
 {
     const rc_grid *g = rc_module3_grid(x->r.level);
     const rc_font *f = &x->font20;
+
+    draw_centred(x, anim, frame, cx + g->w / 2, cy + g->h / 2);
+    if (text) {
+        const rc_card *c = &x->r.card[cell];
+        char s[50];
+        int n = text == 1 ? snprintf(s, sizeof s, "%s", c->text) :
+                            snprintf(s, sizeof s, "%d", c->value);
+        draw_text(x, f, cx + (g->w - n * f->w) / 2,
+                  cy + (g->h - f->h) / 2 + 1, s, -1);
+    }
+}
+
+/* Help's turned cards are drawn over (and in place of) the grid's */
+static int help_covers(const rc_exercise *x, int col, int row)
+{
+    int k;
+
+    for (k = 0; k < 2; k++)
+        if (x->help_card[k].on && x->help_card[k].col == col &&
+            x->help_card[k].row == row)
+            return 1;
+    return 0;
+}
+
+static void draw_cards(rc_exercise *x)          /* 0x1410a, 0x13abb */
+{
+    const rc_grid *g = rc_module3_grid(x->r.level);
     int k;
 
     for (k = 0; k < x->r.cells; k++) {
         int cx = g->x + k % g->cols * (g->w + g->gap_x);
         int cy = g->y + k / g->cols * (g->h + g->gap_y);
 
-        if (x->cell_anim[k] < 0)
+        if (x->cell_anim[k] < 0 || help_covers(x, k % g->cols, k / g->cols))
             continue;
-        draw_centred(x, x->cell_anim[k], x->cell_frame[k], cx + g->w / 2,
-                     cy + g->h / 2);
-        if (x->cell_text[k]) {
-            const rc_card *c = &x->r.card[k];
-            char s[50];
-            int n = x->cell_text[k] == 1 ? snprintf(s, sizeof s, "%s", c->text) :
-                                           snprintf(s, sizeof s, "%d", c->value);
-            draw_text(x, f, cx + (g->w - n * f->w) / 2,
-                      cy + (g->h - f->h) / 2 + 1, s, -1);
-        }
+        draw_card(x, k, x->cell_anim[k], x->cell_frame[k], x->cell_text[k],
+                  cx, cy);
     }
+    for (k = 0; k < 2; k++)
+        if (x->help_card[k].on && x->help_card[k].anim >= 0)
+            draw_card(x, x->help_card[k].cell, x->help_card[k].anim,
+                      x->help_card[k].frame, x->help_card[k].text,
+                      g->x + x->help_card[k].col * (g->w + g->gap_x),
+                      g->y + x->help_card[k].row * (g->h + g->gap_y));
 }
 
 static void draw_sum(rc_exercise *x)            /* 0x11cfd, 0x17fb2, 0x180af */

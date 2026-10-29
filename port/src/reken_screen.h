@@ -82,6 +82,14 @@ typedef struct {
     const char *help_text, *help_width;  /* the example shown */
     int help_anim, help_row;    /* a row animation of the script, its row */
     int help_rows;              /* module 2: the rows show the examples */
+    /* module 3: the grid kept while Help deals its own, and the two cards
+       Help turns, drawn where it puts them (col, row may lie outside the
+       grid) */
+    rc_reken help_r;
+    int help_cell_anim[RC_MEMORY_CELLS], help_cell_frame[RC_MEMORY_CELLS];
+    int help_cell_text[RC_MEMORY_CELLS];
+    struct { int on, cell, col, row, anim, frame, text; } help_card[2];
+    int help_turns;
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,
