@@ -316,16 +316,223 @@ int rc_module1_next(rc_reken *r)
     return 1;
 }
 
-int rc_reken_answer(rc_reken *r, int answer)
+static int answered(rc_reken *r, int right)
 {
-    int right = answer == r->answer;
-
     rc_rand(r);                 /* the spoken "goed" or "fout" (0x1910f, 0x19471) */
     if (right) {
         prize_award(r);
         r->correct++;
     }
     return right;
+}
+
+int rc_reken_answer(rc_reken *r, int answer)
+{
+    return answered(r, answer == r->answer);
+}
+
+/* Module 2 "Wat is waar?" */
+
+/* 0x45480: the results' range per level */
+static const int16_t result_range[6][2] = {
+    { 15, 50 }, { 15, 100 }, { 15, 150 }, { 2, 9 }, { 2, 9 }, { 2, 9 },
+};
+
+/* 0x454b0: the three sums' types (0x4539c's codes) per level, five rows */
+static const uint8_t choice_types[6][5][3] = {
+    { { 0, 1, 2 }, { 1, 0, 3 }, { 3, 1, 0 }, { 2, 1, 3 }, { 2, 0, 3 } },
+    { { 0, 1, 2 }, { 1, 0, 3 }, { 3, 1, 0 }, { 2, 1, 3 }, { 3, 0, 2 } },
+    { { 0, 1, 2 }, { 1, 0, 3 }, { 3, 1, 0 }, { 2, 1, 3 }, { 3, 0, 2 } },
+    { { 2, 3, 2 }, { 3, 2, 3 }, { 2, 3, 2 }, { 3, 3, 2 }, { 3, 2, 2 } },
+    { { 0, 2, 3 }, { 2, 0, 3 }, { 3, 0, 2 }, { 2, 0, 3 }, { 3, 0, 2 } },
+    { { 0, 1, 2 }, { 1, 0, 3 }, { 3, 1, 0 }, { 2, 1, 3 }, { 3, 0, 2 } },
+};
+
+#define TRIES 4000
+
+static int result_between(rc_reken *r)          /* 0x1202a */
+{
+    return between(r, result_range[r->level][0], result_range[r->level][1]);
+}
+
+/* Each generator writes choice i and its value.  The target R is
+   choice_value[0] (0x53be4): the drawn result for choice 0, which then
+   holds choice 0's own value, so choices 1 and 2 are made around that. */
+
+static void choice_add(rc_reken *r, int i)      /* 0x12068 */
+{
+    int R = r->choice_value[0], a, b;
+
+    if (r->level >= 3) {
+        a = rc_rand(r) % R + 1;
+        b = iabs(R - a + rc_rand(r) % 3 + 1);
+    } else {
+        a = iabs(R / 2 - (rc_rand(r) % 4 + 1));
+        b = iabs(R / 2 - (rc_rand(r) % 4 + 1));
+    }
+    snprintf(r->choice[i], sizeof r->choice[i], "%d + %d", a, b);
+    r->choice_value[i] = a + b;
+}
+
+/* 0x121d9: a product within tol of R, but not R */
+static void near_product(rc_reken *r, int *a, int *b, int R, int tol)
+{
+    int x = 0, y = 0, n, d;
+
+    for (n = 0; n < TRIES; n++) {
+        x = result_between(r);
+        y = result_between(r);
+        d = iabs(x * y - R);
+        if (d != 0 && d <= tol) {
+            *a = x;
+            *b = y;
+            return;
+        }
+    }
+    *a = x + 1;
+    *b = y;
+}
+
+static void choice_mul(rc_reken *r, int i)      /* 0x12288 */
+{
+    int R = r->choice_value[0], a, b;
+
+    if (r->level >= 3) {
+        near_product(r, &a, &b, R, 1);
+    } else {
+        a = rc_rand(r) % 20 + 1;
+        b = R / a;
+        if (b < 5)
+            b += rc_rand(r) % 4 + 1;
+        else
+            b -= rc_rand(r) % 4 + 1;
+    }
+    snprintf(r->choice[i], sizeof r->choice[i], "%d x %d", a, b);
+    r->choice_value[i] = a * b;
+}
+
+/* 0x123cf: a division a : b in the result range whose quotient is within
+   tol of R, but not R */
+static void near_quotient(rc_reken *r, int *a, int *b, int R, int tol)
+{
+    int lo = result_range[r->level][0], hi = result_range[r->level][1];
+    int qlo = R - tol, qhi = R + tol, n, q, d;
+
+    if ((unsigned)qlo < (unsigned)lo)           /* unsigned compares */
+        qlo = lo;
+    if ((unsigned)qhi > (unsigned)hi)
+        qhi = hi;
+    /* qhi < qlo (R past hi + tol) still draws, from qlo up (idiv keeps the
+       remainder's sign).  qhi == qlo divides by zero in the original, and a
+       span holding only R loops forever there; the port takes the fallback
+       for both. */
+    n = qhi == qlo || (iabs(qhi - qlo) == 1 && qlo == R) ? TRIES : 0;
+    for (; n < TRIES; n++) {
+        do
+            q = qlo + rc_rand(r) % (qhi - qlo);
+        while (q == R);
+        d = result_between(r);
+        if (q * d >= lo && q * d <= hi) {
+            *a = q * d;
+            *b = d;
+            return;
+        }
+    }
+    *a = R == 4 ? 9 : 8;
+    *b = R == 4 ? 3 : 2;
+}
+
+static void choice_div(rc_reken *r, int i)      /* 0x124ec */
+{
+    int R = r->choice_value[0], a, b;
+
+    if (r->level >= 3) {
+        near_quotient(r, &a, &b, R, 2);
+    } else {
+        b = rc_rand(r) % 6 + 1;
+        a = iabs(R - (rc_rand(r) % 4 + 1)) * b;
+    }
+    snprintf(r->choice[i], sizeof r->choice[i], "%d : %d", a, b);
+    r->choice_value[i] = a / b;
+}
+
+static void choice_sub(rc_reken *r, int i)      /* 0x12614 */
+{
+    int R = r->choice_value[0], a, b;
+
+    if (r->level >= 3) {
+        a = rc_rand(r) % R + 1;
+        b = iabs(rc_rand(r) % 3 + (R - a) + 1);
+        if (a == b)
+            a++;
+        if (a > b && i != 0 && a - b == R)
+            a++;
+        else if (a < b && i != 0 && b - a == R)
+            b++;
+    } else {
+        a = iabs(R - (rc_rand(r) % 4 + 1));
+        b = rc_rand(r) % 100 + 20;
+        a += b;
+        if (a == b)
+            a -= 5;
+    }
+    if (a > b) {
+        snprintf(r->choice[i], sizeof r->choice[i], "%d - %d", a, b);
+        r->choice_value[i] = a - b;
+    } else {
+        snprintf(r->choice[i], sizeof r->choice[i], "%d - %d", b, a);
+        r->choice_value[i] = b - a;
+    }
+}
+
+void rc_module2_make(rc_reken *r)
+{
+    const uint8_t *types;
+    int i;
+
+    result_between(r);          /* [0x53bd4], [0x53bd8]: overwritten */
+    result_between(r);
+    r->choice_value[0] = result_between(r);
+    types = choice_types[r->level][rc_rand(r) % 5];
+    for (i = 0; i < 3; i++)
+        switch (types[i]) {
+        case 0: choice_mul(r, i); break;
+        case 1: choice_div(r, i); break;
+        case 2: choice_add(r, i); break;
+        case 3: choice_sub(r, i); break;
+        }
+}
+
+int rc_module2_next(rc_reken *r)
+{
+    int i;
+
+    if (r->asked >= RC_SUMS_PER_ROUND)
+        return 0;
+    rc_module2_make(r);
+    rc_prize_choose(r);
+    r->true_row = rc_rand(r) % 3;
+    /* groep 6..8 read "a op b = R" in each row; groep 3..5 the bare sums,
+       with R in a box beside them */
+    if (r->level <= 2)
+        for (i = 0; i < 3; i++) {
+            size_t n = strlen(r->choice[i]);
+            snprintf(r->choice[i] + n, sizeof r->choice[i] - n, " = %2d",
+                     r->choice_value[0]);
+        }
+    r->answer = r->choice_value[0];
+    r->asked++;
+    return 1;
+}
+
+int rc_module2_choice(const rc_reken *r, int row)
+{
+    return row == r->true_row ? 0 : row == 0 ? r->true_row : row;
+}
+
+int rc_module2_answer(rc_reken *r, int row)
+{
+    return answered(r, row == r->true_row);
 }
 
 /* The session record */

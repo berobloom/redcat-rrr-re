@@ -456,3 +456,73 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
     ("%d " on black) at (576, 134).
 - CONFIRMED (`0x1847e`): keys S (Stop, −1), H (Help, −2), Enter or O
   (OK; ignored while the field is empty), digit keys and keypad.
+
+## The arithmetic part: module 2 "Wat is waar?"
+
+- CONFIRMED (screenshots, groep 6 and 3): three rows (anims 28, 29, 30,
+  363 × 41, labels 1–3 in the image), each a sum; one of them is true. For
+  groep 6–8 each row reads "a op b = R" with the same R; for groep 3–5 the
+  rows hold the bare sums and R stands in the Uitkomst box (anim 22 at
+  (452, 226), drawn by `0x195e3`). Keys 1, 2, 3 or a click on a row answer;
+  S, H and the Stop / Help buttons as in module 1. No keypad.
+- CONFIRMED (port = original under Unicorn, `check_reken.py`; see below for
+  the faulting seeds): `0x13630` runs 8 rounds of `0x12844` (generate) and
+  `0x13229` (ask), then `0x19f07` with module [0x46c85] = 2. `0x12844(L)`:
+  three draws of `0x1202a` (= lo + rand() % (hi − lo)) over the level's
+  result range `0x45480` into [0x53bd4], [0x53bd8] (overwritten later) and
+  R = [0x53be4]; a row of `0x454b0[L][rand() % 5]` (3 type bytes,
+  0 × `0x12288`, 1 : `0x124ec`, 2 + `0x12068`, 3 − `0x12614`):
+
+  | level | rows |
+  |---|---|
+  | 0 | 012 103 310 213 203 |
+  | 1, 2, 5 | 012 103 310 213 302 |
+  | 3 | 232 323 232 332 322 |
+  | 4 | 023 203 302 203 302 |
+
+  Choice i's text goes to 0x537ec + 100 i, its value to the int array at
+  0x53be4. Element 0 of that array is R itself, so choice 0 overwrites R
+  with its own value and choices 1 and 2 are made around that: choice 0 is
+  the true sum, and R as shown is its value.
+- CONFIRMED (same check): the generators, R = [0x53be4], levels 3–5 / 0–2:
+  - + : a = rand() % R + 1, b = |R − a + rand() % 3 + 1| (a + b is R + 1 to
+    R + 3) / a, b = |R/2 − (rand() % 4 + 1)| each.
+  - × : `0x121d9`: up to 4000 pairs from the result range until
+    0 < |a·b − R| ≤ 1, else last a + 1, last b / a = rand() % 20 + 1,
+    b = R / a, then b ± (rand() % 4 + 1) (+ when b < 5).
+  - : : `0x123cf`: quotient span [max(R − 2, lo), min(R + 2, hi)] (unsigned
+    compares), q = span lo + rand() % (hi − lo) redrawn while q = R,
+    divisor from the result range, accepted when q·d is in the range; 4000
+    tries, else 8 : 2 (9 : 3 when R = 4) / b = rand() % 6 + 1,
+    a = |R − (rand() % 4 + 1)| · b.
+  - − : a = rand() % R + 1, b = |rand() % 3 + R − a + 1|, a = b → a + 1,
+    and for choices 1, 2 a difference equal to R is nudged by one / a =
+    |R − (rand() % 4 + 1)| + b with b = rand() % 100 + 20, equal → a − 5.
+    The larger operand goes first.
+  So the true row is built on one draw and the others miss its value by a
+  little. Each generator keeps choices 1 and 2 off R (by construction, or
+  the × / : retry tests); only ×'s fallback (last a + 1) · b is unchecked
+  (LIKELY rare: 4000 failed pairs).
+- STRONGLY SUPPORTED (Unicorn faults in `0x123cf` at level 5 for some
+  seeds): when the span above is empty (R = 11: max(9, 2) = min(13, 9)),
+  `rand() % 0` divides by zero. R = 11 happens when choice 0 is a + at
+  level 5 (R + 3 with R = 8) and choice 1 is a division (row 213). Whether
+  DOS/4GW then aborts REKEN was not tried. The port takes the 8 : 2
+  fallback there. A span below the range (R > hi + 2) still draws (idiv
+  keeps the remainder positive) and ends in the fallback.
+- CONFIRMED (`0x13229`, screenshots): per round: "Aantal sommen" (8 down to
+  1), the prize (`0x18e7f`), the rows open (`0x1294b`: frames 5 → 0, 5 ms
+  apart; frame 5 is white, 0 black), the true row r = rand() % 3
+  ([0x53c80]): row r shows choice 0, row 0 choice r, the third row its own;
+  then the texts (ASCII30, centred in 342 × 41 from (x + 22, 208 / 297 /
+  385)) and for groep 3–5 R centred in 132 × 144 from (452, 267). The rows
+  are centred at (x + 182, 227 / 316 / 404), x = 61 for groep 3–5, else
+  131. After a key the two other rows close (`0x12b59`, frames 0 → 5 then
+  the background back; frame 0 first hides their text), the award or no
+  prize as in module 1, 1 s, and the true row closes too (`0x129c6`).
+- CONFIRMED (`0x24741` tables, 22-byte records {1, 0, 5, scan code, 1, x0,
+  y0, x1, y1, 0, 0}, ended by 0): mouse buttons per module stand for keys:
+  module 1 `0x45060` (keypad, Help (564, 3)–(632, 33), TERUG, OK, Stop
+  (10, 6)–(78, 35)), module 2 `0x453fc` (rows (x, 207)–(x + 342, 248),
+  +89, +177; Help; Stop (10, 4)–(78, 33)), module 3 `0x4550c`, module 4
+  `0x457d4`.

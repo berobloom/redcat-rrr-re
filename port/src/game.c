@@ -1,11 +1,14 @@
 /* redcat: the arithmetic part's first exercises, then a race with what
    they earned, as REKEN.EXE and RRR.EXE run them.
 
-   usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8] [--fps N]
+   usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
+                 [--module 1..2] [--fps N]
 
-   Exercises: digits (keys or the keypad) answer, Backspace or TERUG takes
-   one back, Enter or OK confirms, S or Stop quits.  --race skips them; the
-   map defaults to the stage's race (world 0, stage 1: track1b).
+   Exercises: module 1 (Handig rekenen): digits (keys or the keypad)
+   answer, Backspace or TERUG takes one back, Enter or OK confirms; module 2
+   (Wat is waar?): 1, 2, 3 or a click picks the true row.  S or Stop quits.
+   --race skips them; the map defaults to the stage's race (world 0,
+   stage 1: track1b).
 
    Race keys (RRRIO.INF defaults): arrows steer and accelerate, right Shift
    boost, Enter rocket, F1/F2/F3 follow RedCat/Brutus/Snitch, Esc quits.
@@ -347,7 +350,14 @@ static void exercise_frame(void)
     g.last_tick = now;
     if (g.ex.r.asked != g.logged_sum) {     /* as REKEN /DEBUG logs it */
         g.logged_sum = g.ex.r.asked;
-        printf("sum %d: %s%d\n", g.ex.r.asked, g.ex.r.text, g.ex.r.answer);
+        if (g.ex.module == 2)
+            printf("sum %d: %s | %s | %s  (true: row %d)\n", g.ex.r.asked,
+                   g.ex.r.choice[rc_module2_choice(&g.ex.r, 0)],
+                   g.ex.r.choice[rc_module2_choice(&g.ex.r, 1)],
+                   g.ex.r.choice[rc_module2_choice(&g.ex.r, 2)],
+                   g.ex.r.true_row + 1);
+        else
+            printf("sum %d: %s%d\n", g.ex.r.asked, g.ex.r.text, g.ex.r.answer);
     }
     rc_exercise_draw(&g.ex);
     memcpy(g.fb, g.ex.fb, sizeof g.fb);
@@ -418,7 +428,7 @@ static void frame(void)
 
 int main(int argc, char **argv)
 {
-    int map = -1, fps = 30, groep = 6, race_only = 0, i;
+    int map = -1, fps = 30, groep = 6, module = 1, race_only = 0, i;
     uint32_t size;
     const uint8_t *d;
 
@@ -427,7 +437,7 @@ int main(int argc, char **argv)
 #else
     if (argc < 2) {
         fprintf(stderr, "usage: %s <data dir> [map 0..22] [--race] "
-                "[--groep 3..8] [--fps N]\n", argv[0]);
+                "[--groep 3..8] [--module 1..2] [--fps N]\n", argv[0]);
         return 2;
     }
     g.dir = argv[1];
@@ -437,6 +447,8 @@ int main(int argc, char **argv)
             fps = atoi(argv[++i]);
         else if (strcmp(argv[i], "--groep") == 0 && i + 1 < argc)
             groep = atoi(argv[++i]);
+        else if (strcmp(argv[i], "--module") == 0 && i + 1 < argc)
+            module = atoi(argv[++i]);
         else if (strcmp(argv[i], "--race") == 0)
             race_only = 1;
         else
@@ -477,7 +489,7 @@ int main(int argc, char **argv)
         if (start_race(map) != 0)
             return 1;
     } else {
-        rc_exercise_start(&g.ex, &g.session, (uint32_t)time(NULL));
+        rc_exercise_start(&g.ex, &g.session, module, (uint32_t)time(NULL));
         g.exercising = 1;
     }
 

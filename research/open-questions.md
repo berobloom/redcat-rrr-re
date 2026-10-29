@@ -27,9 +27,12 @@
 ## Arithmetic (REKEN.EXE)
 
 16. Module 1's generators are **RESOLVED (session 4)** (discoveries, checked
-    under Unicorn). Open: the `0x12068`.. family the other modules use.
-17. Modules 2–4 (Wat is waar?, Memory, Grote getallenspel): screens, rules,
-    prizes.
+    under Unicorn); module 2's `0x12068`.. family too (session 5).
+17. Modules 3–4 (Memory, Grote getallenspel): screens, rules, prizes.
+    Module 2 is **RESOLVED (session 5)** except its Help example
+    (`0x12ca2`, as module 1's `0x11a6a`).
+20. Does REKEN abort when module 2's `0x123cf` divides by zero (level 5,
+    R = 11; discoveries "module 2")?
 18. `NNNNNNNN.SMD` layout and how a pupil's number is chosen (Naam is
     empty under `REKEN /DAVILEX`).
 19. What +0x30 / [0x46c87] (default 3) means; it gates the prize sounds.

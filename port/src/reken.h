@@ -55,6 +55,10 @@ typedef struct {
     char text[100];             /* 0x5371c */
     int answer;                 /* [0x537e4] */
     int asked, correct;         /* [0x537e8] */
+    /* module 2 */
+    char choice[3][100];        /* 0x537ec: choice 0 is the true sum */
+    int choice_value[3];        /* 0x53be4 */
+    int true_row;               /* [0x53c80]: the row choice 0 is shown in */
 } rc_reken;
 
 void rc_reken_start(rc_reken *r, const rc_session *s, uint32_t seed);
@@ -67,8 +71,18 @@ int rc_module1_next(rc_reken *r);
    original counts it up one unit per 200 ms). */
 int rc_reken_answer(rc_reken *r, int answer);
 
+/* Module 2 "Wat is waar?": three sums with their results, one of them
+   true (0x13630, 0x12844 and the start of 0x13229).  Returns 0 after the
+   last round. */
+int rc_module2_next(rc_reken *r);
+/* The choice shown in row 0..2 (0x12ee0). */
+int rc_module2_choice(const rc_reken *r, int row);
+/* The row picked: 1 if it shows the true sum; the prize as in module 1. */
+int rc_module2_answer(rc_reken *r, int row);
+
 /* The generators, for tests: type 0 x, 1 :, 2 +, 3 - (0x4539c's codes). */
 void rc_sum_make(rc_reken *r, int type);
+void rc_module2_make(rc_reken *r);               /* 0x12844 */
 void rc_prize_choose(rc_reken *r);               /* 0x18e7f */
 int rc_rand(rc_reken *r);                        /* 0x22bd2 */
 

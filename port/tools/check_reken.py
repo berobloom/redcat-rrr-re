@@ -12,6 +12,8 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(ROOT, 'reverse-engineering', 'tools'))
 from emu import Emu  # noqa: E402
+from unicorn import UcError  # noqa: E402
+from unicorn.x86_const import UC_X86_REG_EIP  # noqa: E402
 
 SIM = sys.argv[1]
 N = int(sys.argv[2]) if len(sys.argv) > 2 else 500
@@ -25,6 +27,7 @@ e = Emu('reken')
 e.stub(0x22bd2, e.watcom_rand)
 e.stub(0x1a1ee, e.sprintf)
 e.stub(0x18e0b, lambda e: None)       # shows the prize picture
+e.stub(0x1d8f3, lambda e: None)       # debug printf
 e.uc.mem_write(SPEECH, b'\0')         # no sound calls
 
 
@@ -50,6 +53,28 @@ for t, addr in GENERATORS.items():
                     print('type %d level %d seed %d: original %r, port %r'
                           % (t, level, 1 + i, orig, port[i]))
 
+# module 2: three choices at 0x537ec + 100 i, their values at 0x53be4 + 4 i
+CHOICE, VALUE, LEVEL = 0x537ec, 0x53be4, 0x46c84
+crashes = []
+for level in range(6):
+    port = sim('gen2', level, 1, N)
+    e.uc.mem_write(LEVEL, bytes([level]))
+    for i in range(N):
+        e.seed = 1 + i
+        try:
+            e.call(0x12844, eax=level)
+        except UcError:
+            # 0x123cf divides by zero when the span of quotients is empty
+            crashes.append((level, 1 + i, hex(e.uc.reg_read(UC_X86_REG_EIP))))
+            continue
+        orig = ''.join('%s|%d|' % (e.cstr(CHOICE + 100 * k), e.i32(VALUE + 4 * k))
+                       for k in range(3)) + str(e.seed)
+        if orig != port[i]:
+            bad += 1
+            if bad <= 10:
+                print('module 2 level %d seed %d: original %r, port %r'
+                      % (level, 1 + i, orig, port[i]))
+
 STATES = [(75, 100, 5, 10), (40, 100, 5, 10), (120, 70, 5, 10),
           (100, 0, 5, 10), (100, 100, 99, 10), (100, 100, 5, 99),
           (30, 100, 99, 99), (150, 99, 0, 0)]
@@ -68,6 +93,9 @@ for st in STATES:
                 print('prize %s seed %d: original %s, port %s'
                       % (st, 1 + i, orig, port[i]))
 
-cases = len(GENERATORS) * 6 * N + len(STATES) * N
+cases = len(GENERATORS) * 6 * N + 6 * N + len(STATES) * N
 print('%d of %d cases differ' % (bad, cases))
+if crashes:
+    print('the original faults in %d module 2 cases, e.g. level %d seed %d at %s'
+          % ((len(crashes),) + crashes[0]))
 sys.exit(bad != 0)

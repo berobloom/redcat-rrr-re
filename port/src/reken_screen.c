@@ -23,6 +23,8 @@
 #define A_PANEL 32              /* sum panel, 0x111c1 */
 #define A_KEY_1 33              /* keys 1..9: 33..41, 0: 42 (0x110e2) */
 #define A_TITLE 43              /* module title bar, frame = module - 1 */
+#define A_BOX 22                /* module 2 Uitkomst box (0x195e3) */
+#define A_BAR 28                /* module 2 rows: 28, 29, 30 (0x11fcc) */
 
 #define PANEL_X 8
 #define PANEL_Y 168
@@ -52,20 +54,54 @@ static const int key_xy[10][2] = {      /* 0x110e2; index = digit */
 #define BACK_Y 368
 #define HELP_X 564              /* 0x11e23 */
 #define HELP_Y 3
-/* The Stop button is part of mod_124.pcx; its rectangle is read off the
-   picture, not from the code. */
-#define STOP_X0 4
-#define STOP_Y0 4
-#define STOP_X1 78
-#define STOP_Y1 30
+
+/* Module 2: rows centred at (bar_x + 182, bar_y), the sum in the 342 x 41
+   box from (bar_x + 22, text_y) (0x12ee0), the result in 132 x 144 from
+   (452, 267) (0x13229) */
+#define BAR_DX 182
+#define BAR_FRAMES 6
+static const int bar_y[3] = { 227, 316, 404 };
+static const int text_y[3] = { 208, 297, 385 };
+#define TEXT_DX 22
+#define TEXT_W 342
+#define TEXT_H 41
+#define BOX_X 452
+#define BOX_Y 226
+#define RESULT_Y 267
+#define RESULT_W 132
+#define RESULT_H 144
+
+/* Mouse buttons (0x24741's tables: rectangles and the key each stands
+   for) */
+typedef struct { int key, x0, y0, x1, y1; } button;
+
+static const button buttons1[] = {      /* 0x45060 */
+    { '0', 413, 416, 469, 472 }, { '1', 17, 351, 73, 407 },
+    { '2', 105, 351, 161, 407 }, { '3', 193, 351, 249, 407 },
+    { '4', 281, 351, 337, 407 }, { '5', 369, 351, 425, 407 },
+    { '6', 61, 416, 117, 472 }, { '7', 149, 416, 205, 472 },
+    { '8', 237, 416, 293, 472 }, { '9', 325, 416, 381, 472 },
+    { RC_KEY_HELP, 564, 3, 632, 33 }, { RC_KEY_BACK, 502, 368, 634, 416 },
+    { RC_KEY_OK, 502, 424, 634, 472 }, { RC_KEY_STOP, 10, 6, 78, 35 },
+};
+static const button buttons2[] = {      /* 0x453fc; the rows' x is bar_x */
+    { '1', 0, 207, 342, 248 }, { '2', 0, 296, 342, 337 },
+    { '3', 0, 384, 342, 425 },
+    { RC_KEY_HELP, 564, 3, 632, 33 }, { RC_KEY_STOP, 10, 4, 78, 33 },
+};
 
 /* Delays, ms: 0x249f3's arguments */
 #define FRAME_MS 10             /* prize and face animations (0x18e0b) */
 #define PRESS_MS 150            /* a button shown pressed (0x19842) */
 #define UNIT_MS 200             /* one fuel / boost / rocket unit (0x1910f) */
 #define END_MS 1000
+#define BAR_MS 5                /* 0x1294b, 0x12b59, 0x129c6 */
+#define SHOW_MS 1000            /* the true row after the prize (0x13229) */
 
-enum { ST_PRIZE, ST_INPUT, ST_PRESS_OK, ST_FACE, ST_AWARD, ST_DONE, ST_OVER };
+enum {
+    ST_PRIZE, ST_INPUT, ST_PRESS_OK, ST_FACE, ST_AWARD, ST_DONE, ST_OVER,
+    ST_OPEN, ST_CLOSE_WRONG, ST_SHOW, ST_CLOSE,     /* module 2 */
+};
 
 static int anim_image(int anim, int frame)
 {
@@ -197,19 +233,35 @@ static void next_sum(rc_exercise *x)
 {
     char digits[12];
 
-    if (!rc_module1_next(&x->r)) {
-        set_state(x, ST_DONE);
-        return;
+    if (x->module == 2) {
+        if (!rc_module2_next(&x->r)) {
+            set_state(x, ST_OVER);
+            return;
+        }
+        x->texts_shown = 0;
+    } else {
+        if (!rc_module1_next(&x->r)) {
+            set_state(x, ST_DONE);
+            return;
+        }
+        x->typed[0] = 0;
+        x->field = snprintf(digits, sizeof digits, "%d", x->r.answer);
     }
-    x->typed[0] = 0;
-    x->field = snprintf(digits, sizeof digits, "%d", x->r.answer);
     x->prize_frame = 0;
     set_state(x, ST_PRIZE);
 }
 
-void rc_exercise_start(rc_exercise *x, const rc_session *s, uint32_t seed)
+void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
+                       uint32_t seed)
 {
+    int k;
+
     rc_reken_start(&x->r, s, seed);
+    x->module = module == 2 ? 2 : 1;
+    x->bar_x = x->r.level >= 3 ? 61 : 131;     /* module2_init */
+    for (k = 0; k < 3; k++)
+        x->bar_frame[k] = -1;
+    x->box_value = -1;
     x->face_anim = A_FACE_RIGHT;    /* module1_init: anim 13, frame 0 */
     x->face_frame = 0;
     x->shown_fuel = x->r.fuel;
@@ -256,8 +308,56 @@ void rc_exercise_tick(rc_exercise *x, int ms)
             x->state_ms -= FRAME_MS;
             x->prize_frame++;
         }
-        if (x->prize_frame == PRIZE_FRAMES - 1)
+        if (x->prize_frame == PRIZE_FRAMES - 1) {
+            if (x->module == 2) {
+                int k;
+                for (k = 0; k < 3; k++)
+                    x->bar_frame[k] = BAR_FRAMES - 1;
+                set_state(x, ST_OPEN);
+            } else {
+                set_state(x, ST_INPUT);
+            }
+        }
+        break;
+    case ST_OPEN:                       /* 0x1294b: frames 5..0 */
+        while (x->state_ms >= BAR_MS && x->bar_frame[0] > 0) {
+            int k;
+            x->state_ms -= BAR_MS;
+            for (k = 0; k < 3; k++)
+                x->bar_frame[k]--;
+        }
+        if (x->bar_frame[0] == 0) {
+            x->texts_shown = 1;
+            if (x->r.level >= 3)
+                x->box_value = x->r.answer;
             set_state(x, ST_INPUT);
+        }
+        break;
+    case ST_CLOSE_WRONG:                /* 0x12b59: the other rows close */
+    case ST_CLOSE:                      /* 0x129c6: then the true one */
+        while (x->state_ms >= BAR_MS && x->frame <= BAR_FRAMES) {
+            int k;
+            x->state_ms -= BAR_MS;
+            x->frame++;
+            for (k = 0; k < 3; k++)
+                if ((k == x->r.true_row) == (x->state == ST_CLOSE) &&
+                    x->bar_frame[k] >= 0)
+                    x->bar_frame[k] = x->frame > BAR_FRAMES - 1 ? -1 : x->frame;
+        }
+        if (x->frame > BAR_FRAMES) {
+            if (x->state == ST_CLOSE) {
+                next_sum(x);
+            } else {
+                int right = rc_module2_answer(&x->r, x->picked);
+                x->face_anim = right ? A_FACE_RIGHT : A_FACE_WRONG;
+                x->face_frame = 0;
+                set_state(x, ST_FACE);
+            }
+        }
+        break;
+    case ST_SHOW:
+        if (x->state_ms >= SHOW_MS)
+            set_state(x, ST_CLOSE);
         break;
     case ST_PRESS_OK:
         if (x->state_ms >= PRESS_MS) {
@@ -279,7 +379,10 @@ void rc_exercise_tick(rc_exercise *x, int ms)
         /* 0x1910f counts fuel, boosts and rockets one per 200 ms; repair
            goes up in one step */
         if (!counting(x)) {
-            next_sum(x);
+            if (x->module == 2)
+                set_state(x, ST_SHOW);
+            else
+                next_sum(x);
         } else if (x->state_ms >= UNIT_MS || x->frame == 0) {
             if (x->frame)
                 x->state_ms -= UNIT_MS;
@@ -312,6 +415,13 @@ void rc_exercise_key(rc_exercise *x, int key)
     }
     if (x->state != ST_INPUT)
         return;
+    if (x->module == 2) {
+        if (key >= '1' && key <= '3') {
+            x->picked = key - '1';
+            set_state(x, ST_CLOSE_WRONG);
+        }
+        return;
+    }
     if (key >= '0' && key <= '9') {
         int d = key - '0';
         press(x, d ? A_KEY_1 + d - 1 : A_KEY_1 + 9, key_xy[d][0], key_xy[d][1]);
@@ -329,30 +439,21 @@ void rc_exercise_key(rc_exercise *x, int key)
     }
 }
 
-static int hit(rc_exercise *x, int anim, int px, int py, int sx, int sy)
-{
-    const rc_sprite *s = image(x, anim, 0);
-
-    return s && sx >= px && sx < px + s->w && sy >= py && sy < py + s->h;
-}
-
 void rc_exercise_click(rc_exercise *x, int sx, int sy)
 {
-    int d;
+    const button *b = x->module == 2 ? buttons2 : buttons1;
+    int n = x->module == 2 ? (int)(sizeof buttons2 / sizeof *b) :
+                             (int)(sizeof buttons1 / sizeof *b), i;
 
-    for (d = 0; d < 10; d++)
-        if (hit(x, d ? A_KEY_1 + d - 1 : A_KEY_1 + 9, key_xy[d][0], key_xy[d][1], sx, sy)) {
-            rc_exercise_key(x, '0' + d);
+    for (i = 0; i < n; i++) {
+        int dx = x->module == 2 && i < 3 ? x->bar_x : 0;
+        /* the corners are taken as inside (LIKELY; 0x24117 not read) */
+        if (sx >= b[i].x0 + dx && sx <= b[i].x1 + dx &&
+            sy >= b[i].y0 && sy <= b[i].y1) {
+            rc_exercise_key(x, b[i].key);
             return;
         }
-    if (hit(x, A_OK, OK_X, OK_Y, sx, sy))
-        rc_exercise_key(x, RC_KEY_OK);
-    else if (hit(x, A_BACK, BACK_X, BACK_Y, sx, sy))
-        rc_exercise_key(x, RC_KEY_BACK);
-    else if (hit(x, A_HELP, HELP_X, HELP_Y, sx, sy))
-        rc_exercise_key(x, RC_KEY_HELP);
-    else if (sx >= STOP_X0 && sx < STOP_X1 && sy >= STOP_Y0 && sy < STOP_Y1)
-        rc_exercise_key(x, RC_KEY_STOP);
+    }
 }
 
 static void draw_gauges(rc_exercise *x)         /* 0x18d8a */
@@ -403,21 +504,53 @@ static void draw_sum(rc_exercise *x)            /* 0x11cfd, 0x17fb2, 0x180af */
     }
 }
 
+static void draw_choices(rc_exercise *x)        /* 0x12ee0, 0x13229 */
+{
+    const rc_font *f = &x->font30;
+    char s[16];
+    int k;
+
+    if (x->r.level >= 3) {
+        draw_at(x, A_BOX, 0, BOX_X, BOX_Y);
+        if (x->box_value >= 0) {
+            int n = snprintf(s, sizeof s, "%d", x->box_value);
+            draw_text(x, f, BOX_X + (RESULT_W - n * f->w) / 2,
+                      RESULT_Y + (RESULT_H - f->h) / 2, s, -1);
+        }
+    }
+    for (k = 0; k < 3; k++) {
+        const char *t = x->r.choice[rc_module2_choice(&x->r, k)];
+        int n = (int)strlen(t);
+
+        if (x->bar_frame[k] < 0)
+            continue;
+        draw_centred(x, A_BAR + k, x->bar_frame[k], x->bar_x + BAR_DX, bar_y[k]);
+        /* a closing row starts with frame 0 over its text (0x12b59) */
+        if (x->texts_shown && x->bar_frame[k] == 0 &&
+            !(x->state == ST_CLOSE_WRONG && k != x->r.true_row) &&
+            !(x->state == ST_CLOSE && k == x->r.true_row))
+            draw_text(x, f, x->bar_x + TEXT_DX + (TEXT_W - n * f->w) / 2,
+                      text_y[k] + (TEXT_H - f->h) / 2, t, -1);
+    }
+}
+
 void rc_exercise_draw(rc_exercise *x)
 {
     char s[16];
     int d, left = RC_SUMS_PER_ROUND - x->r.asked + 1;
 
     memcpy(x->fb, x->bg.pixels, sizeof x->fb);
-    draw_at(x, A_TITLE, 0, 183, 10);
+    draw_at(x, A_TITLE, x->module - 1, 183, 10);
     draw_centred(x, x->face_anim, x->face_frame, FACE_X, FACE_Y);
     draw_gauges(x);
     if (x->state != ST_DONE && x->state != ST_OVER)
         draw_centred(x, prize_anim[x->r.prize], x->prize_frame, PRIZE_X, PRIZE_Y);
-    for (d = 0; d < 10; d++)
-        draw_at(x, d ? A_KEY_1 + d - 1 : A_KEY_1 + 9, 0, key_xy[d][0], key_xy[d][1]);
-    draw_at(x, A_OK, 0, OK_X, OK_Y);
-    draw_at(x, A_BACK, 0, BACK_X, BACK_Y);
+    if (x->module == 1) {
+        for (d = 0; d < 10; d++)
+            draw_at(x, d ? A_KEY_1 + d - 1 : A_KEY_1 + 9, 0, key_xy[d][0], key_xy[d][1]);
+        draw_at(x, A_OK, 0, OK_X, OK_Y);
+        draw_at(x, A_BACK, 0, BACK_X, BACK_Y);
+    }
     if (x->pressed_ms > 0)
         draw_at(x, x->pressed_anim, 1, x->pressed_x, x->pressed_y);
 
@@ -429,5 +562,8 @@ void rc_exercise_draw(rc_exercise *x)
     snprintf(s, sizeof s, "%d ", left);
     draw_text(x, &x->font12, 576, 134, s, 0);
 
-    draw_sum(x);
+    if (x->module == 2)
+        draw_choices(x);
+    else
+        draw_sum(x);
 }
