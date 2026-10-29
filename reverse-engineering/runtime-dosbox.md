@@ -43,3 +43,12 @@ $D stop
 - DEBUG.TXT lists every load step (file positions in the archives), the
   waypoints found per racer, a 33x33 table of 32 directions, and the sound
   set-up.
+
+## Mouse
+
+Not usable for experiments. QMP `input-send-event` accepts `rel` and `btn`
+events, but the game runs in VESA mode 0x101 (DOSBox-X's mode 0x69), which
+the built-in INT 33h driver does not handle ("MOUSE: Unhandled videomode 69
+on reset" in dosbox.log); relative moves, with `mouse_emulation=always`
+too, left REKEN's pointer where it was. Mouse behaviour is read from the
+code only.

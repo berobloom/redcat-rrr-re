@@ -1039,7 +1039,30 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED (DOSBox from `name_entry`): Backspace deletes before the
   cursor, Delete at it; Home goes to cell 0, End and → as far as cell 24
   (the field is 25 space-padded cells; trailing spaces are dropped).
-  The cursor's blink rate was not measured (the port draws it steadily).
+- CONFIRMED (field loop near 0x30f00, FUN_00030xxx in Ghidra; DOSBox-X,
+  polling the field's rows in the back buffer every ~1.5 ms from
+  `name_entry`): the cursor blinks by a pass counter: every 100 passes of
+  the key loop it alternates between the letter and the cursor (`_`, or
+  `|` when [0x5009c] = 0), and after drawing the cursor it waits
+  delay(10), one tick. Under redcat.conf the cursor stands ~0.95 tick and
+  the letter ~0.04 tick (100 passes ≈ 2 ms): a steady cursor with an 18 Hz
+  flicker, so the port's steady cursor is the visible behaviour. On a
+  slower PC the letter phase would last longer.
+- STRONGLY SUPPORTED (code: `0x1e6a9`, `0x21470`, `0x22d5a`, `0x22c2e`,
+  `0x21031`); not seen at run time: the mouse in the name dialog. The
+  dialog library's poll `0x1e6a9` works only while the pointer is shown
+  ([0x5e30c], set by `0x1e384` from [0x45caa] = 1 after mouse set-up);
+  then a left click first tries the click buttons, else `0x21470` returns
+  −(item + 1) for the item under the pointer; a right click returns 1 and
+  sets [0x5daf0]. menu_init hides the pointer (0x10eef) before the
+  dialogs and shows it after (0x10f79), but the list's opener `0x22c2e`
+  shows it while the list is up, and a left click on a row moves the bar
+  there and leaves as Enter does (0x22dcd → 0x22df4). The typed field's
+  dialog has no click buttons (`0x21031` with EBX = 0). Against this: no
+  pointer is visible in DOSBox-X screenshots of the list, and the mouse
+  could not be moved there (see runtime-dosbox.md), so whether the paw
+  shows and clicks reach the list is open. The port ignores clicks while
+  the dialog is up.
 - CONFIRMED (n5 vs port; code 0x10f21, 0x10f95, 0x11d61): at start-up
   the Race panel shows the header only (`draw_race_panel(1, 0)`); the
   modules are listed only when race_done is set (0x10fec) or after R.
