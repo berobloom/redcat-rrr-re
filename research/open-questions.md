@@ -17,8 +17,8 @@
    waypoints; discoveries "computer racers". The 0x18759 objects are
    missiles (discoveries "dropped missiles"); stats +0x20 is their count,
    never used up.
-5. How are the racers' sprites laid out in RC.IMG (1056 entries; rotations
-   per racer)?
+5. **RESOLVED.** RC.IMG's layout follows the anim table: RedCat 32
+   headings per pose, Brutus and Snitch 16 (discoveries "map objects").
 6. What do the 19 `.MAP` files' different sizes mean for play: is the whole
    map one lap, or a point-to-point course?
 7. **RESOLVED (session 4).** Not in the race: REKEN awards fuel, repair,

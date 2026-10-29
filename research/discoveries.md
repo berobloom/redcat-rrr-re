@@ -282,6 +282,18 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   then removed), 19 start sign anim 10, 18 finish sign anim 11. The anim
   table is static data at 0x57798 (87 entries; identical to the run-time
   capture).
+- CONFIRMED (anim table 0x57798, entries {kind, image}, image = RC entry +
+  1): RC.IMG's 1,056 sprites are all used, laid out by the anims, not in
+  racer blocks. Racers have five poses of 32 frames (heading + 32·pose):
+  RedCat (anim 2, also anim 3) 160 distinct images, entries 144–303 in
+  order; Brutus (anim 0) and Snitch (anim 1) have 16 rotations per pose,
+  each image serving two neighbouring headings (frames 2k, 2k + 1):
+  Snitch entries 337–416 in order, Brutus 80 entries scattered through
+  the gaps (19–23, 30, 41, 46–69, 118–133, 304–336). Anim 4 (shadows, 33
+  frames) mixes 516–533 and 70–83; anim 15 (rockets, 32 headings) is 134,
+  450–478 and 1054–1055. Anims 22–53 are RedCat's wreck, 32 headings × 8
+  frames (577–832, in order); anims 54–69 and 70–85 are Brutus's and
+  Snitch's, 16 headings × 8 frames each (439–576 mixed, 833–1053).
 - CONFIRMED: sprite hotspots are the RC.IMG headers' x, y as signed 16-bit
   values (544 of 544 loaded images match the run-time records).
 - CONFIRMED: the race palette is the tileset's (identical to RACESCR3.PCX's;
