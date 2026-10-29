@@ -1,0 +1,36 @@
+# DOSBox-X config for running the original under the dos-re-suite build
+# (patched DOSBox-X: GDB stub on 2159, QMP on 4444). install.sh fills in the
+# paths and writes .work/dos/redcat.conf.
+
+[sdl]
+output=surface
+
+[dosbox]
+# 16 MB, as a typical 1996 machine; changing it moves where DOS/4GW loads
+# the programs
+memsize=16
+# no "really quit?" dialog when the harness stops the emulator
+quit warning=false
+machine=svga_s3
+gdbserver=true
+gdbserver port=2159
+qmpserver=true
+qmpserver port=4444
+
+[cpu]
+core=normal
+cputype=pentium
+cycles=fixed 40000
+
+[sblaster]
+sbtype=sb16
+sbbase=220
+irq=7
+dma=1
+hdma=5
+
+[autoexec]
+mount c "@C@"
+mount d "@CD@" -t cdrom -label RCREKEN
+c:
+cd \DAVILEX\RCREKEN

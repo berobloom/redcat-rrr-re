@@ -43,13 +43,24 @@ Do not duplicate existing findings.
 
 Preserve original binaries.
 
-Record executable addresses/offsets when possible. Addresses are linear
-addresses as `reverse-engineering/tools/leparse.py` loads the LE image
-(code object at 0x10000), which is also what DOS/4GW uses at run time.
+Record executable addresses/offsets when possible. Addresses are the LE
+image's own (code object at 0x10000), as `reverse-engineering/tools/leparse.py`
+loads it and as REA/Ghidra see `.work/le/<prog>.elf`. DOS/4GW loads each
+object elsewhere at run time, and code and data move by different amounts:
+get the deltas with `dosrun.py locate <prog>` before setting a breakpoint or
+reading a variable (RRR under redcat.conf: code +0x1c4000, data +0x1b6000).
 
 Record evidence for important conclusions.
 
 Prefer small experiments that distinguish competing hypotheses.
+
+## Running the original
+
+`reverse-engineering/dosbox/install.sh` installs the game (as INSTMAX.BAT does)
+into `.work/dos/C`, and `reverse-engineering/tools/dosrun.py` drives the
+dos-re-suite DOSBox-X (../dos-re-suite) on a hidden Xvfb display: type, keys,
+screenshots, memory, save states. `RRR /DAVILEX /DEBUG` starts a race directly
+and logs to DEBUG.TXT. See `reverse-engineering/runtime-dosbox.md`.
 
 ## Setup
 
