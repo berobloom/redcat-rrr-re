@@ -73,7 +73,8 @@ Early. What exists:
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 
-Not ported yet: the winner's film after a stage-4 race (the podium stands
+Not ported yet: the intro film (INTRO.EXE: rrrintro.smk with rrrintro.wav,
+before the first menu), the winner's film after a stage-4 race (the podium stands
 in), the closing film (EINDANI2.SMK), the menu's joystick set-up and
 the exercises' mouse pointer.
 
