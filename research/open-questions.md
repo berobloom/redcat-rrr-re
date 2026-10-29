@@ -13,7 +13,7 @@
 23. INTRO.EXE's film loop ends on Enter, Space or Esc (0x16f95), yet
     under MOTOR in DOSBox-X it did not skip on them. Check with a key
     held longer than one frame, and whether INTRO's keyboard handler
-    ([0x14023]) is in place (discoveries "The round").
+    (`0x14023`, called before the film) is in place (discoveries "The round").
 
 ## Race
 
