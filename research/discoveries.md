@@ -512,6 +512,13 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   624 x 168 from (8, 168). After it: the panel blank, the Help button
   pressed (0x19842: frame 1, delay 150), the title back (0x19af7), and the
   same sum asked again with an empty answer.
+- CONFIRMED (code; DOSBox-X screenshots of the button, port identical):
+  `0x19842(anim, x, y)` draws frame 1, presents and waits 150 ms, and
+  leaves the button so; `0x19862` draws frame 0 and presents. The Help
+  button is pressed throughout Help in modules 1–3; module 1 ends with
+  `0x19842`, so it stays pressed afterwards; modules 2 and 3 end with
+  `0x19862`, whose frame 0 differs from the button in mod_124.pcx /
+  module3.pcx (842 pixels of 80 × 40), and that look stays.
 - CONFIRMED (code; DOSBox-X, memory polling): Delays. REKEN's
   `0x249f3(ms)` (RRRMENU `0x1e88e`, RRR `0x26beb`: same bytes) waits until
   clock() × 100 ≥ start × 100 + ms × 10; clock() (`0x2ef28` → `0x30eac`)
