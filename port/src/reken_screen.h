@@ -80,6 +80,8 @@ typedef struct {
     int help_step, help_from;   /* Help: the script's step, the state after */
     int help_ms;                /* time spoken in Help: the title blinks */
     const char *help_text, *help_width;  /* the example shown */
+    int help_anim, help_row;    /* a row animation of the script, its row */
+    int help_rows;              /* module 2: the rows show the examples */
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,

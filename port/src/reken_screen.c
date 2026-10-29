@@ -162,16 +162,21 @@ static const button buttons3[] = {      /* 0x4550c; the grid is patched in */
     { RC_KEY_HELP, 564, 3, 632, 33 }, { RC_KEY_STOP, 10, 6, 78, 35 },
 };
 
-/* Delays, ms: 0x249f3's arguments */
-#define FRAME_MS 10             /* prize and face animations (0x18e0b) */
-#define PRESS_MS 150            /* a button shown pressed (0x19842) */
-#define UNIT_MS 200             /* one fuel / boost / rocket unit (0x1910f) */
-#define END_MS 1000
-#define BAR_MS 5                /* 0x1294b, 0x12b59, 0x129c6 */
-#define SHOW_MS 1000            /* the true row after the prize (0x13229);
+/* Delays: 0x249f3(ms) waits until clock() (hundredths, from INT 21h
+   AH=2Ch) has gone on by ms; that clock moves with the BIOS tick, 18.2 a
+   second, so each wait ends on a tick and an animation's frames come one
+   tick apart at least (DOSBox-X: module 2's rows close one frame a tick) */
+#define TICK_MS 55
+#define DELAY(ms) (((ms) * 10 + 548) / 549 * TICK_MS)  /* whole ticks */
+#define FRAME_MS DELAY(10)      /* prize and face animations (0x18e0b) */
+#define PRESS_MS DELAY(150)     /* a button shown pressed (0x19842) */
+#define UNIT_MS DELAY(200)      /* one fuel / boost / rocket unit (0x1910f) */
+#define END_MS DELAY(1000)
+#define BAR_MS DELAY(5)         /* 0x1294b, 0x12b59, 0x129c6 */
+#define SHOW_MS DELAY(1000)     /* the true row after the prize (0x13229);
                                    module 3's pair after a miss (0x14967) */
-#define CARD_MS 5               /* 0x13abb, 0x13a16, 0x13d95 */
-#define BACK_MS 40              /* 0x13d95 */
+#define CARD_MS DELAY(5)        /* 0x13abb, 0x13a16, 0x13d95 */
+#define BACK_MS DELAY(40)       /* 0x13d95 */
 
 /* REKENSND sample numbers */
 #define S_CLICK 0
@@ -199,27 +204,49 @@ enum {
     ST_HELP,
 };
 
-/* Help, module 1 (0x11a6a): phrases (REKENSND number - 18, each played on
-   track 0 if it is free and waited for by 0x19c04) and the examples shown
-   between them in the sum panel, each centred by the width of its second
-   string.  Without sound nothing waits and Help passes at once. */
+/* Help: a script of phrases (REKENSND number - 18, each played on track 0
+   if it is free and waited for by 0x19c04) and what is shown between them.
+   Without sound nothing waits and Help passes at once. */
+enum {
+    H_SAY,
+    H_SHOW,             /* module 1: an example in the sum panel */
+    H_PRESS,            /* the Help button pressed, waited for */
+    H_CLOSE_ALL,        /* module 2 (0x12a96): every row closes */
+    H_CLEAR,            /* 0x12ca2: restore_rect(10, 202, 620, 230) */
+    H_OPEN,             /* 0x1294b at x = 131 (0x83) */
+    H_TEXTS,            /* the examples in the rows */
+    H_CLOSE,            /* 0x129c6 on row n */
+};
 typedef struct {
-    int say;
-    const char *text, *width;
+    int op, n;
+    const char *text, *width;   /* H_SHOW: centred by the width of the second */
 } help_line;
-#define SAY(n) { n, NULL, NULL }
+#define SAY(n) { H_SAY, n, NULL, NULL }
+#define SHOW(t, w) { H_SHOW, 0, t, w }
+#define DO(op, n) { op, n, NULL, NULL }
 
-static const help_line help1[] = {
+static const help_line help1[] = {     /* 0x11a6a */
     SAY(3), SAY(4), SAY(5), SAY(6),
-    { 0, "2 + 7 + 8 + 3 = ?", "2 + 7 + 8 + 3 = ?" },
+    SHOW("2 + 7 + 8 + 3 = ?", "2 + 7 + 8 + 3 = ?"),
     SAY(7), SAY(8), SAY(9), SAY(10),
-    { 0, "2 + 8 = ?    7 + 3 = ?", "2 + 8  +  7 + 3 = ?" },
+    SHOW("2 + 8 = ?    7 + 3 = ?", "2 + 8  +  7 + 3 = ?"),
     SAY(11),
-    { 0, "10 + 10 = ?", "10 + 10 = ?" },
+    SHOW("10 + 10 = ?", "10 + 10 = ?"),
     SAY(12), SAY(13),
-    { 0, "10 + 10 = 20", "10 + 10 = 20" },
+    SHOW("10 + 10 = 20", "10 + 10 = 20"),
     SAY(14),
 };
+/* module 2: 0x13229 presses Help and closes the rows, then 0x12ca2 */
+static const help_line help2[] = {
+    DO(H_PRESS, 0), DO(H_CLOSE_ALL, 0), DO(H_CLEAR, 0),
+    SAY(15), SAY(16), SAY(17), SAY(18), SAY(19), SAY(20),
+    DO(H_OPEN, 0), DO(H_TEXTS, 0),
+    SAY(21), SAY(22), SAY(23),
+    DO(H_CLOSE, 0), SAY(24), DO(H_CLOSE, 1), SAY(25), DO(H_CLOSE, 2),
+};
+/* each centred as written, but the second by "2 * 4 = 7" (0x12ca2) */
+static const char *const help2_text[3] = { "4 + 3 = 6", "2 x 4 = 7", "8 : 2 = 4" };
+#define HELP2_BAR_X 131
 #define A_TITLE_HELP 58         /* "Help!", 0x19b77 */
 /* 0x19b77 swaps the title every 50 passes of 0x19c04's wait loop, which
    has no delay: about every 250 ms under DOSBox-X (redcat.conf) */
@@ -459,6 +486,8 @@ void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
     for (k = 0; k < 3; k++)
         x->bar_frame[k] = -1;
     x->box_value = -1;
+    x->help_anim = 0;
+    x->help_rows = 0;
     x->equals_x = x->r.level >= 3 ? 78 : 152;   /* module4_init */
     x->face_anim = A_FACE_RIGHT;    /* module1_init: anim 13, frame 0 */
     x->face_frame = 0;
@@ -580,40 +609,132 @@ static void press(rc_exercise *x, int anim, int px, int py)
     x->pressed_ms = PRESS_MS;
 }
 
-/* After Help (0x11e0d): the panel blank, the Help button pressed, the
-   title back, and the sum asked again with an empty answer */
+/* 0x1294b: frames 5 down to 0, each presented and followed by a delay,
+   so frame 0 stands empty for a tick too; 1 when done */
+static int open_rows(rc_exercise *x)
+{
+    int k;
+
+    while (x->state_ms >= BAR_MS && x->frame < BAR_FRAMES) {
+        x->state_ms -= BAR_MS;
+        x->frame++;
+        for (k = 0; k < 3; k++)
+            x->bar_frame[k] = x->frame < BAR_FRAMES ? BAR_FRAMES - 1 - x->frame : 0;
+    }
+    return x->frame == BAR_FRAMES;
+}
+
+static const help_line *help_script(const rc_exercise *x, int *n)
+{
+    if (x->module == 2) {
+        *n = (int)(sizeof help2 / sizeof help2[0]);
+        return help2;
+    }
+    *n = (int)(sizeof help1 / sizeof help1[0]);
+    return help1;
+}
+
+/* After Help, module 1 (0x11e0d): the panel blank, the Help button pressed,
+   the title back, and the sum asked again with an empty answer.  Module 2
+   (0x13575): the rows back where they were, the Uitkomst box, the rows
+   open with the sum's texts, Help pressed, the title back. */
 static void help_end(rc_exercise *x)
 {
     if (x->snd_stop && sound_on(x))
         x->snd_stop(x->snd_ctx, 0);         /* 0x19c04's mix_stop_track */
     x->help_text = NULL;
-    x->typed[0] = 0;
+    x->help_anim = 0;
     press(x, A_HELP, HELP_X, HELP_Y);
+    if (x->module == 2) {
+        int k;
+        x->help_rows = 0;
+        x->bar_x = x->r.level >= 3 ? 61 : 131;
+        /* 0x13575: the true row becomes [0x53c70], which nothing writes:
+           the true sum moves to the first row (DOSBox-X: row 1 then wins) */
+        x->r.true_row = 0;
+        for (k = 0; k < 3; k++)
+            x->bar_frame[k] = BAR_FRAMES - 1;
+        set_state(x, ST_OPEN);
+        return;
+    }
+    x->typed[0] = 0;
     set_state(x, x->help_from);
 }
 
-/* the script's next step: examples go up at once, a phrase is waited for */
+/* a row animation of the script, BAR_MS a frame; 1 when done */
+static int help_animate(rc_exercise *x)
+{
+    int k;
+
+    if (x->help_anim == H_PRESS)
+        return x->state_ms >= PRESS_MS;
+    if (x->help_anim == H_OPEN)
+        return open_rows(x);
+    while (x->state_ms >= BAR_MS) {
+        x->state_ms -= BAR_MS;
+        if (++x->frame > BAR_FRAMES)
+            return 1;
+        for (k = 0; k < 3; k++)
+            if ((x->help_anim == H_CLOSE_ALL || k == x->help_row) &&
+                x->bar_frame[k] >= 0)
+                x->bar_frame[k] = x->frame > BAR_FRAMES - 1 ? -1 : x->frame;
+    }
+    return 0;
+}
+
+/* the script's next step: what is shown goes up at once, a phrase or a
+   row animation is waited for */
 static void help_next(rc_exercise *x)
 {
-    const int n = (int)(sizeof help1 / sizeof help1[0]);
+    int n, k;
+    const help_line *script = help_script(x, &n);
 
+    x->help_anim = 0;
     while (++x->help_step < n) {
-        const help_line *h = &help1[x->help_step];
-        if (h->say) {
-            snd(x, 0, 18 + h->say);
+        const help_line *h = &script[x->help_step];
+        switch (h->op) {
+        case H_SAY:
+            snd(x, 0, 18 + h->n);
             if (snd_busy(x, 0))
                 return;
-        } else {
+            break;
+        case H_SHOW:
             x->help_text = h->text;
             x->help_width = h->width;
+            break;
+        case H_CLEAR:
+            x->help_rows = 1;       /* the rows' texts are the examples' */
+            x->bar_x = HELP2_BAR_X;
+            for (k = 0; k < 3; k++)
+                x->bar_frame[k] = -1;
+            break;
+        case H_TEXTS:
+            x->texts_shown = 1;
+            break;
+        case H_OPEN:
+            for (k = 0; k < 3; k++)
+                x->bar_frame[k] = BAR_FRAMES - 1;
+            /* fall through */
+        default:
+            if (h->op == H_PRESS)
+                press(x, A_HELP, HELP_X, HELP_Y);
+            if (h->op == H_CLOSE_ALL)
+                x->texts_shown = 0;
+            x->help_anim = h->op;
+            x->help_row = h->n;
+            x->state_ms = 0;
+            x->frame = 0;
+            return;
         }
     }
     help_end(x);
 }
 
-/* 0x11de6: H while a sum is asked */
+/* 0x11de6, 0x13502: H while a sum is asked */
 static void help_start(rc_exercise *x)
 {
+    if (x->module == 2 && x->snd_stop && sound_on(x))
+        x->snd_stop(x->snd_ctx, 0);
     x->help_from = x->state;
     x->help_step = -1;
     x->help_text = NULL;
@@ -649,7 +770,10 @@ void rc_exercise_tick(rc_exercise *x, int ms)
             after_intro(x);
         break;
     case ST_HELP:
-        if (snd_busy(x, 0))
+        if (x->help_anim) {
+            if (help_animate(x))
+                help_next(x);
+        } else if (snd_busy(x, 0))
             x->help_ms += ms;
         else
             help_next(x);
@@ -670,14 +794,8 @@ void rc_exercise_tick(rc_exercise *x, int ms)
             }
         }
         break;
-    case ST_OPEN:                       /* 0x1294b: frames 5..0 */
-        while (x->state_ms >= BAR_MS && x->bar_frame[0] > 0) {
-            int k;
-            x->state_ms -= BAR_MS;
-            for (k = 0; k < 3; k++)
-                x->bar_frame[k]--;
-        }
-        if (x->bar_frame[0] == 0) {
+    case ST_OPEN:                       /* 0x1294b */
+        if (open_rows(x)) {
             x->texts_shown = 1;
             if (x->r.level >= 3)
                 x->box_value = x->r.answer;
@@ -864,15 +982,15 @@ void rc_exercise_key(rc_exercise *x, int key)
         return;
     }
     if (x->state == ST_HELP) {
-        /* 0x19c04: Esc, Enter or S ends it */
-        if (key == RC_KEY_OK || key == RC_KEY_STOP)
+        /* 0x19c04: Esc, Enter or S ends it (keys are read there only) */
+        if (!x->help_anim && (key == RC_KEY_OK || key == RC_KEY_STOP))
             help_end(x);
         return;
     }
     if (key == RC_KEY_HELP) {
-        if (x->module == 1 && x->state == ST_INPUT)
+        if (x->module <= 2 && x->state == ST_INPUT)
             help_start(x);
-        else    /* the examples of modules 2..4 are not ported */
+        else    /* the examples of modules 3 and 4 are not ported */
             press(x, A_HELP, HELP_X, HELP_Y);
         return;
     }
@@ -1072,7 +1190,7 @@ static void draw_choices(rc_exercise *x)        /* 0x12ee0, 0x13229 */
     char s[16];
     int k;
 
-    if (x->r.level >= 3) {
+    if (x->r.level >= 3 && !x->help_rows) {
         draw_at(x, A_BOX, 0, BOX_X, BOX_Y);
         if (x->box_value >= 0) {
             int n = snprintf(s, sizeof s, "%d", x->box_value);
@@ -1081,7 +1199,8 @@ static void draw_choices(rc_exercise *x)        /* 0x12ee0, 0x13229 */
         }
     }
     for (k = 0; k < 3; k++) {
-        const char *t = x->r.choice[rc_module2_choice(&x->r, k)];
+        const char *t = x->help_rows ? help2_text[k] :
+                        x->r.choice[rc_module2_choice(&x->r, k)];
         int n = (int)strlen(t);
 
         if (x->bar_frame[k] < 0)
@@ -1090,7 +1209,8 @@ static void draw_choices(rc_exercise *x)        /* 0x12ee0, 0x13229 */
         /* a closing row starts with frame 0 over its text (0x12b59) */
         if (x->texts_shown && x->bar_frame[k] == 0 &&
             !(x->state == ST_CLOSE_WRONG && k != x->r.true_row) &&
-            !(x->state == ST_CLOSE && k == x->r.true_row))
+            !(x->state == ST_CLOSE && k == x->r.true_row) &&
+            !(x->help_anim == H_CLOSE && k == x->help_row))
             draw_text(x, f, x->bar_x + TEXT_DX + (TEXT_W - n * f->w) / 2,
                       text_y[k] + (TEXT_H - f->h) / 2, t, -1);
     }
