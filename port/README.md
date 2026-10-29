@@ -49,8 +49,12 @@ Early. What exists:
   Brutus and Snitch drop, exhaust smoke (fire when damaged), the
   after-images of a boost, the camera. The keys are the record's, set in
   the menu's Bediening (B); by default arrows drive, Enter boosts, right
-  Shift fires a rocket. F1/F2/F3 pick the racer to follow, PgUp/PgDn
-  change map, Esc quits (in the round: back to the menu).
+  Shift fires a rocket; T is the horn. F1/F2/F3 pick the racer to follow,
+  PgUp/PgDn change map, Esc quits (in the round: back to the menu).
+  Sound (`src/audio.c`, the original's Sound Blaster mixer, from the
+  SNDRCS and RRRMSND archives): the race's effects, start jingle, music
+  and finish tune, the menu's effects and music, as the menu's Geluid
+  (G) sets them: effects and music, effects, nothing.
 - `race_sim <data dir> [map|all] [frames] [trace N]`: races without a
   screen; reports whether the computer racers finish each map.
 - `reken_sim play [groep] [seed]`: the arithmetic part's first module,
@@ -64,10 +68,10 @@ Early. What exists:
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 
-Not ported yet: sound, the
+Not ported yet: the exercises' sounds and spoken feedback (REKENSND), the
 winner's film after a stage-4 race (the podium stands in), the closing film
-(EINDANI2.SMK), the menu's joystick set-up, the exercises'
-Help example, mouse pointer and spoken feedback.
+(EINDANI2.SMK), the menu's joystick set-up and MENU.WAV (played under
+`/1`), the exercises' Help example and mouse pointer.
 
 ### Frame rate
 
@@ -94,6 +98,7 @@ port/web/serve.sh                    # then open http://localhost:8080/redcat.ht
 ```
 
 The build packs the archives each page needs into `port/web/out/*.data`.
+The browser starts the sound after the first click or key.
 Those files are game data: keep them to yourself.
 
 `src/anims_tab.c` is generated from RRR.EXE's animation table (frame and

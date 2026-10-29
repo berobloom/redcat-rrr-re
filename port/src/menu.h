@@ -12,6 +12,14 @@
 
 enum { RC_MENU_NONE, RC_MENU_START, RC_MENU_QUIT };
 
+/* RRRMENU's sample table (0x45164), RRRMSND entries */
+enum {
+    RC_MSND_CHKSND, RC_MSND_KNOPPR, RC_MSND_RC4, RC_MSND_WHIZZ,
+    RC_MSND_RAPPORT, RC_MSND_BEDIEN1, RC_MSND_REDCAT, RC_MSND_TRACK1,
+    RC_MSND_TRACK2, RC_MSND_RCEND, RC_MSND_MENU, RC_MSND_COUNT
+};
+extern const char *const rc_menu_sound_names[RC_MSND_COUNT];
+
 /* 0x453e2: the keys Bediening accepts (PC scan code, name) */
 #define RC_MENU_KEYS 46
 typedef struct {
@@ -47,6 +55,7 @@ typedef struct {
     int mouse_x, mouse_y;
     int pen_x, pen_y;           /* Rapport's line drawing */
     int result;
+    int sound_q[8], sounds;     /* menu_sound (0x10b4f) calls, in order */
 
     uint8_t screen[640 * 480];  /* what the menu has drawn */
     uint8_t fb[640 * 480];      /* screen with the pointer */

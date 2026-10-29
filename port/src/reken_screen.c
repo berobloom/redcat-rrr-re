@@ -8,6 +8,24 @@
 #include "anims.h"
 #include "reken_screen.h"
 
+const char *const rc_reken_sound_names[RC_RSND_COUNT] = {
+    "click.wav", "fuel.wav", "fout1.wav", "fouttun1.wav", "doing.wav",
+    "noise.wav", "whizz.wav", "knoppr.wav", "roll.wav", "yiha.wav", "rc3.wav",
+    "rc4.wav", "rc5.wav", "rc6.wav", "rc7.wav", "rc8.wav", "rc9.wav",
+    "rc10.wav", "rc11.wav", "01.wav", "02.wav", "03.wav", "04.wav", "05.wav",
+    "06.wav", "07.wav", "08.wav", "09.wav", "10.wav", "11.wav", "12.wav",
+    "13.wav", "14.wav", "15.wav", "16.wav", "17.wav", "18.wav", "19.wav",
+    "20.wav", "21.wav", "22.wav", "23.wav", "24.wav", "25.wav", "26.wav",
+    "27.wav", "28.wav", "29.wav", "30.wav", "31.wav", "32.wav", "33.wav",
+    "34.wav", "35.wav", "36.wav", "37.wav", "38.wav", "39.wav", "40.wav",
+    "41.wav", "42.wav", "43.wav", "44.wav", "45.wav", "46.wav", "47.wav",
+    "48.wav", "49.wav", "50.wav", "51.wav", "52.wav", "53.wav", "54.wav",
+    "55.wav", "56a.wav", "56b.wav", "57.wav", "58.wav", "59.wav", "60.wav",
+    "61.wav", "62.wav", "63.wav", "64.wav", "65.wav", "66.wav", "67.wav",
+    "68.wav", "69.wav", "70.wav", "71.wav", "72.wav", "73.wav", "74.wav",
+    "75.wav", "76.wav", "77.wav", "78.wav", "79.wav", "80.wav"
+};
+
 #define SCREEN_W 640
 #define SCREEN_H 480
 

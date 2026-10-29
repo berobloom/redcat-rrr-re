@@ -2,8 +2,8 @@
    anim table 0x457bc (rrrmenu_anims_tab.c), RRRFONT.IMG for the Race panel.
    Sprites are drawn with their top-left at the given point (the hotspot is
    not used), 0xff clear.  Bediening (0x1118f) is the keyboard half: the
-   joystick set-up is not ported, nor the sounds (0x10b4f) and the closing
-   film.  Rapport (P, 0x12990) reads the pupil's SMD file (smd.c), Einde
+   joystick set-up is not ported, nor the closing film.  The sounds
+   (menu_sound 0x10b4f) are queued in sound_q for the caller.  Rapport (P, 0x12990) reads the pupil's SMD file (smd.c), Einde
    (0x119cc) shows RRRHIGH.DAT (highscore.c). */
 #include <stdio.h>
 #include <stdlib.h>
@@ -502,12 +502,25 @@ static void high_start(rc_menu *m)
     m->state = ST_HIGH;
 }
 
+const char *const rc_menu_sound_names[RC_MSND_COUNT] = {
+    "CHKSND.WAV", "KNOPPR.WAV", "RC4.WAV", "WHIZZ.WAV", "RAPPORT.WAV",
+    "BEDIEN1.WAV", "REDCAT.WAV", "TRACK1.WAV", "TRACK2.WAV", "RCEND.WAV",
+    "MENU.WAV"
+};
+
+static void menu_sound(rc_menu *m, int sample)
+{
+    if (m->sounds < (int)(sizeof m->sound_q / sizeof m->sound_q[0]))
+        m->sound_q[m->sounds++] = sample;
+}
+
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed)
 {
     m->s = s;
     m->rng = seed;
     m->result = RC_MENU_NONE;
     m->state = ST_IDLE;
+    m->sounds = 0;
     m->mouse_x = 320;
     m->mouse_y = 240;
     m->sound = s->speech;
@@ -576,6 +589,7 @@ int rc_menu_key(rc_menu *m, int scan)
     }
     if (m->state == ST_RAPPORT) {
         if (scan == 0x14) {     /* Terug: menubs01.pcx, menu_init(0, 1) */
+            menu_sound(m, RC_MSND_WHIZZ);
             main_screen(m);
             panel(m, 1, 1);
             m->state = ST_IDLE;
@@ -587,20 +601,25 @@ int rc_menu_key(rc_menu *m, int scan)
         return 0;
     switch (scan) {
     case 0x1c: case 0x1f:       /* Start!: RedCat drives off */
+        menu_sound(m, RC_MSND_RC4);
         play(m, 3, 22, 94, 1, AFTER_START);
         break;
     case 0x12:                  /* Einde: the record, then the high scores */
+        menu_sound(m, RC_MSND_WHIZZ);   /* waited for */
         leave(m, 0);
         m->result = RC_MENU_NONE;
         high_start(m);
         break;
     case 0x19:                  /* Rapport */
+        menu_sound(m, RC_MSND_RAPPORT);
         rapport_start(m);
         break;
     case 0x30:                  /* Bediening: no joystick here */
+        menu_sound(m, RC_MSND_BEDIEN1);
         keys_start(m);
         break;
     case 0x13:                  /* the next world */
+        menu_sound(m, RC_MSND_TRACK1);
         m->world = (m->world + 1) % 6;
         panel(m, 1, 1);
         break;
@@ -618,6 +637,7 @@ int rc_menu_key(rc_menu *m, int scan)
         break;
     default:
         if (scan >= 4 && scan <= 9 && scan - 4 != m->groep) {
+            menu_sound(m, RC_MSND_KNOPPR);
             draw_groep(m, 0);
             m->groep = scan - 4;
             draw_groep(m, 1);

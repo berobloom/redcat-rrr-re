@@ -16,6 +16,12 @@
 
 #define RC_MENU_IMAGES 479
 
+/* REKEN's sample table (0x44d21): REKENSND entries, 0 click .. 9 yiha,
+   10..18 rc3..rc11, 19.. the spoken 01..80 (56a and 56b both) */
+#define RC_RSND_COUNT 100
+#define RC_RSND_SPOKEN(n) ((n) < 56 ? 18 + (n) : 19 + (n))  /* 56: 56b */
+extern const char *const rc_reken_sound_names[RC_RSND_COUNT];
+
 enum {                          /* rc_exercise_key */
     RC_KEY_0 = '0',             /* '0'..'9': digits; module 2: '1'..'3' rows;
                                    module 4: '1'..'4' numbers */

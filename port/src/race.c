@@ -44,6 +44,24 @@ static int32_t iabs(int32_t v)
     return v < 0 ? -v : v;
 }
 
+/* 0x55e58, by sample number; the names are SNDRCS entries + ".wav" */
+const char *const rc_race_sound_names[RC_SND_COUNT] = {
+    "shot.wav", "explo_m.wav", "ping_m.wav", "to_m.wav", "r_horn_m.wav",
+    "rengine.wav", "bengine.wav", "sengine.wav", "crash1.wav", "crash2.wav",
+    "big_expl.wav", "tune.wav", "tune_m.wav", "duhh.wav", "kick.wav",
+    "slidcar.wav", "boost.wav", "turbo.wav", "boing.wav", "kick.wav",
+    "firerock.wav", "bump2.wav", "putbom.wav", "rcow.wav", "yippee.wav",
+    "cacsmash.wav", "r_yiha06.wav", "b_yiha14.wav", "s_yiha01.wav",
+    "rcend.wav", "ti.wav", "start.wav", "tu.wav", "tropical.wav"
+};
+
+/* play_fx (0x103d1): the caller plays it on a free track */
+static void sound(rc_race *r, int sample)
+{
+    if (r->sounds < RC_SOUNDS)
+        r->sound[r->sounds++] = sample;
+}
+
 /* Watcom C rand(): LCG, 15 bits. */
 static int rc_rand(rc_race *r)
 {
@@ -197,7 +215,11 @@ static int ground_check(rc_race *r, int n)
     return lv;
 }
 
-/* cell_effect (0x18b8d) for racer object n at cell (cx, cy). */
+static void explode(rc_race *r, int at);
+
+/* cell_effect (0x18b8d) for racer object n at cell (cx, cy).  The sounds
+   go out for every racer, wherever the camera is: play_fx's distance
+   (here racer to pickup) is not used by the mixer. */
 static void cell_effect(rc_race *r, int n, int cx, int cy, int chance)
 {
     rc_body *b = &r->body[n];
@@ -217,27 +239,40 @@ static void cell_effect(rc_race *r, int n, int cx, int cy, int chance)
     case 12:                    /* mine: -10 damage, a bump up */
         if (b->z >= FX(20) || r->body[c->object].life > 0)
             return;
+        sound(r, RC_SND_EXPLO);
+        explode(r, c->object);  /* 0x17faa(1, mine), then the mine goes */
         free_object(r, c->object);
         s->damage -= 10;
         c->type = 0;
         b->vz += fxmul(b->speed, 0x1999);
+        if (n == 0 && (s->damage <= 0 || s->fuel <= 0))
+            sound(r, RC_SND_RCOW);
         return;
     case 13:                    /* boost pickup */
         if (b->z >= FX(20))
             return;
+        sound(r, RC_SND_PING);
         free_object(r, c->object);
         s->boosts++;
         c->type = 0;
         return;
-    case 14:                    /* ramp */
+    case 14:                    /* ramp: a wreck shouts yiha (0x18fb5) */
         if (b->z >= FX(20) || b->speed <= FX(4))
             return;
         b->vz += fxmul(b->speed, 0x1999);
-        (void)chance;           /* only picks a sound */
+        if (chance <= 20)
+            return;
+        /* Snitch's test takes Brutus's fuel */
+        if (n == 0 || n == 2 ? s->damage <= 0 || s->fuel <= 0 :
+            n == 4 && (r->stats[RC_MUIS].damage <= 0 ||
+                       r->stats[RC_BULL].fuel <= 0))
+            sound(r, RC_SND_YIHA + n / 2);
         return;
     case 15:
     case 16:                    /* cactus */
         if (s->damage < 1 || s->fuel < 1) {
+            if (n == 0)
+                sound(r, RC_SND_RCOW);
             s->damage -= 2;
             return;
         }
@@ -246,6 +281,7 @@ static void cell_effect(rc_race *r, int n, int cx, int cy, int chance)
         r->body[c->object].life = 5;
         s->damage -= 1;
         c->type = 0;
+        sound(r, RC_SND_CACSMASH);
         return;
     case 20:                    /* finish line */
         r->finished[b->stats] = 1;
@@ -470,8 +506,9 @@ static void racer_bounce(rc_race *r, int a, int bn)
     r->body[bn].speed = avg;
 }
 
-/* Gravity, landing and bounce, shared by the racers. */
-static void fall(rc_body *b, int32_t ground)
+/* Gravity, landing and bounce, shared by the racers.  1 when it bounces
+   up faster than 2 px/frame (player_tick plays bump2 then, 0x12597). */
+static int fall(rc_body *b, int32_t ground)
 {
     b->z += b->vz;
     if (b->vz > -FX(20))
@@ -482,9 +519,12 @@ static void fall(rc_body *b, int32_t ground)
         b->z = 0;
         if (iabs(b->vz) <= 0x10000)
             b->vz = 0;
-        else
+        else {
             b->vz = -fxmul(b->vz, 0x4ccc);
+            return iabs(b->vz) > 0x20000;
+        }
     }
+    return 0;
 }
 
 static void friction(rc_body *b)
@@ -538,6 +578,7 @@ static void explode(rc_race *r, int at)
     b->z = r->body[at].z;
     b->vx = b->vy = b->vz = 0;
     b->life = 18;
+    sound(r, RC_SND_EXPLO);     /* at its distance from the camera's racer */
 }
 
 /* rocket_tick (0x175b4).  The heading is kept in the body's stats field.
@@ -717,6 +758,7 @@ static void player_tick(rc_race *r, int n)     /* 0x11eb5 */
             if (s->rockets != 0) {
                 fire_rocket(r, n);
                 s->rockets--;
+                sound(r, RC_SND_FIREROCK);
             }
         }
         if (!boost)
@@ -726,6 +768,7 @@ static void player_tick(rc_race *r, int n)     /* 0x11eb5 */
             if (s->boosts != 0) {
                 b->speed += accel * 16;
                 b->vz += accel * 64;
+                sound(r, RC_SND_BOOST);
                 s->boosts--;
             }
         }
@@ -733,6 +776,8 @@ static void player_tick(rc_race *r, int n)     /* 0x11eb5 */
             if (b->speed > s->top + FX(4))
                 afterimage(r, n);
         } else if (any) {
+            if (b->speed < 0x3333)      /* pulling away */
+                sound(r, RC_SND_SLIDCAR);
             b->speed += accel;
             s->fuel -= 0x666;
             if (++r->exhaust_count[RC_REDCAT] > 3) {
@@ -760,17 +805,26 @@ static void player_tick(rc_race *r, int n)     /* 0x11eb5 */
         b->vx = b->vy = 0;
     }
     lv = ground_check(r, n);
-    fall(b, lv * FX(1000));
+    if (fall(b, lv * FX(1000)))
+        sound(r, RC_SND_BUMP);
     b->x += b->vx;
     b->y += b->vy;
+    /* a bump: duhh, and 90% (Snitch) or 80% (Brutus) RedCat's horn; the
+       rand() is drawn either way */
     if (racer_contact(r, n, 4)) {
         if (!r->contact_latch[0]) {
             racer_bounce(r, n, 4);
+            sound(r, RC_SND_DUHH);
+            if (rc_rand(r) % 100 >= 10)
+                sound(r, RC_SND_HORN);
             r->contact_latch[0] = 1;
         }
     } else if (racer_contact(r, n, 2)) {
         if (!r->contact_latch[0]) {
             racer_bounce(r, n, 2);
+            sound(r, RC_SND_DUHH);
+            if (rc_rand(r) % 100 >= 20)
+                sound(r, RC_SND_HORN);
             r->contact_latch[0] = 1;
         }
     } else {
@@ -814,6 +868,7 @@ static void player_wreck_tick(rc_race *r, int n)
             if (s->rockets != 0) {
                 fire_rocket(r, n);
                 s->rockets--;
+                sound(r, RC_SND_FIREROCK);
             }
         }
         if (!boost)
@@ -899,7 +954,9 @@ static void ai_waypoint_action(rc_race *r, int n)
     if (rc_rand(r) % 100 < 10 && s->boosts != 0) {
         b->speed += FX(8);
         b->vz += FX(8);
+        sound(r, RC_SND_BOOST);
         s->boosts--;
+        sound(r, RC_SND_TURBO);
     }
 }
 
@@ -942,6 +999,8 @@ static void ai_tick(rc_race *r, int n)
     }
     if (!r->finished[k] && s->boost_state == 0 && r->ai_accel[k]
         && b->speed < s->top) {
+        if (!wreck && b->speed < FX(2))     /* the engine, pulling away */
+            sound(r, k == RC_BULL ? RC_SND_BENGINE : RC_SND_SENGINE);
         b->speed += accel;
         if (++r->exhaust_count[k] > 3) {    /* the wrecks always smoke */
             exhaust(r, 1, n, wreck ? 100 : s->damage);
@@ -970,6 +1029,8 @@ static void ai_tick(rc_race *r, int n)
         if (racer_contact(r, n, 4)) {
             if (!r->contact_latch[1]) {
                 racer_bounce(r, n, 4);
+                if (!wreck)
+                    sound(r, RC_SND_DUHH);
                 r->contact_latch[1] = 1;
             }
         } else {
@@ -1277,6 +1338,7 @@ void rc_race_tick(rc_race *r, const rc_input *in)
     int n;
 
     r->in = *in;
+    r->sounds = 0;
     switch_anims(r);
     r->frame_count++;
     for (n = 0; n < RC_OBJECTS; n++) {         /* objects_tick 0x25c55 */

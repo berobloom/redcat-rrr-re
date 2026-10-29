@@ -23,8 +23,12 @@
    --race only races, the map given or track1a, without the exercises.
 
    Race keys: those of RRRIO.INF, set in the menu's Bediening (defaults:
-   arrows steer and accelerate, Enter boost, right Shift rocket);
-   F1/F2/F3 follow RedCat/Brutus/Snitch, Esc goes back to the menu.
+   arrows steer and accelerate, Enter boost, right Shift rocket); T the
+   horn; F1/F2/F3 follow RedCat/Brutus/Snitch, Esc goes back to the menu.
+
+   Sound: the menu's Geluid (RRRIO +0x30): 3 effects and music, 1 effects,
+   0 none.  One mixer (audio.c) is set up as the program on screen sets up
+   its Sound Blaster.
 
    The original's frame loop has no timer (research/discoveries.md "The
    race: speed"): it ran 29 frames/s at DOSBox cycles=40000 and faster on
@@ -41,6 +45,7 @@
 
 #include "anims.h"
 #include "archive.h"
+#include "audio.h"
 #include "gfx8.h"
 #include "highscore.h"
 #include "menu.h"
@@ -58,6 +63,8 @@
 #define SPEEDO_ANIM 19
 #define FUEL_ANIM 20
 #define DAMAGE_ANIM 21
+
+#define AUDIO_RATE 22050        /* the device; the mixer resamples */
 
 /* start_lights: lamp images and how long each stays, ms */
 static const int light_ms[5] = { 1500, 1000, 1000, 1000, 500 };
@@ -94,7 +101,93 @@ static struct {
     int light;                  /* lamp shown, 5 once the race runs */
     Uint32 light_until, next_frame, frame_ms;
     int running;
+
+    SDL_AudioDeviceID audio;
+    rc_archive sndrcs, rrrmsnd, rekensnd;
+    rc_soundbank bank_race, bank_menu, bank_reken;
+    rc_mixer mix;
+    rc_pcx wacht;               /* the race's loading screen */
+    int race_music;             /* RRR [0x6fc58] */
+    int race_intro;             /* start.wav before a world's first race */
+    int race_rcend;             /* the finish: 1 rcend.wav plays, 2 done */
+    int menu_sound;             /* the Geluid setting the menu last had */
 } g;
+
+static void audio_callback(void *u, Uint8 *stream, int len)
+{
+    rc_mixer_mix(&g.mix, (int16_t *)stream, len / 2, AUDIO_RATE);
+}
+
+static void audio_setup(const rc_soundbank *bank, int tracks, int rate)
+{
+    if (g.audio)
+        SDL_LockAudioDevice(g.audio);
+    rc_mixer_setup(&g.mix, bank, tracks, rate);
+    if (g.audio)
+        SDL_UnlockAudioDevice(g.audio);
+}
+
+/* sndman's play (RRR 0x10350): only on a free track */
+static int snd_play(int track, int sample)
+{
+    int r;
+
+    if (g.audio)
+        SDL_LockAudioDevice(g.audio);
+    r = rc_mixer_play(&g.mix, track, sample);
+    if (g.audio)
+        SDL_UnlockAudioDevice(g.audio);
+    return r;
+}
+
+static void snd_stop(int track)
+{
+    if (g.audio)
+        SDL_LockAudioDevice(g.audio);
+    rc_mixer_stop(&g.mix, track);
+    if (g.audio)
+        SDL_UnlockAudioDevice(g.audio);
+}
+
+static int snd_busy(int track)
+{
+    int r;
+
+    if (g.audio)
+        SDL_LockAudioDevice(g.audio);
+    r = rc_mixer_busy(&g.mix, track);
+    if (g.audio)
+        SDL_UnlockAudioDevice(g.audio);
+    return r;
+}
+
+/* RRR: effects with Geluid bit 0 ([0x751a8] & 1, sound initialised at
+   all), music with bit 1 as well */
+static int race_fx(void)
+{
+    return g.session.speech & 1;
+}
+
+/* play_fx (0x103d1): the first free of tracks 1..3; track 0 is music */
+static void play_fx(int sample)
+{
+    int t;
+
+    if (!race_fx())
+        return;
+    for (t = 1; t < 4; t++)
+        if (snd_play(t, sample) == 0)
+            return;
+}
+
+/* race_init, after the dashboard: tune_m.wav on track 0, looped by
+   race_main playing it again whenever the track is free (tune.wav, the
+   stereo one, only under /STEREO) */
+static void race_music_start(void)
+{
+    if (g.race_music && snd_play(0, RC_SND_TUNE_M) != 0)
+        g.race_music = 0;
+}
 
 static int load_trans(void)     /* trans_load 0x11e2a */
 {
@@ -353,6 +446,7 @@ static void step(void)
 {
     const Uint8 *k = SDL_GetKeyboardState(NULL);
     rc_input in;
+    int i;
 
     /* the keys of RRRIO.INF (RRR 0x1b469; set in the menu's Bediening) */
     in.left = pc_down(k, rc_session_get(&g.session, 0x58));
@@ -365,7 +459,15 @@ static void step(void)
     if (k[SDL_SCANCODE_F2]) g.race.camera_racer = RC_BULL;
     if (k[SDL_SCANCODE_F3]) g.race.camera_racer = RC_MUIS;
     rc_race_tick(&g.race, &in);
+    for (i = 0; i < g.race.sounds; i++)
+        play_fx(g.race.sound[i]);
+    if (g.race_rcend)           /* 0x112fd: only the objects run */
+        return;
     rc_race_over(&g.race);
+    if (k[SDL_SCANCODE_T])      /* race_main 0x113af: the horn */
+        play_fx(RC_SND_HORN);
+    if (g.race_music && !snd_busy(0))
+        race_music_start();
 }
 
 static int exercise_key(SDL_Keycode k)
@@ -434,6 +536,8 @@ static int load_session(void)
     return ok ? rc_session_parse(&g.session, d, sizeof d) : -1;
 }
 
+static void race_sound_start(void);
+
 /* RRR.EXE: the stage's race with the counters of RRRIO.INF. */
 static void play_race(void)
 {
@@ -448,6 +552,21 @@ static void play_race(void)
     }
     rc_race_set_player(&g.race, g.session.fuel, g.session.repair,
                        g.session.boosts, g.session.rockets);
+    race_sound_start();
+}
+
+/* race_init: start.wav over the loading screen when the stage is the
+   world's first (0x1aea5), until it ends or S, Esc, Enter or Space; then
+   the music */
+static void race_sound_start(void)
+{
+    audio_setup(&g.bank_race, 4, 11025);
+    g.race_music = race_fx() && (g.session.speech & 2);
+    g.race_rcend = 0;
+    g.race_intro = race_fx() && g.session.stage == 0 &&
+                   snd_play(0, RC_SND_START) == 0;
+    if (!g.race_intro)
+        race_music_start();
 }
 
 /* REKEN.EXE: the next module of the world, or back to the menu. */
@@ -460,6 +579,7 @@ static void to_reken(int module)
         return;
     }
     rc_exercise_start(&g.ex, &g.session, module, (uint32_t)time(NULL));
+    audio_setup(&g.bank_reken, 2, 22050);
     g.logged_sum = 0;
     g.exercising = 1;
 }
@@ -472,6 +592,8 @@ static void to_menu(void)
 {
     if (g.have_menu) {
         rc_menu_start(&g.mainmenu, &g.session, (uint32_t)time(NULL));
+        audio_setup(&g.bank_menu, 2, 11025);
+        g.menu_sound = g.mainmenu.sound;
         g.in_menu = 1;
         return;
     }
@@ -487,6 +609,7 @@ static void menu_frame(void)
     rc_menu *m = &g.mainmenu;
     SDL_Event e;
     Uint32 now = SDL_GetTicks();
+    int i;
 
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT)
@@ -505,6 +628,24 @@ static void menu_frame(void)
     }
     rc_menu_tick(m, (int)(now - g.last_tick));
     g.last_tick = now;
+    /* Geluid: to 1 the music stops, to 0 both tracks (0x11f92, 0x11fd4) */
+    if (m->sound != g.menu_sound) {
+        if (m->sound != 3)
+            snd_stop(0);
+        if (m->sound == 0)
+            snd_stop(1);
+        g.menu_sound = m->sound;
+    }
+    /* menu_sound (0x10b4f): track 1, cutting off what plays there */
+    for (i = 0; i < m->sounds; i++)
+        if (m->sound) {
+            snd_stop(1);
+            snd_play(1, m->sound_q[i]);
+        }
+    m->sounds = 0;
+    /* menu_loop 0x11c51: REDCAT.WAV on track 0 whenever it is free */
+    if (m->sound & 2)
+        snd_play(0, RC_MSND_REDCAT);
     rc_menu_draw(m);
     memcpy(g.fb, m->fb, sizeof g.fb);
     memcpy(g.pal, m->pal, sizeof g.pal);
@@ -664,6 +805,21 @@ static void frame(void)
             g.running = 0;
         if (e.type != SDL_KEYDOWN)
             continue;
+        if (g.race_intro) {     /* S, Esc, Enter, Space end start.wav */
+            switch (e.key.keysym.scancode) {
+            case SDL_SCANCODE_S: case SDL_SCANCODE_ESCAPE:
+            case SDL_SCANCODE_RETURN: case SDL_SCANCODE_SPACE:
+                snd_stop(0);
+                break;
+            default:
+                break;
+            }
+            continue;
+        }
+        if (g.race_rcend == 1 && e.key.keysym.sym == SDLK_ESCAPE) {
+            snd_stop(0);        /* 0x11359: Esc ends rcend.wav */
+            continue;
+        }
         switch (e.key.keysym.sym) {
         case SDLK_ESCAPE:       /* RRR: to the menu, nothing saved */
             if (g.flow && g.have_menu && !g.race_end)
@@ -676,6 +832,18 @@ static void frame(void)
         }
     }
     now = SDL_GetTicks();
+    if (g.race_intro) {
+        if (!snd_busy(0)) {
+            g.race_intro = 0;
+            race_music_start();
+        } else if (g.wacht.pixels) {
+            memcpy(g.fb, g.wacht.pixels, sizeof g.fb);
+            memcpy(g.pal, g.wacht.palette, sizeof g.pal);
+            present();
+            memcpy(g.pal, g.tiles.palette, sizeof g.pal);
+            goto out;
+        }
+    }
     if (g.race_end) {           /* the podium stays up */
         if ((Sint32)(now - g.race_end) >= 0) {
             g.race_end = 0;
@@ -688,9 +856,11 @@ static void frame(void)
         if (!g.light_until)
             g.light_until = now + light_ms[0];
         else if ((Sint32)(now - g.light_until) >= 0) {
-            if (++g.light < 5)
+            if (++g.light < 5) {
                 g.light_until = now + light_ms[g.light];
-            else {
+                if (race_fx())  /* ti, ti, ti, tu on track 1 */
+                    snd_play(1, g.light < 4 ? RC_SND_TI : RC_SND_TU);
+            } else {
                 g.race.started = 1;
                 g.next_frame = now;
             }
@@ -707,7 +877,17 @@ static void frame(void)
            podium for 4 s (0x15a9f).  After a stage-4 race the original
            plays the winner's film instead (0x15a14, w*.smk), which is not
            ported: the podium stands in. */
+        /* the finish (0x112cb): the music stops; with music on, rcend.wav
+           plays on track 0 and the objects run on until it ends */
         if (g.flow && rc_race_over(&g.race)) {
+            if (g.race_rcend == 0) {
+                snd_stop(0);
+                g.race_rcend = g.race_music &&
+                               snd_play(0, RC_SND_RCEND) == 0 ? 1 : 2;
+            } else if (g.race_rcend == 1 && !snd_busy(0))
+                g.race_rcend = 2;
+        }
+        if (g.race_rcend == 2) {
             char name[32];      /* RRRIO +0x68; RRRMENU puts RedCat if empty */
             snprintf(name, sizeof name, "%.31s",
                      (const char *)g.session.raw + 0x68);
@@ -828,9 +1008,24 @@ int main(int argc, char **argv)
         g.have_menu = 1;
     g.mainmenu.save_dir = g.save;
     g.running = 1;
+    /* the sound archives; without them the game is silent */
+    if (rc_archive_open(&g.sndrcs, g.dir, "SNDRCS") == 0)
+        rc_soundbank_load(&g.bank_race, &g.sndrcs, rc_race_sound_names,
+                          RC_SND_COUNT);
+    if (rc_archive_open(&g.rrrmsnd, g.dir, "RRRMSND") == 0)
+        rc_soundbank_load(&g.bank_menu, &g.rrrmsnd, rc_menu_sound_names,
+                          RC_MSND_COUNT);
+    if (rc_archive_open(&g.rekensnd, g.dir, "REKENSND") == 0)
+        rc_soundbank_load(&g.bank_reken, &g.rekensnd, rc_reken_sound_names,
+                          RC_RSND_COUNT);
+    d = rc_archive_find(&g.rcs, "WACHT.PCX", &size);
+    if (!d || rc_pcx_decode(&g.wacht, d, size) != 0 ||
+        g.wacht.w != SCREEN_W || g.wacht.h != SCREEN_H)
+        rc_pcx_free(&g.wacht);
     if (race_only) {
         if (start_race(map < 0 ? 0 : map) != 0)
             return 1;
+        race_sound_start();
     } else if (module >= 1 && module <= 4)
         to_reken(module == 4 && g.session.groep == 3 ? 3 : module);
     else
@@ -842,6 +1037,20 @@ int main(int argc, char **argv)
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         return 1;
     }
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) == 0) {
+        SDL_AudioSpec want, have;
+        SDL_zero(want);
+        want.freq = AUDIO_RATE;
+        want.format = AUDIO_S16SYS;
+        want.channels = 1;
+        want.samples = 512;
+        want.callback = audio_callback;
+        g.audio = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
+        if (g.audio)
+            SDL_PauseAudioDevice(g.audio, 0);
+    }
+    if (!g.audio)
+        fprintf(stderr, "no sound: %s\n", SDL_GetError());
     g.win = SDL_CreateWindow("RedCat's Razende Rekenrace",
                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                              SCREEN_W * 2, SCREEN_H * 2, SDL_WINDOW_RESIZABLE);

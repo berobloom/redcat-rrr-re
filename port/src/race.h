@@ -14,6 +14,19 @@
 #define RC_RACERS 3
 #define RC_OBJECTS 306          /* 0..5 racers and their shadows */
 #define RC_MAX_WAYPOINTS 150
+#define RC_SOUNDS 32            /* a frame's sound events, at most */
+
+/* RRR's sample table (0x55e58): the sample numbers, SNDRCS file names */
+enum {
+    RC_SND_EXPLO = 1, RC_SND_PING = 2, RC_SND_HORN = 4, RC_SND_BENGINE = 6,
+    RC_SND_SENGINE = 7, RC_SND_TUNE = 11, RC_SND_TUNE_M = 12,
+    RC_SND_DUHH = 13, RC_SND_SLIDCAR = 15, RC_SND_BOOST = 16,
+    RC_SND_TURBO = 17, RC_SND_FIREROCK = 20, RC_SND_BUMP = 21,
+    RC_SND_RCOW = 23, RC_SND_CACSMASH = 25, RC_SND_YIHA = 26,
+    RC_SND_RCEND = 29, RC_SND_TI = 30, RC_SND_START = 31, RC_SND_TU = 32,
+    RC_SND_COUNT = 34
+};
+extern const char *const rc_race_sound_names[RC_SND_COUNT];
 
 /* View rectangle on the 640x480 screen (inclusive bounds 20..620, 0..400). */
 #define RC_VIEW_X 20
@@ -87,6 +100,9 @@ struct rc_race {
     int scroll_x, scroll_y;     /* [0x7f984], [0x7f980] */
     uint32_t frame_count;       /* [0x600c4] */
     uint32_t rng;
+
+    /* play_fx (0x103d1) calls of the last tick, sample numbers in order */
+    int sound[RC_SOUNDS], sounds;
 };
 
 /* Start order: start_order[slot] = racer standing on waypoint 0 of slot's
