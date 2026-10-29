@@ -281,6 +281,45 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (1000 − x)·10 − 1000·y − z − prio, with prio −100000 for shadows and
   mines.
 
+## The race: rockets and explosions
+
+- CONFIRMED (`player_tick` 0x12154, `player_crash_tick` 0x19740): the
+  rocket key, on its press (latch [0x55fc8], set even with none left),
+  calls `fire_rocket` 0x185d4 when stats +0x1c ≠ 0 and takes one rocket;
+  the wreck fires too. Not while finished or a boost runs (+0x24). DOSBox:
+  the HUD goes 10 → 9.
+- CONFIRMED (`0x185d4`; DOSBox body dump 3 and 6 frames after firing,
+  port's figures identical): a new object, period 1, anim 15 (32 frames,
+  one per heading) with frame = heading, callback `rocket_tick` 0x175b4;
+  body +0x20 (otherwise the stats index) holds the heading; position the
+  racer's + 25 px along the heading, height + 20 px; velocity 25 px/frame
+  along the heading; vz untouched; life 100.
+- CONFIRMED (`0x175b4`): each frame life − 1; at 0 it is freed and
+  explodes. prio 0, frame = heading. Once life < 98 (from the third
+  frame): `hit_test` 0x1430e against Brutus (box 20), else Snitch (20),
+  else RedCat (15); a hit frees the rocket, explodes at the racer and
+  takes 15 damage (Brutus, Snitch) or 10 (RedCat) off it (+0x28). Then
+  the cell at (x + vx, y + vy): ground level > 0 frees and explodes it
+  (`ground_check` is called too, with the heading as the stats index, so
+  its wall slide may turn stats entry [heading]'s heading, a racer's for
+  headings 0–2; SPECULATIVE, not seen);
+  a cactus (type 15/16) gets life 5 and type 0, and the rocket explodes
+  but its code runs on. It moves x += vx, y += vy, v × 0xff3b/0x10000
+  (≈ 0.997), height unchanged. The rocket's own sprite-mode write
+  ([0x5fec0] + 8 = 2) is overwritten by `objects_tick` from the frame's
+  kind.
+- CONFIRMED (`0x1430e`): hit_test(a, b, size) is 1–5 when one of the four
+  corners (± 30 px along b's heading, ± 30 px across) or the centre of
+  racer b lies strictly inside a's box x ± size, y ± size; 0 when either
+  object is free. Heights are not compared.
+- CONFIRMED (`0x17faa`, `0x1709c`): an explosion takes the first free slot
+  (often the rocket's own, just freed), period 1, anim 17 (18 frames) from
+  frame 0, the position of the object it is set off at, no velocity, life
+  18; each frame life − 1 (freed at 0), prio −10, velocity × 0.9. Then
+  `0x103d1(1, distance to the camera racer)`, LIKELY its sound.
+- Computer racers never fire (their scripts are empty; see above), so
+  rockets are RedCat's alone.
+
 ## The race: drawing (draw_view 0x11526, new2io.c)
 
 - CONFIRMED: the view is drawn into an off-screen buffer and copied to the
