@@ -151,7 +151,8 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   table at 0x71de0 twice per frame (22.5° per frame).
 - CONFIRMED: holding a direction accelerates: speed += 30/mass per frame
   (player: +0.5 px/frame), fuel −0x666 per frame, an exhaust puff every 4th
-  frame (0x17e87). Above the top speed (+4 px/frame) 0x180d3 runs. Otherwise
+  frame (0x17e87). Above the top speed nothing is added, and above it by
+  more than 4 px/frame 0x180d3 leaves an after-image (see "exhaust"). Otherwise
   speed ×= 0xf851/0x10000 (≈0.970) per frame, and snaps to 0 below 0x3333.
 - CONFIRMED: the boost key (binding at 0x71450) adds 16× the acceleration to
   speed and 64× to vz, using one boost, when height < 40; the rocket key
@@ -321,6 +322,32 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `0x103d1(1, distance to the camera racer)`, LIKELY its sound.
 - Computer racers never fire (their scripts are empty; see above), so
   rockets are RedCat's alone.
+
+## The race: exhaust, smoke and after-images
+
+- CONFIRMED (`0x17e87`, call sites 0x122c4, 0x12bf3, 0x134b9, 0x14642,
+  0x19fcf, 0x1a76d; DOSBox object-table dumps): exhaust(count, object,
+  damage) allocates count objects, period 2, frame 0, at the object's
+  position + (rand() & 15) − 7 px in x and y and (rand() & 7) − 3 in
+  height (three rand() calls each), no velocity, life 6. Damage > 50:
+  anim 7 (smoke, `0x16e46`); else anim 17 (the explosion, `0x1709c`), so a
+  damaged racer's exhaust is fire. Every 4th frame of acceleration RedCat
+  (counter [0x71454]), Brutus ([0x71918]) and Snitch ([0x71ddc]) puff one
+  with their damage; the computer racers' crash ticks with 100 (smoke).
+  `0x14534` (racer contact) puffs 10 smoke clouds at the first racer.
+  DOSBox: Brutus's and Snitch's puffs are period 2, anim 7, life 6..0.
+- CONFIRMED (`0x16e46`): smoke: life − 1, freed at 0; prio −10; moves by
+  its velocity (× 0.9 a tick); below its cell's ground level × 1000 it
+  steps back half its velocity, stops and halves and negates +0x18.
+- CONFIRMED (`player_tick` at 0x122d5, `0x180d3`, `0x1733e`): while a
+  direction key is held and RedCat's speed is above top, nothing is added;
+  above top + 4 px/frame (after a boost) each frame leaves an after-image:
+  period 1, anim 3 (images 145.., kind 6, drawn through TRANS.DAT) with
+  RedCat's heading as frame, his position and vz, no other velocity, life
+  6. Its tick: prio −100000 (under everything), frame − 1 when > 0 (with
+  objects_tick's + 1 it stays), `ground_check` (with a stale stats index;
+  harmless with no velocity), gravity and landing as a racer's (landing on
+  the ground level), velocity × 0.9.
 
 ## The race: dropped missiles
 

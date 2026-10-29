@@ -65,5 +65,6 @@
     frame cap anywhere above ~105 frames/s?
 14. What do the rest of the cell types do: 10, 15, 16, 21, 22 (0x16), and
     the five check points of `0x18ae5`?
-15. The exhaust (0x17e87) and over-speed (0x180d3) objects. The rocket and
-    the explosion are **RESOLVED** (discoveries "rockets and explosions").
+15. **RESOLVED.** Rockets, explosions, exhaust and over-speed objects:
+    discoveries "rockets and explosions", "exhaust, smoke and
+    after-images".
