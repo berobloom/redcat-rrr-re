@@ -507,6 +507,18 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   624 x 168 from (8, 168). After it: the panel blank, the Help button
   pressed (0x19842: frame 1, delay 150), the title back (0x19af7), and the
   same sum asked again with an empty answer.
+- CONFIRMED (code; DOSBox-X, memory polling): Delays. REKEN's
+  `0x249f3(ms)` (RRRMENU `0x1e88e`, RRR `0x26beb`: same bytes) waits until
+  clock() × 100 ≥ start × 100 + ms × 10; clock() (`0x2ef28` → `0x30eac`)
+  counts hundredths of the day from INT 21h AH=2Ch, which moves with the
+  BIOS tick (18.2 Hz, 54.9 ms). So a delay ends on a tick: delay(5),
+  (10), (40) last to the next tick, (150) three, (200) four, (1000) 19.
+  Polling the back buffer ([0x66c38]) and the tick count at 0x46c while
+  module 2's other rows close: one frame per tick, 7 steps in ticks 0..6.
+  Calls: 5 (rows `0x1294b`, `0x12a96`, `0x12b59`, `0x129c6`; cards
+  `0x13a16`.. `0x13d95`), 10 (prize and face frames `0x18e0b`), 40 (cards
+  turning back), 150 (button press), 200 (counter units), 1000, 2000.
+  Animations given as "5 ms apart" below are one tick apart.
 - CONFIRMED (`0x18e7f`, `0x1910f`): prizes [0x46c86]:
 
   | prize | award | shown as |
@@ -652,6 +664,24 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (10, 6)–(78, 35)), module 2 `0x453fc` (rows (x, 207)–(x + 342, 248),
   +89, +177; Help; Stop (10, 4)–(78, 33)), module 3 `0x4550c`, module 4
   `0x457d4`.
+- CONFIRMED (`0x13502`, `0x12ca2`; DOSBox-X, REKEN /DAVILEX M2, groep 6,
+  port frames pixel-identical): Help in module 2. H (or the button) stops
+  track 0, presses Help (`0x19842`), waits for the key's release, closes
+  all rows (`0x12a96`), sets the three rows' x to 131 and calls `0x12ca2`:
+  restore_rect(10, 202, 620, 230) (rows and Uitkomst box gone); say 15..20
+  (as `0x19c04` in module 1); open the rows; "4 + 3 = 6", "2 x 4 = 7"
+  (centred by "2 * 4 = 7", same width), "8 : 2 = 4" in them as the sums
+  are; say 21, 22, 23; close row 0 (`0x129c6` with [0x53c80] = 0); say 24;
+  close row 1; say 25; close row 2. Esc / Enter / S during a phrase end it
+  early. Afterwards the rows' x come back, restore_rect again, the box
+  (groep 3–5), the rows open with the texts, Help pressed, the title.
+- CONFIRMED (`0x13575`; DOSBox-X, memory and play): after Help the true
+  row [0x53c80] is set from [0x53c70], which no code writes (0 in the
+  image and at run time): the true sum moves to the first row and the
+  other two swap accordingly (before: "10 x 6 = 45" / "225 : 5 = 45" /
+  "97 − 56 = 45" with row 2 true; after: "225 : 5" first), and row 1 is
+  then the one that wins (key 1 awarded the prize, boosts 5 → 8). A quirk
+  of the original: Help gives away nothing, but the answer is always row 1.
 
 ## The arithmetic part: module 3 "Memory"
 
@@ -875,10 +905,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   R R R 3 G S: world 3, stage 0, groep 3, sound 1, race_done 0, name
   RedCat.
 - CONFIRMED (`0x11056`): play_anim(x, y, anim, step, n) blits frames 0..n−1
-  (or back), each followed by a present and `0x1e88e(1)`, which waits n
-  hundredths of a second (LIKELY, from its × 100 compare); world_flash
+  (or back), each followed by a present and `0x1e88e(1)`; world_flash
   draws the panel 20 times alternating (header yellow / modules white)
-  with 10 hundredths between. The idle blink (anim 4 at (22, 94)) comes
+  with `0x1e88e(10)` between. `0x1e88e(n)` waits n milliseconds, not
+  hundredths, and never less than to the next BIOS tick: see "Delays"
+  under the arithmetic part (same code as REKEN's `0x249f3`). The idle blink (anim 4 at (22, 94)) comes
   after 20000 + rand() % 10000 loop passes without the mouse moving
   (seen about 25 s in under DOSBox).
 - On the first pass of the loop the groep variable is −1, so it takes
