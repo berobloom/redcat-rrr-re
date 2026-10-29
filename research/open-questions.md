@@ -67,8 +67,10 @@
     `disasm.py`.
 13. **RESOLVED (session 2): none.** The race runs as fast as the CPU allows
     (discoveries "The race: speed"). Open: what rate did the designers
-    tune for? `delay_ms` (0x26beb) and 0x32cce hold a clock; is there a
-    frame cap anywhere above ~105 frames/s?
+    tune for? `delay_ms` (0x26beb) is no frame cap (its direct callers
+    are the start lights, the finish and a fade loop; discoveries "start
+    lights"); 0x32cce also holds a clock: is there a cap there above
+    ~105 frames/s?
 14. What do the rest of the cell types do: 10, 15, 16, 21, 22 (0x16), and
     the five check points of `0x18ae5`?
 15. **RESOLVED.** Rockets, explosions, exhaust and over-speed objects:

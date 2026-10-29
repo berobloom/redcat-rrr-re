@@ -279,7 +279,12 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   wacht.pcx's palette first, for the loading screen.
 - CONFIRMED: start lights: anim 86's frames (images 32, 43–46) drawn at
   screen (226, 50) for 1500, 1000, 1000, 1000, 500 ms (the port's start
-  frame matches an original screenshot pixel for pixel).
+  frame matches an original screenshot pixel for pixel); `delay_ms`
+  (0x26beb) ends each on a BIOS tick, so 28, 19, 19, 19, 10 ticks (see
+  "Delays" under the arithmetic part). Its other direct callers: the
+  finish (4000, `0x15bf9`) and a five-step loop of delay(100) at
+  `0x20ca4` (byte from 0 by 0x33 up to 0xdd, passed to `0x1d329` and
+  `0x1d2ac`); none in the race loop.
 - CONFIRMED: draw order (`sort_draw_order` 0x11b0e): descending key
   (1000 − x)·10 − 1000·y − z − prio, with prio −100000 for shadows and
   mines.
@@ -909,7 +914,10 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   draws the panel 20 times alternating (header yellow / modules white)
   with `0x1e88e(10)` between. `0x1e88e(n)` waits n milliseconds, not
   hundredths, and never less than to the next BIOS tick: see "Delays"
-  under the arithmetic part (same code as REKEN's `0x249f3`). The idle blink (anim 4 at (22, 94)) comes
+  under the arithmetic part (same code as REKEN's `0x249f3`). DOSBox-X,
+  polling the back buffer (linear 0x227038 under redcat.conf) and 0x46c
+  every ~7 ms while G plays Geluid's anim: one frame a tick (19 frames in
+  ticks 0..18). The idle blink (anim 4 at (22, 94)) comes
   after 20000 + rand() % 10000 loop passes without the mouse moving
   (seen about 25 s in under DOSBox).
 - On the first pass of the loop the groep variable is −1, so it takes
