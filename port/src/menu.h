@@ -16,7 +16,8 @@ enum { RC_MENU_NONE, RC_MENU_START, RC_MENU_QUIT };
 enum {
     RC_MSND_CHKSND, RC_MSND_KNOPPR, RC_MSND_RC4, RC_MSND_WHIZZ,
     RC_MSND_RAPPORT, RC_MSND_BEDIEN1, RC_MSND_REDCAT, RC_MSND_TRACK1,
-    RC_MSND_TRACK2, RC_MSND_RCEND, RC_MSND_MENU, RC_MSND_COUNT
+    RC_MSND_TRACK2, RC_MSND_RCEND, RC_MSND_MENU, RC_MSND_COUNT,
+    RC_MSND_STOP = -1           /* in sound_q: stop track 1 only */
 };
 extern const char *const rc_menu_sound_names[RC_MSND_COUNT];
 
@@ -56,6 +57,15 @@ typedef struct {
     int pen_x, pen_y;           /* Rapport's line drawing */
     int result;
     int sound_q[8], sounds;     /* menu_sound (0x10b4f) calls, in order */
+    int track1_busy;            /* the caller's: track 1 plays (MENU.WAV) */
+
+    int first;                  /* [0x44700]: MOTOR's /1, the first start */
+    int fresh;                  /* [0x45142]: RRRIO.INF missing or invalid */
+    int modal;                  /* the name dialog or MENU.WAV: no music */
+    int name_sel;               /* the list's bar */
+    char field[26];             /* the typed name, space-padded */
+    int cursor;
+    uint8_t under[640 * 480];   /* the screen under the dialog */
 
     uint8_t screen[640 * 480];  /* what the menu has drawn */
     uint8_t fb[640 * 480];      /* screen with the pointer */
@@ -65,12 +75,15 @@ typedef struct {
 int rc_menu_load(rc_menu *m, const char *dir);
 void rc_menu_free(rc_menu *m);
 /* menu_init(1): the record's settings, the next world after a finished
-   one, the screen. */
+   one, the screen.  With first (/1) the pupil's name is asked, the world
+   is not moved on, and MENU.WAV plays (until track1_busy drops or a key). */
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed);
 /* A key by its PC scan code (0x1f S, 0x1c Enter, 0x13 R, 0x12 E, 0x19 P,
    0x30 B, 0x22 G, 4..9 the digits 3..8; on the Bediening screen any of
    rc_menu_keys, 1 Esc aborting; on Rapport 0x14 T back). */
 int rc_menu_key(rc_menu *m, int scan);   /* 1 if the menu used it */
+/* A typed character, for the name field (32..126) */
+void rc_menu_char(rc_menu *m, int ch);
 void rc_menu_click(rc_menu *m, int x, int y);
 void rc_menu_mouse(rc_menu *m, int x, int y);
 void rc_menu_tick(rc_menu *m, int ms);

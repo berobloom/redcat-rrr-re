@@ -619,12 +619,14 @@ static void menu_frame(void)
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT)
             g.running = 0;
-        else if (e.type == SDL_KEYDOWN && !e.key.repeat) {
+        else if (e.type == SDL_KEYDOWN && (!e.key.repeat || m->modal)) {
             int scan = pc_scan(e.key.keysym.scancode);
             /* Esc aborts Bediening; on the main screen the port quits */
             if (!rc_menu_key(m, scan) && scan == 1)
                 g.running = 0;
         }
+        else if (e.type == SDL_TEXTINPUT && !e.text.text[1])
+            rc_menu_char(m, (unsigned char)e.text.text[0]);
         else if (e.type == SDL_MOUSEMOTION)
             rc_menu_mouse(m, e.motion.x, e.motion.y);
         else if (e.type == SDL_MOUSEBUTTONDOWN &&
@@ -645,11 +647,13 @@ static void menu_frame(void)
     for (i = 0; i < m->sounds; i++)
         if (m->sound) {
             snd_stop(1);
-            snd_play(1, m->sound_q[i]);
+            if (m->sound_q[i] != RC_MSND_STOP)
+                snd_play(1, m->sound_q[i]);
         }
     m->sounds = 0;
+    m->track1_busy = snd_busy(1);
     /* menu_loop 0x11c51: REDCAT.WAV on track 0 whenever it is free */
-    if (m->sound & 2)
+    if ((m->sound & 2) && !m->modal)
         snd_play(0, RC_MSND_REDCAT);
     rc_menu_draw(m);
     memcpy(g.fb, m->fb, sizeof g.fb);
@@ -919,7 +923,8 @@ out:
 
 int main(int argc, char **argv)
 {
-    int map = -1, fps = 30, groep = 0, module = 0, race_only = 0, i;
+    int map = -1, fps = 30, groep = 0, module = 0, race_only = 0, fresh = 0;
+    int i;
     const char *save = NULL;
     uint32_t size;
     const uint8_t *d;
@@ -985,8 +990,10 @@ int main(int argc, char **argv)
        stage 0, so the round opens with De Welkomstrace's race. */
     if (load_session() == 0)
         printf("record: %s/RRRIO.INF\n", g.save);
-    else
+    else {
         rc_session_default(&g.session);
+        fresh = 1;
+    }
     if (groep >= 3 && groep <= 8)
         g.session.groep = groep;
     /* --module: the first world that plays it, at its stage */
@@ -1012,6 +1019,9 @@ int main(int argc, char **argv)
     else if (g.flow)
         g.have_menu = 1;
     g.mainmenu.save_dir = g.save;
+    /* MOTOR starts the menu with /1 the first time: the name, MENU.WAV */
+    g.mainmenu.first = 1;
+    g.mainmenu.fresh = fresh;
     g.ex.snd_busy = ex_busy;
     g.ex.snd_play = ex_play;
     g.ex.snd_stop = ex_stop;

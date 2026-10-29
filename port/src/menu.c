@@ -4,7 +4,9 @@
    not used), 0xff clear.  Bediening (0x1118f) is the keyboard half: the
    joystick set-up is not ported, nor the closing film.  The sounds
    (menu_sound 0x10b4f) are queued in sound_q for the caller.  Rapport (P, 0x12990) reads the pupil's SMD file (smd.c), Einde
-   (0x119cc) shows RRRHIGH.DAT (highscore.c). */
+   (0x119cc) shows RRRHIGH.DAT (highscore.c).  On the game's first start
+   (MOTOR's /1) the pupil's name is asked (0x133b9, 0x13285) and MENU.WAV
+   plays. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,7 +22,7 @@
 #define FLASH_MS 100            /* world_flash: delay(10), hundredths */
 
 enum { ST_IDLE, ST_ANIM, ST_FLASH, ST_KEYS, ST_KEYS_WAIT, ST_RAPPORT,
-       ST_HIGH };
+       ST_HIGH, ST_NAME_LIST, ST_NAME_EDIT, ST_JINGLE };
 enum { AFTER_NONE, AFTER_START };
 
 /* menu buttons 0x45244: scan code and rectangle */
@@ -514,8 +516,258 @@ static void menu_sound(rc_menu *m, int sample)
         m->sound_q[m->sounds++] = sample;
 }
 
+/* The pupil's name.  RRRIO +0x68 holds the last four names, 100 bytes
+   each, the latest first; the toolkit ("cl2.c", "fm2.c") lays its windows
+   out in RRRFONT cells of 10 x 21 on a 64 x 22 grid, centred. */
+#define NAMES 0x68
+#define NAME_SIZE 100
+#define FIELD_LEN 25            /* 0x13285: the field's width */
+#define LIST_COL 17             /* the list: 5 rows of 30 cells */
+#define LIST_ROW 10
+#define LIST_LEN 30
+#define FIELD_COL 21
+#define FIELD_ROW 12
+#define BAR 254                 /* the list's bar (0x20ee0's 0xfe) */
+
+static const char hello[] = "Hallo, hoe heet jij?";
+static const char not_listed[] = "Ik sta er niet bij!";
+
+/* One RRRFONT glyph in cell (col, row): a window piece (0xff clear) or,
+   text, a letter in yellow (253, 254 as pair 1; 0 clear). */
+static void cell(rc_menu *m, int g, int col, int row, int text)
+{
+    const rc_font *f = &m->font;
+    const uint8_t *p = f->glyphs + (uint8_t)g * f->w * f->h;
+    int gx, gy;
+
+    for (gy = 0; gy < f->h; gy++)
+        for (gx = 0; gx < f->w; gx++) {
+            int c = p[gy * f->w + gx];
+            if (text ? c == 0 : c == 0xff)
+                continue;
+            if (text && c == 253)
+                c = colours[1][0];
+            else if (text && c == 254)
+                c = colours[1][1];
+            m->screen[(row * f->h + gy) * W + col * f->w + gx] = (uint8_t)c;
+        }
+}
+
+static void cells_text(rc_menu *m, int col, int row, const char *s, int n)
+{
+    for (; *s && n > 0; s++, n--)
+        cell(m, *s, col++, row, 1);
+}
+
+static void cells_fill(rc_menu *m, int col, int row, int n, int c)
+{
+    const rc_font *f = &m->font;
+    int y;
+
+    for (y = 0; y < f->h; y++)
+        memset(m->screen + (row * f->h + y) * W + col * f->w, c,
+               (size_t)(n * f->w));
+}
+
+/* 0x1c5c7 with style 1 of 0x45c3c: corners 0x18..0x1b, the edges two
+   glyphs alternating, the inside one of three by position */
+static void window(rc_menu *m, int c0, int r0, int c1, int r1)
+{
+    static const uint8_t fill[3] = { 0x83, 0x84, 0x85 };
+    int c, r;
+
+    for (c = c0 + 1; c <= c1 - 1; c++) {
+        cell(m, 0x1c + c % 2, c, r0, 0);
+        cell(m, 0x1e + c % 2, c, r1, 0);
+    }
+    for (r = r0 + 1; r <= r1 - 1; r++) {
+        cell(m, 0x7f + r % 2, c0, r, 0);
+        cell(m, 0x81 + r % 2, c1, r, 0);
+    }
+    cell(m, 0x18, c0, r0, 0);
+    cell(m, 0x19, c1, r0, 0);
+    cell(m, 0x1a, c0, r1, 0);
+    cell(m, 0x1b, c1, r1, 0);
+    for (r = r0 + 1; r <= r1 - 1; r++)
+        for (c = c0 + 1; c <= c1 - 1; c++)
+            cell(m, fill[(2 * r % 5 + 7 * c % 4) % 3], c, r, 0);
+}
+
+static char *name_at(rc_menu *m, int i)
+{
+    return (char *)m->s->raw + NAMES + NAME_SIZE * i;
+}
+
+static int same_name(const char *a, const char *b)  /* 0x13e01, stricmp */
+{
+    for (;; a++, b++) {
+        int x = *a >= 'A' && *a <= 'Z' ? *a + 32 : *a;
+        int y = *b >= 'A' && *b <= 'Z' ? *b + 32 : *b;
+        if (x != y)
+            return 0;
+        if (!x)
+            return 1;
+    }
+}
+
+/* 0x131a4: a known name swaps with the first, a new one goes first and
+   the fourth drops off */
+static void name_take(rc_menu *m, const char *name)
+{
+    char tmp[NAME_SIZE];
+    int i;
+
+    for (i = 0; i < 4; i++)
+        if (same_name(name_at(m, i), name)) {
+            memcpy(tmp, name_at(m, 0), NAME_SIZE);
+            memcpy(name_at(m, 0), name_at(m, i), NAME_SIZE);
+            memcpy(name_at(m, i), tmp, NAME_SIZE);
+            return;
+        }
+    snprintf(tmp, sizeof tmp, "%s", name);
+    for (i = 3; i > 0; i--)
+        memcpy(name_at(m, i), name_at(m, i - 1), NAME_SIZE);
+    memset(name_at(m, 0), 0, NAME_SIZE);
+    memcpy(name_at(m, 0), tmp, strlen(tmp));
+}
+
+/* 0x133b9: the names, cut to 30, and "Ik sta er niet bij!" */
+static void name_list_draw(rc_menu *m)
+{
+    int i;
+
+    for (i = 0; i < 5; i++) {
+        cells_fill(m, LIST_COL, LIST_ROW + i, LIST_LEN,
+                   i == m->name_sel ? BAR : 0);
+        cells_text(m, LIST_COL, LIST_ROW + i,
+                   i < 4 ? name_at(m, i) : not_listed, LIST_LEN);
+    }
+}
+
+/* 0x13285: the field, a blinking _ in place of the letter at the cursor
+   (drawn steadily here: the blink was not timed) */
+static void name_field_draw(rc_menu *m)
+{
+    int i;
+
+    cells_fill(m, FIELD_COL, FIELD_ROW, FIELD_LEN, 0);
+    for (i = 0; i < FIELD_LEN; i++)
+        cell(m, i == m->cursor ? '_' : m->field[i], FIELD_COL + i,
+             FIELD_ROW, 1);
+}
+
+static void name_edit_start(rc_menu *m)
+{
+    memcpy(m->screen, m->under, sizeof m->screen);
+    window(m, 16, 7, 47, 13);
+    cells_text(m, 22, 8, hello, 99);
+    memset(m->field, ' ', FIELD_LEN);
+    m->field[FIELD_LEN] = 0;
+    m->cursor = 0;
+    m->state = ST_NAME_EDIT;
+    name_field_draw(m);
+}
+
+static void name_start(rc_menu *m)
+{
+    memcpy(m->under, m->screen, sizeof m->under);
+    m->modal = 1;
+    if (m->fresh) {             /* no names to show */
+        name_edit_start(m);
+        return;
+    }
+    window(m, 15, 6, 48, 15);
+    cells_text(m, 22, 7, hello, 99);
+    m->name_sel = 0;
+    m->state = ST_NAME_LIST;
+    name_list_draw(m);
+}
+
+/* the rest of menu_init once the name is known (0x10f6a..0x11047) */
+static void name_done(rc_menu *m)
+{
+    memcpy(m->screen, m->under, sizeof m->screen);
+    draw_bediening(m);
+    draw_geluid(m);
+    draw_groep(m, 1);
+    menu_sound(m, RC_MSND_MENU);
+    m->track1_busy = 1;         /* until the caller reports */
+    m->state = ST_JINGLE;
+}
+
+static void name_key(rc_menu *m, int scan)
+{
+    char *f = m->field;
+    int n;
+
+    if (m->state == ST_NAME_LIST) {
+        if (scan == 0x48 || scan == 0x50) {         /* up, down: wrap */
+            m->name_sel = (m->name_sel + (scan == 0x50 ? 1 : 4)) % 5;
+            name_list_draw(m);
+        } else if (scan == 1)                       /* Esc: type it */
+            name_edit_start(m);
+        else if (scan == 0x1c) {
+            const char *s = m->name_sel < 4 ? name_at(m, m->name_sel) : "";
+            if (!*s || *s == ' ')                   /* incl. not listed */
+                name_edit_start(m);
+            else {
+                char tmp[NAME_SIZE];
+                snprintf(tmp, sizeof tmp, "%.*s", LIST_LEN, s);
+                name_take(m, tmp);
+                name_done(m);
+            }
+        }
+        return;
+    }
+    switch (scan) {
+    case 0x4b: if (m->cursor > 0) m->cursor--; break;          /* left */
+    case 0x4d: if (m->cursor < FIELD_LEN - 1) m->cursor++; break;
+    case 0x47: m->cursor = 0; break;                           /* Home */
+    case 0x4f: m->cursor = FIELD_LEN - 1; break;               /* End */
+    case 0x0e:                                                 /* back */
+        if (m->cursor == 0)
+            break;
+        m->cursor--;
+        /* fall through */
+    case 0x53:                                                 /* Del */
+        memmove(f + m->cursor, f + m->cursor + 1,
+                (size_t)(FIELD_LEN - 1 - m->cursor));
+        f[FIELD_LEN - 1] = ' ';
+        break;
+    case 1:                     /* Esc: RedCat */
+        name_take(m, "RedCat");
+        name_done(m);
+        return;
+    case 0x1c:                  /* empty or led by a space: RedCat */
+        for (n = FIELD_LEN; n > 0 && f[n - 1] == ' '; n--)
+            ;
+        f[n] = 0;
+        name_take(m, n && f[0] != ' ' ? f : "RedCat");
+        name_done(m);
+        return;
+    }
+    name_field_draw(m);
+}
+
+/* insert at the cursor; a full field loses its last letter */
+void rc_menu_char(rc_menu *m, int ch)
+{
+    if (m->state != ST_NAME_EDIT || ch < 32 || ch > 126)
+        return;
+    memmove(m->field + m->cursor + 1, m->field + m->cursor,
+            (size_t)(FIELD_LEN - 1 - m->cursor));
+    m->field[m->cursor] = (char)ch;
+    if (m->cursor < FIELD_LEN - 1)
+        m->cursor++;
+    name_field_draw(m);
+}
+
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed)
 {
+    int first = m->first;
+
+    m->first = 0;               /* MOTOR passes /1 once */
+    m->modal = 0;
     m->s = s;
     m->rng = seed;
     m->result = RC_MENU_NONE;
@@ -530,6 +782,12 @@ void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed)
     memcpy(m->screen, m->bg.pixels, sizeof m->screen);
     memcpy(m->pal, m->bg.palette, sizeof m->pal);
     panel(m, 1, 0);
+    if (first) {
+        /* under /1 the world is not moved on ([0x45562] is 0); the groep
+           button lights after the name (0x10f74) */
+        name_start(m);
+        return;
+    }
     draw_bediening(m);
     draw_geluid(m);
     draw_groep(m, 1);
@@ -540,7 +798,7 @@ void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed)
         m->flashes = 0;
         m->timer = 0;
         panel(m, 0, 1);
-    } else
+    } else if (s->race_done)    /* 0x10fec; else the header only */
         panel(m, 1, 1);
     idle_wait(m);
 }
@@ -569,6 +827,17 @@ static void leave(rc_menu *m, int start)
 
 int rc_menu_key(rc_menu *m, int scan)
 {
+    if (m->state == ST_NAME_LIST || m->state == ST_NAME_EDIT) {
+        name_key(m, scan);
+        return 1;
+    }
+    if (m->state == ST_JINGLE) {    /* any key ends MENU.WAV */
+        menu_sound(m, RC_MSND_STOP);
+        m->state = ST_IDLE;
+        m->modal = 0;
+        idle_wait(m);
+        return 1;
+    }
     if (m->state == ST_KEYS) {
         keys_take(m, scan);
         return 1;
@@ -653,6 +922,8 @@ void rc_menu_click(rc_menu *m, int x, int y)
 {
     size_t i;
 
+    if (m->modal)                       /* the pointer is hidden */
+        return;
     if (m->state == ST_HIGH) {          /* 0x455ee: Enter, the screen */
         rc_menu_key(m, 0x1c);
         return;
@@ -700,6 +971,13 @@ void rc_menu_tick(rc_menu *m, int ms)
                 draw_frame(m, m->anim, m->frame, m->ax, m->ay);
         }
         break;
+    case ST_JINGLE:             /* 0x1101e: until track 1 is free */
+        if (!m->track1_busy) {
+            m->state = ST_IDLE;
+            m->modal = 0;
+            idle_wait(m);
+        }
+        break;
     case ST_FLASH:              /* world_flash 0x10e2d, then 0x10ff8 */
         while (m->state == ST_FLASH && m->timer >= FLASH_MS) {
             m->timer -= FLASH_MS;
@@ -720,7 +998,7 @@ void rc_menu_draw(rc_menu *m)
     int i, j;
 
     memcpy(m->fb, m->screen, sizeof m->fb);
-    if (m->state == ST_KEYS || m->state == ST_KEYS_WAIT)
+    if (m->state == ST_KEYS || m->state == ST_KEYS_WAIT || m->modal)
         return;                 /* 0x1e3b1 hides it there */
     for (j = 0; j < p->h; j++)
         for (i = 0; i < p->w; i++) {

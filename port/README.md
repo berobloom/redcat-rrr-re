@@ -16,7 +16,9 @@ Early. What exists:
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
 - `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]
-  [--save DIR]`: the game's round as MOTOR.EXE runs it, from the menu
+  [--save DIR]`: the game's round as MOTOR.EXE runs it, from the menu,
+  which first asks the pupil's name (the last four from RRRIO.INF, ↑/↓ and
+  Enter, or typed; Esc gives RedCat) and plays MENU.WAV
   (`src/menu.c`: Start! S/Enter, R or a click on the Race panel the next
   world, 3..8 the groep, G the sound, B the race keys, P the Rapport (T
   back), E Einde, which shows the high scores; Esc in a race returns to it). A world
@@ -72,9 +74,8 @@ Early. What exists:
   seed with REKEN.EXE's own code run under Unicorn.
 
 Not ported yet: the winner's film after a stage-4 race (the podium stands
-in), the closing film (EINDANI2.SMK), the menu's joystick set-up and
-MENU.WAV (played under `/1`), the exercises' Help example and mouse
-pointer.
+in), the closing film (EINDANI2.SMK), the menu's joystick set-up, the
+exercises' Help example and mouse pointer.
 
 ### Frame rate
 
