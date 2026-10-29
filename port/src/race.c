@@ -2,7 +2,7 @@
    muis_tick (0x130f8) and their helpers.  research/discoveries.md has the
    evidence; comments here name the original's addresses.
 
-   Not yet ported: exhaust (0x17e87), over-speed (0x180d3), sounds. */
+   Not yet ported: sounds. */
 #include "race.h"
 
 #include <math.h>
@@ -313,7 +313,142 @@ static int hit_test(rc_race *r, int a, int bn, int size)
     return 0;
 }
 
-static void racer_bounce(rc_race *r, int a, int bn)    /* 0x14534 */
+static void racer_bounce(rc_race *r, int a, int bn);
+
+/* explosion_tick (0x1709c): anim 17 where it was set off, until its life
+   runs out (an explosion 18 frames, a damaged racer's exhaust 6 ticks) */
+static void explosion_tick(rc_race *r, int n)
+{
+    rc_body *b = &r->body[n];
+
+    if (--b->life <= 0) {
+        free_object(r, n);
+        return;
+    }
+    b->prio = -10;
+    r->obj[n].anim = 17;
+    b->x += b->vx;
+    b->y += b->vy;
+    b->z += b->vz;
+    b->vx = fxmul(b->vx, 0xe666);
+    b->vy = fxmul(b->vy, 0xe666);
+    b->vz = fxmul(b->vz, 0xe666);
+    place_sprite(r, n);
+}
+
+/* smoke_tick (0x16e46): anim 7; below the cell's ground it steps back half
+   its velocity and stops */
+static void smoke_tick(rc_race *r, int n)
+{
+    rc_body *b = &r->body[n];
+
+    if (--b->life <= 0) {
+        free_object(r, n);
+        return;
+    }
+    b->prio = -10;
+    r->obj[n].anim = 7;
+    b->x += b->vx;
+    b->y += b->vy;
+    b->z += b->vz;
+    b->vx = fxmul(b->vx, 0xe666);
+    b->vy = fxmul(b->vy, 0xe666);
+    b->vz = fxmul(b->vz, 0xe666);
+    if (cell_at(r, px_to_cx(b->x), px_to_cy(b->y))->level * FX(1000) > b->z) {
+        b->x -= b->vx >> 1;
+        b->y -= b->vy >> 1;
+        b->vx = b->vy = 0;
+        b->speed = -b->speed >> 1;
+    }
+    place_sprite(r, n);
+}
+
+/* exhaust (0x17e87): count puffs around object at, ±7 px and ±3 high,
+   every second frame for 6: smoke (anim 7) when the racer's damage is
+   above 50, else small explosions (anim 17) */
+static void exhaust(rc_race *r, int count, int at, int damage)
+{
+    while (count-- > 0) {
+        int n = alloc_object(r);
+        rc_body *b;
+
+        if (n < 0)
+            return;
+        r->obj[n].period = 2;
+        r->obj[n].anim = damage > 50 ? 7 : 17;
+        r->obj[n].tick = damage > 50 ? smoke_tick : explosion_tick;
+        r->obj[n].frame = 0;
+        b = &r->body[n];
+        b->x = r->body[at].x + FX((rc_rand(r) & 15) - 7);
+        b->y = r->body[at].y + FX((rc_rand(r) & 15) - 7);
+        b->z = r->body[at].z + FX((rc_rand(r) & 7) - 3);
+        b->vx = b->vy = b->vz = 0;
+        b->life = 6;
+    }
+}
+
+/* afterimage_tick (0x1733e): a see-through RedCat (anim 3) under
+   everything, falling like a racer */
+static void afterimage_tick(rc_race *r, int n)
+{
+    rc_body *b = &r->body[n];
+    int32_t ground;
+
+    if (--b->life <= 0) {
+        free_object(r, n);
+        return;
+    }
+    b->prio = -100000;
+    r->obj[n].anim = 3;
+    if (r->obj[n].frame > 0)
+        r->obj[n].frame--;
+    /* ground_check with no velocity: the level of its own cell */
+    ground = cell_at(r, px_to_cx(b->x), px_to_cy(b->y))->level * FX(1000);
+    b->z += b->vz;
+    if (b->vz > -FX(20))
+        b->vz -= fxmul(iabs(b->vz), 0x4000) + 0x4000;
+    if (ground > b->z) {
+        b->vx -= fxmul(b->vx, 0x2666);
+        b->vy -= fxmul(b->vy, 0x2666);
+        b->z = ground;
+        if (iabs(b->vz) > 0x10000)
+            b->vz = -fxmul(b->vz, 0x4ccc);
+        else
+            b->vz = 0;
+    }
+    b->x += b->vx;
+    b->y += b->vy;
+    b->vx = fxmul(b->vx, 0xe666);
+    b->vy = fxmul(b->vy, 0xe666);
+    b->vz = fxmul(b->vz, 0xe666);
+    place_sprite(r, n);
+}
+
+/* 0x180d3: above top speed + 4 px/frame, an after-image where racer n is
+   (its heading as the frame, its vz), 6 frames */
+static void afterimage(rc_race *r, int n)
+{
+    int m = alloc_object(r);
+    rc_body *b;
+
+    if (m < 0)
+        return;
+    r->obj[m].period = 1;
+    r->obj[m].tick = afterimage_tick;
+    r->obj[m].anim = 3;
+    r->obj[m].frame = (short)r->stats[r->body[n].stats].heading;
+    b = &r->body[m];
+    b->x = r->body[n].x;
+    b->y = r->body[n].y;
+    b->z = r->body[n].z;
+    b->vx = b->vy = 0;
+    b->vz = r->body[n].vz;
+    b->life = 6;
+}
+
+/* 0x14534: the two racers turn toward each other's heading (or stop), share
+   their speed, and a puffs ten clouds of smoke */
+static void racer_bounce(rc_race *r, int a, int bn)
 {
     rc_stats *sa = &r->stats[r->body[a].stats];
     rc_stats *sb = &r->stats[r->body[bn].stats];
@@ -325,6 +460,7 @@ static void racer_bounce(rc_race *r, int a, int bn)    /* 0x14534 */
         sa->heading = na;
     else
         r->body[a].speed = 0;
+    exhaust(r, 10, a, 100);
     if (iabs(hb - nb) < 9)
         sb->heading = nb;
     else
@@ -380,26 +516,6 @@ static void clamp_and_pose(rc_race *r, int n)
     else
         pose = 0;
     o->frame = (short)(r->stats[b->stats].heading + pose);
-    place_sprite(r, n);
-}
-
-/* explosion_tick (0x1709c): anim 17 where it was set off, 17 frames */
-static void explosion_tick(rc_race *r, int n)
-{
-    rc_body *b = &r->body[n];
-
-    if (--b->life <= 0) {
-        free_object(r, n);
-        return;
-    }
-    b->prio = -10;
-    r->obj[n].anim = 17;
-    b->x += b->vx;
-    b->y += b->vy;
-    b->z += b->vz;
-    b->vx = fxmul(b->vx, 0xe666);
-    b->vy = fxmul(b->vy, 0xe666);
-    b->vz = fxmul(b->vz, 0xe666);
     place_sprite(r, n);
 }
 
@@ -613,11 +729,16 @@ static void player_tick(rc_race *r, int n)     /* 0x11eb5 */
                 s->boosts--;
             }
         }
-        if (any && b->speed <= s->top) {
+        if (any && b->speed > s->top) {
+            if (b->speed > s->top + FX(4))
+                afterimage(r, n);
+        } else if (any) {
             b->speed += accel;
             s->fuel -= 0x666;
-            if (++r->exhaust_count[RC_REDCAT] > 3)
+            if (++r->exhaust_count[RC_REDCAT] > 3) {
+                exhaust(r, 1, n, s->damage);
                 r->exhaust_count[RC_REDCAT] = 0;
+            }
         }
         if (r->started) {
             if (in->left) col = 0;
@@ -822,8 +943,10 @@ static void ai_tick(rc_race *r, int n)
     if (!r->finished[k] && s->boost_state == 0 && r->ai_accel[k]
         && b->speed < s->top) {
         b->speed += accel;
-        if (++r->exhaust_count[k] > 3)
+        if (++r->exhaust_count[k] > 3) {    /* the wrecks always smoke */
+            exhaust(r, 1, n, wreck ? 100 : s->damage);
             r->exhaust_count[k] = 0;
+        }
     }
     if (!r->ai_accel[k] || s->top < b->speed)
         friction(b);
