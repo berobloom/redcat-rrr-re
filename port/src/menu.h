@@ -25,6 +25,7 @@ typedef struct {
     rc_pcx bg;                  /* menubs01.pcx */
     rc_pcx keys_bg;             /* MENUKEY.PCX */
     rc_pcx rapport_bg;          /* rapport.pcx */
+    rc_pcx high_bg;             /* highscor.pcx */
     const char *save_dir;       /* where the SMD files are; "." if unset */
     rc_sprite img[RC_RRRMENU_IMAGES + 1];   /* by image number */
     rc_font font;               /* RRRFONT.IMG */
@@ -36,6 +37,7 @@ typedef struct {
     int sound;                  /* [0x45556]: RRRIO +0x30, 0 / 1 / 3 */
     int joystick;               /* [0x4555a]: RRRIO +0x34 */
     int colour;                 /* [0x45566]: font colour pair */
+    int clear;                  /* the font's background not drawn */
 
     int state, after;
     int anim, ax, ay, frame, step, end;

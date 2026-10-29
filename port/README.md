@@ -19,7 +19,7 @@ Early. What exists:
   [--save DIR]`: the game's round as MOTOR.EXE runs it, from the menu
   (`src/menu.c`: Start! S/Enter, R or a click on the Race panel the next
   world, 3..8 the groep, G the sound, B the race keys, P the Rapport (T
-  back), E Einde; Esc in a race returns to it). A world
+  back), E Einde, which shows the high scores; Esc in a race returns to it). A world
   opens with its race; then for each of its modules the exercise screen of
   the arithmetic part (`src/reken_screen.c`) and the race of that stage,
   with the fuel, repair, boosts and rockets earned and the last finishing
@@ -39,7 +39,9 @@ Early. What exists:
   pupil's results (`%8.8d.SMD`, one record per module played, `src/smd.c`;
   the files are the original's format) are kept in the save directory:
   `--save`, else SDL's preferences path (on Linux
-  `~/.local/share/Davilex/RedCat`); in the browser in IndexedDB. The game
+  `~/.local/share/Davilex/RedCat`); in the browser in IndexedDB. After
+  each race RedCat's world points go into the high scores (RRRHIGH.DAT,
+  `src/highscore.c`), as RRR does. The game
   data directory is only read. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
   waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
@@ -61,8 +63,8 @@ Early. What exists:
   seed with REKEN.EXE's own code run under Unicorn.
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
-winner's film after a stage-4 race (the podium stands in), the high scores,
-the menu's joystick set-up, the exercises'
+winner's film after a stage-4 race (the podium stands in), the closing film
+(EINDANI2.SMK), the menu's joystick set-up, the exercises'
 Help example, mouse pointer and spoken feedback.
 
 ### Frame rate

@@ -3,7 +3,7 @@
    race (RRR.EXE) of that stage, with what they earned; after the last
    one the next world.  It opens with RRRMENU's screen (menu.c): S or
    Enter Start!, R the next world, 3..8 the groep, G the sound, P the
-   Rapport, E Einde; Esc in a race goes back to it.
+   Rapport, E Einde (the high scores); Esc in a race goes back to it.
 
    usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
                  [--module 1..4] [--fps N] [--save DIR]
@@ -42,6 +42,7 @@
 #include "anims.h"
 #include "archive.h"
 #include "gfx8.h"
+#include "highscore.h"
 #include "menu.h"
 #include "podium.h"
 #include "race.h"
@@ -520,6 +521,11 @@ static void menu_frame(void)
     }
 }
 
+static int high_rnd(void *ctx)
+{
+    return rand();
+}
+
 /* race end 0x1585e: the player's counters back into RRRIO.INF, the
    finishing order, 3 / 2 / 1 points, race_done. */
 static void race_result(void)
@@ -542,6 +548,16 @@ static void race_result(void)
     s->race_done = 1;
     rc_session_store(s);
     save_session();
+    /* high_score 0x1b6bf: RedCat's points this world under the record's
+       name (+0x68), into RRRHIGH.DAT */
+    if (*g.save) {
+        rc_high h;
+        char name[32];
+        snprintf(name, sizeof name, "%.29s", (const char *)s->raw + 0x68);
+        rc_high_load(&h, g.save, high_rnd, NULL);
+        if (rc_high_add(&h, g.save, name, s->points[0], s->world) >= 0)
+            save_sync();
+    }
     printf("finish: %d %d %d; points %d %d %d; fuel %d, repair %d, "
            "boosts %d, rockets %d\n", s->order[0] / 2, s->order[1] / 2,
            s->order[2] / 2, s->points[0], s->points[1], s->points[2],

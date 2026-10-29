@@ -3,12 +3,14 @@
    Sprites are drawn with their top-left at the given point (the hotspot is
    not used), 0xff clear.  Bediening (0x1118f) is the keyboard half: the
    joystick set-up is not ported, nor the sounds (0x10b4f) and the closing
-   film.  Rapport (P, 0x12990) reads the pupil's SMD file (smd.c). */
+   film.  Rapport (P, 0x12990) reads the pupil's SMD file (smd.c), Einde
+   (0x119cc) shows RRRHIGH.DAT (highscore.c). */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "anims.h"
+#include "highscore.h"
 #include "menu.h"
 #include "smd.h"
 
@@ -17,7 +19,8 @@
 #define FRAME_MS 20             /* a frame, present and delay(1) (0x11056) */
 #define FLASH_MS 100            /* world_flash: delay(10), hundredths */
 
-enum { ST_IDLE, ST_ANIM, ST_FLASH, ST_KEYS, ST_KEYS_WAIT, ST_RAPPORT };
+enum { ST_IDLE, ST_ANIM, ST_FLASH, ST_KEYS, ST_KEYS_WAIT, ST_RAPPORT,
+       ST_HIGH };
 enum { AFTER_NONE, AFTER_START };
 
 /* menu buttons 0x45244: scan code and rectangle */
@@ -125,6 +128,10 @@ int rc_menu_load(rc_menu *m, const char *dir)
     if (!d || rc_pcx_decode(&m->rapport_bg, d, size) != 0 ||
         m->rapport_bg.w != W || m->rapport_bg.h != H)
         return -1;
+    d = rc_archive_find(&m->rrrmenu, "highscor.pcx", &size);
+    if (!d || rc_pcx_decode(&m->high_bg, d, size) != 0 ||
+        m->high_bg.w != W || m->high_bg.h != H)
+        return -1;
     d = rc_archive_find(&m->rrrmenu, "MENUKEY.PCX", &size);
     if (!d || rc_pcx_decode(&m->keys_bg, d, size) != 0 || m->keys_bg.w != W ||
         m->keys_bg.h != H)
@@ -144,6 +151,7 @@ void rc_menu_free(rc_menu *m)
     rc_pcx_free(&m->bg);
     rc_pcx_free(&m->keys_bg);
     rc_pcx_free(&m->rapport_bg);
+    rc_pcx_free(&m->high_bg);
     rc_font_free(&m->font);
     free(m->font_data);
 }
@@ -192,6 +200,8 @@ static void text(rc_menu *m, int x, int y, const char *s)
                 int c = g[gy * f->w + gx], X = x + gx, Y = y + gy;
                 if (c == f->bk)
                     c = 0;
+                if (c == 0 && m->clear)     /* 0x10a04: 0 becomes 0xff */
+                    continue;
                 else if (c == 253)
                     c = colours[m->colour][0];
                 else if (c == 254)
@@ -455,6 +465,43 @@ static void rapport_start(rc_menu *m)
     m->state = ST_RAPPORT;
 }
 
+static int high_rnd(void *m)
+{
+    return rnd(m);
+}
+
+/* Einde (0x119cc): highscor.pcx and RRRHIGH.DAT's ten entries, the
+   font's background clear (0x10a04): each line in pair 1 at (51, 101 +
+   30 i), then in pair 0 one pixel up and left.  A line is 40 columns
+   with the name at 2, the world at 21 and "%3d" at 40. */
+static void high_start(rc_menu *m)
+{
+    rc_high h;
+    int i, pass;
+
+    memcpy(m->screen, m->high_bg.pixels, sizeof m->screen);
+    memcpy(m->pal, m->high_bg.palette, sizeof m->pal);
+    rc_high_load(&h, m->save_dir ? m->save_dir : ".", high_rnd, m);
+    m->clear = 1;
+    for (pass = 0; pass < 2; pass++) {
+        m->colour = pass ? 0 : 1;
+        for (i = 0; i < RC_HIGH_ENTRIES; i++) {
+            char line[64];
+            const rc_high_entry *e = &h.e[i];
+            int n, w = e->world >= 0 && e->world < 6 ? e->world : 0;
+
+            memset(line, ' ', 40);
+            n = (int)strlen(e->name);
+            memcpy(line + 2, e->name, (size_t)(n > 19 ? 19 : n));
+            memcpy(line + 21, world_names[w], strlen(world_names[w]));
+            snprintf(line + 40, sizeof line - 40, "%3d  ", (int)e->score);
+            text(m, 0x33 - pass, 0x65 + 30 * i - pass, line);
+        }
+    }
+    m->clear = 0;
+    m->state = ST_HIGH;
+}
+
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed)
 {
     m->s = s;
@@ -522,6 +569,11 @@ int rc_menu_key(rc_menu *m, int scan)
         }
         return 1;
     }
+    if (m->state == ST_HIGH) {
+        if (scan == 0x1c || scan == 0x12)   /* then EINDANI2.SMK, not ported */
+            m->result = RC_MENU_QUIT;
+        return 1;
+    }
     if (m->state == ST_RAPPORT) {
         if (scan == 0x14) {     /* Terug: menubs01.pcx, menu_init(0, 1) */
             main_screen(m);
@@ -537,8 +589,10 @@ int rc_menu_key(rc_menu *m, int scan)
     case 0x1c: case 0x1f:       /* Start!: RedCat drives off */
         play(m, 3, 22, 94, 1, AFTER_START);
         break;
-    case 0x12:                  /* Einde */
+    case 0x12:                  /* Einde: the record, then the high scores */
         leave(m, 0);
+        m->result = RC_MENU_NONE;
+        high_start(m);
         break;
     case 0x19:                  /* Rapport */
         rapport_start(m);
@@ -579,6 +633,10 @@ void rc_menu_click(rc_menu *m, int x, int y)
 {
     size_t i;
 
+    if (m->state == ST_HIGH) {          /* 0x455ee: Enter, the screen */
+        rc_menu_key(m, 0x1c);
+        return;
+    }
     if (m->state == ST_RAPPORT) {       /* 0x4592c: Terug */
         if (x >= 561 && x <= 628 && y >= 436 && y <= 464)
             rc_menu_key(m, 0x14);
