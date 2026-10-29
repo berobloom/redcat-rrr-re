@@ -831,11 +831,13 @@ int rc_menu_key(rc_menu *m, int scan)
         name_key(m, scan);
         return 1;
     }
-    if (m->state == ST_JINGLE) {    /* any key ends MENU.WAV */
-        menu_sound(m, RC_MSND_STOP);
-        m->state = ST_IDLE;
-        m->modal = 0;
-        idle_wait(m);
+    if (m->state == ST_JINGLE) {    /* 0x1102c: Esc ends MENU.WAV */
+        if (scan == 1) {
+            menu_sound(m, RC_MSND_STOP);
+            m->state = ST_IDLE;
+            m->modal = 0;
+            idle_wait(m);
+        }
         return 1;
     }
     if (m->state == ST_KEYS) {

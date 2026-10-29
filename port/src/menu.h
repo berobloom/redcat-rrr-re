@@ -76,7 +76,7 @@ int rc_menu_load(rc_menu *m, const char *dir);
 void rc_menu_free(rc_menu *m);
 /* menu_init(1): the record's settings, the next world after a finished
    one, the screen.  With first (/1) the pupil's name is asked, the world
-   is not moved on, and MENU.WAV plays (until track1_busy drops or a key). */
+   is not moved on, and MENU.WAV plays (until track1_busy drops or Esc). */
 void rc_menu_start(rc_menu *m, rc_session *s, uint32_t seed);
 /* A key by its PC scan code (0x1f S, 0x1c Enter, 0x13 R, 0x12 E, 0x19 P,
    0x30 B, 0x22 G, 4..9 the digits 3..8; on the Bediening screen any of

@@ -18,7 +18,7 @@ Early. What exists:
 - `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]
   [--save DIR]`: the game's round as MOTOR.EXE runs it, from the menu,
   which first asks the pupil's name (the last four from RRRIO.INF, ↑/↓ and
-  Enter, or typed; Esc gives RedCat) and plays MENU.WAV
+  Enter, or typed; Esc gives RedCat) and plays MENU.WAV (Esc skips it)
   (`src/menu.c`: Start! S/Enter, R or a click on the Race panel the next
   world, 3..8 the groep, G the sound, B the race keys, P the Rapport (T
   back), E Einde, which shows the high scores; Esc in a race returns to it). A world
