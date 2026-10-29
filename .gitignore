@@ -1,0 +1,8 @@
+# The game itself (copyrighted) and everything derived from it
+/*.iso
+/.work/
+# Build output and caches
+/port/build/
+/port/web/out/
+__pycache__/
+*.pyc

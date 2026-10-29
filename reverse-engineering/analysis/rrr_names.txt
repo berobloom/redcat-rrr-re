@@ -1,0 +1,17 @@
+# RRR.EXE function names (linear addresses as loaded by tools/leparse.py).
+# Read by tools/disasm.py.  Confidence per AGENTS.md; evidence in the comment.
+0x10817 race_init            # LIKELY: allocs objects, picks + loads map, inits anims (debug strings)
+0x1517a find_waypoints       # STRONGLY SUPPORTED: result picks 'Waypoint-search found missing waypoint!'
+0x15c02 init_anims           # LIKELY: logged as 'Init anims.'
+0x1ae44 stage_map_index      # CONFIRMED: table 0x57b8c[group][stage] - 1
+0x1ae67 stage_is_last        # LIKELY: scans 0x57b8c row for the next non-zero stage
+0x1bb27 fopen                # STRONGLY SUPPORTED: (name, "rb") -> FILE*
+0x1be78 rc_error             # STRONGLY SUPPORTED: every '%s(%d) : ...' failure goes here
+0x1c0d1 fread                # STRONGLY SUPPORTED: Watcom regs eax=buf edx=size ebx=n ecx=fp
+0x1f063 debug_printf         # LIKELY: progress messages ('Map and images loaded ok.\n')
+0x1fa1b tile_to_xvga         # LIKELY: (src, dst, w=32, h=40) per tileset tile
+0x1fad6 load_xvga_map_images # CONFIRMED: named in its own error string (rctools.c line 0x2f7)
+0x1fc4c load_map             # STRONGLY SUPPORTED: 'Kaart bestand kon niet geopend worden.' (rctools.c)
+0x22c71 xvga_src_fopen       # STRONGLY SUPPORTED: named in load_xvga_map_images' error string
+0x22e32 fclose               # LIKELY
+0x2325c rand                 # LIKELY: result % 22 picks a random map

@@ -1,0 +1,735 @@
+0x01002e	0	-	'd:\\MOVIE'
+0x0100ae	1	-	'BLASTER'
+0x0100f1	1	-	'BLASTER'
+0x010134	1	-	'BLASTER'
+0x010177	1	-	'rb'
+0x010303	3	sndman.c	'sndman.c' | '%s(%d): track out of bounds %d (0..4)\n'
+0x010350	11	sndman.c	'sndman.c' | '%s(%d): track out of bounds %d (0..4)\n' | '%s(%d): sample index out of bounds %d (0..%d)\n'
+0x0103d1	13	-	
+0x01043a	1	-	'/NOSOUND' | '/NS' | 'sb.ins' | 'Adres:%x, IRQ:%d, DMA:%d\n' | 'error setting soundblaster dsp variables {error=%d}' | '/STEREO'
+0x010754	3	-	
+0x01075a	1	-	'screen%#2.2d.pcx'
+0x0107f6	1	-	'\n \n U kunt het spel opstarten door RCRACE in te typen en op [Enter] | '\n \n Veel plezier !\n'
+0x010817	1	main.c	'/DAVILEX' | '/M' | '/DEBUG' | 'intro.img' | '/V' | 'rcs.img'
+0x010eff	1	main.c	'main.c' | '%s(%d) Finish line not complete!' | ' finishline 1 : %d 2 : %d 3 : %d\n'
+0x01103e	1	-	
+0x0111e8	1	main.c	'main.c' | '%s(%d) : Error switching anims' | 'playing Stereo Music\n' | 'do user_exit succeeded\n'
+0x011526	2	new2io.c	'new2io.c' | ' %s(%d) : illegal ordering.' | ' %s(%d) : illegal sprite %d, order element %d.' | ' %s (%d) : unknown type %d sprite %d'
+0x01195f	1	-	
+0x0119a0	1	-	
+0x0119ce	1	-	
+0x011a1a	1	order.c	'order.c' | ' %s(%d) : illegal free order element'
+0x011ae3	1	-	
+0x011b0e	2	order.c	'order.c' | ' %s(%d) : illegal add_to_order' | ' %s(%d) : illegal order, %d missing'
+0x011bb4	1	-	
+0x011c11	1	-	
+0x011ca2	1	-	'not enough memory for transparenct sprites, choos lower speed level'
+0x011db8	1	-	'wb'
+0x011e2a	1	shade.c	'rb' | 'shade.c' | ' %s(%d) : not enough memory for transparent sprites'
+0x01265d	0	-	
+0x0126fc	0	-	
+0x012f9e	0	-	
+0x013870	0	-	
+0x0138ed	2	-	
+0x013a78	0	-	
+0x013c34	1	-	
+0x013cba	1	-	'%2d '
+0x013d60	3	-	
+0x013e3d	4	-	
+0x013f00	1	-	
+0x013f91	1	-	
+0x01401d	4	-	
+0x01404a	2	-	
+0x01430e	0	-	
+0x014534	1	-	
+0x01467c	0	-	
+0x01475f	1	-	
+0x014861	2	-	
+0x0148db	1	-	'player_direction : %d wp: %d\n'
+0x014f3e	3	-	
+0x015084	1	-	
+0x015166	1	-	
+0x01517a	1	init.c	'init.c' | 'REDCAT wayp.nr %d found at (%d,%d) in tile %d\n'
+0x0152bb	0	init.c	'init.c' | 'BULL wayp.nr %d found at (%d,%d) in tile %d\n' | 'MUIS wayp.nr %d found at (%d,%d) in tile %d\n' | '%d waypoints found for REDCAT\n' | '%d waypoints found for BULL\n' | '%d waypoints found for MUIS\n'
+0x015597	1	init.c	'init.c' | '(%s):%d Number of free objects cannot be negative : %d' | '(%s):%d Cannot initialise boost object.' | '(%s):%d Cannot initialise startsign object.' | '(%s):%d Cannot initialise finish sign object.' | '(%s):%d Cannot initialise cactus1 sign object.'
+0x01585e	1	init.c	'init.c' | '%s(%d) : finishline not okay' | 'rc:%d b:%d m:%d\n'
+0x015a14	1	-	'wredcat.smk' | 'wbrutus.smk' | 'wsnitch.smk'
+0x015a9f	1	-	'rbs.pcx' | 'rsb.pcx' | 'brs.pcx' | 'bsr.pcx' | 'srb.pcx' | 'sbr.pcx'
+0x015c02	1	-	'not enough memory for animations' | 'rc.img' | 'not enough memory for animation data'
+0x015c66	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first' | 'rc.ind' | 'rc.img'
+0x015e02	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first' | 'rc.ind' | 'rc.img'
+0x015e8d	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first'
+0x015f9e	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first'
+0x015fdd	0	-	'rc.ind' | 'rc.img'
+0x016029	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first'
+0x01613a	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first' | 'rc.ind' | 'rc.img'
+0x0161c5	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first'
+0x0162d6	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first' | 'rc.ind' | 'rc.img'
+0x016472	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first' | 'rc.ind' | 'rc.img'
+0x01660e	1	raceanim.c	'raceanim.c' | ' %s(%d) : please call init_anims () first' | 'rc.ind' | 'rc.img'
+0x016f7b	0	-	
+0x017d94	3	-	
+0x017e0b	10	-	
+0x017e4d	3	-	
+0x017e87	1	heap.c	'heap.c' | ' %s(%d) : illegal amount of objects requested (%d)\n'
+0x017faa	1	heap.c	'heap.c' | ' %s(%d) : illegal amount of objects requested (%d)\n'
+0x0180d3	0	heap.c	'heap.c' | ' %s(%d) : illegal amount of objects requested (%d)\n'
+0x0181ba	1	-	
+0x018276	2	-	
+0x01836d	1	-	'object %d created mijn \n'
+0x018445	2	-	
+0x018502	1	-	
+0x0185d4	2	-	
+0x018759	1	-	
+0x018886	2	-	
+0x01889d	1	-	
+0x018ae5	2	-	
+0x018b8d	5	map.c	'map.c' | '%s(%d) : Unknown object found in map : %d'
+0x01918d	1	-	
+0x019391	4	-	
+0x01963e	0	-	
+0x0196cb	0	-	
+0x019740	0	-	
+0x019789	0	-	
+0x019835	0	-	
+0x019ce9	0	-	
+0x01ab7f	2	-	'wb' | 'RRRIO.INF'
+0x01abb6	1	-	'rb' | 'RRRIO.INF'
+0x01ad9a	0	-	
+0x01ae44	1	-	
+0x01ae67	1	-	
+0x01aea5	1	-	
+0x01aedf	1	-	
+0x01af83	0	-	
+0x01b469	1	-	
+0x01b536	1	-	
+0x01b67b	1	-	' %s(%d) : objectnr %d error\n'
+0x01b69d	6	-	' %s(%d) : Waypointnr %d error\n'
+0x01b6bf	1	-	'Save score %d for %s\n' | 'New place = %d\n'
+0x01b705	0	-	'%d to %d\n'
+0x01b759	0	-	'r+b' | 'RRRHIGH.DAT' | 'wb'
+0x01b82c	1	-	'rb' | 'RRRHIGH.DAT'
+0x01b880	0	-	
+0x01b929	3	-	
+0x01b959	1	-	
+0x01ba2a	1	-	
+0x01bab4	0	-	
+0x01baee	1	-	
+0x01bb27	25	-	
+0x01bb31	0	-	
+0x01bbdc	1	-	
+0x01bc18	1	-	
+0x01bc3b	0	-	
+0x01bc5e	0	-	
+0x01bc7f	16	-	
+0x01bcb7	16	-	
+0x01bce0	2	stdlib.c	'stdlib.c' | ' %s(%d) : anim base not properly reset.' | ' %s(%d) : too many mem_images '
+0x01bd71	10	-	
+0x01bda1	0	-	
+0x01be17	2	-	
+0x01be78	200	-	'-------------------------------------------------------------------\n | '%s\n'
+0x01bf6b	3	-	
+0x01bfb2	6	-	
+0x01c013	3	-	
+0x01c0d1	63	-	
+0x01c2ac	18	-	
+0x01c2d9	2	-	
+0x01c2ee	3	-	
+0x01c2fa	1	-	
+0x01c35f	2	-	
+0x01c3ef	5	-	
+0x01c5b5	6	-	
+0x01c5e4	1	-	
+0x01c67f	1	-	
+0x01c85b	1	-	'unknown mode selected..\n'
+0x01c884	1	-	
+0x01c98d	1	-	
+0x01ca08	1	-	
+0x01cb00	1	-	
+0x01cb3c	0	-	
+0x01cb63	0	-	
+0x01cc00	0	-	
+0x01cc9a	1	-	
+0x01cd3f	5	-	
+0x01cd62	3	-	
+0x01ce02	3	-	
+0x01ce2b	3	fxs.c	'fxs.c' | ' %s(%d) : reference to illegal track # %d (0..%d)\n'
+0x01ceab	1	-	
+0x01cee7	1	-	
+0x01cf21	2	-	
+0x01cf52	1	-	
+0x01d060	1	-	
+0x01d091	1	-	
+0x01d17a	1	-	
+0x01d1ee	1	-	
+0x01d225	1	-	
+0x01d282	1	-	
+0x01d2a0	1	-	
+0x01d2a6	2	-	
+0x01d2ac	3	-	
+0x01d329	3	-	
+0x01d3a6	2	-	
+0x01d423	1	-	
+0x01d4a0	2	-	
+0x01d8b3	3	-	'opening %s\n' | 'succeeded\n' | 'filelength %d\n' | 'data size %d < 0 -> so quit\n' | '<%s> malloc size %d\n' | '<%s> data size %d\n'
+0x01da00	1	-	'getting wave info <%s>\n' | 'done %d,%d\n'
+0x01da61	1	-	
+0x01daa0	1	-	
+0x01df82	1	irq7.c	'irq7.c' | ' %s(%d) : error : irq int twice\n' | ' %s(%d) : error : irq set failed\n'
+0x01e0ef	1	irq7.c	'irq7.c' | ' %s(%d) : error : irq reset twice\n' | 'irq reset : %d\n' | 'exit irq mono failed' | 'exit irq stereo failed'
+0x01e200	1	-	
+0x01e23c	1	-	
+0x01e2c2	1	-	'init fxs\n' | 'get dsp version\n' | 'get dsp version = %d\n' | 'init irq\n' | 'exit irq\n' | 'buffer size = %d, %d\n'
+0x01e3aa	1	-	
+0x01e3c5	1	sndbuf.c	'sndbuf.c' | ' %s(%d) : illegale (want negatieve) waarde voor het aantal geluiden:% | ' %s(%d) : illegale (negatieve_ waarde voor het aantal geluids buffers | ' %s(%d) : er moeten altijd evenveel membuffs zijn als tracks membuffs
+0x01e4db	1	-	
+0x01e51b	1	-	
+0x01e5ab	1	-	
+0x01e61f	1	-	
+0x01e65c	1	sndbuf.c	'sndbuf.c' | ' %s(%d) : not enough files to claim\n' | '%s is stereo\n' | '%s not the same frequency\n'
+0x01eaa9	0	-	
+0x01ec03	1	sndbuf.c	'sndbuf.c' | ' %s(%d) : track %d is outside bounds (%d max)\n' | ' %s(%d) : sound index %d is outside bounds (%d max)\n' | 'play sound fx\n' | 'load wave file failed\n' | '1:add track %d (buff%d) %s , size %d \n'
+0x01efc0	1	-	
+0x01eff7	2	-	
+0x01f063	128	-	'at+' | 'debug.txt'
+0x01f1fe	1	-	
+0x01f204	1	-	
+0x01f210	1	-	
+0x01f21c	1	-	
+0x01f222	1	rctools.c	'startup memory allocation : not enough free memory\n' | 'rctools.c' | ' %s(%d) : einde init xvga_lib\n'
+0x01f329	2	-	
+0x01f367	1	rctools.c	'rctools.c' | "screen allocation wasn't ok %s(%d)" | "buffer screen allocation wasn't ok %s(%d)"
+0x01f3dc	2	rctools.c	'rctools.c' | "screen allocation wasn't ok %s(%d)" | "buffer screen allocation wasn't ok %s(%d)"
+0x01f46d	1	-	
+0x01f515	1	-	'startup memory allocation : not enough memory free\n'
+0x01f579	6	-	
+0x01f5a0	5	-	'to enable virtual buffers you need to allocate screen buffers'
+0x01f604	3	rctools.c	'rctools.c' | ' %s(%d) : to update the screen you need to allocate a screen buffer f
+0x01f680	1	rctools.c	'rctools.c' | '%s(%d) : allocate map failed'
+0x01f6f6	2	rctools.c	'rctools.c' | '%s(%d) : dealloc_map called twice or without any alloc !'
+0x01f747	0	rctools.c	'rctools.c' | '%s(%d) : allocate map failed'
+0x01f7bb	1	rctools.c	'rctools.c' | '%s(%d) : dealloc map2 called twice or without any alloc !'
+0x01f80c	1	rctools.c	'rctools.c' | '%s(%d) : dealloc sprites called twice or without any alloc !'
+0x01f83f	1	-	
+0x01f8e6	1	rctools.c	'rctools.c' | '%s(%d) : mem bk images alloc failed %d size = %d Bytes' | '%s(%d) : mem bk images alloc failed'
+0x01f9a1	1	rctools.c	'rctools.c' | '%s(%d) : dealloc mem bk called twice or without any alloc !'
+0x01fa1b	1	-	
+0x01fa94	1	-	
+0x01fad6	1	rctools.c	'rctools.c' | '%s(%d) : load xvga_map_images : xvga_src_fopen ( %s ) failed' | 'Aantal = %d\n' | 'max %d\n' | '%s(%d) : load xvga_map_images : read/write failure <%s>'
+0x01fc4c	1	rctools.c	'Kaart bestand kon niet geopend worden.' | 'rctools.c' | '%s(%d) : %s' | 'rb' | 'Niet genoeg geheugen voor kaart' | '%s(%d) : load xvga_map_images : read/write error <%s>'
+0x0200b0	4	rctools.c	'rctools.c' | '%s(%d) : ascii y size <?= 0 ???' | '%s(%d) : ascii x size <?= 0 ???' | '%s(%d) : trying to print beyond screen limits %d'
+0x02031e	4	-	
+0x020342	4	-	
+0x020364	2	-	
+0x0203d2	1	-	
+0x020446	1	-	
+0x020548	1	-	
+0x020651	2	-	
+0x020b80	1	easy.c	'easy.c' | ' %s(%d) : number of tracks is illegal %d [0..8]\n' | ' %s(%d) : init sample (%d) number out of bounds (%d)\n' | ' %s(%d) : wave info file [%s] not found\n' | 'init_snd error %d\n'
+0x020cdf	2	-	
+0x020cf1	5	-	
+0x020d09	1	-	
+0x020d1f	2	-	
+0x020e31	0	-	
+0x020e88	0	-	
+0x02121e	1	-	
+0x021658	1	-	
+0x0216c4	1	-	
+0x021797	5	-	
+0x0217bf	1	-	
+0x021815	1	-	'x:%s\\%s' | 'x:\\%s' | 'NOCD' | 'cdromcheckname=%s\n' | '%s\n'
+0x0218e4	21	-	'path=%s\n' | 'failed goto path=%s\n'
+0x021995	9	-	'%d bytes alloc\n' | 'smaller 0\n' | 'success\n' | 'failure\n' | 'radmal.i' | ' %s(%d) : not enough memory, start op met /NOSMACK of /MINIMUM.\n'
+0x021a26	19	-	
+0x021a32	1	-	
+0x021a67	5	-	' %s(%d) : smacker file not open yet'
+0x021aa4	1	-	
+0x021ab2	1	-	
+0x021ad1	3	-	
+0x021af9	1	-	
+0x022580	1	smacker.c	'smacker.c' | ' %s(%d) : smacker not initialized' | 'doei' | 'disable vb---\n' | 'vb disabled--\n' | 'mode set--\n'
+0x022ab5	1	fileio.c	'fileio.c' | '%s(%d) : resource files already opened' | 'rb' | '%s(%d) : could not open <%s>'
+0x022b58	2	fileio.c	'no copy\n' | 'fileio.c' | '%s(%d) : fseeking past end or begin of file!' | '%s(%d) : fseeking past end file! (%d,%d,%d)'
+0x022c2a	0	fileio.c	'fileio.c' | '%s(%d) : attempt at reading unopened file length'
+0x022c71	6	fileio.c	'rb' | 'fileio.c' | ' %s(%d)  : file open failed [%s]\n' | ' %s(%d)  : file open succeeded [%s]\n' | ' %s(%d)  : file open succeeded [%s] %d/%d pos %d %d %d\n'
+0x022e32	8	-	'closing copying..\n'
+0x022ec9	1	fileio.c	'fileio.c' | '%s(%d) : resource files already opened' | 'rb' | '%s(%d) : could not open <%s>'
+0x022fea	1	fileio.c	'fileio.c' | '%s(%d) : attempt at reading unopened file length'
+0x023031	4	fileio.c	'rb+' | 'fileio.c' | ' %s(%d)  : file open failed [%s]\n' | ' %s(%d)  : file open succeeded [%s]\n'
+0x0231bf	5	-	
+0x023227	1	-	
+0x023256	2	-	
+0x02325c	18	-	
+0x023280	1	-	
+0x023290	3	-	
+0x02333a	0	-	
+0x0233f3	3	-	
+0x023445	1	rcpcx.c	'rcpcx.c' | '%s(%d) : read_pcx_line out of bounds'
+0x023502	1	-	
+0x023544	0	-	
+0x023607	1	-	
+0x02365e	0	-	
+0x02369f	3	rcpcx.c	'rcpcx.c' | '%s(%d) : file <%s> could not open' | '%s(%d) : file <%s> read/write error <%s>\n' | ' %s(%d) : error reading\n'
+0x023c7a	0	-	
+0x023ce4	3	-	
+0x023cfb	1	-	
+0x023d5f	1	-	
+0x023de8	0	-	
+0x023efe	1	-	
+0x023f05	1	-	
+0x023f2c	0	rcascii.c	'rcascii.c' | ' %s(%d) : illegal clipping limit top x.' | ' %s(%d) : illegal clipping limit top y.' | ' %s(%d) : illegal clipping limit bottom x.' | ' %s(%d) : illegal clipping limit bottom y.'
+0x023ff9	2	-	
+0x02425d	25	rcascii.c	'rcascii.c' | ' %s(%d) : negative y size %d\n' | ' %s(%d) : negative x size %d\n' | ' %s(%d) : negative x coord %d\n' | ' %s(%d) : x coord overflow %d\n' | ' %s(%d) : x + xs coord overflow %d\n'
+0x0246b5	2	rcascii.c	'rcascii.c' | "%s(%d) : trying to set NULL pointer ascii sets won't get you anywhere | '%s(%d) : this value should not be NULL, ascii %d' | '%s(%d) : ascii set appears to have no (allocated) characters'
+0x02480a	1	rcascii.c	'rcascii.c' | "%s(%d) : trying to allocate a NULL pointer ascii sets won't get you a
+0x024879	5	rcascii.c	'rcascii.c' | '%s(%d) : trying to set the fore ground color to impossible values is 
+0x024942	5	rcascii.c	'rcascii.c' | '%s(%d) : trying to set the background color to impossible values is n
+0x024a9a	2	rcascii.c	'rcascii.c' | '%s(%d) : could not open <%s>.' | '%s(%d) : read/write error for <%s>.' | '%s(%d) : ascii X size out of bounds <%s>.' | '%s(%d) : ascii Y size out of bounds <%s>.' | '%s(%d) : memory overflow for <%s>.'
+0x024cb3	0	-	
+0x024dbe	1	-	
+0x024fe3	0	-	
+0x0250b6	2	-	
+0x02539b	2	rcascii.c	'rcascii.c' | ' %s(%d) : no current ascii set.'
+0x0253d3	1	rcascii.c	'rcascii.c' | ' %s(%d) : no current ascii set.'
+0x02561f	1	-	
+0x02593d	2	-	
+0x025966	1	-	
+0x025a9d	1	rcobj.c	'rcobj.c' | '%s(%d) : internal safety fuse blown (init_animations)' | '%s(%d) : out of memory alloc animations'
+0x025b5d	1	-	
+0x025bbd	1	rcobj.c	'rcobj.c' | '%s(%d) : out of memory alloc objects'
+0x025c55	2	rcobj.c	'rcobj.c' | '%s(%d) : you need to call init animations first!' | '%s(%d) : you need to call alloc_objects first!' | '%s(%d) : you need to call alloc_xvga_sprites first!' | '%s(%d) : you need to allocate mem_images first!' | '%s(%d) : object (%d) : func error (null?) !'
+0x0261a9	1	rcobj.c	'rcobj.c' | '%s(%d) : object #%d used, is out side bounds (max = %d).\n' | '%s(%d) : animation %d used, is out side bounds.\nObject nr: %d' | '%s(%d) : illegal frame encountered object #%d, anim %d, frame %d.\nOb | '%s(%d) : image %d used, is out side bounds (%d).\nObject nr: %d'
+0x02631f	1	rcimgret.c	'rcimgret.c' | '%s(%d) :\n\t\tnot enough memory free for image allocation.\n'
+0x02643f	7	rcimgret.c	'rb' | 'rcimgret.c' | '%s(%d) : unable to open file <%s>' | '%s(%d) : out of array bounds %d (max:%d), array item :%d' | '%s(%d) : index file seek error (probably wrong index %d)' | '%s(%d) : read/write error in <%s>'
+0x02670e	17	rcimgret.c	'rcimgret.c' | '%s(%d) : disable_mem_images array %d is out of array bounds (%d=max).
+0x026782	1	rcimgret.c	'rb' | 'rcimgret.c' | '%s(%d) : file <%s> could not be opened' | '%s maxmemimages = %d\n' | '%s(%d) : max_mem_image_ptr has impossible value %d' | '%s(%d) : mem image allocation failed'
+0x02698a	1	-	
+0x026a38	1	-	
+0x026a73	2	-	
+0x026a9e	34	-	
+0x026af5	0	-	
+0x026b59	1	-	
+0x026b65	0	-	
+0x026b7e	0	-	
+0x026beb	7	-	
+0x026c1c	0	-	
+0x026ead	1	-	
+0x026ee8	2	-	
+0x026ef4	4	-	
+0x02703f	0	-	
+0x02707a	0	-	
+0x02709a	0	-	
+0x02764c	30	-	
+0x027730	11	-	
+0x02774e	0	-	
+0x027763	1	-	
+0x02779e	1	-	
+0x027837	1	-	
+0x02784e	2	-	
+0x0278a4	2	-	
+0x0278fa	3	-	
+0x027c99	1	-	
+0x027dd7	1	-	
+0x027e36	2	-	
+0x027e5a	1	-	
+0x027e7d	2	-	
+0x027edb	1	-	
+0x027fd0	1	-	
+0x027fd7	1	-	
+0x0284c0	2	-	
+0x0284d8	2	-	
+0x0284e6	1	-	
+0x0284eb	13	-	
+0x0284f7	3	-	
+0x02850e	1	-	
+0x02853e	1	-	
+0x02878c	1	-	
+0x028832	2	-	
+0x028889	2	-	
+0x0288cb	14	-	
+0x0289c7	3	-	
+0x0289f8	1	-	
+0x028a0c	1	-	
+0x028a13	1	-	
+0x028a17	7	-	
+0x028a88	3	-	
+0x028ac1	5	-	
+0x0291ea	0	-	
+0x0292ab	0	-	
+0x0292c2	0	-	
+0x0292f8	0	-	
+0x02932e	0	-	
+0x02933f	0	-	
+0x02935f	1	-	
+0x029388	1	-	
+0x0293d6	2	-	
+0x0294a6	2	-	
+0x02952b	2	-	
+0x0295bb	1	-	
+0x029790	10	-	
+0x0297c1	10	-	
+0x029824	1	-	
+0x02983c	1	-	
+0x029a02	3	-	
+0x029a08	2	mouse.c	'mouse.c' | ' %s(%d) : mouse driver NOT found\n' | ' %s(%d) : mouse driver installed\n' | ' N' | ' %s(%d) : mouse buffer allocation failed.' | ' %s(%d) : mouse driver init ok\n'
+0x029b84	0	-	
+0x029b85	1	-	
+0x029bb9	1	-	"can't handle uninitialised mouse"
+0x029c95	4	-	
+0x029caa	1	-	
+0x029cfd	7	-	
+0x029d74	2	-	
+0x029d93	10	-	
+0x029e1c	2	-	
+0x029e4b	4	-	
+0x029ef7	1	-	
+0x029efd	9	-	
+0x029fd6	1	-	
+0x02a018	10	-	
+0x02a05b	1	-	
+0x02a090	16	-	
+0x02a112	1	-	
+0x02a117	2	-	
+0x02a18b	3	-	
+0x02a191	2	-	
+0x02a197	3	-	
+0x02a23b	0	-	
+0x02a247	1	-	
+0x02a281	1	-	
+0x02a2ad	2	-	
+0x02a331	1	audio.c	'audio.c' | ' %s(%d) : output buffer overflow\n'
+0x02a562	1	audio.c	'audio.c' | ' %s(%d) : output buffer overflow\n'
+0x02a5d4	1	-	
+0x02a5fb	3	-	
+0x02a609	2	-	
+0x02a621	1	audio.c	' mod size : %d\n' | 'audio.c' | ' %s(%d) : Insufficient memory'
+0x02a6a2	1	-	
+0x02a78b	1	-	
+0x02a833	1	-	
+0x02a8a4	1	-	
+0x02a8db	1	-	
+0x02a8f9	1	-	
+0x02b473	0	-	
+0x02b4a6	0	-	
+0x02b4bf	1	-	
+0x02b52b	0	-	
+0x02b550	1	-	
+0x02b5ff	1	-	
+0x02b613	1	-	
+0x02b6b8	0	-	
+0x02b6fa	0	-	
+0x02b70f	0	-	'resample :%d (%d)\n'
+0x02b79b	7	-	
+0x02b7cd	10	-	
+0x02b7fa	1	-	
+0x02b809	2	-	
+0x02b82e	1	-	
+0x02b84f	1	-	
+0x02b9fe	1	-	
+0x02bb5c	1	-	'AHEAD' | '`ab' | '`abcqtO@AB12abc' | '761295520' | 'abc' | 'abcdTU)*,1+0xy|~jux'
+0x02cc32	1	-	
+0x02cc50	1	-	
+0x02cc76	1	-	
+0x02cc96	2	-	
+0x02ccac	1	-	
+0x02cccb	1	-	
+0x02cce2	1	-	
+0x02ccf6	1	-	
+0x02cd13	3	-	
+0x02cd3d	1	-	
+0x02cd8d	1	-	
+0x02cda7	1	-	
+0x02cdc3	1	-	
+0x02cdc8	1	-	
+0x02cdda	1	-	
+0x02cdef	1	-	
+0x02ce05	2	-	
+0x02ce27	1	-	
+0x02ce4d	1	-	
+0x02ce6c	1	-	
+0x02ce7b	1	-	
+0x02ce8c	2	-	
+0x02cea5	1	-	
+0x02cebe	1	-	
+0x02d58d	0	-	
+0x02db23	1	-	
+0x02dcce	1	-	
+0x02dcec	2	rcbutton.c	'rcbutton.c' | '%s(%d) : write to null button ptr' | '%s(%d) : load mem buton #%d failed.rcbutton.c' | '%s(%d) : load index buton #%d failed.rcbutton.c'
+0x02ddf0	1	-	'%s(%d) : filename too big :%d is max.rcbutton.c' | '%s(%d) : indexfilename too big :%d is max.rcbutton.c'
+0x02de85	2	rcbutton.c	'rcbutton.c' | '%s(%d) : write to null button ptr' | '%s(%d) : could not load file <%s> in rcs.img' | '%s(%d) : memory overlfow error :%ld bytes' | '%s(%d) : read/write error.'
+0x02e006	2	rcbutton.c	'rcbutton.c' | '%s(%d) : write to null button ptr' | 'rb' | '%s(%d) : could open img file <%s>' | '%s(%d) : read/write error in indexfile <%s>' | '%s(%d) : size of button image is zero or negative'
+0x02e2af	2	rcbutton.c	'rcbutton.c' | '%s(%d) : attempting to read NULL button to screen'
+0x02e369	1	rcbutton.c	'xvgalib.img' | 'xvgalib.ind' | 'rcbutton.c' | '%s(%d) : attempting to activate NULL buttons' | '%s(%d) : passed internal safety barrier' | '%s(%d) : impossible value'
+0x02e555	1	rcbutton.c	'rcbutton.c' | '%s(%d) : read/write error for button <%d>'
+0x02e614	1	-	
+0x02e670	12	-	
+0x02e688	1	-	
+0x02e70e	1	-	
+0x02e785	1	-	
+0x02e8da	2	-	
+0x02e959	2	-	
+0x02e967	1	-	
+0x02e9a2	3	-	
+0x02e9d8	1	-	
+0x02eab1	3	-	
+0x02eac5	2	-	
+0x02ed30	1	-	
+0x02ef70	1	-	
+0x02f35c	1	-	
+0x02f6e0	1	-	
+0x02fe60	0	-	
+0x02fea0	1	-	
+0x030050	1	-	
+0x030170	1	-	
+0x030250	1	-	
+0x0302c0	1	-	
+0x030550	1	-	
+0x0308e0	1	-	
+0x031160	1	-	
+0x0313e0	2	-	
+0x031740	1	-	
+0x0319f0	10	-	
+0x031ca0	2	-	
+0x031db0	2	-	
+0x031dd9	2	-	
+0x031eb4	4	-	
+0x031ef1	3	-	
+0x031f08	1	-	
+0x031fcb	2	-	'PF'
+0x03211f	2	-	
+0x03215d	1	-	
+0x0321e7	10	-	
+0x0321f4	1	-	
+0x032234	10	-	
+0x03227c	0	-	
+0x032293	0	-	
+0x0322bb	0	-	'GIF87a'
+0x03249d	0	-	
+0x0324ed	0	-	
+0x032808	1	-	
+0x032ad8	1	-	
+0x032b1e	2	-	
+0x032b49	2	-	
+0x032b92	1	-	
+0x032bdf	2	-	
+0x032c16	5	-	
+0x032c78	3	-	
+0x032cce	2	-	
+0x032cd3	1	-	
+0x032d22	1	-	
+0x032d6d	1	-	
+0x032e7d	0	-	
+0x032f8c	1	-	
+0x033034	1	-	
+0x03313f	1	-	
+0x033190	1	-	
+0x0332eb	2	-	
+0x03335f	1	-	
+0x0333af	1	-	
+0x033480	1	-	
+0x033530	1	-	
+0x03367c	2	-	
+0x0336f9	1	-	
+0x0336fc	2	-	
+0x03377c	0	-	
+0x033847	2	-	
+0x033864	1	-	
+0x0338b1	2	-	
+0x03394b	0	-	
+0x033986	1	-	
+0x0339b0	0	-	
+0x033a5a	1	-	
+0x033aa4	3	-	
+0x033af6	2	-	
+0x033b40	2	-	
+0x033b5b	4	-	
+0x033b82	2	-	
+0x033bd7	2	-	
+0x033bec	2	-	
+0x033c85	0	-	
+0x033cdd	2	-	
+0x033d82	1	-	
+0x033e09	1	-	
+0x034c01	1	-	
+0x034c8f	1	-	
+0x034e09	1	-	
+0x034e0e	1	-	
+0x034e3d	1	-	
+0x034e5a	1	-	
+0x034e8b	0	-	
+0x034f3b	0	-	
+0x0350b2	0	-	
+0x0352ce	0	-	
+0x0353f0	1	-	
+0x035460	1	-	
+0x0354cb	4	-	
+0x035524	2	-	
+0x03553a	2	-	
+0x03555d	1	-	
+0x0355d2	2	-	
+0x035614	1	-	
+0x035715	1	-	
+0x035753	2	-	
+0x0359e2	1	-	
+0x035a01	1	-	
+0x035ab5	4	-	
+0x035b0d	2	-	
+0x035b6f	0	-	
+0x035c7c	2	-	
+0x035d81	1	-	
+0x035f2d	7	-	
+0x035f68	2	-	
+0x03604d	1	-	
+0x036081	1	-	
+0x036344	2	-	
+0x036374	2	-	
+0x036489	0	-	
+0x036520	1	-	'TZ' | 'PF' | 'EST' | 'EDT'
+0x036565	9	-	
+0x036589	2	-	
+0x0366b2	2	-	'EDT' | 'PF'
+0x036884	1	-	
+0x0368c2	1	-	
+0x036905	1	-	
+0x036993	1	-	
+0x03699c	1	-	
+0x036add	1	-	
+0x036bda	0	-	':î0ΓÄyE>RATIONAL DOS/4G'
+0x036c00	1	-	
+0x036eea	0	-	
+0x037364	0	-	
+0x037574	4	-	
+0x038a7a	14	-	
+0x038a88	7	-	
+0x038ab2	9	-	
+0x038ae2	15	-	
+0x038c4e	15	-	
+0x038ce7	15	-	
+0x038d11	7	-	
+0x038ebc	8	-	
+0x038ee6	16	-	
+0x039037	6	-	
+0x03903c	1	-	
+0x0390a6	19	-	
+0x0390b7	1	-	
+0x0390ec	9	-	
+0x03916c	2	-	
+0x0391eb	2	-	
+0x0392b2	9	-	
+0x039377	6	-	
+0x039504	1	-	
+0x0395ba	1	-	
+0x03971d	2	-	
+0x039783	2	-	
+0x0397fe	1	-	
+0x0398ec	1	-	
+0x039905	1	-	
+0x039948	1	-	
+0x039be0	3	-	
+0x039dd7	2	-	
+0x039de1	2	-	
+0x039dee	1	-	
+0x039e24	1	-	
+0x039ebd	0	-	
+0x039ff8	1	-	
+0x03a0e4	4	-	
+0x03a136	2	-	
+0x03a17e	2	-	'RATIONAL DOS/4G'
+0x03a252	0	-	
+0x03a2ac	1	-	
+0x03a2d8	3	-	
+0x03a529	0	-	
+0x03a568	1	-	
+0x03a5b3	0	-	
+0x03a5e4	0	-	'Unable to allocate real mode selector' | 'Unable to set limit of real mode selector'
+0x03a689	1	-	
+0x03a7e4	5	-	
+0x03a878	1	-	
+0x03aa2e	1	-	
+0x03aa66	0	-	
+0x03ab81	0	-	
+0x03ac9c	2	-	
+0x03adb3	2	-	
+0x03b24f	2	-	
+0x03b262	0	-	
+0x03b2d4	2	-	
+0x03b3be	1	-	
+0x03b461	2	-	
+0x03b4c4	1	-	
+0x03b535	0	-	
+0x03b76f	0	-	
+0x03b962	1	-	
+0x03b988	12	-	
+0x03b9a3	2	-	
+0x03b9c7	3	-	
+0x03b9e7	1	-	
+0x03b9ff	1	-	
+0x03ba4a	0	-	
+0x03bb2a	1	-	
+0x03bb90	1	read.c	'read.c' | ' %s(%d) : error: pitch %d out of range\n' | ' %s(%d) : warning : no note for pitch %d\n'
+0x03bc45	1	-	
+0x03bc8c	1	-	
+0x03bca7	1	-	
+0x03bd28	1	-	
+0x03bd69	1	-	
+0x03be5c	0	read.c	'rb' | 'read.c' | ' %s(%d) : errors while reading song %s\n'
+0x03c00e	0	-	
+0x03c080	1	-	
+0x03c3be	1	-	
+0x03c4a8	0	-	
+0x03c56a	2	-	'inf' | 'nan'
+0x03c5fc	0	-	
+0x03c63f	0	-	
+0x03c643	1	-	
+0x03c66b	1	-	
+0x03c6a7	2	-	
+0x03c6e8	3	-	'Θ4╟ll'
+0x03c805	1	-	
+0x03ca72	1	-	
+0x03cabd	1	-	
+0x03cb14	1	-	'ABNORMAL TERMINATION\r\n'
+0x03cb26	0	-	
+0x03cb2b	1	-	
+0x03cb68	2	-	
+0x03cb82	1	-	
+0x03cbbc	1	-	
+0x03cc27	1	-	
+0x03cc91	1	-	
+0x03ccc2	0	-	
+0x03cd03	0	-	
+0x03cd46	1	-	
+0x03cd48	1	-	
+0x03cde8	1	-	
+0x03cdf2	1	-	
+0x03cece	1	-	
+0x03cf88	2	-	
+0x03d0b0	0	-	
+0x03d13d	0	-	
+0x03d18f	2	-	
+0x03d1b5	1	-	
+0x03d1da	2	-	
+0x03d1ee	1	-	' in '
+0x03d236	1	-	
+0x03d266	1	-	
+0x03d329	0	-	
+0x03d356	1	-	
+0x03d383	0	-	
+0x03d39c	1	-	'u á'
+0x03d3da	0	-	'u á'
+0x03d3f4	1	-	
+0x03d44c	0	-	
+0x03d453	1	-	
+0x03d472	3	-	
+0x03d500	11	-	
+0x03d5a0	1	-	
+0x03d890	1	-	
+0x03d900	4	-	
+0x03d990	1	-	
+0x03d9a0	1	-	
+0x03dce0	4	-	
+0x03dd10	4	-	
+0x040620	1	-	
+0x0409f0	1	-	
+0x041220	1	-	
+0x041240	3	-	
+0x041360	1	-	

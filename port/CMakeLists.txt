@@ -1,0 +1,34 @@
+cmake_minimum_required(VERSION 3.16)
+project(redcat C)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo)
+endif()
+
+add_compile_options(-Wall -Wextra -Wno-unused-parameter)
+
+# Format core: no SDL, so it can be tested headless.
+add_library(rccore STATIC
+  src/archive.c
+  src/gfx8.c
+)
+target_include_directories(rccore PUBLIC src)
+
+add_executable(rc_dump src/rc_dump.c)
+target_link_libraries(rc_dump PRIVATE rccore)
+
+# The viewer needs SDL2; skip it (with a note) when it is missing so the core
+# and rc_dump still build.
+find_package(SDL2 QUIET)
+if(SDL2_FOUND)
+  add_executable(rcview
+    src/main.c
+  )
+  target_include_directories(rcview PRIVATE ${SDL2_INCLUDE_DIRS})
+  target_link_libraries(rcview PRIVATE rccore ${SDL2_LIBRARIES})
+else()
+  message(STATUS "SDL2 not found: building rccore and rc_dump only")
+endif()
