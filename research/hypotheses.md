@@ -26,14 +26,20 @@ Confidence levels per AGENTS.md.
 
 ## Rendering
 
-- LIKELY: the race uses an unchained 256-colour mode ("xvga": `xvga_src_fopen`,
-  `load_xvga_map_images`, XVGALIB.IMG), while menus and screens are 640×480
-  (every PCX is 640×480; VESA drivers ship on the CD; batch option `/V`).
-  `tile_to_xvga` (0x1fa1b) converting each tile on load fits a planar layout.
+- DISPROVEN (session 2): "the race uses an unchained 320x200 mode". A
+  screenshot shows the race at 640x480; "xvga" is the library's name. See
+  discoveries "Running the original".
+- LIKELY: `tile_to_xvga` (0x1fa1b) converts tiles for the banked VESA
+  640x480 screen; not read yet.
 
 ## Map cells
 
-- SPECULATIVE: cell field 2 is the collision/surface class (0x200 on 74% of
-  TRACK1A's cells, ten distinct values), and field 1 places objects or
-  waypoints (0 on 99%, small packed values elsewhere; "Searching waypoints in
-  map" runs right after loading).
+- SETTLED (session 2): bytes 2-3 are waypoints, byte 4 the object/surface
+  type, byte 5 the ground level. See discoveries "The race: map cells".
+  Open: byte 1 (high byte of the tile word) holds the object number after
+  loading; is it ever non-zero in the files?
+- LIKELY: type 11 is the road surface (it holds the top speed near 12
+  px/frame while off-road speeds above 12 drop); the exact effect over five
+  checks per frame is not worked out.
+- SPECULATIVE: type 12 is a mine ("putbom.wav" in SNDRCS) and 15/16 hurt as
+  cacti do (damage −2 or −1 in the 15/16 branch).

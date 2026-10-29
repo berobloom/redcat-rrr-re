@@ -11,9 +11,10 @@
 
 ## Race
 
-3. Meaning of map cell fields 1 and 2 (see hypotheses "Map cells").
-4. What do the waypoints look like (`find_waypoints` 0x1517a), and how do
-   the computer racers follow them?
+3. **RESOLVED (session 2).** Map cell bytes: 2-3 waypoint, 4 object or
+   surface type, 5 ground level. Discoveries "The race: map cells".
+4. Waypoints are decoded (discoveries "map cells"). Open: how do the
+   computer racers follow them (`bull_tick` 0x12826, `muis_tick` 0x130f8)?
 5. How are the racers' sprites laid out in RC.IMG (1056 entries; rotations
    per racer)?
 6. What do the 19 `.MAP` files' different sizes mean for play: is the whole
@@ -31,7 +32,13 @@
 
 ## Tooling
 
-12. REA cannot open LE executables, and has no working decompiler here
-    (it expects Ghidra at ~/Downloads/ghidra_12.1.4_PUBLIC, which is missing).
-    The workaround is `leparse.py`'s ELF wrapper; a Ghidra install would add
-    decompilation.
+12. **RESOLVED (session 2).** REA decompiles `.work/le/*.elf` with Ghidra
+    12.1.4, and `tools/ghidra/decomp.sh` dumps a whole program to
+    `.work/ghidra/<prog>.c`. Ghidra has no Watcom register convention, so
+    register arguments show as `in_EAX`/`extraout_ECX`; check details in
+    `disasm.py`.
+13. What sets the frame rate of the race (timer interrupt, vsync, or none)?
+14. What do the rest of the cell types do: 10, 15, 16, 21, 22 (0x16), and
+    the five check points of `0x18ae5`?
+15. The rocket (0x185d4), the exhaust (0x17e87), over-speed (0x180d3) and
+    the explosion (0x17faa) objects.

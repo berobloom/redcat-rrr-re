@@ -93,3 +93,102 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: tilesets per map (table 0x57abc): `track1.img` for track1a,
   track1c, track2a/b/c and track3a; `track2.img` for track1b and every map
   from track3b on.
+
+## Running the original
+
+- CONFIRMED: the game runs in the dos-re-suite DOSBox-X (`runtime-dosbox.md`).
+  `RRR /DAVILEX /DEBUG` starts a race on its own; with no RRRIO.INF it uses
+  the defaults of `rrrio_load` (0x1abb6) and races track1a.
+- CONFIRMED (screenshot): the race is 640×480, map view on top, HUD
+  (RACESCR3.PCX) in the bottom 80 rows. The earlier guess of an unchained
+  320×200 "xvga" mode was wrong; "xvga" is the name of Davilex's graphics
+  library (`einde init xvga_lib`), not a mode.
+- CONFIRMED: DOS/4GW loads RRR's code object at linear 0x1d4000 and its data
+  object at 0x206000 under `redcat.conf` (deltas +0x1c4000 / +0x1b6000), found
+  by searching memory for fixup-free byte windows (`dosrun.py locate`).
+
+## RRRIO.INF
+
+- CONFIRMED: RRRIO.INF is a raw 0x228-byte image of RRR's globals
+  0x75178..0x753a0, read by `rrrio_load` (0x1abb6) and written by
+  `rrrio_save` (0x1ab7f). Layout and defaults in `file-formats.md`. A file
+  whose first int is not 3 is replaced by the defaults.
+
+## The race: frame loop
+
+- CONFIRMED: `race_main` (0x111e8) calls `race_init` (0x10817), then loops
+  until Esc (scancode 1) or S (0x1f): `switch_anims`, `objects_tick`
+  (0x25c55), `camera_follow`, `sort_draw_order`, `joystick_to_keys`,
+  `hud_update`, `draw_view(scroll_y % 40, scroll_x % 32)`; the first pass
+  runs `start_lights` (0x1103e: lamp steps after 1500, 1000, 1000, 1000 and
+  500 ms). `finish_check` (0x10eff) ends the race loop once the finishing
+  order is complete. F1/F2/F3 point the camera at racer 0/2/4 (a debug key).
+- CONFIRMED: `objects_tick` (rcobj.c) runs 306 (0x132) object slots of 16
+  bytes at `[0x804b8]`: `+0` tick period (-1 = free), `+2` sprite slot, `+4`
+  x, `+6` y, `+8` anim, `+10` frame, `+12` callback. A slot runs when the
+  tick counter is a multiple of its period; the callback moves it and the
+  anim frame selects the sprite.
+- CONFIRMED (`init_objects` 0x148db): slot 0 is the player (callback
+  0x11eb5), 2 Brutus/BULL (0x12826), 4 Snitch/MUIS (0x130f8); 1, 3, 5 run
+  0x167aa and copy the position of the racer before them; 6..305 are the free
+  pool (0x16945).
+- CONFIRMED: per object there is a 40-byte record at 0x6cbf0 + 0x28·n:
+  `+0` x, `+4` y, `+8` height z, `+0xc` vx, `+0x10` vy, `+0x14` vz, `+0x18`
+  speed (all 16.16 fixed point, pixels per frame), `+0x20` stats index.
+  Per racer a 48-byte stats record at 0x6fbc0 + 0x30·k: `+0` mass (player
+  60.0), `+4` heading 0..31, `+8` fuel, `+0xc` boosts, `+0x1c` rockets,
+  `+0x28` damage points (100), `+0x2c` top speed.
+
+## The race: driving (player_tick 0x11eb5)
+
+- CONFIRMED: headings are 32 steps of 11.25°: 0 up, 8 left, 16 down, 24
+  right. vx = speed·cos[h], vy = speed·sin[h] with the tables at 0x73de0 /
+  0x73e60 (built at run time; cos[0] = 0, sin[0] = -1).
+- CONFIRMED: steering is absolute. The four direction keys select one of
+  eight screen directions from the 3×3 table at 0x56030
+  (`[4,0,28, 8,-1,24, 12,16,20]`, rows up/none/down, columns
+  left/none/right); the heading steps toward it through the 32×32 turn
+  table at 0x71de0 twice per frame (22.5° per frame).
+- CONFIRMED: holding a direction accelerates: speed += 30/mass per frame
+  (player: +0.5 px/frame), fuel −0x666 per frame, an exhaust puff every 4th
+  frame (0x17e87). Above the top speed (+4 px/frame) 0x180d3 runs. Otherwise
+  speed ×= 0xf851/0x10000 (≈0.970) per frame, and snaps to 0 below 0x3333.
+- CONFIRMED: the boost key (binding at 0x71450) adds 16× the acceleration to
+  speed and 64× to vz, using one boost, when height < 40; the rocket key
+  (0x7144c) fires 0x185d4 and uses one rocket.
+- CONFIRMED: height: z += vz; gravity vz −= 0x4000 + |vz|/4 while
+  vz > −20. Landing on the ground level of the cell under the racer: vx, vy
+  ×(1−0.15), vz = −0.3·vz (sound above 2).
+- CONFIRMED: the anim frame is heading + 0/32/64 (vz > 3, > 4 px) or
+  96/128 (vz < −5, < −7): five poses of 32 headings.
+- CONFIRMED: the player's waypoint index advances when within 120 px
+  (|dx|+|dy|) of the next REDCAT waypoint.
+- CONFIRMED: fuel or damage below 0 ends the race for the player
+  (`[0x56078] = 1`).
+
+## The race: map cells
+
+- CONFIRMED: of a cell's 6 bytes, byte 5 is the ground level. A racer whose
+  z is below level·1000.0 cannot enter the cell (`0x1889d`); walls are
+  steps in level. The racer then slides: its heading is turned through
+  0x721e0 / 0x725e0 / 0x729e0, depending on the side hit. On TRACK1A 74% of
+  cells are level 2 (the desert above the canyon), the track is level 0.
+- CONFIRMED: bytes 2-3 are a waypoint: byte 3 the racer (1 REDCAT, 2 BULL,
+  4 MUIS), byte 2 its number; at most 150 per racer. Position: cell centre
+  (x·32+16, y·40+20); MUIS waypoints use +16 vertically (log:
+  "MUIS wayp.nr 0 found at (1040,256)").
+- CONFIRMED: byte 4 is an object or surface type, checked under five points
+  of each racer every frame (`0x18ae5` → `0x18b8d`, map.c; > 21 is an
+  error). 11: the top speed moves toward 12 px/frame by 3 per check (off it,
+  speeds above 12 lose 3); 12: a hazard below height 20: −10 damage, a bump
+  upward, the cell cleared; 13: +1 boost, cell cleared; 14: a ramp, above
+  4 px/frame vz += speed/10; 20: finish line, sets the racer's finished flag.
+  At load, `find_bonus_objects` (0x15597) creates objects for 10, 12, 13
+  (boosts), 15, 16 (cacti), 18 (finish sign), 19 (start sign) and stores the
+  object number in byte 1.
+- CONFIRMED: racer–racer contact (`0x1404a`): within 60 height units and
+  300 px, four corner tests 50 px along the heading; on contact (`0x14534`)
+  headings merge through the table at 0x72de0 and both speeds become their
+  average.
+- CONFIRMED: the computer racers' top speed comes from 0x57b18 indexed by the
+  map number (13, 13, 14, 14, 14, 15, 15, 15 px/frame for maps 0–7).

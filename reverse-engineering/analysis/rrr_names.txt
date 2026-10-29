@@ -15,3 +15,30 @@
 0x22c71 xvga_src_fopen       # STRONGLY SUPPORTED: named in load_xvga_map_images' error string
 0x22e32 fclose               # LIKELY
 0x2325c rand                 # LIKELY: result % 22 picks a random map
+0x111e8 race_main            # CONFIRMED: calls race_init, then the frame loop until Esc/S; returns 0x2b
+0x26a9e key_pressed          # CONFIRMED: (scancode on stack, ret 4) -> key state array 0x804c0
+0x26beb delay_ms             # LIKELY: start lights wait 0x5dc/1000/500 between lamps
+0x138ed camera_follow        # CONFIRMED: scroll [0x7f984],[0x7f980] eases 1/16 toward racer + 128 px lead
+0x11526 draw_view            # LIKELY: args scroll_y%40, scroll_x%32 (sub-tile offsets)
+0x11b0e sort_draw_order      # STRONGLY SUPPORTED: order.c 'illegal add to order', 0x132 objects
+0x1b536 joystick_to_keys     # CONFIRMED: joystick buttons/axes set entries of key array 0x804c0
+0x1918d hud_update           # CONFIRMED: damage bar, fuel gauge, speedometer, boost/rocket counters
+0x25c55 objects_tick         # CONFIRMED: rcobj.c; per object: period, callback, anim frame -> sprite
+0x15084 switch_anims         # LIKELY: 'Error switching anims' on failure
+0x10eff finish_check         # CONFIRMED: records finishing order 0x55f93[3]; 'finishline' log
+0x1103e start_lights         # CONFIRMED: 1500/1000/1000/1000/500 ms lamp sequence
+0x14861 clear_objects        # CONFIRMED: every object slot inactive (period -1)
+0x148db init_objects         # CONFIRMED: racers 0/2/4, followers 1/3/5, free pool 6..305
+0x13d60 direction_to_waypoint # LIKELY: initial racer direction ('player_direction : %d wp: %d')
+0x15597 find_bonus_objects   # STRONGLY SUPPORTED: 'Searching bonus objects in map'
+0x1ab7f rrrio_save           # CONFIRMED: writes 0x228 bytes from 0x75178 to RRRIO.INF
+0x1abb6 rrrio_load           # CONFIRMED: reads RRRIO.INF; defaults when absent or version != 3
+0x11eb5 player_tick          # CONFIRMED: object 0's callback (init_objects)
+0x12826 bull_tick            # CONFIRMED: object 2's callback (Brutus)
+0x130f8 muis_tick            # CONFIRMED: object 4's callback (Snitch)
+0x167aa follower_tick        # CONFIRMED: objects 1/3/5 callback
+0x16945 free_object_tick     # CONFIRMED: callback of the free pool
+0x19497 obj_callback_19497   # SPECULATIVE: stored as a callback (+0xc) somewhere
+0x1709c obj_callback_1709c   # CONFIRMED: callback set by 0x17e87/0x17faa
+0x16a63 obj_callback_16a63   # CONFIRMED: callback set by 0x181ba
+0x16ad9 obj_callback_16ad9   # CONFIRMED: callback set by 0x18324

@@ -72,11 +72,44 @@ u8  palette[256][3];           /* 6-bit VGA DAC values (0..63) */
 
 ```c
 u16 width, height;             /* in tiles; TRACK1A is 99 x 155 */
-struct { u16 tile, f1, f2; } cell[height][width];
+struct {
+    u8 tile;                   /* tileset index */
+    u8 object;                 /* 0 in the files; RRR stores the object
+                                  number of a bonus/sign here at load */
+    u8 waypoint;               /* waypoint number, when racer != 0 */
+    u8 racer;                  /* 1 REDCAT, 2 BULL, 4 MUIS: whose waypoint */
+    u8 type;                   /* object/surface type, 0..21 */
+    u8 level;                  /* ground level; blocks z < level*1000 */
+} cell[height][width];
 ```
 
-`tile` indexes the tileset (low byte; max 0xFF seen). `f1` and `f2` are not
-yet understood (hypotheses "Map cells").
+Types seen in code: 10, 12, 13 bonus objects; 11 a speed surface; 12 hazard
+(damage); 13 boost pickup; 14 ramp; 15, 16 cacti; 18 finish sign; 19 start
+sign; 20 finish line. Details: discoveries "The race: map cells".
 
 Which tileset goes with which map, and which map a race uses, is in RRR's
 tables (discoveries "Race tracks").
+
+## RRRIO.INF
+
+The state RRRMENU and RRR share: a raw dump of RRR's globals
+0x75178..0x753a0 (0x228 bytes). Defaults from `rrrio_load` (0x1abb6):
+
+| offset | RRR global | default | meaning |
+|---|---|---|---|
+| 0x00 | 0x75178 | 3 | format version (anything else: defaults) |
+| 0x04 | 0x7517c | 100 | damage points at the start |
+| 0x0c | 0x75184 | 5 | boosts |
+| 0x14 | 0x7518c | 10 | rockets |
+| 0x18 | 0x75190 | 0 | ? (stats +0x10) |
+| 0x1c | 0x75194 | 0 | ? (stats +0x14) |
+| 0x20 | 0x75198 | 75 | fuel |
+| 0x24 | 0x7519c | 0 | stage (column of the map table) |
+| 0x28 | 0x751a0 | 6 | ? |
+| 0x2c | 0x751a4 | 0 | group row (groep − 3, LIKELY) |
+| 0x30 | 0x751a8 | 3 | ? |
+| 0x34 | 0x751ac | 0 | joystick on |
+| 0x50 | 0x751c8 | 0x1c, 0x36, 0x4b, 0x4d, 0x48, 0x50 | key scancodes: Enter, right Shift, ←, →, ↑, ↓ |
+| 0x68 | 0x751e0 | | four 400-byte records (cleared) |
+| 0x1fc | 0x75374 | 0, 2, 4 | start order of the racers |
+| 0x214 | 0x7538c | 0, 0, 0 | points per racer |
