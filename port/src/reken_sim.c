@@ -6,6 +6,8 @@
               module 2: text0|value0|text1|value1|text2|value2|seed after
           reken_sim gen3 <level 0..5> <seed> <count>
               module 3's deal: text/value/kind per cell, |-separated
+          reken_sim gen4 <level 0..5> <seed> <count>
+              module 4: 8 rounds of numbers and target per seed
           reken_sim prize <fuel> <repair> <boosts> <rockets> <seed> <count>
               one line per seed: prize|seed after
           reken_sim play [groep] [seed]
@@ -15,11 +17,13 @@
               (digits, b = TERUG, o = OK); the first sum can be forced
           reken_sim shot2 <data dir> <out.ppm> [ms] [keys] [groep] [seed]
               the same for module 2
+          reken_sim shot4 <data dir> <out.ppm> [ms] [keys] [groep] [seed]
+              module 4: keys as typed (b = TERUG, = for =, o = OPNIEUW)
           reken_sim shot3 <data dir> <out.ppm> [ms] [clicks] [groep] [seed]
               module 3, clicks as cell numbers separated by commas, 1.5 s
               apart
 
-   gen, gen2, gen3 and prize are what port/tools/check_reken.py compares with the
+   gen, gen2, gen3, gen4 and prize are what port/tools/check_reken.py compares with the
    original code. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -101,7 +105,8 @@ static int shot(int argc, char **argv, int module)
         if (module != 3 && t == 300)
             for (i = 0; keys[i]; i++)
                 rc_exercise_key(&x, keys[i] == 'b' ? RC_KEY_BACK :
-                                keys[i] == 'o' ? RC_KEY_OK : keys[i]);
+                                keys[i] == '=' || (module == 1 && keys[i] == 'o') ?
+                                RC_KEY_OK : keys[i]);
     }
     rc_exercise_draw(&x);
     f = fopen(argv[3], "wb");
@@ -169,6 +174,25 @@ int main(int argc, char **argv)
         }
         return 0;
     }
+    if (argc >= 5 && strcmp(argv[1], "gen4") == 0) {
+        uint32_t seed = strtoul(argv[3], NULL, 0);
+
+        r.level = atoi(argv[2]);
+        n = atoi(argv[4]);
+        for (i = 0; i < n; i++) {
+            int k, j;
+
+            r.seed = seed + i;
+            for (k = 0; k < 8; k++) {
+                rc_module4_make(&r);
+                for (j = 0; j < r.count; j++)
+                    printf("%d ", r.num[j]);
+                printf("= %d|", r.target);
+            }
+            printf("%u\n", r.seed);
+        }
+        return 0;
+    }
     if (argc >= 8 && strcmp(argv[1], "prize") == 0) {
         uint32_t seed = strtoul(argv[6], NULL, 0);
 
@@ -189,6 +213,8 @@ int main(int argc, char **argv)
         return shot(argc, argv, 1);
     if (argc >= 4 && strcmp(argv[1], "shot2") == 0)
         return shot(argc, argv, 2);
+    if (argc >= 4 && strcmp(argv[1], "shot4") == 0)
+        return shot(argc, argv, 4);
     if (argc >= 4 && strcmp(argv[1], "shot3") == 0)
         return shot(argc, argv, 3);
     if (argc >= 2 && strcmp(argv[1], "play") == 0)

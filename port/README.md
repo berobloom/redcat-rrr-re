@@ -15,14 +15,18 @@ Early. What exists:
 - `rcview <data dir> [map]`: an SDL2 viewer at the original's 640×480 in 8-bit
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
-- `redcat <data dir> [map] [--race] [--groep N] [--module 1..3] [--fps N]`:
+- `redcat <data dir> [map] [--race] [--groep N] [--module 1..4] [--fps N]`:
   first an exercise screen of the arithmetic part (`src/reken_screen.c`):
   module 1 Handig rekenen, 8 sums answered with the digit keys or by
   clicking the keypad, Backspace/TERUG, Enter/OK; module 2 Wat is waar?,
   8 rounds of three sums, 1/2/3 or a click picks the true one; module 3
   Memory, a grid of SOM and ANTWOORD cards turned by mouse, a found pair
-  leaves the grid. Each right answer or pair adds the shown prize. Then the stage's race
-  (track1b) starts with the fuel, repair, boosts and rockets earned.
+  leaves the grid; module 4 Grote getallenspel, 8 rounds of reaching a
+  target from three or four numbers: 1..4 or a click takes a number, + − ×
+  : (keypad, x, colon) an operator, = or Enter makes the sum, Backspace
+  TERUG, o OPNIEUW. Each right answer, pair or target adds the shown
+  prize. Then that module's stage race starts with the fuel, repair,
+  boosts and rockets earned.
   `--race` goes straight to the race. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
   waypoints, walls, jumps, mines, boosts, cacti, ramps, racer contact,
@@ -36,13 +40,14 @@ Early. What exists:
   `reken_sim shot <data dir> out.ppm [ms] [keys] [sum answer prize]` renders
   the exercise screen headless (`shot2 <data dir> out.ppm [ms] [keys]
   [groep] [seed]` module 2's, `shot3` with comma-separated cells to click
-  Memory's). `reken_sim gen` / `gen2` / `gen3` / `prize` print
+  Memory's, `shot4` with keys, `=` for OK and `b` for TERUG). `reken_sim
+  gen` / `gen2` / `gen3` / `gen4` / `prize` print
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 
 Not ported yet: rockets, dropped objects, exhaust and explosions, sound, the
 race's end (podium, RRRIO.INF), the menu, the exercises' Help example,
-mouse pointer and spoken feedback, and modules 2–4.
+mouse pointer and spoken feedback, and the module order of a world.
 
 ### Frame rate
 

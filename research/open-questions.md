@@ -28,9 +28,8 @@
 
 16. Module 1's generators are **RESOLVED (session 4)** (discoveries, checked
     under Unicorn); module 2's `0x12068`.. family too (session 5).
-17. Module 4 (Grote getallenspel): screen, rules, prizes. Modules 2 and 3
-    are **RESOLVED (session 5)** except their Help examples (`0x12ca2`,
-    `0x147a9`, as module 1's `0x11a6a`).
+17. The exercises' Help examples (`0x11a6a`, `0x12ca2`, `0x147a9`,
+    `0x171ea`). Modules 2–4 themselves are **RESOLVED (session 5)**.
 20. Does REKEN abort when module 2's `0x123cf` divides by zero (level 5,
     R = 11; discoveries "module 2")?
 18. `NNNNNNNN.SMD` layout and how a pupil's number is chosen (Naam is

@@ -696,6 +696,290 @@ int rc_module3_judge(rc_reken *r)
     return right;
 }
 
+/* Module 4 "Grote getallenspel" */
+
+/* 0x45908: the operations (0x4539c's codes) per level, four rows; groep 3
+   uses groep 4's tables */
+static const uint8_t big_ops[6][4][3] = {
+    { { 0, 2, 2 }, { 3, 0, 2 }, { 1, 3, 2 }, { 1, 2, 2 } },
+    { { 0, 2, 2 }, { 3, 0, 2 }, { 1, 2, 2 }, { 1, 2, 2 } },
+    { { 0, 2, 0 }, { 1, 2, 0 }, { 2, 0, 3 }, { 2, 0, 3 } },
+    { { 3, 2, 2 }, { 2, 3, 2 }, { 2, 3, 2 }, { 3, 2, 2 } },
+    { { 3, 2, 2 }, { 2, 3, 2 }, { 2, 3, 2 }, { 3, 2, 2 } },
+    { { 3, 2, 2 }, { 2, 3, 2 }, { 2, 3, 2 }, { 3, 2, 2 } },
+};
+/* 0x45950 the numbers, 0x45a40 the factors after the first, 0x45b30 the
+   first dividends */
+static const int8_t big_num[6][10] = {
+    { 2, 2, 4, 5, 4, 5, 2, 4, 4, 5 }, { 3, 2, 4, 4, 3, 4, 3, 3, 6, 6 },
+    { 3, 2, 6, 5, 6, 6, 3, 6, 4, 3 }, { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5 },
+    { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5 }, { 6, 3, 8, 4, 5, 2, 7, 9, 10, 5 },
+};
+static const int8_t big_factor[6][10] = {
+    { 2, 2, 4, 5, 5, 2, 2, 4, 5, 2 }, { 3, 2, 4, 3, 3, 2, 3, 5, 5, 4 },
+    { 3, 3, 4, 5, 4, 5, 4, 5, 4, 3 }, { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5 },
+    { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5 }, { 6, 2, 3, 4, 5, 6, 2, 3, 4, 5 },
+};
+static const int8_t big_dividend[6][10] = {
+    { 8, 6, 4, 6, 8, 4, 6, 4, 4, 8 }, { 4, 8, 4, 8, 4, 6, 4, 4, 6, 6 },
+    { 8, 4, 6, 4, 6, 4, 8, 6, 4, 6 }, { 2, 4, 6, 2, 4, 6, 2, 4, 6, 2 },
+    { 2, 4, 6, 2, 4, 6, 2, 4, 6, 2 }, { 2, 4, 6, 2, 4, 6, 2, 4, 6, 2 },
+};
+static const char big_op_char[4] = { 'x', ':', '+', '-' };     /* 0x45c20 */
+
+#define BIG_ROUNDS 8
+#define BIG_MAX 50              /* the target is redrawn while above */
+
+/* One operation of the chain (0x151c6, 0x1530f, 0x154bf, 0x155ed): the
+   first takes two numbers, the others one, applied to the result so far
+   (0 = none yet). */
+static int big_step(rc_reken *r, int L, int type, int R, int *n)
+{
+    int *v = r->num + *n, d;
+
+    switch (type) {
+    case 0:                                     /* x */
+        if (R == 0) {
+            v[0] = big_num[L][rc_rand(r) % 10];
+            v[1] = big_factor[L][rc_rand(r) % 10];
+            *n += 2;
+            return v[0] * v[1];
+        }
+        v[0] = big_factor[L][rc_rand(r) % 10];
+        (*n)++;
+        return R * v[0];
+    case 1:                                     /* : */
+        if (R == 0) {
+            v[0] = big_dividend[L][rc_rand(r) % 10];
+            v[1] = rc_rand(r) % 2 == 0 ? 2 : v[0] / 2;
+            *n += 2;
+            return v[0] / v[1];
+        }
+        /* never reached: no row has : after the first operation */
+        switch (rc_rand(r) % 4) {
+        case 0: d = v[-2]; break;
+        case 1: d = v[-2] / 2; break;
+        case 2: d = v[-1]; break;
+        default: d = v[-1] / 2; break;
+        }
+        v[0] = d;
+        (*n)++;
+        return d ? R / d : R;
+    case 2:                                     /* + */
+        if (R == 0) {
+            v[0] = big_num[L][rc_rand(r) % 10];
+            v[1] = big_num[L][rc_rand(r) % 10];
+            *n += 2;
+            return v[0] + v[1];
+        }
+        v[0] = big_num[L][rc_rand(r) % 10];
+        (*n)++;
+        return R + v[0];
+    default:                                    /* - */
+        if (R == 0) {
+            v[0] = big_num[L][rc_rand(r) % 10];
+            v[1] = big_num[L][rc_rand(r) % 10];
+            if (v[0] == v[1])
+                v[0] += v[0] > 1 ? -1 : 1;
+            *n += 2;
+            return v[0] > v[1] ? v[0] - v[1] : v[1] - v[0];
+        }
+        if (R <= 10) {
+            /* R > 0 in every row the tables allow */
+            d = R > 0 ? rc_rand(r) % R + 1 : 1;
+            if (d == R)
+                d += d > 1 ? -1 : 1;
+        } else {
+            d = big_num[L][rc_rand(r) % 10];
+        }
+        v[0] = d;
+        (*n)++;
+        return R - d;
+    }
+}
+
+void rc_module4_make(rc_reken *r)
+{
+    const int L = r->level == 3 ? 4 : r->level;
+    const uint8_t *ops = big_ops[L][rc_rand(r) % 4];
+    int R = BIG_MAX + 10, n, k, t, i;
+
+    r->count = r->level == 4 || r->level == 5 ? 3 : 4;    /* module4_init */
+    while (R > BIG_MAX) {
+        n = 0;
+        R = 0;
+        for (k = 0; k < r->count - 1; k++)
+            R = big_step(r, L, ops[k], R, &n);
+    }
+    r->target = R;
+    /* the numbers rotated left rand() % count places */
+    for (k = rc_rand(r) % r->count; k > 0; k--) {
+        t = r->num[0];
+        for (i = 0; i < r->count - 1; i++)
+            r->num[i] = r->num[i + 1];
+        r->num[r->count - 1] = t;
+    }
+    if (r->count == 3)
+        r->num[3] = -1;
+}
+
+int rc_module4_next(rc_reken *r)
+{
+    int i;
+
+    if (r->asked >= BIG_ROUNDS)
+        return 0;
+    r->lines = r->steps = 0;                    /* 0x17c57 */
+    rc_module4_make(r);
+    for (i = 0; i < r->count; i++) {            /* 0x17b95 */
+        r->start[i] = r->num[i];
+        r->line[i][0] = 0;
+    }
+    r->op = RC_OP_NONE;
+    r->a = r->b = -1;
+    r->entered = r->want_b = 0;
+    rc_prize_choose(r);
+    r->asked++;
+    return 1;
+}
+
+int rc_module4_number(rc_reken *r, int slot)
+{
+    int v;
+
+    if (slot < 0 || slot >= r->count || r->num[slot] == -1)
+        return RC_BIG_NONE;
+    v = r->num[slot];
+    if (r->op == RC_OP_NONE) {
+        if (r->want_b)
+            return RC_BIG_REFUSED;
+        r->a = v;
+        r->ia = slot;
+        r->want_b = 1;
+    } else {
+        if (!r->want_b)
+            return RC_BIG_REFUSED;
+        if ((r->op == RC_OP_DIVIDE && (v == 0 || r->a % v != 0)) ||
+            (r->op == RC_OP_MINUS && r->a < v))
+            return RC_BIG_REFUSED;
+        r->b = v;
+        r->ib = slot;
+        r->want_b = 0;
+    }
+    r->num[slot] = -1;
+    r->entered++;
+    return RC_BIG_TAKEN;
+}
+
+int rc_module4_op(rc_reken *r, int op)
+{
+    if (r->want_b != 1)
+        return RC_BIG_REFUSED;
+    r->op = op;
+    r->entered = 2;
+    return RC_BIG_TAKEN;
+}
+
+int rc_module4_equals(rc_reken *r)
+{
+    int v, left = 0, i;
+
+    if (r->entered != 3)
+        return RC_BIG_REFUSED;
+    switch (r->op) {
+    case RC_OP_TIMES: v = r->a * r->b; break;
+    case RC_OP_DIVIDE: v = r->a / r->b; break;
+    case RC_OP_PLUS: v = r->a + r->b; break;
+    default: v = iabs(r->a - r->b); break;
+    }
+    /* The original keeps going past its four work lines (after OPNIEUW,
+       which resets neither count) and writes over the variables behind
+       them; the port stops recording instead. */
+    if (r->steps < RC_BIG_HISTORY) {
+        rc_big_step *st = &r->step[r->steps++];
+        st->a = r->a;
+        st->b = r->b;
+        st->ia = r->ia;
+        st->ib = r->ib;
+    }
+    if (r->lines < RC_BIG_HISTORY) {
+        snprintf(r->line[r->lines], sizeof r->line[0], "%d %c %d = %d",
+                 r->a, big_op_char[r->op], r->b, v);
+        r->line_on[r->lines++] = 1;
+    }
+    r->num[r->ia] = v;
+    r->op = RC_OP_NONE;
+    r->a = r->b = -1;
+    r->entered = r->want_b = 0;
+    for (i = 0; i < r->count; i++)
+        left += r->num[i] != -1;
+    if (left != 1)
+        return RC_BIG_TAKEN;
+    return answered(r, v == r->target) ? RC_BIG_RIGHT : RC_BIG_WRONG;
+}
+
+int rc_module4_back(rc_reken *r)
+{
+    switch (r->entered) {
+    case 0:
+        /* undo the last sum (lines and steps go up and down together);
+           with speech off ([0x46c87] = 0) the original only shows the
+           button pressed */
+        if (!r->speech)
+            return RC_BIG_TAKEN;
+        if (r->steps == 0)
+            return RC_BIG_REFUSED;
+        r->line_on[--r->lines] = 0;
+        r->steps--;
+        r->num[r->step[r->steps].ia] = r->step[r->steps].a;
+        r->num[r->step[r->steps].ib] = r->step[r->steps].b;
+        break;
+    case 1:
+        r->num[r->ia] = r->a;
+        r->a = -1;
+        r->want_b = 0;
+        r->entered = 0;
+        break;
+    case 2:
+        r->op = RC_OP_NONE;
+        r->entered = 1;
+        break;
+    default:
+        r->num[r->ib] = r->b;
+        r->b = -1;
+        r->want_b = 1;
+        r->entered = 2;
+        break;
+    }
+    return RC_BIG_TAKEN;
+}
+
+void rc_module4_again(rc_reken *r)
+{
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        r->num[i] = r->start[i];
+        r->line[i][0] = 0;
+    }
+    r->op = RC_OP_NONE;
+    r->a = r->b = -1;
+    r->entered = r->want_b = 0;
+}
+
+void rc_module4_entry(const rc_reken *r, char *s, int size)
+{
+    int n = 0;
+
+    s[0] = 0;
+    if (r->a != -1)
+        n += snprintf(s + n, size - n, "%d ", r->a);
+    if (r->op != RC_OP_NONE && n < size)
+        n += snprintf(s + n, size - n, "%c ", big_op_char[r->op]);
+    if (r->b != -1 && n < size)
+        snprintf(s + n, size - n, "%d ", r->b);
+}
+
 /* The session record */
 
 static int32_t get32(const uint8_t *p)
@@ -799,6 +1083,7 @@ void rc_reken_start(rc_reken *r, const rc_session *s, uint32_t seed)
     r->repair = s->repair < 0 ? 0 : s->repair;
     r->boosts = s->boosts;
     r->rockets = s->rockets;
+    r->speech = s->speech;
 }
 
 void rc_reken_finish(const rc_reken *r, rc_session *s)

@@ -99,6 +99,28 @@ for level in range(6):
                 print('module 3 level %d seed %d:\n  original %r\n  port     %r'
                       % (level, 1 + i, orig, port[i]))
 
+# module 4: 0x17c57's eight rounds with the ask (0x17b95) stubbed to
+# read the numbers 0x5bf94 and the target [0x5c104]
+COUNT, NUMS, TARGET = 0x45c30, 0x5bf94, 0x5c104
+rounds = []
+e.stub(0x17b95, lambda e: rounds.append(
+    ' '.join(str(e.i32(NUMS + 4 * j)) for j in range(e.i32(COUNT)))
+    + ' = %d|' % e.i32(TARGET)))
+for level in range(6):
+    port = sim('gen4', level, 1, N)
+    e.uc.mem_write(LEVEL, bytes([level]))
+    e.put32(COUNT, 3 if level in (4, 5) else 4)
+    for i in range(N):
+        e.seed = 1 + i
+        rounds.clear()
+        e.call(0x17c57)
+        orig = ''.join(rounds) + str(e.seed)
+        if orig != port[i]:
+            bad += 1
+            if bad <= 10:
+                print('module 4 level %d seed %d:\n  original %r\n  port     %r'
+                      % (level, 1 + i, orig, port[i]))
+
 STATES = [(75, 100, 5, 10), (40, 100, 5, 10), (120, 70, 5, 10),
           (100, 0, 5, 10), (100, 100, 99, 10), (100, 100, 5, 99),
           (30, 100, 99, 99), (150, 99, 0, 0)]
@@ -117,7 +139,7 @@ for st in STATES:
                 print('prize %s seed %d: original %s, port %s'
                       % (st, 1 + i, orig, port[i]))
 
-cases = len(GENERATORS) * 6 * N + 2 * 6 * N + len(STATES) * N
+cases = len(GENERATORS) * 6 * N + 3 * 6 * N + len(STATES) * N
 print('%d of %d cases differ' % (bad, cases))
 if crashes:
     print('the original faults in %d module 2 cases, e.g. level %d seed %d at %s'

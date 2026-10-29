@@ -1,5 +1,6 @@
-/* The arithmetic part's screen (REKEN.EXE modules 1 "Handig rekenen",
-   2 "Wat is waar?" and 3 "Memory"): drawn into a 640x480 8-bit frame buffer, no SDL.  The caller passes time, keys
+/* The arithmetic part's screen (REKEN.EXE's four exercise modules: 1
+   "Handig rekenen", 2 "Wat is waar?", 3 "Memory", 4 "Grote
+   getallenspel"): drawn into a 640x480 8-bit frame buffer, no SDL.  The caller passes time, keys
    and clicks, and shows fb with pal.
 
    Layout and timing are the original's (research/discoveries.md "The
@@ -16,9 +17,15 @@
 #define RC_MENU_IMAGES 479
 
 enum {                          /* rc_exercise_key */
-    RC_KEY_0 = '0',             /* '0'..'9': digits; module 2: '1'..'3' rows */
+    RC_KEY_0 = '0',             /* '0'..'9': digits; module 2: '1'..'3' rows;
+                                   module 4: '1'..'4' numbers */
     RC_KEY_BACK = '\b',         /* TERUG */
-    RC_KEY_OK = '\r',
+    RC_KEY_OK = '\r',           /* module 4: = */
+    RC_KEY_AGAIN = 'o',         /* module 4 OPNIEUW; module 1 OK */
+    RC_KEY_PLUS = '+',          /* module 4's operators */
+    RC_KEY_MINUS = '-',
+    RC_KEY_TIMES = 'x',
+    RC_KEY_DIVIDE = ':',
     RC_KEY_HELP = 'h',
     RC_KEY_STOP = 's',
 };
@@ -32,7 +39,7 @@ typedef struct {
     rc_sprite img[RC_MENU_IMAGES + 1];  /* by image number (MENU entry + 1) */
 
     rc_reken r;
-    int module;                 /* 1, 2, 3 */
+    int module;                 /* 1..4 */
     int state, state_ms, frame;
     char typed[12];
     int field;                  /* answer digits */
@@ -51,13 +58,17 @@ typedef struct {
     int cell_anim[RC_MEMORY_CELLS], cell_frame[RC_MEMORY_CELLS];
     int cell_text[RC_MEMORY_CELLS];     /* 1 the sum, 2 the value */
     int anim_cell[2], anim_kind[2], anim_cells;     /* cards animating */
+    /* module 4: what the screen shows while the next round's prize comes
+       in (the original redraws the numbers after it) */
+    rc_reken shown;
+    int equals_x;               /* [0x457cc]: 78 for groep 3..5, else 152 */
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,
                      const rc_archive *menu);
 void rc_exercise_free(rc_exercise *x);
 
-/* Start module 1, 2 or 3 with the session's groep and counters. */
+/* Start module 1..4 with the session's groep and counters. */
 void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
                        uint32_t seed);
 void rc_exercise_tick(rc_exercise *x, int ms);

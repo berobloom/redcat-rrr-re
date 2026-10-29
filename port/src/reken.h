@@ -11,6 +11,8 @@
 #define RC_SUMS_PER_ROUND 8     /* module 1, 0x11ea2 */
 #define RC_SESSION_SIZE 0x228   /* RRRIO.INF */
 #define RC_MEMORY_CELLS 30      /* module 3: the largest grid, 5 x 6 */
+#define RC_BIG_LINES 4          /* module 4: work lines shown */
+#define RC_BIG_HISTORY 64       /* module 4: sums TERUG can undo (port limit) */
 
 enum {                          /* [0x46c86] */
     RC_PRIZE_BOOSTS,            /* +5, max 99 */
@@ -62,9 +64,17 @@ typedef struct {
     int x, y, w, h, gap_x, gap_y;   /* [0x457b0].. */
 } rc_grid;
 
+/* Module 4 "Grote getallenspel": operators [0x45c2c] */
+enum { RC_OP_NONE = -1, RC_OP_TIMES, RC_OP_DIVIDE, RC_OP_PLUS, RC_OP_MINUS };
+
+typedef struct {                /* 0x5bcf4, 16-byte records */
+    int a, b, ia, ib;
+} rc_big_step;
+
 typedef struct {
     uint32_t seed;              /* Watcom rand() state */
     int level;                  /* [0x46c84]: groep 6,7,8 -> 0,1,2; 3,4,5 */
+    int speech;                 /* [0x46c87] (RRRIO +0x30) */
     int fuel, repair, boosts, rockets;
     int prize;
     char text[100];             /* 0x5371c */
@@ -79,6 +89,17 @@ typedef struct {
     rc_card card[RC_MEMORY_CELLS];
     int cells, left;            /* [0x457ac]; cards still on the grid */
     int first, second;          /* [0x58f90], [0x58f94]: turned cells, -1 */
+    /* module 4 */
+    int count;                  /* [0x45c30]: 4 numbers, 3 for groep 4, 5 */
+    int num[4], start[4];       /* 0x5bf94 (-1 used), 0x5bfb4 */
+    int target;                 /* [0x5c104] */
+    int a, b, ia, ib, op;       /* [0x5bf84], [0x5bf88], [0x5bf74], [0x5bf78] */
+    int entered, want_b;        /* 0x165fb's step and ebp */
+    char line[RC_BIG_HISTORY][50];  /* 0x5bfc4, 51-byte records +0x32 flag */
+    int line_on[RC_BIG_HISTORY];
+    int lines;                  /* [0x45c38] */
+    rc_big_step step[RC_BIG_HISTORY];
+    int steps;                  /* [0x45c28] */
 } rc_reken;
 
 void rc_reken_start(rc_reken *r, const rc_session *s, uint32_t seed);
@@ -114,10 +135,28 @@ int rc_module3_pick(rc_reken *r, int cell);
    not.  first and second are -1 again afterwards. */
 int rc_module3_judge(rc_reken *r);
 
+/* Module 4 "Grote getallenspel": the next round's numbers and target, and
+   its prize (0x17c57, 0x17b95).  Returns 0 after the last round. */
+int rc_module4_next(rc_reken *r);
+/* The buttons (0x165fb): a number slot, an operator, '=', TERUG and
+   OPNIEUW.  Returns RC_BIG_NONE (an empty slot), RC_BIG_REFUSED (the
+   error sound), RC_BIG_TAKEN, or after '=' with one number left
+   RC_BIG_RIGHT / RC_BIG_WRONG (the round is over and the prize, if any,
+   added). */
+enum { RC_BIG_NONE, RC_BIG_REFUSED, RC_BIG_TAKEN, RC_BIG_RIGHT, RC_BIG_WRONG };
+int rc_module4_number(rc_reken *r, int slot);
+int rc_module4_op(rc_reken *r, int op);
+int rc_module4_equals(rc_reken *r);
+int rc_module4_back(rc_reken *r);               /* TERUG */
+void rc_module4_again(rc_reken *r);             /* OPNIEUW */
+/* The sum being entered, as 0x161d3 shows it ("a op b "). */
+void rc_module4_entry(const rc_reken *r, char *s, int size);
+
 /* The generators, for tests: type 0 x, 1 :, 2 +, 3 - (0x4539c's codes). */
 void rc_sum_make(rc_reken *r, int type);
 void rc_module2_make(rc_reken *r);               /* 0x12844 */
 void rc_module3_deal(rc_reken *r);               /* 0x14d5a, 0x14378 */
+void rc_module4_make(rc_reken *r);               /* 0x17c57's round */
 void rc_prize_choose(rc_reken *r);               /* 0x18e7f */
 int rc_rand(rc_reken *r);                        /* 0x22bd2 */
 

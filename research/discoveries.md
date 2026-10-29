@@ -575,3 +575,45 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   deals a demo (SOM and ANTWOORD alternating, "2 + 3" = 5, "4 + 4" = 8),
   turns cards to the spoken explanation with the title "Help!", and puts
   the grid back. Not ported.
+
+## The arithmetic part: module 4 "Grote getallenspel"
+
+- CONFIRMED (`0x17c57`, port = original under Unicorn for 100 seeds per
+  level, `check_reken.py`): 8 rounds. Each round picks row rand() % 4 of
+  `0x45908[L]` (L = level, 4 for level 3) and calls its generator, drawn
+  again while the target is above 50: × `0x151c6`, : `0x1530f`, +
+  `0x154bf`, − `0x155ed`, with number tables `0x45950`, factors
+  `0x45a40`, dividends `0x45b30` (values in `port/src/reken.c`). The
+  numbers are then rotated left by rand() % count. count is 3 for levels
+  4 and 5 (groep 4, 5), else 4 (`0x17e18`, [0x45c30]); with 3 the fourth
+  slot holds −1 and stays empty.
+- CONFIRMED (`0x165fb`): a number is taken only as the first operand or
+  after an operator; an operator only after a first operand (a second one
+  replaces it). ':' needs b ≠ 0 and a % b = 0, '−' needs a ≥ b; else
+  refused. '=' with all three pushes a history step, writes
+  "%d op %d = %d" (ASCII12) as the next line of the panel (y = 178 + 20 k,
+  centred in 280 from x = 224) and puts the result into a's slot, b's
+  slot emptied. The round ends when one number is left: equal to the
+  target gives the prize, otherwise none. TERUG undoes b, the operator, a,
+  or with nothing entered the last sum ([0x46c87] ≠ 0). OPNIEUW restores
+  the numbers and clears the four line texts.
+- CONFIRMED (DOSBox, sum after OPNIEUW drawn at y = 198): OPNIEUW does
+  not reset the line and step counters. Past 4 lines nothing is shown and
+  the writes run beyond 0x5bfc4 into 0x5c090.. (operands, [0x5c094],
+  [0x5c098]); the target survived 6 rounds of this. The port keeps the
+  counters but bounds the arrays.
+- CONFIRMED (`0x17b95`, `0x18*` SMD writer): [0x5c094], the count module
+  4 hands the SMD record, is never incremented: module 4 records 0 right.
+  In the draw `0x161d3` a recount of [0x5c098] makes the branch that
+  shows a single number in the panel unreachable; `0x15c5f`, an
+  alternative screen selected by [0x45c34], is dead ([0x45c34] = 0).
+- CONFIRMED (screenshots, port pixel-identical for slots, entry and
+  lines): slots anim 21 at (8, 168 + 48 i), numbers ASCII30 centred in
+  182 × 41 from (30, 169 + 48 i); target box anim 22 at (502, 168),
+  number centred in 132 × 144 from (502, 209); panel anim 23 at
+  (224, 168), 280 × 185, the entry centred; + anim 24 (8, 368), × 25
+  (78, 368), − 26 (8, 425), : 27 (78, 425), = anim 16 at (78 or 152, 368),
+  TERUG 19 (503, 368), OPNIEUW 20 (503, 424). Groep 3–5 have no × and :
+  buttons (= moves to x 78). Keys: × scan 0x49 / 0x2d, : 0x48, + 0x4e,
+  − 0x4a, = 0x1c / 0x0d, TERUG 0x0e / 0x14, OPNIEUW 0x18.
+- Help (`0x171ea`) not read or ported.

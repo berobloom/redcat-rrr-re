@@ -33,6 +33,14 @@
 #define A_BACK_ANTWOORD 9
 #define A_CARD_ANTWOORD 10
 #define A_SHAKE_ANTWOORD 11
+#define A_EQUALS 16             /* module 4 (0x14fe3) */
+#define A_AGAIN 20              /* OPNIEUW */
+#define A_SLOT 21               /* the number slots, frame = slot */
+#define A_PANEL4 23             /* the work panel */
+#define A_PLUS 24
+#define A_TIMES 25
+#define A_MINUS 26
+#define A_DIVIDE 27
 
 #define PANEL_X 8
 #define PANEL_Y 168
@@ -83,6 +91,20 @@ static const int text_y[3] = { 208, 297, 385 };
 #define SHAKE_FRAMES 5
 #define GONE_FRAMES 8
 #define BACK_FRAMES 4
+/* Module 4: slots at (8, 168 + 48 i), the number centred in 182 x 41 from
+   (30, 169 + 48 i); the work panel (224, 168), 280 x 185, its lines from
+   y = 178, 20 apart; the Uitkomst box (502, 168), the target in 132 x 144
+   from (502, 209) (0x161d3) */
+#define SLOT_X 8
+#define SLOT_Y 168
+#define SLOT_DY 48
+#define WORK_X 224
+#define WORK_Y 168
+#define WORK_W 280
+#define WORK_H 185
+#define BOX4_X 502
+#define BOX4_Y 168
+#define BUTTON4_X 503           /* TERUG, OPNIEUW (0x195e3) */
 #define BOX_X 452
 #define BOX_Y 226
 #define RESULT_Y 267
@@ -107,6 +129,17 @@ static const button buttons2[] = {      /* 0x453fc; the rows' x is bar_x */
     { '3', 0, 384, 342, 425 },
     { RC_KEY_HELP, 564, 3, 632, 33 }, { RC_KEY_STOP, 10, 4, 78, 33 },
 };
+static const button buttons4[] = {      /* 0x457d4; = and x, : patched in */
+    { '1', 8, 168, 190, 209 }, { '2', 8, 216, 190, 257 },
+    { '3', 8, 264, 190, 305 }, { '4', 8, 312, 190, 353 },
+    { RC_KEY_PLUS, 8, 368, 70, 416 }, { RC_KEY_MINUS, 8, 425, 70, 473 },
+    { RC_KEY_HELP, 564, 3, 632, 33 }, { RC_KEY_BACK, 503, 368, 635, 416 },
+    { RC_KEY_STOP, 10, 6, 78, 35 }, { RC_KEY_AGAIN, 503, 424, 635, 472 },
+    { RC_KEY_OK, 0, 368, 62, 474 },
+    { RC_KEY_TIMES, 78, 368, 140, 416 }, { RC_KEY_DIVIDE, 78, 425, 140, 473 },
+};
+#define BUTTON4_EQUALS 10
+#define BUTTON4_TIMES 11
 static const button buttons3[] = {      /* 0x4550c; the grid is patched in */
     { RC_KEY_HELP, 564, 3, 632, 33 }, { RC_KEY_STOP, 10, 6, 78, 35 },
 };
@@ -265,7 +298,13 @@ static void next_sum(rc_exercise *x)
 {
     char digits[12];
 
-    if (x->module == 2) {
+    if (x->module == 4) {
+        x->shown = x->r;
+        if (!rc_module4_next(&x->r)) {
+            set_state(x, ST_OVER);
+            return;
+        }
+    } else if (x->module == 2) {
         if (!rc_module2_next(&x->r)) {
             set_state(x, ST_OVER);
             return;
@@ -290,12 +329,13 @@ void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
     int k;
 
     rc_reken_start(&x->r, s, seed);
-    x->module = module == 2 || module == 3 ? module : 1;
+    x->module = module >= 2 && module <= 4 ? module : 1;
     memcpy(x->pal, x->module == 3 ? x->bg3.palette : x->bg.palette, sizeof x->pal);
     x->bar_x = x->r.level >= 3 ? 61 : 131;     /* module2_init */
     for (k = 0; k < 3; k++)
         x->bar_frame[k] = -1;
     x->box_value = -1;
+    x->equals_x = x->r.level >= 3 ? 78 : 152;   /* module4_init */
     x->face_anim = A_FACE_RIGHT;    /* module1_init: anim 13, frame 0 */
     x->face_frame = 0;
     x->shown_fuel = x->r.fuel;
@@ -514,6 +554,8 @@ void rc_exercise_tick(rc_exercise *x, int ms)
         if (!counting(x)) {
             if (x->module == 3)
                 set_state(x, x->picked ? ST_VANISH : ST_SHOW);
+            else if (x->module == 4)
+                next_sum(x);
             else if (x->module == 2)
                 set_state(x, ST_SHOW);
             else
@@ -535,6 +577,56 @@ void rc_exercise_tick(rc_exercise *x, int ms)
     }
 }
 
+/* Module 4's buttons (0x165fb); the error sound is not ported */
+static void big_key(rc_exercise *x, int key)
+{
+    int res;
+
+    if (x->state != ST_INPUT)
+        return;
+    switch (key) {
+    case '1': case '2': case '3': case '4':
+        rc_module4_number(&x->r, key - '1');
+        return;
+    case RC_KEY_PLUS:
+    case RC_KEY_MINUS:
+    case RC_KEY_TIMES:
+    case RC_KEY_DIVIDE: {
+        static const struct { int key, op, anim, x, y; } ops[4] = {
+            { RC_KEY_TIMES, RC_OP_TIMES, A_TIMES, 78, 368 },
+            { RC_KEY_DIVIDE, RC_OP_DIVIDE, A_DIVIDE, 78, 425 },
+            { RC_KEY_PLUS, RC_OP_PLUS, A_PLUS, 8, 368 },
+            { RC_KEY_MINUS, RC_OP_MINUS, A_MINUS, 8, 425 },
+        };
+        int i;
+        for (i = 0; ops[i].key != key; i++)
+            ;
+        if (rc_module4_op(&x->r, ops[i].op) == RC_BIG_TAKEN)
+            press(x, ops[i].anim, ops[i].x, ops[i].y);
+        return;
+    }
+    case RC_KEY_BACK:
+        if (rc_module4_back(&x->r) == RC_BIG_TAKEN)
+            press(x, A_BACK, BUTTON4_X, 368);
+        return;
+    case RC_KEY_AGAIN:
+        press(x, A_AGAIN, BUTTON4_X, 424);
+        rc_module4_again(&x->r);
+        return;
+    case RC_KEY_OK:
+        res = rc_module4_equals(&x->r);
+        if (res == RC_BIG_REFUSED)
+            return;
+        press(x, A_EQUALS, x->equals_x, 368);
+        if (res == RC_BIG_RIGHT || res == RC_BIG_WRONG) {
+            x->face_anim = res == RC_BIG_RIGHT ? A_FACE_RIGHT : A_FACE_WRONG;
+            x->face_frame = 0;
+            set_state(x, ST_FACE);
+        }
+        return;
+    }
+}
+
 void rc_exercise_key(rc_exercise *x, int key)
 {
     int n = (int)strlen(x->typed);
@@ -548,6 +640,12 @@ void rc_exercise_key(rc_exercise *x, int key)
         press(x, A_HELP, HELP_X, HELP_Y);   /* the example (0x11a6a) is not ported */
         return;
     }
+    if (x->module == 4) {
+        big_key(x, key);
+        return;
+    }
+    if (x->module == 1 && key == RC_KEY_AGAIN)
+        key = RC_KEY_OK;
     if (x->module == 3) {
         /* Enter leaves Memory with what was won (0x14d11) */
         if (key == RC_KEY_OK && x->state != ST_OVER)
@@ -613,14 +711,19 @@ static void memory_click(rc_exercise *x, int sx, int sy)
 
 void rc_exercise_click(rc_exercise *x, int sx, int sy)
 {
-    const button *b = x->module == 3 ? buttons3 : x->module == 2 ? buttons2 :
-                      buttons1;
-    int n = x->module == 3 ? (int)(sizeof buttons3 / sizeof *b) :
+    const button *b = x->module == 4 ? buttons4 : x->module == 3 ? buttons3 :
+                      x->module == 2 ? buttons2 : buttons1;
+    int n = x->module == 4 ? (int)(sizeof buttons4 / sizeof *b) :
+            x->module == 3 ? (int)(sizeof buttons3 / sizeof *b) :
             x->module == 2 ? (int)(sizeof buttons2 / sizeof *b) :
                              (int)(sizeof buttons1 / sizeof *b), i;
 
+    /* groep 3..5 have no x and : (module4_init zeroes them) */
+    if (x->module == 4 && x->r.level >= 3)
+        n = BUTTON4_TIMES;
     for (i = 0; i < n; i++) {
-        int dx = x->module == 2 && i < 3 ? x->bar_x : 0;
+        int dx = x->module == 2 && i < 3 ? x->bar_x :
+                 x->module == 4 && i == BUTTON4_EQUALS ? x->equals_x : 0;
         /* the corners are taken as inside (LIKELY; 0x24117 not read) */
         if (sx >= b[i].x0 + dx && sx <= b[i].x1 + dx &&
             sy >= b[i].y0 && sy <= b[i].y1) {
@@ -748,6 +851,48 @@ static void draw_choices(rc_exercise *x)        /* 0x12ee0, 0x13229 */
     }
 }
 
+static void draw_big(rc_exercise *x)            /* 0x14fe3, 0x161d3 */
+{
+    const rc_reken *r = x->state == ST_PRIZE ? &x->shown : &x->r;
+    const rc_font *f = &x->font30;
+    char s[64];
+    int i, n;
+
+    for (i = 0; i < x->r.count; i++)
+        draw_at(x, A_SLOT, i, SLOT_X, SLOT_Y + SLOT_DY * i);
+    draw_at(x, A_BOX, 0, BOX4_X, BOX4_Y);
+    draw_at(x, A_PANEL4, 0, WORK_X, WORK_Y);
+    draw_at(x, A_PLUS, 0, 8, 368);
+    draw_at(x, A_MINUS, 0, 8, 425);
+    if (x->r.level < 3) {
+        draw_at(x, A_TIMES, 0, 78, 368);
+        draw_at(x, A_DIVIDE, 0, 78, 425);
+    }
+    draw_at(x, A_EQUALS, 0, x->equals_x, 368);
+    if (r->asked == 0)          /* before the first round's numbers */
+        return;
+    for (i = 0; i < r->count; i++) {
+        if (r->num[i] == -1)
+            continue;
+        n = snprintf(s, sizeof s, "%d", r->num[i]);
+        draw_text(x, f, 30 + (182 - n * f->w) / 2,
+                  169 + SLOT_DY * i + (41 - f->h) / 2, s, -1);
+    }
+    n = snprintf(s, sizeof s, "%d", r->target);
+    draw_text(x, f, BOX4_X + (132 - n * f->w) / 2, 209 + (144 - f->h) / 2, s, -1);
+    rc_module4_entry(r, s, sizeof s);
+    n = (int)strlen(s);
+    draw_text(x, f, WORK_X + (WORK_W - n * f->w) / 2,
+              WORK_Y + (WORK_H - f->h) / 2, s, -1);
+    for (i = 0; i < RC_BIG_LINES; i++) {
+        if (!r->line_on[i])
+            continue;
+        n = (int)strlen(r->line[i]);
+        draw_text(x, &x->font12, WORK_X + (WORK_W - n * x->font12.w) / 2,
+                  178 + 20 * i, r->line[i], -1);
+    }
+}
+
 void rc_exercise_draw(rc_exercise *x)
 {
     const int m3 = x->module == 3;
@@ -762,6 +907,11 @@ void rc_exercise_draw(rc_exercise *x)
     if (x->state != ST_DONE && x->state != ST_OVER)
         draw_centred(x, prize_anim[x->prize] - m3, x->prize_frame,
                      m3 ? PRIZE3_X : PRIZE_X, m3 ? PRIZE3_Y : PRIZE_Y);
+    if (x->module == 4) {
+        draw_at(x, A_BACK, 0, BUTTON4_X, 368);
+        draw_at(x, A_AGAIN, 0, BUTTON4_X, 424);
+        draw_big(x);
+    }
     if (x->module == 1) {
         for (d = 0; d < 10; d++)
             draw_at(x, d ? A_KEY_1 + d - 1 : A_KEY_1 + 9, 0, key_xy[d][0], key_xy[d][1]);
@@ -787,6 +937,6 @@ void rc_exercise_draw(rc_exercise *x)
 
     if (x->module == 2)
         draw_choices(x);
-    else
+    else if (x->module == 1)
         draw_sum(x);
 }

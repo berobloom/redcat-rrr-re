@@ -2,13 +2,15 @@
    they earned, as REKEN.EXE and RRR.EXE run them.
 
    usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
-                 [--module 1..3] [--fps N]
+                 [--module 1..4] [--fps N]
 
    Exercises: module 1 (Handig rekenen): digits (keys or the keypad)
    answer, Backspace or TERUG takes one back, Enter or OK confirms; module 2
    (Wat is waar?): 1, 2, 3 or a click picks the true row; module 3
    (Memory): click a SOM card, then the ANTWOORD card with its value; Enter
-   ends it early.  S or Stop quits.
+   ends it early; module 4 (Grote getallenspel): 1..4 take a number,
+   + - x : (keypad too) an operator, Enter or = works it out, Backspace
+   or T is TERUG, O is OPNIEUW.  S or Stop quits.
    --race skips them; the map defaults to the stage's race (world 0,
    stage 1: track1b).
 
@@ -301,7 +303,12 @@ static int exercise_key(SDL_Keycode k)
     switch (k) {
     case SDLK_KP_0: return '0';
     case SDLK_BACKSPACE: case SDLK_t: return RC_KEY_BACK;
-    case SDLK_RETURN: case SDLK_KP_ENTER: case SDLK_o: return RC_KEY_OK;
+    case SDLK_RETURN: case SDLK_KP_ENTER: case SDLK_EQUALS: return RC_KEY_OK;
+    case SDLK_o: return RC_KEY_AGAIN;
+    case SDLK_KP_PLUS: case SDLK_PLUS: return RC_KEY_PLUS;
+    case SDLK_KP_MINUS: case SDLK_MINUS: return RC_KEY_MINUS;
+    case SDLK_KP_MULTIPLY: case SDLK_x: case SDLK_PAGEUP: return RC_KEY_TIMES;
+    case SDLK_KP_DIVIDE: case SDLK_COLON: case SDLK_UP: return RC_KEY_DIVIDE;
     case SDLK_h: return RC_KEY_HELP;
     case SDLK_s: return RC_KEY_STOP;
     }
@@ -353,7 +360,10 @@ static void exercise_frame(void)
     g.last_tick = now;
     if (g.ex.r.asked != g.logged_sum) {     /* as REKEN /DEBUG logs it */
         g.logged_sum = g.ex.r.asked;
-        if (g.ex.module == 3)
+        if (g.ex.module == 4)
+            printf("round %d: %d %d %d %d -> %d\n", g.ex.r.asked, g.ex.r.num[0],
+                   g.ex.r.num[1], g.ex.r.num[2], g.ex.r.num[3], g.ex.r.target);
+        else if (g.ex.module == 3)
             printf("pair %d: %d found\n", g.ex.r.asked, g.ex.r.correct);
         else if (g.ex.module == 2)
             printf("sum %d: %s | %s | %s  (true: row %d)\n", g.ex.r.asked,
@@ -442,7 +452,7 @@ int main(int argc, char **argv)
 #else
     if (argc < 2) {
         fprintf(stderr, "usage: %s <data dir> [map 0..22] [--race] "
-                "[--groep 3..8] [--module 1..3] [--fps N]\n", argv[0]);
+                "[--groep 3..8] [--module 1..4] [--fps N]\n", argv[0]);
         return 2;
     }
     g.dir = argv[1];
@@ -475,11 +485,20 @@ int main(int argc, char **argv)
         g.hud.h != SCREEN_H)
         rc_pcx_free(&g.hud);
     /* A new pupil's session (RRRIO.INF defaults): world 0, stage 0; the
-       first module after the welcome race is Handig rekenen, stage 1. */
+       first module after the welcome race is Handig rekenen, stage 1.
+       The race after a module is the one of its stage. */
     rc_session_default(&g.session);
     if (groep >= 3 && groep <= 8)
         g.session.groep = groep;
     rc_next_module(&g.session, 1);
+    /* --module: the first world that plays it, at its stage */
+    if (module >= 1 && module <= 4 && module != g.session.stage)
+        for (i = 0; i < 6; i++)
+            if (rc_stage_map(i, module) >= 0) {
+                g.session.world = i;
+                g.session.stage = module;
+                break;
+            }
     if (map < 0)
         map = race_only ? 0 : rc_stage_map(g.session.world, g.session.stage);
     g.map_index = map;
