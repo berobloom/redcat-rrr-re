@@ -2,11 +2,13 @@
    they earned, as REKEN.EXE and RRR.EXE run them.
 
    usage: redcat <data dir> [map 0..22] [--race] [--groep 3..8]
-                 [--module 1..2] [--fps N]
+                 [--module 1..3] [--fps N]
 
    Exercises: module 1 (Handig rekenen): digits (keys or the keypad)
    answer, Backspace or TERUG takes one back, Enter or OK confirms; module 2
-   (Wat is waar?): 1, 2, 3 or a click picks the true row.  S or Stop quits.
+   (Wat is waar?): 1, 2, 3 or a click picks the true row; module 3
+   (Memory): click a SOM card, then the ANTWOORD card with its value; Enter
+   ends it early.  S or Stop quits.
    --race skips them; the map defaults to the stage's race (world 0,
    stage 1: track1b).
 
@@ -319,7 +321,8 @@ static void finish_exercises(void)
     }
     rc_reken_finish(r, &g.session);
     printf("%d of %d right: fuel %d, repair %d, boosts %d, rockets %d\n",
-           r->correct, RC_SUMS_PER_ROUND, r->fuel, r->repair, r->boosts,
+           r->correct, g.ex.module == 3 ? r->asked : RC_SUMS_PER_ROUND,
+           r->fuel, r->repair, r->boosts,
            r->rockets);
     if (start_race(g.map_index) != 0) {
         g.running = 0;
@@ -350,7 +353,9 @@ static void exercise_frame(void)
     g.last_tick = now;
     if (g.ex.r.asked != g.logged_sum) {     /* as REKEN /DEBUG logs it */
         g.logged_sum = g.ex.r.asked;
-        if (g.ex.module == 2)
+        if (g.ex.module == 3)
+            printf("pair %d: %d found\n", g.ex.r.asked, g.ex.r.correct);
+        else if (g.ex.module == 2)
             printf("sum %d: %s | %s | %s  (true: row %d)\n", g.ex.r.asked,
                    g.ex.r.choice[rc_module2_choice(&g.ex.r, 0)],
                    g.ex.r.choice[rc_module2_choice(&g.ex.r, 1)],
@@ -437,7 +442,7 @@ int main(int argc, char **argv)
 #else
     if (argc < 2) {
         fprintf(stderr, "usage: %s <data dir> [map 0..22] [--race] "
-                "[--groep 3..8] [--module 1..2] [--fps N]\n", argv[0]);
+                "[--groep 3..8] [--module 1..3] [--fps N]\n", argv[0]);
         return 2;
     }
     g.dir = argv[1];

@@ -526,3 +526,52 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (10, 6)–(78, 35)), module 2 `0x453fc` (rows (x, 207)–(x + 342, 248),
   +89, +177; Help; Stop (10, 4)–(78, 33)), module 3 `0x4550c`, module 4
   `0x457d4`.
+
+## The arithmetic part: module 3 "Memory"
+
+- CONFIRMED (screenshots, groep 6): module3.pcx with a grid of cards,
+  green SOM (Brutus) and yellow ANTWOORD (Snitch); face-up they are black
+  with white ASCII20 text, the sum or its value. The face, fuel, prize,
+  repair, boosts and rockets stand in a column on the right; no "Aantal
+  sommen". Cards are taken by mouse (the whole grid is one button, scan
+  code 57, the card read from the pointer; LIKELY Space does the same
+  wherever the pointer is, not tried).
+- CONFIRMED (port = original under Unicorn for 100 seeds per level,
+  `check_reken.py`): the grid per level `0x456e4` {cols, rows, x, y, w, h,
+  gap x, gap y}: groep 6 and 5 4 × 5 at (36, 70), groep 7–8 5 × 6 at
+  (5, 55) with 2-pixel gaps, groep 3 3 × 4 at (94, 102), groep 4 4 × 4 at
+  (36, 102); cards 102 × 67, gaps 12 or 14 / 12. `0x14d5a` makes
+  ⌈pairs / n⌉ sums of each of the n types in `0x45684[level]` (the
+  `0x4539c` list again), in type order, the extra ones unused:
+  + `0x137fa` and − `0x13945` from {10, 30} (groep 6–8) or {1, 5},
+  {1, 10}, {1, 20} (groep 3, 4, 5) (− nudges equal operands apart and puts
+  the larger first); × `0x13869` a ∈ [1, 10) by b ∈ [10, 20) (groep 6–8),
+  [1, 10) (3–4), [1, 20) (5); : `0x138ce` divisor d ∈ [1, 6) or [1, 10)
+  (3–4), quotient q ∈ [2, 10), [2, 5), [2, 8), shown as q·d : d. Then
+  `0x14378` deals pair p to two cells drawn one at a time (rand() % cells
+  left, the list closing up, `0x1434c`): first the SOM, then the ANTWOORD.
+  Cards are 58-byte records at 0x58f98: text, value +0x32, kind +0x36
+  (0 SOM, 1 ANTWOORD, −1 gone).
+- CONFIRMED (`0x14967`): a prize is chosen at the start and after each
+  found pair while cards are left. The first card must be a SOM, the
+  second an ANTWOORD; a card of the wrong kind shakes (anim 6 / 11, frames
+  0–4, 5 ms). A turned card plays anim 5 (SOM) / 10 (ANTWOORD) frames 0–6
+  then gets its text, centred, one pixel low. With two up the try counts
+  ([0x5bcf0]); equal values (any SOM with any ANTWOORD of that value) count
+  as found ([0x5bcec]): the award, then both play anim 7 (8 frames, 5 ms)
+  and leave. Otherwise no prize, 1 s, and they turn back (anims 8 / 9, 4
+  frames, 40 ms). The module ends when the grid is empty, or on Enter
+  (scan 0x1c, keeping what was won); the SMD record gets the tries and
+  the pairs found.
+- CONFIRMED (records' first two words, `0x18c17`.., port render identical
+  to the screenshot outside the prize and the cards): module 3 positions:
+  face anims 12 / 14 at (577, 90); prize anims 44–56 (each record's
+  module-3 anim, one below the others') at (568, 224); repair anim 4 at
+  (612, 188); boosts and rockets anim 1 at (600, 280) / (600, 316), +17;
+  fuel anim 2 digits at (539, 149), (560, 148), (582, 147); title anim 43
+  frame 2; Groep (ASCII12) at y = 420 centred in 98 pixels from x = 537
+  as if one character, Naam at y = 370.
+- CONFIRMED (screenshots during Help): Help (`0x147a9`) saves the grid,
+  deals a demo (SOM and ANTWOORD alternating, "2 + 3" = 5, "4 + 4" = 8),
+  turns cards to the spoken explanation with the title "Help!", and puts
+  the grid back. Not ported.

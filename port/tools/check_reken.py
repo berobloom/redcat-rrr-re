@@ -75,6 +75,30 @@ for level in range(6):
                 print('module 2 level %d seed %d: original %r, port %r'
                       % (level, 1 + i, orig, port[i]))
 
+# module 3: the deal, 0x14d5a with the play (0x14967) and the SMD record
+# stubbed; cards at 0x58f98, 58 bytes: text, value +0x32, kind +0x36
+GRID = [(4, 5), (5, 6), (5, 6), (3, 4), (4, 4), (4, 5)]
+CARDS, CELLS = 0x58f98, 0x457ac
+e.stub(0x14967, lambda e: None)
+e.stub(0x19f07, lambda e: None)
+for level in range(6):
+    port = sim('gen3', level, 1, N)
+    e.uc.mem_write(LEVEL, bytes([level]))
+    cells = GRID[level][0] * GRID[level][1]
+    for i in range(N):
+        e.seed = 1 + i
+        e.put32(CELLS, cells)
+        e.call(0x14d5a)
+        orig = ''.join('%s/%d/%d|' % (e.cstr(CARDS + 58 * k, 50),
+                                      e.i32(CARDS + 58 * k + 0x32),
+                                      e.i32(CARDS + 58 * k + 0x36))
+                       for k in range(cells)) + str(e.seed)
+        if orig != port[i]:
+            bad += 1
+            if bad <= 10:
+                print('module 3 level %d seed %d:\n  original %r\n  port     %r'
+                      % (level, 1 + i, orig, port[i]))
+
 STATES = [(75, 100, 5, 10), (40, 100, 5, 10), (120, 70, 5, 10),
           (100, 0, 5, 10), (100, 100, 99, 10), (100, 100, 5, 99),
           (30, 100, 99, 99), (150, 99, 0, 0)]
@@ -93,7 +117,7 @@ for st in STATES:
                 print('prize %s seed %d: original %s, port %s'
                       % (st, 1 + i, orig, port[i]))
 
-cases = len(GENERATORS) * 6 * N + 6 * N + len(STATES) * N
+cases = len(GENERATORS) * 6 * N + 2 * 6 * N + len(STATES) * N
 print('%d of %d cases differ' % (bad, cases))
 if crashes:
     print('the original faults in %d module 2 cases, e.g. level %d seed %d at %s'

@@ -10,6 +10,7 @@
 
 #define RC_SUMS_PER_ROUND 8     /* module 1, 0x11ea2 */
 #define RC_SESSION_SIZE 0x228   /* RRRIO.INF */
+#define RC_MEMORY_CELLS 30      /* module 3: the largest grid, 5 x 6 */
 
 enum {                          /* [0x46c86] */
     RC_PRIZE_BOOSTS,            /* +5, max 99 */
@@ -47,6 +48,20 @@ int rc_next_module(rc_session *s, int take);
    stage has none. */
 int rc_stage_map(int world, int stage);
 
+/* Module 3 "Memory": a card of the grid (0x58f98, 58-byte records) */
+enum { RC_CARD_GONE = -1, RC_CARD_SOM, RC_CARD_ANTWOORD };
+typedef struct {
+    char text[50];              /* the sum; a SOM card shows it */
+    int value;                  /* +0x32: an ANTWOORD card shows it */
+    int kind;                   /* +0x36 */
+} rc_card;
+
+/* 0x456e4: the grid per level */
+typedef struct {
+    int cols, rows;             /* [0x457a4], [0x457a8] */
+    int x, y, w, h, gap_x, gap_y;   /* [0x457b0].. */
+} rc_grid;
+
 typedef struct {
     uint32_t seed;              /* Watcom rand() state */
     int level;                  /* [0x46c84]: groep 6,7,8 -> 0,1,2; 3,4,5 */
@@ -59,6 +74,11 @@ typedef struct {
     char choice[3][100];        /* 0x537ec: choice 0 is the true sum */
     int choice_value[3];        /* 0x53be4 */
     int true_row;               /* [0x53c80]: the row choice 0 is shown in */
+    /* module 3: asked counts the pairs tried ([0x5bcf0]), correct the
+       pairs found ([0x5bcec]) */
+    rc_card card[RC_MEMORY_CELLS];
+    int cells, left;            /* [0x457ac]; cards still on the grid */
+    int first, second;          /* [0x58f90], [0x58f94]: turned cells, -1 */
 } rc_reken;
 
 void rc_reken_start(rc_reken *r, const rc_session *s, uint32_t seed);
@@ -80,9 +100,24 @@ int rc_module2_choice(const rc_reken *r, int row);
 /* The row picked: 1 if it shows the true sum; the prize as in module 1. */
 int rc_module2_answer(rc_reken *r, int row);
 
+/* Module 3 "Memory": deal the grid (0x14d5a, 0x14378) and choose the
+   first prize (0x14967). */
+void rc_module3_start(rc_reken *r);
+const rc_grid *rc_module3_grid(int level);
+/* A click on a cell (0x14967): RC_PICK_NONE when nothing happens,
+   RC_PICK_REFUSED when the card shakes (an ANTWOORD first, or a second
+   SOM), RC_PICK_TURNED when it turns over. */
+enum { RC_PICK_NONE, RC_PICK_REFUSED, RC_PICK_TURNED };
+int rc_module3_pick(rc_reken *r, int cell);
+/* After the second card: 1 if the values match (the pair leaves the grid,
+   the prize is added and, while cards are left, a new one chosen); 0 if
+   not.  first and second are -1 again afterwards. */
+int rc_module3_judge(rc_reken *r);
+
 /* The generators, for tests: type 0 x, 1 :, 2 +, 3 - (0x4539c's codes). */
 void rc_sum_make(rc_reken *r, int type);
 void rc_module2_make(rc_reken *r);               /* 0x12844 */
+void rc_module3_deal(rc_reken *r);               /* 0x14d5a, 0x14378 */
 void rc_prize_choose(rc_reken *r);               /* 0x18e7f */
 int rc_rand(rc_reken *r);                        /* 0x22bd2 */
 

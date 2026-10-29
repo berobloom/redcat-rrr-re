@@ -4,6 +4,8 @@
               one line per seed: text|answer|seed after
           reken_sim gen2 <level 0..5> <seed> <count>
               module 2: text0|value0|text1|value1|text2|value2|seed after
+          reken_sim gen3 <level 0..5> <seed> <count>
+              module 3's deal: text/value/kind per cell, |-separated
           reken_sim prize <fuel> <repair> <boosts> <rockets> <seed> <count>
               one line per seed: prize|seed after
           reken_sim play [groep] [seed]
@@ -13,8 +15,11 @@
               (digits, b = TERUG, o = OK); the first sum can be forced
           reken_sim shot2 <data dir> <out.ppm> [ms] [keys] [groep] [seed]
               the same for module 2
+          reken_sim shot3 <data dir> <out.ppm> [ms] [clicks] [groep] [seed]
+              module 3, clicks as cell numbers separated by commas, 1.5 s
+              apart
 
-   gen, gen2 and prize are what port/tools/check_reken.py compares with the
+   gen, gen2, gen3 and prize are what port/tools/check_reken.py compares with the
    original code. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,19 +76,29 @@ static int shot(int argc, char **argv, int module)
         return 1;
     }
     rc_session_default(&s);
-    if (module == 2 && argc > 6)
+    if (module >= 2 && argc > 6)
         s.groep = atoi(argv[6]);
     rc_exercise_start(&x, &s, module,
-                      module == 2 && argc > 7 ? strtoul(argv[7], NULL, 0) : 1);
+                      module >= 2 && argc > 7 ? strtoul(argv[7], NULL, 0) : 1);
     if (module == 1 && argc > 8) {
         snprintf(x.r.text, sizeof x.r.text, "%s", argv[6]);
         x.r.answer = atoi(argv[7]);
         x.field = (int)strlen(argv[7]);
-        x.r.prize = atoi(argv[8]);
+        x.prize = x.r.prize = atoi(argv[8]);
     }
     for (t = 0; t < ms; t += 10) {
         rc_exercise_tick(&x, 10);
-        if (t == 300)
+        if (module == 3 && t % 1500 == 300 && *keys) {
+            const rc_grid *g = rc_module3_grid(x.r.level);
+            int cell = atoi(keys);
+
+            rc_exercise_click(&x, g->x + cell % g->cols * (g->w + g->gap_x) + 10,
+                              g->y + cell / g->cols * (g->h + g->gap_y) + 10);
+            keys += strcspn(keys, ",");
+            keys += *keys == ',';
+            continue;
+        }
+        if (module != 3 && t == 300)
             for (i = 0; keys[i]; i++)
                 rc_exercise_key(&x, keys[i] == 'b' ? RC_KEY_BACK :
                                 keys[i] == 'o' ? RC_KEY_OK : keys[i]);
@@ -138,6 +153,22 @@ int main(int argc, char **argv)
         }
         return 0;
     }
+    if (argc >= 5 && strcmp(argv[1], "gen3") == 0) {
+        uint32_t seed = strtoul(argv[3], NULL, 0);
+
+        r.level = atoi(argv[2]);
+        n = atoi(argv[4]);
+        for (i = 0; i < n; i++) {
+            int k;
+
+            r.seed = seed + i;
+            rc_module3_deal(&r);
+            for (k = 0; k < r.cells; k++)
+                printf("%s/%d/%d|", r.card[k].text, r.card[k].value, r.card[k].kind);
+            printf("%u\n", r.seed);
+        }
+        return 0;
+    }
     if (argc >= 8 && strcmp(argv[1], "prize") == 0) {
         uint32_t seed = strtoul(argv[6], NULL, 0);
 
@@ -158,6 +189,8 @@ int main(int argc, char **argv)
         return shot(argc, argv, 1);
     if (argc >= 4 && strcmp(argv[1], "shot2") == 0)
         return shot(argc, argv, 2);
+    if (argc >= 4 && strcmp(argv[1], "shot3") == 0)
+        return shot(argc, argv, 3);
     if (argc >= 2 && strcmp(argv[1], "play") == 0)
         return play(argc > 2 ? atoi(argv[2]) : 6,
                     argc > 3 ? strtoul(argv[3], NULL, 0) : (uint32_t)time(NULL));

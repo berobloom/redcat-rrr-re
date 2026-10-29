@@ -15,12 +15,13 @@ Early. What exists:
 - `rcview <data dir> [map]`: an SDL2 viewer at the original's 640×480 in 8-bit
   colour. It scrolls a race map with the arrow keys (PgUp/PgDn: other map),
   and Tab shows the menu, race and exercise screens (left/right to step).
-- `redcat <data dir> [map] [--race] [--groep N] [--module 1|2] [--fps N]`:
+- `redcat <data dir> [map] [--race] [--groep N] [--module 1..3] [--fps N]`:
   first an exercise screen of the arithmetic part (`src/reken_screen.c`):
   module 1 Handig rekenen, 8 sums answered with the digit keys or by
   clicking the keypad, Backspace/TERUG, Enter/OK; module 2 Wat is waar?,
-  8 rounds of three sums, 1/2/3 or a click picks the true one. Each right
-  answer adds the shown prize. Then the stage's race
+  8 rounds of three sums, 1/2/3 or a click picks the true one; module 3
+  Memory, a grid of SOM and ANTWOORD cards turned by mouse, a found pair
+  leaves the grid. Each right answer or pair adds the shown prize. Then the stage's race
   (track1b) starts with the fuel, repair, boosts and rockets earned.
   `--race` goes straight to the race. The race (`src/race.c`, `src/game.c`):
   start lights, RedCat's driving, Brutus and Snitch following their
@@ -34,7 +35,8 @@ Early. What exists:
   prize per sum (fuel, repair, boosts, rockets), the totals at the end.
   `reken_sim shot <data dir> out.ppm [ms] [keys] [sum answer prize]` renders
   the exercise screen headless (`shot2 <data dir> out.ppm [ms] [keys]
-  [groep] [seed]` module 2's). `reken_sim gen` / `gen2` / `prize` print
+  [groep] [seed]` module 2's, `shot3` with comma-separated cells to click
+  Memory's). `reken_sim gen` / `gen2` / `gen3` / `prize` print
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 

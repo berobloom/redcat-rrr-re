@@ -535,6 +535,167 @@ int rc_module2_answer(rc_reken *r, int row)
     return answered(r, row == r->true_row);
 }
 
+/* Module 3 "Memory" */
+
+/* 0x45684: sum types per level (-1 unused), as 0x4539c */
+static const int8_t memory_types[6][4] = {
+    { 0, 1, 2, 3 }, { 0, 1, 2, 3 }, { 0, 1, 2, 3 },
+    { 2, 3, -1, -1 }, { 0, 2, 3, -1 }, { 0, 1, 2, 3 },
+};
+
+static const rc_grid memory_grid[6] = {         /* 0x456e4 */
+    { 4, 5, 36, 70, 102, 67, 12, 12 }, { 5, 6, 5, 55, 102, 67, 2, 2 },
+    { 5, 6, 5, 55, 102, 67, 2, 2 }, { 3, 4, 94, 102, 102, 67, 14, 12 },
+    { 4, 4, 36, 102, 102, 67, 14, 12 }, { 4, 5, 36, 70, 102, 67, 12, 12 },
+};
+
+/* operand ranges per level: + 0x45564 and - 0x45594 {lo, hi}; x 0x455c4
+   and : 0x45624 {lo, hi} for the first and second draw */
+static const int16_t memory_add[6][2] = {
+    { 10, 30 }, { 10, 30 }, { 10, 30 }, { 1, 5 }, { 1, 10 }, { 1, 20 },
+};
+static const int16_t memory_mul[6][4] = {
+    { 1, 10, 10, 20 }, { 1, 10, 10, 20 }, { 1, 10, 10, 20 },
+    { 1, 10, 1, 10 }, { 1, 10, 1, 10 }, { 1, 10, 1, 20 },
+};
+static const int16_t memory_div[6][4] = {      /* divisor, quotient */
+    { 1, 6, 2, 10 }, { 1, 6, 2, 10 }, { 1, 6, 2, 10 },
+    { 1, 10, 2, 5 }, { 1, 10, 2, 5 }, { 1, 6, 2, 8 },
+};
+
+#define MEMORY_SUMS 16          /* up to 4 types x 4 for 15 pairs */
+
+typedef struct {
+    char text[MEMORY_SUMS][100];    /* 0x56878 */
+    int value[MEMORY_SUMS];         /* 0x566e0 */
+} memory_sums;
+
+static void memory_sum(rc_reken *r, memory_sums *m, int type, int i)
+{
+    const int L = r->level;
+    int a, b;
+
+    switch (type) {
+    case 0:                                     /* 0x13869 */
+        a = between(r, memory_mul[L][0], memory_mul[L][1]);
+        b = between(r, memory_mul[L][2], memory_mul[L][3]);
+        snprintf(m->text[i], sizeof m->text[i], "%d x %d", a, b);
+        m->value[i] = a * b;
+        break;
+    case 1:                                     /* 0x138ce */
+        b = between(r, memory_div[L][0], memory_div[L][1]);
+        a = between(r, memory_div[L][2], memory_div[L][3]) * b;
+        snprintf(m->text[i], sizeof m->text[i], "%d : %d", a, b);
+        m->value[i] = a / b;
+        break;
+    case 2:                                     /* 0x137fa */
+        a = between(r, memory_add[L][0], memory_add[L][1]);
+        b = between(r, memory_add[L][0], memory_add[L][1]);
+        snprintf(m->text[i], sizeof m->text[i], "%d + %d", a, b);
+        m->value[i] = a + b;
+        break;
+    case 3:                                     /* 0x13945 (0x45594 = 0x45564) */
+        a = between(r, memory_add[L][0], memory_add[L][1]);
+        b = between(r, memory_add[L][0], memory_add[L][1]);
+        if (a == b)
+            a += a == memory_add[L][1] ? -1 : 1;
+        if (a > b) {
+            snprintf(m->text[i], sizeof m->text[i], "%d - %d", a, b);
+            m->value[i] = a - b;
+        } else {
+            snprintf(m->text[i], sizeof m->text[i], "%d - %d", b, a);
+            m->value[i] = b - a;
+        }
+        break;
+    }
+}
+
+const rc_grid *rc_module3_grid(int level)
+{
+    return &memory_grid[level < 0 || level > 5 ? 0 : level];
+}
+
+void rc_module3_deal(rc_reken *r)
+{
+    static memory_sums m;
+    const rc_grid *g = rc_module3_grid(r->level);
+    int perm[RC_MEMORY_CELLS], n = 0, per, i, k, p, left;
+
+    r->cells = r->left = g->cols * g->rows;
+    for (k = 0; k < 4; k++)
+        if (memory_types[r->level][k] != -1)
+            n++;
+    /* every type the same number of times, rounded up: the extra sums are
+       made but not dealt */
+    per = r->cells / 2 / n;
+    if (per * n < r->cells / 2)
+        per++;
+    for (k = 0, i = 0; k < n; k++)
+        for (p = 0; p < per; p++, i++)
+            memory_sum(r, &m, memory_types[r->level][k], i);
+
+    /* 0x14378: each pair to two cells drawn from those left */
+    for (i = 0; i < r->cells; i++)
+        perm[i] = i;
+    left = r->cells;
+    for (p = 0; p < r->cells / 2; p++)
+        for (k = RC_CARD_SOM; k <= RC_CARD_ANTWOORD; k++) {
+            int j = rc_rand(r) % left;
+            rc_card *c = &r->card[perm[j]];
+
+            snprintf(c->text, sizeof c->text, "%s", m.text[p]);
+            c->value = m.value[p];
+            c->kind = k;
+            memmove(perm + j, perm + j + 1, (left - j - 1) * sizeof *perm);
+            left--;                             /* 0x1434c */
+        }
+}
+
+void rc_module3_start(rc_reken *r)
+{
+    rc_module3_deal(r);
+    r->first = r->second = -1;
+    rc_prize_choose(r);
+}
+
+int rc_module3_pick(rc_reken *r, int cell)
+{
+    int kind;
+
+    if (cell < 0 || cell >= r->cells || r->card[cell].kind == RC_CARD_GONE)
+        return RC_PICK_NONE;
+    kind = r->card[cell].kind;
+    if (r->first == -1) {
+        if (kind != RC_CARD_SOM)
+            return RC_PICK_REFUSED;
+        r->first = cell;
+        return RC_PICK_TURNED;
+    }
+    if (cell == r->first || r->second != -1)
+        return RC_PICK_NONE;
+    if (kind == r->card[r->first].kind)
+        return RC_PICK_REFUSED;
+    r->second = cell;
+    return RC_PICK_TURNED;
+}
+
+int rc_module3_judge(rc_reken *r)
+{
+    rc_card *a = &r->card[r->first], *b = &r->card[r->second];
+    int right = a->value == b->value;
+
+    r->asked++;
+    if (right) {
+        a->kind = b->kind = RC_CARD_GONE;
+        r->left -= 2;
+    }
+    answered(r, right);
+    if (right && r->left)
+        rc_prize_choose(r);
+    r->first = r->second = -1;
+    return right;
+}
+
 /* The session record */
 
 static int32_t get32(const uint8_t *p)

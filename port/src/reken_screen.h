@@ -1,5 +1,5 @@
-/* The arithmetic part's screen (REKEN.EXE modules 1 "Handig rekenen" and
-   2 "Wat is waar?"): drawn into a 640x480 8-bit frame buffer, no SDL.  The caller passes time, keys
+/* The arithmetic part's screen (REKEN.EXE modules 1 "Handig rekenen",
+   2 "Wat is waar?" and 3 "Memory"): drawn into a 640x480 8-bit frame buffer, no SDL.  The caller passes time, keys
    and clicks, and shows fb with pal.
 
    Layout and timing are the original's (research/discoveries.md "The
@@ -27,17 +27,17 @@ typedef struct {
     uint8_t fb[640 * 480];
     rc_rgb pal[256];
 
-    rc_pcx bg;                  /* mod_124.pcx */
-    rc_font font12, font30;
+    rc_pcx bg, bg3;             /* mod_124.pcx, module3.pcx */
+    rc_font font12, font20, font30;
     rc_sprite img[RC_MENU_IMAGES + 1];  /* by image number (MENU entry + 1) */
 
     rc_reken r;
-    int module;                 /* 1, 2 */
+    int module;                 /* 1, 2, 3 */
     int state, state_ms, frame;
     char typed[12];
     int field;                  /* answer digits */
     int face_anim, face_frame;
-    int prize_frame;
+    int prize_frame, prize;     /* the prize shown */
     int pressed_anim, pressed_x, pressed_y, pressed_ms;
     int shown_fuel, shown_repair, shown_boosts, shown_rockets;
     int stopped;
@@ -47,13 +47,17 @@ typedef struct {
     int texts_shown;
     int picked;                 /* the row answered */
     int box_value;              /* the Uitkomst box (groep 3..5); -1 empty */
+    /* module 3: what each cell shows (anim, frame, its text on top) */
+    int cell_anim[RC_MEMORY_CELLS], cell_frame[RC_MEMORY_CELLS];
+    int cell_text[RC_MEMORY_CELLS];     /* 1 the sum, 2 the value */
+    int anim_cell[2], anim_kind[2], anim_cells;     /* cards animating */
 } rc_exercise;
 
 int rc_exercise_load(rc_exercise *x, const rc_archive *reken,
                      const rc_archive *menu);
 void rc_exercise_free(rc_exercise *x);
 
-/* Start module 1 or 2 with the session's groep and counters. */
+/* Start module 1, 2 or 3 with the session's groep and counters. */
 void rc_exercise_start(rc_exercise *x, const rc_session *s, int module,
                        uint32_t seed);
 void rc_exercise_tick(rc_exercise *x, int ms);
