@@ -38,7 +38,8 @@
     number is one past the last file's when no name matches. Not checked
     at run time: REKEN's own second append (the full-stride rewrite is
     read from the code).
-19. What +0x30 / [0x46c87] (default 3) means; it gates the prize sounds.
+19. **RESOLVED.** +0x30 / [0x46c87] is the sound mode: bit 0 effects (and
+    sound at all), bit 1 music (discoveries "Sound").
 
 ## Data
 

@@ -319,7 +319,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (often the rocket's own, just freed), period 1, anim 17 (18 frames) from
   frame 0, the position of the object it is set off at, no velocity, life
   18; each frame life − 1 (freed at 0), prio −10, velocity × 0.9. Then
-  `0x103d1(1, distance to the camera racer)`, LIKELY its sound.
+  `0x103d1(1, distance to the camera racer)`: explo_m.wav (see "Sound").
 - Computer racers never fire (their scripts are empty; see above), so
   rockets are RedCat's alone.
 
@@ -923,3 +923,83 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   the "%3d". RRRFONT pair 1 at (51, 101 + 30 i), then pair 0 at (50,
   100 + 30 i). The pointer comes back; one button (0x455ee) Enter over the
   whole screen; Enter or E goes on to EINDANI2.SMK (not ported).
+
+## Sound
+
+- CONFIRMED (code: RRR `0x1043a`, RRRMENU `0x103ce`, REKEN `0x103d1`): the
+  three programs share one Sound Blaster library ("sndman.c" over
+  "sndbuf.c" and "irq7.c"). RRR: 4 tracks ([0x5fe67]), 34 samples from
+  SNDRCS by the name table 0x55e58, card rate 0x2b11 = 11025 Hz. RRRMENU:
+  2 tracks, the 11 names at 0x45164 (RRRMSND), 11025 Hz. REKEN: 2 tracks,
+  100 names (REKENSND: click, fuel, fout1, fouttun1, doing, noise, whizz,
+  knoppr, roll, yiha, rc3..rc11, then 01..80 with 56a and 56b), the rate
+  from a WAV header (`0x1c29c`; all REKENSND files are 22050 Hz).
+  `/NOSOUND`, `/NS` and a failed card set-up leave the sound off.
+- CONFIRMED (code): the sound mode RRRIO +0x30 (RRR [0x751a8], RRRMENU
+  [0x45556], REKEN [0x46c87]; the menu's Geluid 3 → 1 → 0) is a bit set:
+  RRR initialises sound only with bit 0 (`0x10a3a`, so 0 is silence) and
+  plays music only with bit 1 and no `/NOMUSIC` ([0x6fc58], `0x10d53`);
+  RRRMENU plays effects for any non-zero mode and music for bit 1.
+- STRONGLY SUPPORTED (code `0x1db94`, `0x1dda9`): the mixer. For each byte
+  the card plays, every track adds its next byte (8-bit unsigned) and a
+  free track 0x80; the sum divided by the number of tracks is the output.
+  A sample whose WAV has more than one channel (entry +0x20, `0x1daa0`)
+  gives the mean of a byte pair. The track's volume byte (+0xe, set from
+  the play call, clamped to 256 / tracks) is compared but both branches do
+  the same, so volume is never applied; the WAV rate is only compared with
+  the card's for a debug message ("not the same frequency"), so turbo.wav
+  (8403 Hz) plays fast. A track plays its sample once and is then free
+  (mode 1; mode 2 loops, not used here).
+- CONFIRMED (code `0x10303`, `0x10350`, `0x103d1`): `play(track, sample)`
+  starts only on a free track (a busy one keeps its sound); `play_fx
+  (sample, distance)` takes the first free of tracks 1..3 with volume
+  min(64, (1500 / distance) · 64), which the mixer ignores. Track 0 is
+  RRR's music.
+- CONFIRMED (code `race_init` 0x10d8e..0x10ede, `race_main`
+  0x112cb..0x11458): music. On a world's first race (`0x1aea5`: stage 0)
+  start.wav plays on track 0 over the loading screen (wacht.pcx) until it
+  ends or S, Esc, Enter or Space, which stop it. After the dashboard
+  tune_m.wav (tune.wav under `/STEREO`) starts on track 0; race_main
+  plays it again each frame, which only takes when the track is free, so
+  it loops. At the finish track 0 is stopped and rcend.wav plays; with
+  music on, the loop then runs only objects, camera and drawing (no input,
+  no HUD) until track 0 is free or Esc. Without music the race stops at
+  once (as observed in DOSBox, "The race: podium").
+- CONFIRMED (code `start_lights` 0x1103e): ti.wav on track 1 with lamps
+  2, 3 and 4, tu.wav with the green one.
+- CONFIRMED (code; the call sites of `0x103d1`): the effects, sample
+  number and file:
+  | event | where | sample |
+  |---|---|---|
+  | T held (every frame) | race_main 0x113af | 4 r_horn_m |
+  | rocket fired (also the wreck) | 0x12185, 0x19772 | 20 firerock |
+  | RedCat's boost | 0x12209 | 16 boost |
+  | RedCat accelerates from below 0x3333 | 0x12277 | 15 slidcar |
+  | RedCat lands bouncing faster than 2 px/frame | 0x12597 | 21 bump2 |
+  | RedCat bumps Snitch / Brutus | 0x1260f, 0x12680 | 13 duhh, then rand() % 100 ≥ 10 / ≥ 20: 4 r_horn_m |
+  | Brutus bumps Snitch | 0x12f57 | 13 duhh |
+  | Brutus / Snitch accelerate from below 2 px/frame | 0x12ba8, 0x13472 | 6 bengine / 7 sengine |
+  | AI boost at a waypoint | 0x1b29c, 0x1b2be | 16 boost, 17 turbo |
+  | explosion (rocket, missile, mine) | `0x17faa` 0x180c2 | 1 explo_m |
+  | mine (any racer) | cell_effect 0x18eae | 1 explo_m, then the explosion's |
+  | mine leaves RedCat with damage or fuel ≤ 0 | 0x18f72 | 23 rcow |
+  | boost picked up (any racer) | 0x18d10 | 2 ping_m |
+  | cactus hit (any racer) | 0x1911c | 25 cacsmash |
+  | cactus while damage or fuel < 1 (RedCat) | 0x190a4 | 23 rcow |
+  | ramp with chance > 20 while damage or fuel ≤ 0 | 0x18fe4.. | 26 r_yiha06, 27 b_yiha14, 28 s_yiha01 |
+  Snitch's ramp test reads Snitch's damage but Brutus's fuel. The rest of
+  the table (shot, to_m, rengine, crash1/2, big_expl, kick, boing,
+  putbom, yippee, tropical) is loaded but never played by RRR's code;
+  cell type 22 (ping_m, stats +0x18 + 1) is not in any map.
+- CONFIRMED (code `0x12614`, `0x12685`): the bump's rand() is drawn
+  whether or not sound is on, so it is part of the race's random stream.
+- CONFIRMED (code `0x18eba`): a mine sets off an explosion
+  (`0x17faa(1, mine)`) before it is freed, so the explosion takes another
+  slot than the mine's.
+- CONFIRMED (code `menu_loop` 0x11bf7, `rapport_screen` 0x12990): RRRMENU
+  plays effects on track 1 through `menu_sound(sample, wait)` (0x10b4f),
+  which first stops what plays there, and REDCAT.WAV (stereo) on track 0
+  whenever it is free and the mode has bit 1. Start! rc4, R TRACK1, a new
+  groep KNOPPR, P RAPPORT and Terug from Rapport WHIZZ, B BEDIEN1, E WHIZZ
+  (waited for). Geluid to 1 stops track 0, to 0 both. Under `/1` (from
+  MOTOR) menu_init plays MENU.WAV and waits for it or Esc.

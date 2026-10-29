@@ -43,5 +43,6 @@ Confidence levels per AGENTS.md.
 - LIKELY: type 11 is the road surface (it holds the top speed near 12
   px/frame while off-road speeds above 12 drop); the exact effect over five
   checks per frame is not worked out.
-- SPECULATIVE: type 12 is a mine ("putbom.wav" in SNDRCS) and 15/16 hurt as
-  cacti do (damage −2 or −1 in the 15/16 branch).
+- SUPERSEDED: "type 12 is a mine (putbom.wav)". It is a mine (discoveries
+  "map cells", "Sound": it explodes with explo_m.wav); putbom.wav is never
+  played.

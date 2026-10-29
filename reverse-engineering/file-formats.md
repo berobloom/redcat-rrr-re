@@ -107,7 +107,7 @@ The state RRRMENU, REKEN and RRR share (REKEN keeps it at 0x534f4): a raw dump o
 | 0x24 | 0x7519c | 0 | stage: map column, = the module REKEN last played |
 | 0x28 | 0x751a0 | 6 | groep 3–8 |
 | 0x2c | 0x751a4 | 0 | world 0–5 (row of the map and module tables) |
-| 0x30 | 0x751a8 | 3 | ? (REKEN [0x46c87], gates prize sounds) |
+| 0x30 | 0x751a8 | 3 | sound mode: bit 0 effects, bit 1 music (REKEN [0x46c87]) |
 | 0x34 | 0x751ac | 0 | joystick on |
 | 0x50 | 0x751c8 | 0x1c, 0x36, 0x4b, 0x4d, 0x48, 0x50 | key scancodes: Enter, right Shift, ←, →, ↑, ↓ |
 | 0x68 | 0x751e0 | | the pupil's name, a C string (RRRMENU 0x10ed1 puts "RedCat" when empty); the 400 bytes up to 0x1f8 are cleared by default |

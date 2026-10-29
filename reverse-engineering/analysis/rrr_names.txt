@@ -81,3 +81,13 @@
 0x15a9f podium               # CONFIRMED: picture by first two places + points, 4 s (port podium.c, pixel-identical)
 0x1be17 user_exit            # CONFIRMED: exit(code) for MOTOR.EXE
 0x1b6bf high_score           # LIKELY: 'Save score %d for', 'New place = %d' in DEBUG.TXT (RRRHIGH.DAT?)
+0x10303 snd_track_free       # CONFIRMED: sndman.c; 1 when sound is off, the track is unused or done
+0x10350 snd_play             # CONFIRMED: sndman.c (track, sample, vol); only on a free track
+0x103d1 play_fx              # CONFIRMED: first free of tracks 1..3, vol from 1500/distance (unused by the mixer)
+0x1043a sound_init           # CONFIRMED: /NOSOUND /NS, BLASTER, 4 tracks, 34 samples at 11025 Hz, /VMIN.. /VMAX
+0x17faa explode_objects      # CONFIRMED: (count, at): explosions at an object, explo_m.wav each
+0x1cd3f mix_track_free       # CONFIRMED: irq7.c track table 0x7f16c (0x12 bytes) +0 free flag
+0x1cd62 mix_add_track        # CONFIRMED: data, size, vol (+0xe), stereo flag (+0xf)
+0x1ce02 mix_stop_track       # CONFIRMED
+0x1db94 mix_irq              # STRONGLY SUPPORTED: Sound Blaster IRQ mixer: sum of tracks / tracks
+0x1ec03 sndbuf_play          # CONFIRMED: sndbuf.c: loads the sample if not cached, then mix_add_track
