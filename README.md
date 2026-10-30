@@ -6,7 +6,7 @@ A study of the 1996 DOS game **RedCat's Razende Rekenrace** (Davilex), a
 racing game for primary-school arithmetic, and a reimplementation in C that
 plays it on Linux and in the browser.
 
-![The port: the start lights go out, Brutus and Snitch pull away, and RedCat drives down the canyon past the cacti and a ramp](docs/media/race.gif)
+![The port: the start lights go out, Brutus and Snitch pull away, and RedCat drives down the canyon past the cacti and a ramp](docs/media/redcat-race.gif)
 
 The research half is notes on how the original works, worked out from its
 executables (Watcom C, DOS/4GW) and its data, and from experiments with it
