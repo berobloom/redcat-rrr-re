@@ -10,10 +10,9 @@
    ends; MOTOR runs it unless `/NI` (`/NOINTRO` does not match).
    Discoveries "The round".
 
-23. INTRO.EXE's film loop ends on Enter, Space or Esc (0x16f95), yet
-    under MOTOR in DOSBox-X it did not skip on them. Check with a key
-    held longer than one frame, and whether INTRO's keyboard handler
-    (`0x14023`, called before the film) is in place (discoveries "The round").
+23. **RESOLVED (session 7): the harness.** QMP `send-key` released the key
+    too soon for INTRO's own INT 9 table; with real holds an 80 ms tap ends
+    the film, under MOTOR too (discoveries "The round").
 
 ## Race
 

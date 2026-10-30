@@ -929,9 +929,25 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   track 0 is free or Enter, Space or Esc is pressed and released; when
   the sound card could not be set up ([0x4366c] = 1) it skips the wait.
   /NOSMACK (0x159de(0)) turns the player off; /VBUF sets a buffer flag;
-  /NOSOUND, /STEREO and /DMA: /SBP: /IRQ: set up the sound card. Against
-  the keys: runtime-dosbox.md notes that the intro did not skip on Esc,
-  Space or Enter (QMP taps of 80 ms under MOTOR); not yet explained.
+  /NOSOUND, /STEREO and /DMA: /SBP: /IRQ: set up the sound card.
+- CONFIRMED (INTRO.EXE code; DOSBox-X, session 7): INTRO reads the
+  keyboard through its own INT 9 handler `0x172a9`, installed at start-up
+  (main `0x105b7` → `0x13f26` → `0x17318`, DPMI via `0x1a0e3`/`0x1a115`).
+  It reads port 0x60 and sets `held[scan]` ([0x5ab20 + 4·scan]) to 1 on a
+  make code and 0 on a break code; it does not chain to the old handler
+  ([0x43868] = 0). The key test `0x1737e` reads `held` (flag [0x43864],
+  initialised 1, never written) and then a "pressed" latch [0x5a720], which
+  only the mouse hit-test `0x1dd5e` sets. So a key counts only while it
+  is down at the moment of a poll; the film polls in its wait for the sound
+  and once per frame. `0x14023`, named in the old open question, is not
+  the handler: it hides the pointer, fills the screen and shows it again.
+  At run time [0x43864] = 1, [0x4386c] = 1 (installed), and Esc's `held`
+  entry read 1 for as long as it was down. Taps of 80 ms of Esc, Space or
+  Enter end the film, alone and under MOTOR (the menu follows). The
+  earlier misses came from the harness: QMP `send-key` ignores
+  `hold-time` and releases the key 120 main-loop passes after the press,
+  which with the Sound Blaster's DMA is too soon for any poll; `held` never
+  read 1. `dosrun.py key` now sends separate down and up events.
 - Port: `game.c` plays the film before the first menu, stretched to
   640 × 480 as mode 13h fills a 4:3 screen, with `smacker.c` (from the
   A2 port; all five of the game's films decode identically to ffmpeg).

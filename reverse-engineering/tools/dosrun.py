@@ -116,10 +116,13 @@ class Dos:
         self.q.close()
 
     def key(self, qcode, hold=0.08):
+        # not QMP send-key: it ignores hold-time and releases the key 120
+        # main-loop passes later, which under sound DMA is too soon for a
+        # program that polls its own INT 9 table to ever see it down
         if isinstance(qcode, tuple):
             self.q.key_chord(list(qcode), hold)
         else:
-            self.q.key_tap(qcode, hold)
+            self.q.key_hold(qcode, hold)
         time.sleep(0.03)
 
     def type_line(self, text, enter=True):

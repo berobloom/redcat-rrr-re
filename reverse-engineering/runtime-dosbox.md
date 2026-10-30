@@ -33,9 +33,12 @@ $D stop
   image (RRR: code 0x10000 -> 0x1d4000, data 0x50000 -> 0x206000 under
   `redcat.conf`, memsize 16). Changing memsize or what runs first moves them;
   `locate` finds them by searching fixup-free byte windows.
-- The intro did not skip on Esc, Space or Enter (mouse not tried), though
-  its code ends the film on any of them once released (discoveries
-  "The round"); not yet explained.
+- QMP `send-key` ignores `hold-time`: the release follows the press by
+  120 passes of DOSBox-X's main loop, not 120 ms, and every PIC event
+  (Sound Blaster DMA, for one) ends a pass. A program with its own INT 9
+  handler that polls a key table then never sees the key down (INTRO's
+  film did not skip). `dosrun.py key` sends `input-send-event` down, waits
+  the hold, then up; text typed at the DOS prompt works either way.
 
 - `cycles = fixed 40000` is not always real time: with another DOSBox-X
   busy on the machine, the BIOS tick (0x46c) came every 76–88 ms of wall
