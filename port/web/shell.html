@@ -31,6 +31,8 @@
   progress { width: 100%; height: 8px; margin-top: 12px; accent-color: var(--accent); }
   #log { font: 12px/1.4 ui-monospace, monospace; color: var(--muted); white-space: pre-wrap;
          max-height: 120px; overflow: auto; margin-top: 12px; }
+  a { color: var(--text); }
+  code { font: 13px ui-monospace, monospace; }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -39,6 +41,11 @@
   <div id="panel">
     <h1>RedCat's Razende Rekenrace</h1>
     <p id="status">Starting…</p>
+    <p id="get" class="hidden">
+      Don't have it? The CD is on the Internet Archive:
+      <a href="https://archive.org/download/RedcatRazendeRekenrace/Redcat%20Razende%20Rekenrace.iso">Redcat&nbsp;Razende&nbsp;Rekenrace.iso</a>.
+      Extract the ISO (7-Zip can) and choose the extracted folder.
+    </p>
     <progress id="progress" class="hidden" max="100" value="0"></progress>
     <div id="pick" class="row hidden">
       <label class="btn" for="folder">Choose the game folder…</label>
@@ -95,6 +102,7 @@
       return;
     }
     $('pick').classList.add('hidden');
+    $('get').classList.add('hidden');
     $('progress').classList.remove('hidden');
     let done = 0;
     for (const f of list) {
@@ -135,6 +143,7 @@
                'Choose your RedCat\'s Razende Rekenrace CD or installed game folder once; ' +
                'the files are copied into this browser.');
         $('pick').classList.remove('hidden');
+        $('get').classList.remove('hidden');
       }
     },
   };
