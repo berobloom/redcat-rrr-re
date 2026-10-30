@@ -50,12 +50,12 @@ The other options are in [`port/README.md`](port/README.md).
 ### In the browser
 
 ```sh
-port/web/build.sh <game data dir>    # needs Emscripten (emcc)
-port/web/serve.sh                    # then open http://localhost:8080/redcat.html
+port/web/build.sh    # needs Emscripten (emcc)
+port/web/serve.sh    # then open http://localhost:8080/redcat.html
 ```
 
-The build packs the game data the page needs into `port/web/out/`. Those
-files are the original's: keep them to yourself.
+The page asks for your game folder (the CD or the installed game) once and
+keeps the files it needs in the browser's storage.
 
 ## Layout
 

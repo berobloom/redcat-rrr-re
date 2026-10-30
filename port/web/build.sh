@@ -1,20 +1,18 @@
 #!/bin/sh
-# Build the WebAssembly race and viewer (port/web/out/redcat.* and
-# rcview.*). The C sources are the desktop port's own; the web-only part is
-# the __EMSCRIPTEN__ main loop in game.c and main.c.
+# Build the WebAssembly game (port/web/out/redcat.*). The C sources are the
+# desktop port's own; the web-only part is the __EMSCRIPTEN__ main loop in
+# game.c.
 #
-#   port/web/build.sh <game data dir>   (needs Emscripten: source emsdk_env.sh
-#                                         first, or have it in .work/emsdk)
-#   port/web/serve.sh                   then open http://localhost:8080/redcat.html
+#   port/web/build.sh      (needs Emscripten: source emsdk_env.sh first, or
+#                           have it in .work/emsdk)
+#   port/web/serve.sh      then open http://localhost:8080/redcat.html
 #
-# The game data is packed into out/*.data. It is the original game's:
-# never publish out/.
+# No game data goes into out/: the page asks for the player's own game folder
+# once and keeps the files it needs in the browser (shell.html, save.js).
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 PORT=$(cd "$HERE/.." && pwd)
 ROOT=$(cd "$PORT/.." && pwd)
-DATA=${1:?usage: build.sh <game data dir>}
-DATA=$(cd "$DATA" && pwd)
 
 if ! command -v emcc >/dev/null 2>&1; then
     if [ -x "$ROOT/.work/emsdk/upstream/emscripten/emcc" ]; then
@@ -30,35 +28,14 @@ sources() {
     sed -n "/add_$1($2/,/)/p" "$PORT/CMakeLists.txt" | tr -d ' ' | grep '\.c$'
 }
 
-# preload flags for the named files (archives as BASE.IND + BASE.IMG)
-preload() {
-    for f in "$@"; do
-        case $f in
-        *.*) names=$f ;;
-        *) names="$f.IND $f.IMG" ;;
-        esac
-        for n in $names; do
-            src=$(find "$DATA" -maxdepth 1 -iname "$n" | head -n 1)
-            [ -n "$src" ] || { echo "$n not in $DATA" >&2; exit 1; }
-            printf ' --preload-file %s@/data/%s' "$src" "$n"
-        done
-    done
-}
-
 OUT="$HERE/out"
 mkdir -p "$OUT"
 cd "$PORT"
 CORE=$(sources library rccore)
-build() {
-    name=$1; shift
-    files=$1; shift
-    # shellcheck disable=SC2046,SC2086
-    emcc -O2 -std=gnu99 -Isrc $CORE $(sources executable "$name") \
-        -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 "$@" \
-        --shell-file "$HERE/shell.html" $(preload $files) \
-        -o "$OUT/$name.html"
-    echo "built $OUT/$name.html"
-}
-build redcat "RCS RC TRANS.DAT REKEN MENU RRRMENU RRRANIM RRRFONT.IMG SNDRCS RRRMSND REKENSND INTRO INTROSND" \
-    -lidbfs.js --pre-js "$HERE/save.js"
-build rcview "RCS RRRMENU REKEN"
+emcc -O2 -std=gnu99 -Isrc $CORE $(sources executable redcat) \
+    -sUSE_SDL=2 -sALLOW_MEMORY_GROWTH=1 \
+    -sFORCE_FILESYSTEM=1 -lidbfs.js --pre-js "$HERE/save.js" \
+    -sINVOKE_RUN=0 -sEXPORTED_RUNTIME_METHODS=callMain,FS \
+    --shell-file "$HERE/shell.html" \
+    -o "$OUT/redcat.html"
+echo "built $OUT/redcat.html"

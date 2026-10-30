@@ -4,7 +4,8 @@ redcat.html (or $RC_PAGE), follow a script of waits and keys, screenshot the
 canvas and print the program's console output.
 
 Usage: test_web.py <out dir> [step ...]
-  steps:  wait:<s>  shot:<name>  key:<Key> (Playwright key name)
+  steps:  data:<dir> (choose that game folder)  play (press Play)
+          wait:<s>  shot:<name>  key:<Key> (Playwright key name)
           hold:<Key>:<s>  click (focus the canvas)
           clickat:<x>:<y> (a click at 640x480 game coordinates)
 Needs: pip install playwright (any cached Chromium; set RC_CHROME to pick one)
@@ -44,7 +45,12 @@ with sync_playwright() as p:
                                           os.environ.get('RC_PAGE', 'redcat.html')))
     for step in sys.argv[2:]:
         kind, _, arg = step.partition(':')
-        if kind == 'wait':
+        if kind == 'data':
+            page.locator('#folder').set_input_files(arg)
+            page.locator('#play').wait_for(state='visible', timeout=120000)
+        elif kind == 'play':
+            page.locator('#play').click()
+        elif kind == 'wait':
             time.sleep(float(arg))
         elif kind == 'shot':
             page.locator('canvas').screenshot(path=os.path.join(out, arg + '.png'))

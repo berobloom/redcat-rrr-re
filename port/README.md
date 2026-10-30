@@ -99,14 +99,15 @@ File names are matched without regard to case, as on DOS.
 ### In the browser
 
 ```sh
-port/web/build.sh <game data dir>    # needs Emscripten (emcc, or .work/emsdk)
+port/web/build.sh                    # needs Emscripten (emcc, or .work/emsdk)
 port/web/serve.sh                    # then open http://localhost:8080/redcat.html
-.work/venv/bin/python port/web/test_web.py <shots dir> wait:10 hold:ArrowDown:3 shot:race
+.work/venv/bin/python port/web/test_web.py <shots dir> data:<game data dir> play wait:10 shot:intro
 ```
 
-The build packs the archives each page needs into `port/web/out/*.data`.
-The browser starts the sound after the first click or key.
-Those files are game data: keep them to yourself.
+The build holds no game data. The page asks once for the player's game
+folder (the CD or the installed RCREKEN) and copies the archives the port
+reads into the browser's IndexedDB (`shell.html`, `save.js`), next to the
+saves. The browser starts the sound after the first click or key.
 
 `src/anims_tab.c` is generated from RRR.EXE's animation table (frame and
 image numbers only) by `port/tools/gen_anims.py`.
