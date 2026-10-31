@@ -29,7 +29,8 @@ Early. What exists:
   the arithmetic part (`src/reken_screen.c`) and the race of that stage,
   with the fuel, repair, boosts and rockets earned and the last finishing
   order as the start order, each race followed by the podium with the
-  world's points (`src/podium.c`); after the last race the next world. The
+  world's points (`src/podium.c`), the world's last race by the points
+  leader's film (w*.smk with tropical.wav; Enter, Space or Esc ends it); after the last race the next world. The
   modules: 1 Handig rekenen, 8 sums answered with the digit keys or by
   clicking the keypad, Backspace/TERUG, Enter/OK; 2 Wat is waar?, 8 rounds
   of three sums, 1/2/3 or a click picks the true one; 3 Memory, a grid of
@@ -76,9 +77,8 @@ Early. What exists:
   generator output for `tools/check_reken.py`, which compares it seed by
   seed with REKEN.EXE's own code run under Unicorn.
 
-Not ported yet: the winner's film after a stage-4 race (the podium stands
-in), the closing film (EINDANI2.SMK), the menu's joystick set-up and
-the exercises' mouse pointer.
+Not ported yet: the menu's joystick set-up and the exercises' mouse
+pointer.
 
 ### Frame rate
 

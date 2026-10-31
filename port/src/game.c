@@ -128,6 +128,9 @@ static struct {
     Uint32 film_start;
     Uint32 intro_ms;            /* rrrintro.wav's length; 0 without it */
     SDL_Scancode intro_key;     /* Esc, Space or Enter held down */
+    int winner;                 /* RRR's winner film plays (0x15a14) */
+    int closing;                /* RRRMENU's closing film: 1 plays, 2 hold */
+    Uint32 closing_until;
 } g;
 
 static void audio_callback(void *u, Uint8 *stream, int len)
@@ -626,6 +629,8 @@ static void to_menu(void)
     play_race();
 }
 
+static int start_closing_film(void);
+
 static void menu_frame(void)
 {
     rc_menu *m = &g.mainmenu;
@@ -684,7 +689,9 @@ static void menu_frame(void)
         play_race();
     } else if (m->result == RC_MENU_QUIT) {
         save_session();
-        g.running = 0;
+        g.in_menu = 0;
+        if (start_closing_film() != 0)
+            g.running = 0;
     }
 }
 
@@ -919,13 +926,193 @@ static void intro_frame(void)
     }
 }
 
+/* stage_is_last (0x1ae67): from the stage on, the first stage with a
+   race is column 4 */
+static int stage_is_last(int world, int stage)
+{
+    while (stage <= 4 && rc_stage_map(world, stage) < 0)
+        stage++;
+    return stage == 4;
+}
+
+/* After the last race of a world RRR plays the points leader's film
+   instead of the podium (0x114b8): the first racer with the most points
+   (more than 0), as 0x15a14(2 k), which stops track 0 and plays
+   wredcat.smk, wbrutus.smk or wsnitch.smk (RCS) through smacker.c's
+   0x22580 with flags 0x2a: mode 13h and back (0x20), the film's own
+   palette (2), all 200 lines, not held to the sound (8); tropical.wav
+   (sample 33) starts on track 0 with the first frame when the sound card
+   is set up ([0x55ee1]).  It ends after the last frame, or when Enter,
+   Space or Esc is let go; then RRR exits 43 (REKEN). */
+static const char *const winner_films[RC_RACERS] = {
+    "wredcat.smk", "wbrutus.smk", "wsnitch.smk"
+};
+
+static int start_winner_film(void)
+{
+    uint32_t size;
+    const uint8_t *d;
+    int k, best = 0, leader = -1;
+
+    for (k = 0; k < RC_RACERS; k++)
+        if (best < g.session.points[k]) {
+            best = g.session.points[k];
+            leader = k;
+        }
+    if (leader < 0)
+        return -1;
+    snd_stop(0);
+    d = rc_archive_find(&g.rcs, winner_films[leader], &size);
+    if (!d || !(g.film = smk_open(d, size)))
+        return -1;
+    g.winner = 1;
+    g.film_frame = 0;
+    g.film_start = 0;
+    g.intro_key = SDL_SCANCODE_UNKNOWN;
+    return 0;
+}
+
+static void end_winner_film(void)
+{
+    snd_stop(0);
+    smk_close(g.film);
+    g.film = NULL;
+    g.winner = 0;
+    to_reken(-1);
+    g.last_tick = SDL_GetTicks();
+}
+
+static void winner_frame(void)
+{
+    SDL_Event e;
+    Uint32 now = SDL_GetTicks();
+    int due, drawn = 0;
+
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT)
+            g.running = 0;
+        else if (e.type == SDL_KEYDOWN && !e.key.repeat) {
+            switch (e.key.keysym.scancode) {
+            case SDL_SCANCODE_ESCAPE: case SDL_SCANCODE_SPACE:
+            case SDL_SCANCODE_RETURN: case SDL_SCANCODE_KP_ENTER:
+                g.intro_key = e.key.keysym.scancode;
+                break;
+            default:
+                break;
+            }
+        } else if (e.type == SDL_KEYUP &&
+                   e.key.keysym.scancode == g.intro_key) {
+            end_winner_film();
+            return;
+        }
+    }
+    if (!g.film_start) {
+        g.film_start = now ? now : 1;
+        if (race_fx())
+            snd_play(0, RC_SND_TROPICAL);
+    }
+    due = (int)((now - g.film_start) / smk_frame_ms(g.film)) + 1;
+    while (g.film_frame < due) {
+        if (smk_next(g.film) != 0) {
+            end_winner_film();
+            return;
+        }
+        g.film_frame++;
+        drawn = 1;
+    }
+    if (drawn) {
+        draw_film();
+        present();
+    }
+}
+
+/* RRRMENU's Einde (0x12182): after the high scores (0x119cc) it hides
+   the pointer and plays EINDANI2.SMK (RRRMENU.IMG; 640 x 480, 20 frames
+   at 20 fps, no sound) through its smacker.c player 0x194b5 with flags 2,
+   the film's own palette, each frame's changed rectangle to the screen;
+   Enter, Space or Esc, once released, end it.  Then delay 1000 ms
+   (0x1e88e, whole ticks) and main exits 255: the round is over.  Track 0's
+   REDCAT.WAV is not stopped. */
+static int start_closing_film(void)
+{
+    uint32_t size;
+    const uint8_t *d;
+
+    d = rc_archive_find(&g.mainmenu.rrrmenu, "eindani2.smk", &size);
+    if (!d || !(g.film = smk_open(d, size)))
+        return -1;
+    g.closing = 1;
+    g.film_frame = 0;
+    g.film_start = 0;
+    g.intro_key = SDL_SCANCODE_UNKNOWN;
+    return 0;
+}
+
+static void closing_frame(void)
+{
+    SDL_Event e;
+    Uint32 now = SDL_GetTicks();
+    int due, drawn = 0;
+
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT)
+            g.running = 0;
+        else if (g.closing == 2)
+            continue;
+        else if (e.type == SDL_KEYDOWN && !e.key.repeat) {
+            switch (e.key.keysym.scancode) {
+            case SDL_SCANCODE_ESCAPE: case SDL_SCANCODE_SPACE:
+            case SDL_SCANCODE_RETURN: case SDL_SCANCODE_KP_ENTER:
+                g.intro_key = e.key.keysym.scancode;
+                break;
+            default:
+                break;
+            }
+        } else if (e.type == SDL_KEYUP &&
+                   e.key.keysym.scancode == g.intro_key) {
+            g.closing = 2;
+            g.closing_until = now + 19 * 55;
+        }
+    }
+    if (g.closing == 2) {
+        if ((Sint32)(now - g.closing_until) >= 0) {
+            smk_close(g.film);
+            g.film = NULL;
+            g.closing = 0;
+            g.running = 0;
+        }
+        return;
+    }
+    if (!g.film_start)
+        g.film_start = now ? now : 1;
+    due = (int)((now - g.film_start) / smk_frame_ms(g.film)) + 1;
+    while (g.film_frame < due) {
+        if (smk_next(g.film) != 0) {
+            g.closing = 2;
+            g.closing_until = now + 19 * 55;
+            break;
+        }
+        g.film_frame++;
+        drawn = 1;
+    }
+    if (drawn) {
+        draw_film();
+        present();
+    }
+}
+
 static void frame(void)
 {
     SDL_Event e;
     Uint32 now;
 
-    if (g.intro) {
-        intro_frame();
+    if (g.intro || g.winner || g.closing) {
+        if (g.intro)
+            intro_frame();
+        else if (g.winner)
+            winner_frame();
+        else
+            closing_frame();
 #ifdef __EMSCRIPTEN__
         if (!g.running)
             emscripten_cancel_main_loop();
@@ -1023,9 +1210,8 @@ static void frame(void)
         if (steps > 4)
             g.next_frame = now;
         /* The race stops at the finish (0x11364); after race_end the
-           podium for 4 s (0x15a9f).  After a stage-4 race the original
-           plays the winner's film instead (0x15a14, w*.smk), which is not
-           ported: the podium stands in. */
+           podium for 4 s (0x15a9f), or after a world's last race the
+           winner's film (0x15a14). */
         /* the finish (0x112cb): the music stops; with music on, rcend.wav
            plays on track 0 and the objects run on until it ends */
         if (g.flow && rc_race_over(&g.race)) {
@@ -1041,6 +1227,12 @@ static void frame(void)
             snprintf(name, sizeof name, "%.31s",
                      (const char *)g.session.raw + 0x68);
             race_result();
+            if (g.flow && stage_is_last(g.session.world, g.session.stage)) {
+                if (start_winner_film() == 0)
+                    goto out;
+                to_reken(-1);   /* no leader or no film: RRR exits 43 */
+                goto out;
+            }
             compose();
             rc_podium_draw(&g.podium, &g.rcs, g.session.world,
                            g.session.order, g.session.points,

@@ -858,7 +858,7 @@ int rc_menu_key(rc_menu *m, int scan)
         return 1;
     }
     if (m->state == ST_HIGH) {
-        if (scan == 0x1c || scan == 0x12)   /* then EINDANI2.SMK, not ported */
+        if (scan == 0x1c || scan == 0x12)   /* then EINDANI2.SMK (game.c) */
             m->result = RC_MENU_QUIT;
         return 1;
     }

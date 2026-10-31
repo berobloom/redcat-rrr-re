@@ -24,7 +24,7 @@ enum {
     RC_SND_TURBO = 17, RC_SND_FIREROCK = 20, RC_SND_BUMP = 21,
     RC_SND_RCOW = 23, RC_SND_CACSMASH = 25, RC_SND_YIHA = 26,
     RC_SND_RCEND = 29, RC_SND_TI = 30, RC_SND_START = 31, RC_SND_TU = 32,
-    RC_SND_COUNT = 34
+    RC_SND_TROPICAL = 33, RC_SND_COUNT = 34
 };
 extern const char *const rc_race_sound_names[RC_SND_COUNT];
 
