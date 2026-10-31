@@ -16,7 +16,8 @@
 0x10e69 menu_init
 0x11056 play_anim
 0x1118f bediening_screen
-0x119cc einde_film
+0x119cc einde_film          # the high-score screen; menu_loop 0x12182 then plays EINDANI2.SMK
+0x194b5 smk_play            # CONFIRMED: smacker.c player (screen, name, flags)
 0x11bf7 menu_loop
 0x121b3 init_anims
 0x1232d rrrio_save

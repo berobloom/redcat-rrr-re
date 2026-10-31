@@ -1021,6 +1021,21 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED (strings): after a stage-4 race `0x15a14(2 × points leader)`
   plays `wredcat.smk`, `wbrutus.smk` or `wsnitch.smk` instead (Smacker,
   in RCS). "Max de Muis" is the podium's name for Snitch.
+- CONFIRMED (code 0x111ee, 0x114b8, 0x15a14, 0x22580): the leader is the
+  first racer with strictly more points than the best so far, starting
+  from 0 with none (esi 0, edi −1), so ties go to RedCat, then Brutus;
+  no podium is shown. `0x15a14` stops track 0 (`0x1ce02`) and calls the
+  smacker.c player `0x22580([0x7f954], 0, 0, [0x7f95e], [0x7f962],
+  name, flags 0x2a, track 0, sample 0x21)` (LIKELY screen, x, y, width,
+  height): flag 0x20 sets mode 13h and restores the mode
+  and pointer afterwards, 2 keeps the film's own palette, 8 clears the
+  sound sync ([0x5ff70]), no 0x10 so all 200 lines. Sample 33
+  (tropical.wav, 9.7 s) starts on track 0 with frame 1 through
+  `snd_play` (0x10350, gated only by [0x55ee1], not by the music
+  setting). The films are 160 frames at 15 fps (10.7 s, no audio). On
+  each frame Enter (0x1c), Space (0x39) or Esc (1), once released, end
+  the film; F2/F1 are the debug keys ("doei"). Then RRR exits 43. Port:
+  `game.c` `start_winner_film` (not yet compared against DOSBox).
 
 ## The menu (RRRMENU.EXE)
 
@@ -1235,7 +1250,16 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   the name at column 2, the world name (0x4589c) at 21, the score through
   the "%3d". RRRFONT pair 1 at (51, 101 + 30 i), then pair 0 at (50,
   100 + 30 i). The pointer comes back; one button (0x455ee) Enter over the
-  whole screen; Enter or E goes on to EINDANI2.SMK (not ported).
+  whole screen; Enter or E goes on to EINDANI2.SMK.
+- CONFIRMED (code 0x12182, 0x194b5): then menu_loop hides the pointer
+  (`0x1e3b1`) and plays `EINDANI2.SMK` (RRRMENU.IMG; SMK2 640 × 480, 20
+  frames at 20 fps, 1.0 s, no audio: the Davilex Entertainment logo)
+  through RRRMENU's own smacker.c player `0x194b5(screen [0x5cf94],
+  name, flags 2)`: the film's own palette, each frame's changed rectangle
+  (+0x374..+0x380) copied to the screen; Enter, Space or Esc, once
+  released, end it. Then `0x1e88e(1000)` and main exits 255. Nothing
+  stops track 0. Port: `game.c` `start_closing_film` (not yet compared
+  against DOSBox).
 
 ## Sound
 

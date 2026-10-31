@@ -78,6 +78,7 @@
 0x17e4d free_object          # CONFIRMED: slots 6..305 only
 0x1585e race_end             # CONFIRMED: player counters, order, points, race_done into RRRIO (discoveries "the round")
 0x15a14 winner_film          # CONFIRMED (strings): after a stage-4 race plays wredcat/wbrutus/wsnitch.smk for the points leader x 2
+0x22580 smk_play             # CONFIRMED: smacker.c player (name, flags, track, sample; the first five LIKELY screen, x, y, w, h)
 0x15a9f podium               # CONFIRMED: picture by first two places + points, 4 s (port podium.c, pixel-identical)
 0x1be17 user_exit            # CONFIRMED: exit(code) for MOTOR.EXE
 0x1b6bf high_score           # LIKELY: 'Save score %d for', 'New place = %d' in DEBUG.TXT (RRRHIGH.DAT?)
