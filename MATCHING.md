@@ -23,7 +23,7 @@ stub with DOS/4GW bound in front of an LE program. Addresses are the LE image's 
 | Range | What | Rebuilt from |
 |---|---|---|
 | 0x10000-0x1000F | `BEGTEXT` (`int3`, `jmp $-1`, padding) | the Watcom start-up |
-| 0x10010-0x1B915 | **the game's own C**: sndman.c, main.c, new2io.c, order.c, shade.c, init.c, raceanim.c, heap.c, map.c, ... | `src/rrr.c` (this file's subject) |
+| 0x10010-0x1B915 | **the game's own C**: sndman.c, main.c, new2io.c, order.c, shade.c, init.c, raceanim.c, heap.c, map.c, ... | `src/*.c` with `src/rrr.h` (this file's subject) |
 | 0x1B916-0x4142F | library modules in the order WLINK pulled them in: Watcom's clib and math library mixed with Davilex's own libraries (`C:\PROTMOD\WINLIB\mgl2\fg2`, `C:\PROTMOD\SOUNDLIB\wc32\mod`), Fastgraph V4.03 and the Smacker player | Watcom's libraries as they are; the rest not identified yet |
 
 The game's own C ends where the first library module starts (clib `sprintf` at 0x1B916, then
@@ -73,8 +73,17 @@ after the game's own C (REKEN keeps their full paths).
 
 ## 4. The check: `src/check.sh`
 
+**One file per original module.** `src/rrr.h` holds the shared types, globals and prototypes;
+each module whose boundary is known has its own file (`src/new2io.c`, `src/order.c`), and
+`src/rrr.c` holds the rest in address order until their boundaries are found. A module boundary
+shows in the game as (1) the module's error strings naming its source file, (2) its strings
+starting on a fresh boundary (one padding byte after the previous module's last string), (3) a
+function that ends without the shared epilogue/jump-table layout one object would give. Splitting
+matters for matching: within one object Watcom merges identical epilogues across functions and
+places jump tables and padding differently (order_add 8 rows -> MATCH, main 31 -> 6).
+
 ```sh
-src/check.sh            # compile src/rrr.c as .work/src/RRR.C, compare every function
+src/check.sh            # compile each src/*.c into .work/src/<MODULE>.OBJ, compare every function
 src/check.sh -v         # also the differing bytes
 src/check.sh 2>&1 | grep -c ' MATCH at'    # the number that counts
 ```
@@ -86,20 +95,21 @@ fixup targets agree with the names ("fixups: N named targets agree"; a `WRONG` l
 or a wrong global in the C). Its `_TEXT DISAGREES` line is expected while functions between the
 matched ones are missing: the bases agree only once the module is complete in address order.
 
-There is no link yet: `src/rrr.c` is compared as one object file, function by function.
+There is no link yet: each object is compared function by function; `_TEXT DISAGREES` within one
+object means its functions are not yet one contiguous run of the game's code.
 
 **The rule:** the MATCH count only goes up. `src/matched.baseline` holds it; raise it in the same
 commit as the code that adds a MATCH, and only after `src/check.sh` shows the count one higher.
 
 ## 5. Matching one function
 
-1. **Write the C** in `src/rrr.c` at its address order (address order, types and externs first).
+1. **Write the C** in its module's file (or `src/rrr.c`) at its address order (address order, types and externs first).
    Disassemble the game's function with `reverse-engineering/tools/disasm.py rrr 0xADDR --func`;
    Ghidra's output (`.work/ghidra/rrr.c`) helps with the shape, but it has no Watcom register
    convention.
 2. **Run `src/check.sh`.** MATCH: raise the baseline, commit.
 3. **Otherwise read the diff before changing anything:**
-   `reverse-engineering/tools/wc/fndiff.py rrr .work/src/RRR.OBJ NAME 0xADDR`. OURS is the LEFT
+   `reverse-engineering/tools/wc/fndiff.py rrr .work/src/<MODULE>.OBJ NAME 0xADDR`. OURS is the LEFT
    column, the game the RIGHT. `fncompare.py` (instruction counts per side, same text but different
    encoding) and `objdiff.py` (both full listings) answer what fndiff cannot.
 4. **Probe spellings in bulk.** `reverse-engineering/tools/wc/variants.py` scores many copies of the

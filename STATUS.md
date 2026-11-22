@@ -7,11 +7,11 @@ Short: where the project stands, and what is next. History is in git; no diary.
 - Executables: RRR, REKEN, RRRMENU, INTRO: bound DOS/4GW LE, Watcom C/C++ **10.5**, `-3r -s -ox`
   (research/discoveries.md "Executables"; MATCHING.md). REKEN carries Watcom debug info naming its
   modules (not decoded beyond the module list).
-- **Matching decompilation of RRR.EXE:** `src/rrr.c`, checked by `src/check.sh`; the count is in
+- **Matching decompilation of RRR.EXE:** `src/` (`rrr.h`, `new2io.c`, `order.c`, `rrr.c` for the modules not split yet), checked by `src/check.sh`; the count is in
   `src/matched.baseline`, the numbers in `PROGRESS.md` / `docs/RRRPROGRESS.HTML`. The game's own C is
   0x10010-0x1B915; the libraries after it are not identified beyond Watcom's clib and math library.
 - Toolchain: `.work/watcom/dos/C/WATCOM` (reverse-engineering/watcom.md), Wine.
-- The port (`port/`) plays the whole round; it is a new engine, not built from `src/rrr.c`.
+- The port (`port/`) plays the whole round; it is a new engine, not built from `src/`.
 
 ## Next
 

@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""inplace.py: score spellings of one function compiled IN PLACE in src/rrr.c (probe copies can score
-differently: shared tails, other scheduling; GOTCHAS "Probes").
+"""inplace.py: score spellings of one function compiled IN PLACE in its module of src/ (probe copies
+can score differently: shared tails, other scheduling; GOTCHAS "Probes").
 
 usage: inplace.py NAME 0xADDR FILE.c [FILE.c ...]
 
-Each FILE.c holds one full definition of NAME. For each, src/rrr.c is copied with NAME's definition
-(from its signature line to the next `/* ---- 0x` marker) replaced by FILE.c, compiled with the game's
-options into .work/inplace/, and fndiff's row count is printed. src/rrr.c is not changed.
+Each FILE.c holds one full definition of NAME. For each, the src/*.c module that defines NAME is
+copied with that definition (from its signature line to the next `/* ---- 0x` marker, or the end of
+the file) replaced by FILE.c, compiled with src/rrr.h and the game's options into .work/inplace/
+(IP.C, IP.OBJ), and fndiff's row count is printed. src/ is not changed.
 """
 import os
+import glob
 import re
+import shutil
 import subprocess
 import sys
 
@@ -18,15 +21,21 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.a
 
 def main():
     name, addr, files = sys.argv[1], sys.argv[2], sys.argv[3:]
-    src = open(os.path.join(ROOT, 'src', 'rrr.c')).read()
-    m = re.search(r'^[^\n;]*\b%s\([^;{]*\)\s*\{' % re.escape(name), src, re.M)
-    if not m:
-        sys.exit('no definition of %s in src/rrr.c' % name)
+    pat = re.compile(r'^[^\n;]*\b%s\([^;{]*\)\s*\{' % re.escape(name), re.M)
+    for mod in sorted(glob.glob(os.path.join(ROOT, 'src', '*.c'))):
+        src = open(mod).read()
+        m = pat.search(src)
+        if m:
+            break
+    else:
+        sys.exit('no definition of %s in src/*.c' % name)
     start = src.rfind('\n', 0, m.start()) + 1
-    # include a /* differs: ... */ note directly above
-    end = src.index('/* ---- 0x', m.end())
+    end = src.find('/* ---- 0x', m.end())
+    if end < 0:
+        end = len(src)
     w = os.path.join(ROOT, '.work', 'inplace')
     os.makedirs(w, exist_ok=True)
+    shutil.copy(os.path.join(ROOT, 'src', 'rrr.h'), os.path.join(w, 'RRR.H'))
     for f in files:
         open(os.path.join(w, 'IP.C'), 'w').write(src[:start] + open(f).read() + '\n' + src[end:])
         obj = os.path.join(w, 'IP.OBJ')

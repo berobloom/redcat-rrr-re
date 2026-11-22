@@ -106,6 +106,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   new2io.c's "new2io.c" is at 0x50c30). nmrefs reports it; it is layout, not behaviour, and goes
   away when src/ is split into the original modules.
 
+- **One object per module, or epilogues and tables move:** in a single object Watcom jumps to an
+  identical `pop ... ret` of an earlier function instead of emitting its own (order_add jumped to
+  main's), and pads before a function where the game has the next module's jump table (main +25
+  rows). When a diff ends in a `jmp` to outside the function or in nops, look for a module
+  boundary (its source-file strings, the string padding) and give that module its own src/*.c.
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,

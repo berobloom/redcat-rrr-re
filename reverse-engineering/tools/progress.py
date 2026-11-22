@@ -3,7 +3,7 @@
 
 usage: reverse-engineering/tools/progress.py [--out FILE]
 
-Builds src/rrr.c with src/check.sh and compares it the same way: a function counts as done only when
+Builds src/ with src/check.sh and compares it the same way: a function counts as done only when
 our compiled bytes equal the game's (fixup bytes masked, fixup targets checked). Near misses get
 their remaining instruction rows from tools/wc/fndiff.py. Functions of the game's own C that src/rrr.c
 does not have yet come from tools/funcs.py's list (reverse-engineering/analysis/rrr_funcs.tsv) and the
@@ -75,15 +75,18 @@ def align_all(near):
     meta = json.load(open(os.path.join(ROOT, '.work', 'le', 'rrr.json')))
     code = open(os.path.join(ROOT, '.work', 'le', 'rrr.obj1.bin'), 'rb').read()
     cbase = meta['objects'][0]['base']
-    (_, recs), = list(L.modules(open(os.path.join(ROOT, '.work', 'src', 'RRR.OBJ'), 'rb').read()))
-    segs = L.code_of(recs)
-    pubs = sorted(p for p in M.publics(recs) if p[0] in segs)
+    import glob
+    objs = []
+    for path in sorted(glob.glob(os.path.join(ROOT, '.work', 'src', '*.OBJ'))):
+        (_, recs), = list(L.modules(open(path, 'rb').read()))
+        segs = L.code_of(recs)
+        objs.append((segs, sorted(p for p in M.publics(recs) if p[0] in segs)))
     out = {}
     for addr, name in near.items():
-        hit = [p for p in pubs if p[2] == name or M.plain(p[2]) == name]
+        hit = [(segs, pubs, p) for segs, pubs in objs for p in pubs if p[2] == name or M.plain(p[2]) == name]
         if not hit:
             continue
-        seg, off, _ = hit[0]
+        segs, pubs, (seg, off, _) = hit[0]
         end = next((q[1] for q in pubs if q[0] == seg and q[1] > off), len(segs[seg][0]))
         buf, mask = segs[seg]
         ours = bytes(b if not mask[off + k] else 0x90 for k, b in enumerate(buf[off:end]))
@@ -227,7 +230,7 @@ def main():
     w('Of RRR.EXE\'s code object after `BEGTEXT` (%s bytes), %s bytes (%s) are rebuilt byte for byte or '
       'identified as byte-identical Watcom library code.' % (num(whole), num(overall), pct(overall, whole)))
     w('')
-    w('A function counts only when our build of `src/rrr.c` (Watcom C/C++ 10.5, `-3r -s -ox`) gives')
+    w('A function counts only when our build of `src/` (Watcom C/C++ 10.5, `-3r -s -ox`) gives')
     w('the same bytes as the game at the same address, with every address it refers to checked as')
     w('well. A near miss compiles but its code still differs: the number is how many instructions')
     w('differ (`reverse-engineering/tools/wc/fndiff.py`). The list of functions not written yet comes')
@@ -275,7 +278,7 @@ def main():
     w('| Address | Function | Subsystem | Status |')
     w('|---|---|---|---|')
     for a, n, s in allf:
-        st = {'match': 'byte-identical', 'none': 'not in src/rrr.c yet'}.get(s)
+        st = {'match': 'byte-identical', 'none': 'not in src/ yet'}.get(s)
         if s == 'near':
             st = 'near miss, %s instructions differ' % rows[a] if rows.get(a) is not None else 'near miss'
         w('| 0x%05X | `%s` | %s | %s |' % (a, n, sub_of.get(n, 'unsorted'), st))

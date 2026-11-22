@@ -46,7 +46,7 @@ compiler set-up in
 [`reverse-engineering/watcom.md`](reverse-engineering/watcom.md).
 
 ```sh
-src/check.sh                                          # compile src/rrr.c, compare every function
+src/check.sh                                          # compile src/*.c (one object per module), compare every function
 .work/venv/bin/python reverse-engineering/tools/progress.py   # rewrite PROGRESS.md and docs/RRRPROGRESS.*
 ```
 
@@ -87,7 +87,7 @@ keeps the files it needs in the browser's storage.
 | `reverse-engineering/` | Reference docs: executables, file formats, architecture, running the original under DOSBox-X |
 | `reverse-engineering/tools/` | LE loader, disassembler, function finder, xrefs, Unicorn emulation and the DOSBox-X driver; `wc/`: the Watcom compile-and-compare tools |
 | `reverse-engineering/analysis/` | Function lists, names, CD inventory |
-| `src/` | The matching decompilation: `rrr.c`, `check.sh`, the baseline and the near-miss list ([`MATCHING.md`](MATCHING.md)) |
+| `src/` | The matching decompilation: `rrr.h`, one `.c` per known module (`new2io.c`, `order.c`), `rrr.c` for the rest, `check.sh`, the baseline and the near-miss list ([`MATCHING.md`](MATCHING.md)) |
 | `port/` | The C port; [`port/README.md`](port/README.md) is its detailed manual |
 | `port/web/` | The WebAssembly build |
 | `port/rctools/` | Python tools for the game's archives, images and maps |
