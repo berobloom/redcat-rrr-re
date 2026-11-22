@@ -394,6 +394,8 @@ int direction_to_waypoint(int racer, int x, int y);
 int aim_at_player(int racer, int target);
 extern int            crash0, crash2, crash4;   /* 0x56078, 0x56080, 0x5607c: race over for that racer */
 extern int            joy_on;               /* 0x5fdf0 */
+extern int            key_right;            /* 0x55fd8: right key held this frame */
+extern int            key_left;             /* 0x55fdc: left key held this frame */
 extern int            keymap[7];            /* 0x7144c: [0] rocket, [1] boost, [3] left, [4] back, [5] forward, [6] right */
 extern int            joymap[4];            /* 0x753a0 */
 int __cdecl fn_2779e(int n);
@@ -433,4 +435,7 @@ int dropped0_tick(short n);
 int dropped4_tick(short n);
 int fire_rocket(int racer);
 int spawn_dropped_object(int racer, int kind);
+int play_fx(int sample, int dist);
+void cell_checks(int n);
+void cell_effect(int n, int x, int y, int r);
 #endif

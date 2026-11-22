@@ -519,3 +519,5 @@
 0x1ae36 next_module_of       # CONFIRMED (code): next_module(0, world, groep); not called directly
 0x17e87 spawn_puffs          # CONFIRMED (code): heap.c; count exhaust/dust puffs around a racer (anim 7 / 17 by the third argument, life 6)
 0x185d4 fire_rocket          # CONFIRMED: the rocket key fires it (discoveries.md); a rocket_tick object 25 px ahead along the racer's heading, life 100
+0x55fd8 key_right            # STRONGLY SUPPORTED (code): player_tick stores key_pressed(keymap[6]) here (0x11fcd)
+0x55fdc key_left             # STRONGLY SUPPORTED (code): player_tick stores key_pressed(keymap[3]) here (0x11fdd)

@@ -23,3 +23,5 @@
 16 0x17b61 dropped0_tick  the same as dropped2_tick
 15 0x17c74 dropped4_tick  the same as dropped2_tick
 8 0x18759 spawn_dropped_object
+35 0x1889d ground_check
+17 0x18b8d cell_effect
