@@ -935,6 +935,177 @@ void free_object(int n)
     }
 }
 
+/* ---- 0x180d3 -------------------------------------------------------------------------------- */
+
+int spawn_trail(int count, int racer)
+{
+    int n;
+
+#line 140 "heap.c"
+    if (count <= 0)
+        rc_error(" %s(%d) : illegal amount of objects requested (%d)\n", "heap.c", __LINE__, count);
+    while (count-- > 0) {
+        n = alloc_object();
+        if (n == -1)
+            return -1;
+        objects[n].period = 1;
+        objects[n].callback = (void (*)(void))fn_1733e;
+        objects[n].anim = 3;
+        objects[n].frame = stats[bodies[racer].stats].heading;
+        bodies[n].x = bodies[racer].x;
+        bodies[n].y = bodies[racer].y;
+        bodies[n].z = bodies[racer].z;
+        bodies[n].vx = 0;
+        bodies[n].vy = 0;
+        bodies[n].vz = bodies[racer].vz;
+        bodies[n].f24 = 6;
+    }
+    return 0;
+}
+
+
+/* ---- 0x181ba -------------------------------------------------------------------------------- */
+
+int new_boost_pickup(int x, int y)
+{
+    int n;
+
+    n = alloc_object();
+    if (n == -1)
+        return -1;
+    objects[n].period = 2;
+    objects[n].callback = (void (*)(void))obj_callback_16a63;
+    objects[n].anim = 8;
+    objects[n].frame = rand() % animset[objects[n].anim].count;
+    bodies[n].z = 0;
+    bodies[n].vx = 0;
+    bodies[n].vy = 0;
+    bodies[n].vz = 0;
+    bodies[n].x = x;
+    bodies[n].y = y;
+    return n;
+}
+
+
+/* ---- 0x18276 -------------------------------------------------------------------------------- */
+
+int new_cactus(int x, int y)
+{
+    int n;
+
+    n = alloc_object();
+    if (n == -1)
+        return -1;
+    objects[n].period = 1;
+    objects[n].callback = (void (*)(void))cactus_tick;
+    objects[n].anim = 12;
+    objects[n].frame = 0;
+    bodies[n].z = 0;
+    bodies[n].vx = 0;
+    bodies[n].vy = 0;
+    bodies[n].vz = 0;
+    bodies[n].f24 = -1;
+    bodies[n].x = x + 0x100000;
+    bodies[n].y = y - 0xa0000;
+    return n;
+}
+
+
+/* ---- 0x18324 -------------------------------------------------------------------------------- */
+
+int fn_18324(int x, int y)
+{
+    int n;
+
+    n = alloc_object();
+    if (n == -1)
+        return -1;
+    objects[n].period = 2;
+    objects[n].callback = (void (*)(void))obj_callback_16ad9;
+    objects[n].anim = 9;
+    objects[n].frame = rand() % animset[objects[n].anim].count;
+    bodies[n].z = 0;
+    bodies[n].vx = 0;
+    bodies[n].vy = 0;
+    bodies[n].vz = 0;
+    bodies[n].x = x;
+    bodies[n].y = y;
+    return n;
+}
+
+
+/* ---- 0x1836d -------------------------------------------------------------------------------- */
+
+int new_mine(int x, int y)
+{
+    int n;
+
+    n = alloc_object();
+    if (n == -1)
+        return -1;
+    debug_printf("object %d created mijn \n", n);
+    objects[n].period = 3;
+    objects[n].callback = (void (*)(void))mine_tick;
+    objects[n].anim = 6;
+    objects[n].frame = rand() % animset[objects[n].anim].count;
+    bodies[n].f24 = 10;
+    bodies[n].z = 0;
+    bodies[n].vx = 0;
+    bodies[n].vy = 0;
+    bodies[n].vz = 0;
+    bodies[n].x = x;
+    bodies[n].y = y;
+    return n;
+}
+
+
+/* ---- 0x18445 -------------------------------------------------------------------------------- */
+
+int new_sign(int x, int y, int anim)
+{
+    int n;
+
+    n = alloc_object();
+    if (n == -1)
+        return -1;
+    objects[n].period = 3;
+    objects[n].callback = (void (*)(void))sign_tick;
+    objects[n].anim = anim;
+    objects[n].frame = rand() % animset[objects[n].anim].count;
+    bodies[n].z = 0;
+    bodies[n].vx = 0;
+    bodies[n].vy = 0;
+    bodies[n].vz = 0;
+    bodies[n].x = x;
+    bodies[n].y = y;
+    return n;
+}
+
+
+/* ---- 0x18502 -------------------------------------------------------------------------------- */
+
+int new_bomb(int x, int y)
+{
+    int n;
+
+    n = alloc_object();
+    if (n == -1)
+        return -1;
+    objects[n].period = 3;
+    objects[n].callback = (void (*)(void))bomb_tick;
+    objects[n].anim = 5;
+    objects[n].frame = rand() % animset[objects[n].anim].count;
+    bodies[n].z = 0;
+    bodies[n].vx = 0;
+    bodies[n].vy = 0;
+    bodies[n].vz = 0;
+    bodies[n].x = x;
+    bodies[n].y = y;
+    bodies[n].f24 = (rand() & 0xff) + 100;
+    return n;
+}
+
+
 /* ---- 0x18886 -------------------------------------------------------------------------------- */
 
 int fn_18886(int v, int lo, int hi)

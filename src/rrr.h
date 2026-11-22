@@ -220,7 +220,8 @@ struct animstep {                           /* 4 bytes: one step of an animation
     short   frame;                              /* +2: index into frames */
 };
 struct animset {                            /* 8 bytes per animation; 0x56 = the start lights */
-    int     f0;
+    short   count;                              /* number of steps (spawners: random start frame) */
+    short   f2;
     struct animstep *steps;                     /* +4 */
 };
 extern int            lights_done;          /* 0x55f8b */
@@ -376,4 +377,16 @@ struct high {                               /* 38 bytes: one RRRHIGH.DAT entry *
 extern struct high    high[10];             /* 0x753b0: RRRHIGH.DAT, 380 bytes */
 extern char          *high_names[3];        /* 0x5fdf4: the default table's names */
 int high_load(void);
+int mine_tick(short n);
+int sign_tick(short n);
+int bomb_tick(short n);
+int cactus_tick(short n);
+int fn_1733e(short n);
+int spawn_trail(int count, int racer);
+int new_boost_pickup(int x, int y);
+int new_cactus(int x, int y);
+int fn_18324(int x, int y);
+int new_mine(int x, int y);
+int new_sign(int x, int y, int anim);
+int new_bomb(int x, int y);
 #endif

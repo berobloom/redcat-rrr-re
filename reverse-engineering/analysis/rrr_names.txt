@@ -491,3 +491,6 @@
 0x1b82c high_load            # CONFIRMED (code): reads RRRHIGH.DAT (380 bytes) into high, else 10 random default entries
 0x753b0 high                 # CONFIRMED (code): 10 x 38-byte high-score entries {name[30], score, world}
 0x5fdf4 high_names           # CONFIRMED (code): 3 default names, picked by rand() % 3
+0x180d3 spawn_trail          # LIKELY: heap.c; count objects at a racer's position (anim 3, its heading as frame, life 6, callback 0x1733e)
+0x18324 fn_18324             # CONFIRMED (code): new_boost_pickup's twin with anim 9 and obj_callback_16ad9
+0x1733e fn_1733e             # CONFIRMED (code): object callback, set by spawn_trail

@@ -133,6 +133,10 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   that saves EBX/ECX/EDX it never uses calls something declared `modify [eax ebx ecx edx]`
   (fn_1bcb7).
 
+- **`if (n == -1) return -1;`, not `return n;`.** With `return n` Watcom jumps to a `mov eax, n`
+  before the epilogue; with the constant it knows EAX already holds -1 and jumps past it, as the
+  game does (the heap.c spawners 0x180d3-0x18502, 2 bytes per function).
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,
