@@ -483,3 +483,6 @@
 0x1aea5 fn_1aea5             # CONFIRMED (code): walks stage_table[world-1] down from the stage while entries are non-zero
 0x1b67b check_object_nr      # CONFIRMED (code): ' %s(%d) : objectnr %d error' unless 0..255; returns n
 0x1b69d check_waypoint_nr    # CONFIRMED (code): ' %s(%d) : Waypointnr %d error' unless 0..150; returns n
+0x1696c obj_callback_1696c   # CONFIRMED (code): same body as 0x16a63/0x16ad9 with anim 7; shares their tail
+0x57c90 script2              # CONFIRMED: Brutus's waypoint script, 24-byte entries, 720 bytes per world (ai_script_find)
+0x5bd40 script4              # CONFIRMED: Snitch's, the same layout

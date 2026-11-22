@@ -215,9 +215,13 @@ struct frame {                              /* 12 bytes: an anim frame image */
     short   h;                                  /* +6 */
     short   f8, fa;
 };
-struct animset {
-    char    pad[0x2b4];
-    short  *lamp;                               /* +0x2b4: start-light frames, [1] [3] .. [9] */
+struct animstep {                           /* 4 bytes: one step of an animation */
+    short   f0;
+    short   frame;                              /* +2: index into frames */
+};
+struct animset {                            /* 8 bytes per animation; 0x56 = the start lights */
+    int     f0;
+    struct animstep *steps;                     /* +4 */
 };
 extern int            lights_done;          /* 0x55f8b */
 extern int            finish_order[3];      /* 0x55f93 */
@@ -351,4 +355,14 @@ int fn_18886(int v, int lo, int hi);
 int fn_1aea5(void);
 int check_object_nr(int n, char *file, int line);
 int check_waypoint_nr(int n, char *file, int line);
+int obj_callback_1696c(short n);
+int obj_callback_16a63(short n);
+int obj_callback_16ad9(short n);
+struct script {                             /* 24 bytes: one waypoint action of a racer's script */
+    int     key;                                /* waypoint number, -1 = end */
+    int     f4, f8, fc, f10, f14;
+};
+extern struct script  script2[][30];        /* 0x57c90: Brutus (racer 2), per world */
+extern struct script  script4[][30];        /* 0x5bd40: Snitch (racer 4) */
+int ai_script_find(int racer, int n);
 #endif

@@ -534,22 +534,22 @@ void start_lights(void)
 {
     struct frame *f;
 
-    f = &frames[animset->lamp[1]];
+    f = &frames[animset[0x56].steps[0].frame];
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
     delay_ms(1500);
-    f = &frames[animset->lamp[3]];
+    f = &frames[animset[0x56].steps[1].frame];
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
     snd_play(1, 30, 64);
     delay_ms(1000);
-    f = &frames[animset->lamp[5]];
+    f = &frames[animset[0x56].steps[2].frame];
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
     snd_play(1, 30, 64);
     delay_ms(1000);
-    f = &frames[animset->lamp[7]];
+    f = &frames[animset[0x56].steps[3].frame];
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
     snd_play(1, 30, 64);
     delay_ms(1000);
-    f = &frames[animset->lamp[9]];
+    f = &frames[animset[0x56].steps[4].frame];
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
     snd_play(1, 32, 64);
     delay_ms(500);
@@ -831,6 +831,63 @@ int free_object_tick(short n)
     return 0;
 }
 
+/* ---- 0x1696c -------------------------------------------------------------------------------- */
+
+int obj_callback_1696c(short n)
+{
+    short k;
+
+    sprites[objects[n].sprite].mode = 2;
+    if (objects[n].period == -1)
+        return 0;
+    if (n < 0)
+        rc_error("illegal object : %d ", (int)n);
+    bodies[n].f1c = 0;
+    objects[n].anim = 7;
+    k = animset[objects[n].anim].steps[objects[n].frame].frame;
+    objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
+    objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
+    return 0;
+}
+
+/* ---- 0x16a63 -------------------------------------------------------------------------------- */
+
+int obj_callback_16a63(short n)
+{
+    short k;
+
+    sprites[objects[n].sprite].mode = 2;
+    if (objects[n].period == -1)
+        return 0;
+    if (n < 0)
+        rc_error("illegal object : %d ", (int)n);
+    bodies[n].f1c = 0;
+    objects[n].anim = 8;
+    k = animset[objects[n].anim].steps[objects[n].frame].frame;
+    objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
+    objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
+    return 0;
+}
+
+/* ---- 0x16ad9 -------------------------------------------------------------------------------- */
+
+int obj_callback_16ad9(short n)
+{
+    short k;
+
+    sprites[objects[n].sprite].mode = 2;
+    if (objects[n].period == -1)
+        return 0;
+    if (n < 0)
+        rc_error("illegal object : %d ", (int)n);
+    bodies[n].f1c = 0;
+    objects[n].anim = 9;
+    k = animset[objects[n].anim].steps[objects[n].frame].frame;
+    objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
+    objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
+    return 0;
+}
+
 /* ---- 0x17e0b -------------------------------------------------------------------------------- */
 
 int alloc_object(void)
@@ -966,6 +1023,34 @@ int fn_1aea5(void)
     while (i > 0 && stage_table[rrrio.world - 1][i] != 0)
         i--;
     return i == rrrio.stage;
+}
+
+/* ---- 0x1aedf -------------------------------------------------------------------------------- */
+
+int ai_script_find(int racer, int n)
+{
+    int i;
+
+    if (racer == 2) {
+        for (i = 0; i < 150; i++) {
+            if (script2[rrrio.world][i].key == -1)
+                break;
+            if (n < script2[rrrio.world][i].key)
+                break;
+            if (n == script2[rrrio.world][i].key)
+                return i;
+        }
+    } else if (racer == 4) {
+        for (i = 0; i < 150; i++) {
+            if (script4[rrrio.world][i].key == -1)
+                break;
+            if (n < script4[rrrio.world][i].key)
+                break;
+            if (n == script4[rrrio.world][i].key)
+                return i;
+        }
+    }
+    return -1;
 }
 
 /* ---- 0x1b67b -------------------------------------------------------------------------------- */
