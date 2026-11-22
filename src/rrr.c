@@ -1,7 +1,7 @@
 /*
  * RRR.EXE, the race: the game's own C, rebuilt function by function.
  *
- * Compiled by src/check.sh with Watcom C/C++ 10.5, `wcc386 -3r -s -ox` (MATCHING.md), and compared
+ * Compiled by src/check.sh with Watcom C/C++ 10.5, `wcc386 -bt=dos -3r -s -ox` (MATCHING.md), and compared
  * with RRR.EXE function by function. Functions are in address order. The original was several
  * modules (sndman.c, main.c, new2io.c, order.c, shade.c, init.c, raceanim.c, heap.c, map.c, ...;
  * research/discoveries.md); this file is one module until their boundaries are known, so each
@@ -9,6 +9,10 @@
  * evidence in reverse-engineering/analysis/rrr_names.txt; the original's are not known.
  */
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <direct.h>
+#include <dos.h>
 
 /* ---- types ---------------------------------------------------------------------------------- */
 
@@ -70,16 +74,152 @@ struct body {
 /* ---- functions not rebuilt yet --------------------------------------------------------------- */
 
 void fn_261a9(int n);
+void rc_error(char *fmt, ...);
 
 /* ---- globals (addresses in rrr_names.txt) --------------------------------------------------- */
 
+extern char           movie_dir[];          /* 0x55e3a: "d:\\MOVIE" */
+extern char          *wav_names[34];        /* 0x55e58 */
+extern char          *blaster_ports[6];     /* 0x55ef5: "A210".."A260" */
+extern char          *blaster_irqs[5];      /* 0x55f1f: "I2".."I10" */
+extern char          *blaster_dmas[3];      /* 0x55f39: "D0", "D1", "D3" */
+extern short          snd_cfg_b;            /* 0x55f45 */
+extern short          snd_cfg_c;            /* 0x55f47 */
+extern short          snd_cfg_d;            /* 0x55f49 */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
+extern int            wav_handles[34];      /* 0x6c980 */
+extern char           strbuf[];             /* 0x6ca08 */
+extern short          snd_cfg_f;            /* 0x6fc60 */
+extern short          snd_cfg_e;            /* 0x6fc62 */
+extern short          snd_cfg_g;            /* 0x6fc64 */
+extern short          snd_cfg_a;            /* 0x6fc66 */
 extern struct sprite *sprites;              /* 0x5fec0 */
 extern int            free_objects;         /* 0x57a5c */
 extern short          num_objects;          /* 0x600c8 */
 extern struct body    bodies[];             /* 0x6cbf0 */
 extern struct rrrio   rrrio;                /* 0x75178 */
 extern struct object *objects;              /* 0x804b8 */
+
+/* ---- 0x10010 -------------------------------------------------------------------------------- */
+
+char *fn_10010(char *s)
+{
+    sprintf(strbuf, "%s", s);
+    return strbuf;
+}
+
+/* ---- 0x10029 -------------------------------------------------------------------------------- */
+
+FILE *fn_10029(char *name, char *mode)
+{
+    return fopen(name, mode);
+}
+
+/* ---- 0x1002e -------------------------------------------------------------------------------- */
+
+int movie_dir_exists(void)
+{
+    struct find_t ft;
+    return _dos_findfirst(movie_dir, _A_SUBDIR, &ft) == 0;
+}
+
+/* ---- 0x10052 -------------------------------------------------------------------------------- */
+
+void movie_dir_make(void)
+{
+    mkdir(movie_dir);
+    if (!movie_dir_exists())
+        rc_error("Couldn't create directory %s", movie_dir);
+}
+
+/* ---- 0x10078 -------------------------------------------------------------------------------- */
+
+int wav_lookup(char *name)
+{
+    int i;
+    for (i = 0; i < 34; i++)
+        if (stricmp(name, wav_names[i]) == 0)
+            return wav_handles[i];
+    return -1;
+}
+
+/* ---- 0x100ae -------------------------------------------------------------------------------- */
+
+int blaster_port(void)
+{
+    char *env;
+    int i;
+    env = getenv("BLASTER");
+    if (env != NULL)
+        for (i = 0; i < 6; i++)
+            if (strstr(env, blaster_ports[i]) != NULL)
+                return i;
+    return -1;
+}
+
+/* ---- 0x100f1 -------------------------------------------------------------------------------- */
+
+int blaster_irq(void)
+{
+    char *env;
+    int i;
+    env = getenv("BLASTER");
+    if (env != NULL)
+        for (i = 0; i < 5; i++)
+            if (strstr(env, blaster_irqs[i]) != NULL)
+                return i;
+    return -1;
+}
+
+/* ---- 0x10134 -------------------------------------------------------------------------------- */
+
+int blaster_dma(void)
+{
+    char *env;
+    int i;
+    env = getenv("BLASTER");
+    if (env != NULL)
+        for (i = 0; i < 3; i++)
+            if (strstr(env, blaster_dmas[i]) != NULL)
+                return i;
+    return -1;
+}
+
+/* ---- 0x10177 -------------------------------------------------------------------------------- */
+
+int snd_cfg_load(char *name)
+{
+    FILE *f = fopen(name, "rb");
+    if (f == NULL)
+        return 1000;
+    fread(&snd_cfg_a, 2, 1, f);
+    fread(&snd_cfg_b, 2, 1, f);
+    fread(&snd_cfg_c, 2, 1, f);
+    fread(&snd_cfg_d, 2, 1, f);
+    fread(&snd_cfg_e, 2, 1, f);
+    fread(&snd_cfg_f, 2, 1, f);
+    fread(&snd_cfg_g, 2, 1, f);
+    fclose(f);
+    return 0;
+}
+
+/* ---- 0x1023d -------------------------------------------------------------------------------- */
+
+int snd_cfg_save(char *name)
+{
+    FILE *f = fopen(name, "wb+");
+    if (f == NULL)
+        return 1000;
+    fwrite(&snd_cfg_a, 2, 1, f);
+    fwrite(&snd_cfg_b, 2, 1, f);
+    fwrite(&snd_cfg_c, 2, 1, f);
+    fwrite(&snd_cfg_d, 2, 1, f);
+    fwrite(&snd_cfg_e, 2, 1, f);
+    fwrite(&snd_cfg_f, 2, 1, f);
+    fwrite(&snd_cfg_g, 2, 1, f);
+    fclose(f);
+    return 0;
+}
 
 /* ---- 0x14861 -------------------------------------------------------------------------------- */
 

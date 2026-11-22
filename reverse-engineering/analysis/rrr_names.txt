@@ -5,16 +5,16 @@
 0x15c02 init_anims           # LIKELY: logged as 'Init anims.'
 0x1ae44 stage_map_index      # CONFIRMED: table 0x57b8c[group][stage] - 1
 0x1ae67 stage_is_last        # CONFIRMED: scans the 0x57b8c row from the stage itself for a race, 1 if it reaches column 4: in effect stage == 4
-0x1bb27 fopen                # STRONGLY SUPPORTED: (name, "rb") -> FILE*
+0x1bb27 fopen                # CONFIRMED: CLIB3R.LIB 10.5 module fopen found byte for byte (libnames.py)
 0x1be78 rc_error             # STRONGLY SUPPORTED: every '%s(%d) : ...' failure goes here
-0x1c0d1 fread                # STRONGLY SUPPORTED: Watcom regs eax=buf edx=size ebx=n ecx=fp
+0x1c0d1 fread                # CONFIRMED: CLIB3R.LIB 10.5 module fread found byte for byte (libnames.py)
 0x1f063 debug_printf         # LIKELY: progress messages ('Map and images loaded ok.\n')
 0x1fa1b tile_to_xvga         # LIKELY: (src, dst, w=32, h=40) per tileset tile
 0x1fad6 load_xvga_map_images # CONFIRMED: named in its own error string (rctools.c line 0x2f7)
 0x1fc4c load_map             # STRONGLY SUPPORTED: 'Kaart bestand kon niet geopend worden.' (rctools.c)
 0x22c71 xvga_src_fopen       # STRONGLY SUPPORTED: named in load_xvga_map_images' error string
 0x22e32 fileio_close         # LIKELY: fileio.c, logs 'closing copying..'; not clib fclose, which is 0x1c2ac (libmatch)
-0x2325c rand                 # LIKELY: result % 22 picks a random map
+0x2325c rand                 # CONFIRMED: CLIB3R.LIB 10.5 module rand found byte for byte; result % 22 picks a random map
 0x111e8 race_main            # CONFIRMED: calls race_init, then the frame loop until Esc/S; returns 0x2b
 0x26a9e key_pressed          # CONFIRMED: (scancode on stack, ret 4) -> key state array 0x804c0
 0x26beb delay_ms             # LIKELY: start lights wait 0x5dc/1000/500 between lamps
@@ -92,9 +92,6 @@
 0x1ce02 mix_stop_track       # CONFIRMED
 0x1db94 mix_irq              # STRONGLY SUPPORTED: Sound Blaster IRQ mixer: sum of tracks / tracks
 0x1ec03 sndbuf_play          # CONFIRMED: sndbuf.c: loads the sample if not cached, then mix_add_track
-# Watcom C library (10.5 CLIB3R.LIB modules found byte for byte by tools/wc/libmatch.py)
-0x1c2ac fclose               # CONFIRMED: CLIB3R module fclose at this address
-0x1c3ef fwrite               # CONFIRMED: CLIB3R module fwrite at this address
 # globals
 0x57b8c stage_table          # CONFIRMED: int [world][5]; stage_map_index, stage_is_last
 0x5fec0 sprites              # LIKELY: pointer to 16-byte sprite slots ([0x5fec0]+8 sprite mode, discoveries)
@@ -104,3 +101,243 @@
 0x804b8 objects              # CONFIRMED: pointer to the 16-byte object slots (objects_tick)
 0x57a5c free_objects         # STRONGLY SUPPORTED: alloc_object takes one (when non-zero), free_object gives one back
 0x261a9 fn_261a9             # SPECULATIVE: rcobj.c library; free_object calls it with the slot number before freeing it
+# Watcom C/math library 10.5 (reverse-engineering/tools/wc/libnames.py; aliases share an address)
+0x1b959 __open_flags         # CONFIRMED: CLIB3R.LIB module fopen (642 bytes) found byte for byte here
+0x1baee _fsopen              # CONFIRMED: CLIB3R.LIB module fopen (642 bytes) found byte for byte here
+0x1bb99 freopen              # CONFIRMED: CLIB3R.LIB module fopen (642 bytes) found byte for byte here
+0x1bbdc _dos_findfirst       # CONFIRMED: CLIB3R.LIB module find386 (130 bytes) found byte for byte here
+0x1bbf9 _dos_findnext        # CONFIRMED: CLIB3R.LIB module find386 (130 bytes) found byte for byte here
+0x1bc15 _dos_findclose       # CONFIRMED: CLIB3R.LIB module find386 (130 bytes) found byte for byte here
+0x1bc5e mkdir                # CONFIRMED: CLIB3R.LIB module mkdir (33 bytes) found byte for byte here
+0x1bf6b _stricmp             # CONFIRMED: CLIB3R.LIB module stricmp (71 bytes) found byte for byte here
+0x1bf6b strcmpi              # CONFIRMED: CLIB3R.LIB module stricmp (71 bytes) found byte for byte here
+0x1bf6b stricmp              # CONFIRMED: CLIB3R.LIB module stricmp (71 bytes) found byte for byte here
+0x1bfb2 getenv               # CONFIRMED: CLIB3R.LIB module getenv (97 bytes) found byte for byte here
+0x1c013 strstr               # CONFIRMED: CLIB3R.LIB module strstr (190 bytes) found byte for byte here
+0x1c2ac fclose               # CONFIRMED: CLIB3R.LIB module fclose (323 bytes) found byte for byte here
+0x1c2d9 __shutdown_stream    # CONFIRMED: CLIB3R.LIB module fclose (323 bytes) found byte for byte here
+0x1c2fa __MkTmpFile          # CONFIRMED: CLIB3R.LIB module fclose (323 bytes) found byte for byte here
+0x1c35f __doclose            # CONFIRMED: CLIB3R.LIB module fclose (323 bytes) found byte for byte here
+0x1c3ef fwrite               # CONFIRMED: CLIB3R.LIB module fwrite (448 bytes) found byte for byte here
+0x1efc0 _STOSB               # CONFIRMED: CLIB3R.LIB module __stos (163 bytes) found byte for byte here
+0x1eff7 _STOSD               # CONFIRMED: CLIB3R.LIB module __stos (163 bytes) found byte for byte here
+0x20cf0 __null_int23_exit    # CONFIRMED: CLIB3R.LIB module exit (47 bytes) found byte for byte here
+0x20cf1 exit                 # CONFIRMED: CLIB3R.LIB module exit (47 bytes) found byte for byte here
+0x20d09 _exit                # CONFIRMED: CLIB3R.LIB module exit (47 bytes) found byte for byte here
+0x21797 printf               # CONFIRMED: CLIB3R.LIB module printf (34 bytes) found byte for byte here
+0x23227 time                 # CONFIRMED: CLIB3R.LIB module time (47 bytes) found byte for byte here
+0x23280 srand                # CONFIRMED: CLIB3R.LIB module rand (58 bytes) found byte for byte here
+0x2764c _nmalloc             # CONFIRMED: CLIB3R.LIB module nmalloc (227 bytes) found byte for byte here
+0x2764c malloc               # CONFIRMED: CLIB3R.LIB module nmalloc (227 bytes) found byte for byte here
+0x27730 _CHP                 # STRONGLY SUPPORTED: short module, MATH387R.LIB module fchop (29 bytes) found byte for byte here
+0x2774e IF@ATAN              # CONFIRMED: MATH387R.LIB module atan387 (70 bytes) found byte for byte here
+0x2774e IF@DATAN             # CONFIRMED: MATH387R.LIB module atan387 (70 bytes) found byte for byte here
+0x27763 IF@ATAN2             # CONFIRMED: MATH387R.LIB module atan387 (70 bytes) found byte for byte here
+0x27763 IF@DATAN2            # CONFIRMED: MATH387R.LIB module atan387 (70 bytes) found byte for byte here
+0x27778 atan                 # CONFIRMED: MATH387R.LIB module atan387 (70 bytes) found byte for byte here
+0x27784 atan2                # CONFIRMED: MATH387R.LIB module atan387 (70 bytes) found byte for byte here
+0x284d8 _tolower             # STRONGLY SUPPORTED: short module, CLIB3R.LIB module tolower (14 bytes) found byte for byte here
+0x284d8 tolower              # STRONGLY SUPPORTED: short module, CLIB3R.LIB module tolower (14 bytes) found byte for byte here
+0x284e6 __set_EDOM           # CONFIRMED: CLIB3R.LIB module seterrno (52 bytes) found byte for byte here
+0x284eb __set_errno          # CONFIRMED: CLIB3R.LIB module seterrno (52 bytes) found byte for byte here
+0x284f7 __set_ERANGE         # CONFIRMED: CLIB3R.LIB module seterrno (52 bytes) found byte for byte here
+0x284fe __set_EINVAL         # CONFIRMED: CLIB3R.LIB module seterrno (52 bytes) found byte for byte here
+0x2850e __set_doserrno       # CONFIRMED: CLIB3R.LIB module seterrno (52 bytes) found byte for byte here
+0x2851a open                 # CONFIRMED: CLIB3R.LIB module open (626 bytes) found byte for byte here
+0x2853e sopen                # CONFIRMED: CLIB3R.LIB module open (626 bytes) found byte for byte here
+0x28727 __set_binary         # CONFIRMED: CLIB3R.LIB module open (626 bytes) found byte for byte here
+0x2878c __allocfp            # CONFIRMED: CLIB3R.LIB module allocfp (253 bytes) found byte for byte here
+0x28832 __freefp             # CONFIRMED: CLIB3R.LIB module allocfp (253 bytes) found byte for byte here
+0x2886b __purgefp            # CONFIRMED: CLIB3R.LIB module allocfp (253 bytes) found byte for byte here
+0x288cb fseek                # CONFIRMED: CLIB3R.LIB module fseek (318 bytes) found byte for byte here
+0x289c7 __chktty             # CONFIRMED: CLIB3R.LIB module chktty (49 bytes) found byte for byte here
+0x289f8 __doserror           # STRONGLY SUPPORTED: short module, CLIB3R.LIB module error386 (19 bytes) found byte for byte here
+0x28a0c _dosret0             # CONFIRMED: CLIB3R.LIB module dosret (124 bytes) found byte for byte here
+0x28a13 _dosretax            # CONFIRMED: CLIB3R.LIB module dosret (124 bytes) found byte for byte here
+0x28a17 __set_errno_dos      # CONFIRMED: CLIB3R.LIB module dosret (124 bytes) found byte for byte here
+0x29caa _strnicmp            # CONFIRMED: CLIB3R.LIB module strnicmp (83 bytes) found byte for byte here
+0x29caa strnicmp             # CONFIRMED: CLIB3R.LIB module strnicmp (83 bytes) found byte for byte here
+0x29cfd __ioalloc            # CONFIRMED: CLIB3R.LIB module ioalloc (119 bytes) found byte for byte here
+0x29d74 __qread              # STRONGLY SUPPORTED: short module, CLIB3R.LIB module qread (31 bytes) found byte for byte here
+0x29d93 fgetc                # CONFIRMED: CLIB3R.LIB module fgetc (356 bytes) found byte for byte here
+0x29e1c __filbuf             # CONFIRMED: CLIB3R.LIB module fgetc (356 bytes) found byte for byte here
+0x29e4b __fill_buffer        # CONFIRMED: CLIB3R.LIB module fgetc (356 bytes) found byte for byte here
+0x29efd __flush              # CONFIRMED: CLIB3R.LIB module flush (217 bytes) found byte for byte here
+0x2a018 _lseek               # CONFIRMED: CLIB3R.LIB module lseek (67 bytes) found byte for byte here
+0x2a018 lseek                # CONFIRMED: CLIB3R.LIB module lseek (67 bytes) found byte for byte here
+0x2a05b __close              # CONFIRMED: CLIB3R.LIB module _clse (53 bytes) found byte for byte here
+0x2a090 _nfree               # CONFIRMED: CLIB3R.LIB module nfree (130 bytes) found byte for byte here
+0x2a090 free                 # CONFIRMED: CLIB3R.LIB module nfree (130 bytes) found byte for byte here
+0x2a117 __qwrite             # CONFIRMED: CLIB3R.LIB module qwrit (116 bytes) found byte for byte here
+0x2a197 fputc                # CONFIRMED: CLIB3R.LIB module fputc (164 bytes) found byte for byte here
+0x2b4a6 _chain_intr          # STRONGLY SUPPORTED: short module, CLIB3R.LIB module chint386 (25 bytes) found byte for byte here
+0x2b79b _dos_getvect         # CONFIRMED: CLIB3R.LIB module d_getvec (50 bytes) found byte for byte here
+0x2b7cd _dos_setvect         # CONFIRMED: CLIB3R.LIB module d_setvec (45 bytes) found byte for byte here
+0x2b7fa putch                # STRONGLY SUPPORTED: short module, CLIB3R.LIB module putch (15 bytes) found byte for byte here
+0x2b809 strncpy              # CONFIRMED: CLIB3R.LIB module strncpy (37 bytes) found byte for byte here
+0x2b82e fprintf              # CONFIRMED: CLIB3R.LIB module fprintf (33 bytes) found byte for byte here
+0x2e670 memset               # STRONGLY SUPPORTED: short module, CLIB3R.LIB module set386 (24 bytes) found byte for byte here
+0x2e8da __fprtf              # CONFIRMED: CLIB3R.LIB module fprtf (144 bytes) found byte for byte here
+0x2e959 _toupper             # STRONGLY SUPPORTED: short module, CLIB3R.LIB module toupper (14 bytes) found byte for byte here
+0x2e959 toupper              # STRONGLY SUPPORTED: short module, CLIB3R.LIB module toupper (14 bytes) found byte for byte here
+0x2e967 _access              # CONFIRMED: CLIB3R.LIB module accss (59 bytes) found byte for byte here
+0x2e967 access               # CONFIRMED: CLIB3R.LIB module accss (59 bytes) found byte for byte here
+0x2e9d8 _splitpath           # CONFIRMED: CLIB3R.LIB module splitpat (271 bytes) found byte for byte here
+0x2eac5 _makepath            # CONFIRMED: CLIB3R.LIB module makepath (511 bytes) found byte for byte here
+0x31eb4 filelength           # CONFIRMED: CLIB3R.LIB module filelen (61 bytes) found byte for byte here
+0x31ef1 rewind               # STRONGLY SUPPORTED: short module, CLIB3R.LIB module rewind (23 bytes) found byte for byte here
+0x31f08 __getctime           # CONFIRMED: CLIB3R.LIB module gtctm (195 bytes) found byte for byte here
+0x31fcb mktime               # CONFIRMED: CLIB3R.LIB module mktime (340 bytes) found byte for byte here
+0x322a4 strerror             # STRONGLY SUPPORTED: short module, CLIB3R.LIB module strerror (23 bytes) found byte for byte here
+0x32cd3 _CMain               # CONFIRMED: CLIB3R.LIB module cmain386 (79 bytes) found byte for byte here
+0x32d22 _InitRtns            # CONFIRMED: CLIB3R.LIB module inirt386 (154 bytes) found byte for byte here
+0x32d6d _FiniRtns            # CONFIRMED: CLIB3R.LIB module inirt386 (154 bytes) found byte for byte here
+0x336fc _fpatan_wrap         # CONFIRMED: CLIB3R.LIB module chipw32 (52 bytes) found byte for byte here
+0x3374c _sys_init_387_emulator # CONFIRMED: MATH387R.LIB module dosinite (603 bytes) found byte for byte here
+0x338d1 _sys_fini_387_emulator # CONFIRMED: MATH387R.LIB module dosinite (603 bytes) found byte for byte here
+0x33a5a utoa                 # CONFIRMED: CLIB3R.LIB module itoa (138 bytes) found byte for byte here
+0x33aa4 _itoa                # CONFIRMED: CLIB3R.LIB module itoa (138 bytes) found byte for byte here
+0x33aa4 itoa                 # CONFIRMED: CLIB3R.LIB module itoa (138 bytes) found byte for byte here
+0x33af6 ultoa                # CONFIRMED: CLIB3R.LIB module ltoa (138 bytes) found byte for byte here
+0x33b40 _ltoa                # CONFIRMED: CLIB3R.LIB module ltoa (138 bytes) found byte for byte here
+0x33b40 ltoa                 # CONFIRMED: CLIB3R.LIB module ltoa (138 bytes) found byte for byte here
+0x33b5b isatty               # CONFIRMED: CLIB3R.LIB module isatt (39 bytes) found byte for byte here
+0x33b82 __IOMode             # CONFIRMED: CLIB3R.LIB module iomode (106 bytes) found byte for byte here
+0x33bd7 __SetIOMode          # CONFIRMED: CLIB3R.LIB module iomode (106 bytes) found byte for byte here
+0x33bec tell                 # STRONGLY SUPPORTED: short module, CLIB3R.LIB module tell (17 bytes) found byte for byte here
+0x33bfd __InitFiles          # CONFIRMED: CLIB3R.LIB module initfile (119 bytes) found byte for byte here
+0x33c74 __full_io_exit       # CONFIRMED: CLIB3R.LIB module ioexit (105 bytes) found byte for byte here
+0x33c80 fcloseall            # CONFIRMED: CLIB3R.LIB module ioexit (105 bytes) found byte for byte here
+0x34d35 __setenvp            # CONFIRMED: CLIB3R.LIB module setenvp (212 bytes) found byte for byte here
+0x34e09 flushall             # CONFIRMED: CLIB3R.LIB module flushall (52 bytes) found byte for byte here
+0x34e0e __flushall           # CONFIRMED: CLIB3R.LIB module flushall (52 bytes) found byte for byte here
+0x34e3d getche               # STRONGLY SUPPORTED: short module, CLIB3R.LIB module gtche (29 bytes) found byte for byte here
+0x34e6a unlink               # CONFIRMED: CLIB3R.LIB module unlnk (33 bytes) found byte for byte here
+0x34e8b setvbuf              # CONFIRMED: CLIB3R.LIB module setvbuf (103 bytes) found byte for byte here
+0x35715 _mbsnccnt            # CONFIRMED: CLIB3R.LIB module mbncnt (205 bytes) found byte for byte here
+0x35753 _mbsnbcnt            # CONFIRMED: CLIB3R.LIB module mbncnt (205 bytes) found byte for byte here
+0x35784 _mbsninc             # CONFIRMED: CLIB3R.LIB module mbncnt (205 bytes) found byte for byte here
+0x3579d __mbsninc            # CONFIRMED: CLIB3R.LIB module mbncnt (205 bytes) found byte for byte here
+0x357e2 _mbscat              # CONFIRMED: CLIB3R.LIB module mbscat (723 bytes) found byte for byte here
+0x35833 _mbscpy              # CONFIRMED: CLIB3R.LIB module mbscat (723 bytes) found byte for byte here
+0x35852 _mbsdup              # CONFIRMED: CLIB3R.LIB module mbscat (723 bytes) found byte for byte here
+0x35893 _mbsncat             # CONFIRMED: CLIB3R.LIB module mbscat (723 bytes) found byte for byte here
+0x358f0 _mbsnbcat            # CONFIRMED: CLIB3R.LIB module mbscat (723 bytes) found byte for byte here
+0x359e2 _mbsncpy             # CONFIRMED: CLIB3R.LIB module mbscat (723 bytes) found byte for byte here
+0x35a01 _mbsnbcpy            # CONFIRMED: CLIB3R.LIB module mbscat (723 bytes) found byte for byte here
+0x35ab5 _mbptov              # CONFIRMED: CLIB3R.LIB module mbconv (140 bytes) found byte for byte here
+0x35af3 _mbvtop              # CONFIRMED: CLIB3R.LIB module mbconv (140 bytes) found byte for byte here
+0x35b0d __mbvtop             # CONFIRMED: CLIB3R.LIB module mbconv (140 bytes) found byte for byte here
+0x35c7c _mbgetcode           # CONFIRMED: CLIB3R.LIB module mbsinc (395 bytes) found byte for byte here
+0x35ce9 _mbsnextc            # CONFIRMED: CLIB3R.LIB module mbsinc (395 bytes) found byte for byte here
+0x35d3b _mbsinc              # CONFIRMED: CLIB3R.LIB module mbsinc (395 bytes) found byte for byte here
+0x35d81 _mbsdec              # CONFIRMED: CLIB3R.LIB module mbsinc (395 bytes) found byte for byte here
+0x35f2d __leapyear           # CONFIRMED: CLIB3R.LIB module timeutil (1095 bytes) found byte for byte here
+0x36081 __isindst            # CONFIRMED: CLIB3R.LIB module timeutil (1095 bytes) found byte for byte here
+0x36374 __brktime            # CONFIRMED: CLIB3R.LIB module gmtime (320 bytes) found byte for byte here
+0x36489 _gmtime              # CONFIRMED: CLIB3R.LIB module gmtime (320 bytes) found byte for byte here
+0x364a7 gmtime               # CONFIRMED: CLIB3R.LIB module gmtime (320 bytes) found byte for byte here
+0x364b4 __CacheOSTZ          # CONFIRMED: CLIB3R.LIB module tzset (976 bytes) found byte for byte here
+0x36520 tzset                # CONFIRMED: CLIB3R.LIB module tzset (976 bytes) found byte for byte here
+0x3652e __parse_tz           # CONFIRMED: CLIB3R.LIB module tzset (976 bytes) found byte for byte here
+0x36960 __clock_init         # CONFIRMED: CLIB3R.LIB module clock (142 bytes) found byte for byte here
+0x3696b __clock              # CONFIRMED: CLIB3R.LIB module clock (142 bytes) found byte for byte here
+0x36a15 sbrk                 # CONFIRMED: CLIB3R.LIB module sbrk386 (403 bytes) found byte for byte here
+0x36add __brk                # CONFIRMED: CLIB3R.LIB module sbrk386 (403 bytes) found byte for byte here
+0x36ba8 verify_pentium_fdiv_bug # CONFIRMED: CLIB3R.LIB module chipbug (85 bytes) found byte for byte here
+0x36c00 _fpatan_chk          # CONFIRMED: CLIB3R.LIB module chipa32 (512 bytes) found byte for byte here
+0x3a17e _hook387             # CONFIRMED: CLIB3R.LIB module hook387 (301 bytes) found byte for byte here
+0x3a252 _unhook387           # CONFIRMED: CLIB3R.LIB module hook387 (301 bytes) found byte for byte here
+0x3a2ac _init_80x87          # CONFIRMED: CLIB3R.LIB module ini87386 (39 bytes) found byte for byte here
+0x3a2d3 __exit_with_msg      # CONFIRMED: CLIB3R.LIB module xmsg (34 bytes) found byte for byte here
+0x3a2d8 __fatal_runtime_error # CONFIRMED: CLIB3R.LIB module xmsg (34 bytes) found byte for byte here
+0x3a529 strncat              # CONFIRMED: CLIB3R.LIB module strncat (63 bytes) found byte for byte here
+0x3a689 intdos               # CONFIRMED: CLIB3R.LIB module intd386 (78 bytes) found byte for byte here
+0x3a878 __restore_int23      # CONFIRMED: CLIB3R.LIB module sigsy (1477 bytes) found byte for byte here
+0x3aa2e __restore_int_ctrl_break # CONFIRMED: CLIB3R.LIB module sigsy (1477 bytes) found byte for byte here
+0x3aa66 __grab_int23         # CONFIRMED: CLIB3R.LIB module sigsy (1477 bytes) found byte for byte here
+0x3ab81 __grab_int_ctrl_break # CONFIRMED: CLIB3R.LIB module sigsy (1477 bytes) found byte for byte here
+0x3adb3 _fdiv_fpr            # CONFIRMED: CLIB3R.LIB module chipd32 (1820 bytes) found byte for byte here
+0x3b275 _fdiv_chk            # CONFIRMED: CLIB3R.LIB module chipd32 (1820 bytes) found byte for byte here
+0x3b288 _fdiv_m32            # CONFIRMED: CLIB3R.LIB module chipd32 (1820 bytes) found byte for byte here
+0x3b2d4 _fdiv_m64            # CONFIRMED: CLIB3R.LIB module chipd32 (1820 bytes) found byte for byte here
+0x3b320 _fdiv_m32r           # CONFIRMED: CLIB3R.LIB module chipd32 (1820 bytes) found byte for byte here
+0x3b36c _fdiv_m64r           # CONFIRMED: CLIB3R.LIB module chipd32 (1820 bytes) found byte for byte here
+0x3b76f strtod               # CONFIRMED: MATH387R.LIB module strtod (499 bytes) found byte for byte here
+0x3b962 __EnterWVIDEO        # CONFIRMED: CLIB3R.LIB module enterdb (38 bytes) found byte for byte here
+0x3bfd6 __int386x            # CONFIRMED: CLIB3R.LIB module intxa386 (990 bytes) found byte for byte here
+0x3c033 _DoINTR              # CONFIRMED: CLIB3R.LIB module intxa386 (990 bytes) found byte for byte here
+0x3c3b4 __sigabort           # CONFIRMED: CLIB3R.LIB module signl (438 bytes) found byte for byte here
+0x3c3be __sigfpe_handler     # CONFIRMED: CLIB3R.LIB module signl (438 bytes) found byte for byte here
+0x3c3f3 signal               # CONFIRMED: CLIB3R.LIB module signl (438 bytes) found byte for byte here
+0x3c4a8 raise                # CONFIRMED: CLIB3R.LIB module signl (438 bytes) found byte for byte here
+0x3c56a __Nan_Inf            # CONFIRMED: MATH387R.LIB module nan_inf (146 bytes) found byte for byte here
+0x3c5fc IF@DLOG              # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c5fc IF@LOG               # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c63f IF@DLOG2             # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c63f IF@LOG2              # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c643 IF@DLOG10            # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c643 IF@LOG10             # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c647 log                  # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c653 log10                # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c65f log2                 # CONFIRMED: MATH387R.LIB module log387 (111 bytes) found byte for byte here
+0x3c66b floor                # CONFIRMED: MATH387R.LIB module floor (60 bytes) found byte for byte here
+0x3c6a7 _Scale               # CONFIRMED: MATH387R.LIB module scale (350 bytes) found byte for byte here
+0x3c6e8 _Scale10V            # CONFIRMED: MATH387R.LIB module scale (350 bytes) found byte for byte here
+0x3c805 __cvt                # CONFIRMED: MATH387R.LIB module cvt (477 bytes) found byte for byte here
+0x3c9e2 _ModF                # CONFIRMED: CLIB3R.LIB module amodf386 (300 bytes) found byte for byte here
+0x3ca72 _ZBuf2F              # CONFIRMED: CLIB3R.LIB module amodf386 (300 bytes) found byte for byte here
+0x3cb0e abort                # STRONGLY SUPPORTED: short module, CLIB3R.LIB module abort (24 bytes) found byte for byte here
+0x3cb14 __terminate          # STRONGLY SUPPORTED: short module, CLIB3R.LIB module abort (24 bytes) found byte for byte here
+0x3cb2b __log87_err          # CONFIRMED: MATH387R.LIB module log87e (60 bytes) found byte for byte here
+0x3cb68 modf                 # STRONGLY SUPPORTED: short module, MATH387R.LIB module modf387 (25 bytes) found byte for byte here
+0x3cb82 _CmpBigInt           # CONFIRMED: MATH387R.LIB module i64ts386 (454 bytes) found byte for byte here
+0x3cbbc _Rnd2Int             # CONFIRMED: MATH387R.LIB module i64ts386 (454 bytes) found byte for byte here
+0x3cc27 _Bin2String          # CONFIRMED: MATH387R.LIB module i64ts386 (454 bytes) found byte for byte here
+0x3cd48 frexp                # CONFIRMED: MATH387R.LIB module frexp (111 bytes) found byte for byte here
+0x3cdb7 __GrabFP87           # CONFIRMED: CLIB3R.LIB module grabfp87 (49 bytes) found byte for byte here
+0x3cde8 __math1err           # CONFIRMED: MATH387R.LIB module math2err (229 bytes) found byte for byte here
+0x3cdf2 __math2err           # CONFIRMED: MATH387R.LIB module math2err (229 bytes) found byte for byte here
+0x3cece __Init_FPE_handler   # CONFIRMED: CLIB3R.LIB module fpe387 (185 bytes) found byte for byte here
+0x3cf2b __Fini_FPE_handler   # CONFIRMED: CLIB3R.LIB module fpe387 (185 bytes) found byte for byte here
+0x3cf88 __Enable_FPE         # CONFIRMED: CLIB3R.LIB module fpeinth (608 bytes) found byte for byte here
+0x3cf9d __FPEHandler         # CONFIRMED: CLIB3R.LIB module fpeinth (608 bytes) found byte for byte here
+0x3cfaa __FPE2Handler        # CONFIRMED: CLIB3R.LIB module fpeinth (608 bytes) found byte for byte here
+0x3d1e8 _set_matherr         # CONFIRMED: MATH387R.LIB module _matherr (125 bytes) found byte for byte here
+0x3d1ee __rterrmsg           # CONFIRMED: MATH387R.LIB module _matherr (125 bytes) found byte for byte here
+0x3d236 _matherr             # CONFIRMED: MATH387R.LIB module _matherr (125 bytes) found byte for byte here
+0x3d266 __Phar_hook_init     # CONFIRMED: CLIB3R.LIB module fpephar (240 bytes) found byte for byte here
+0x3d329 __Phar_hook_fini     # CONFIRMED: CLIB3R.LIB module fpephar (240 bytes) found byte for byte here
+0x3d356 __DOS4G_hook_init    # CONFIRMED: CLIB3R.LIB module fpedos4g (70 bytes) found byte for byte here
+0x3d383 __DOS4G_hook_fini    # CONFIRMED: CLIB3R.LIB module fpedos4g (70 bytes) found byte for byte here
+0x3d39c __Ergo_hook_init     # CONFIRMED: CLIB3R.LIB module fpeergo (87 bytes) found byte for byte here
+0x3d3da __Ergo_hook_fini     # CONFIRMED: CLIB3R.LIB module fpeergo (87 bytes) found byte for byte here
+0x3d3f4 __Intel_hook_init    # CONFIRMED: CLIB3R.LIB module fpeintel (89 bytes) found byte for byte here
+0x3d44c __Intel_hook_fini    # CONFIRMED: CLIB3R.LIB module fpeintel (89 bytes) found byte for byte here
+0x3d453 __get_std_stream     # STRONGLY SUPPORTED: short module, CLIB3R.LIB module iobaddr (31 bytes) found byte for byte here
+0x3d472 fputs                # CONFIRMED: CLIB3R.LIB module fputs (123 bytes) found byte for byte here
+# sndman.c (start of the game's C)
+0x10010 fn_10010             # CONFIRMED (code): sprintf(strbuf, "%s", s), returns strbuf
+0x10029 fn_10029             # CONFIRMED (code): return fopen(name, mode) (a jmp)
+0x1002e movie_dir_exists     # LIKELY: _dos_findfirst("d:\\MOVIE", _A_SUBDIR) == 0
+0x10052 movie_dir_make       # LIKELY: mkdir("d:\\MOVIE"), else "Couldn't create directory %s"
+0x10078 wav_lookup           # LIKELY: index of a .wav name in wav_names (stricmp) -> wav_handles[i], else -1
+0x100ae blaster_port         # CONFIRMED (code): index of "A210".."A260" in getenv("BLASTER"), else -1
+0x100f1 blaster_irq          # CONFIRMED (code): index of "I2".."I10" in BLASTER, else -1
+0x10134 blaster_dma          # CONFIRMED (code): index of "D0","D1","D3" in BLASTER, else -1
+0x10177 snd_cfg_load         # LIKELY: reads seven shorts from a file (1000 when it cannot open it)
+0x1023d snd_cfg_save         # LIKELY: writes the same seven shorts ("wb+")
+0x55e58 wav_names            # CONFIRMED: 34 char* to .wav names (shot.wav .. tropical.wav)
+0x55ef5 blaster_ports        # CONFIRMED: 6 char*, "A210".."A260"
+0x55f1f blaster_irqs         # CONFIRMED: 5 char*, "I2".."I10"
+0x55f39 blaster_dmas         # CONFIRMED: 3 char*, "D0","D1","D3"
+0x55f45 snd_cfg_b            # LIKELY: short, 2nd of snd_cfg_load's seven
+0x55f47 snd_cfg_c            # LIKELY: short, 3rd
+0x55f49 snd_cfg_d            # LIKELY: short, 4th
+0x6c980 wav_handles          # LIKELY: 34 ints next to wav_names, returned by wav_lookup
+0x6ca08 strbuf               # CONFIRMED (code): fn_10010's sprintf buffer
+0x6fc60 snd_cfg_f            # LIKELY: short, 6th
+0x6fc62 snd_cfg_e            # LIKELY: short, 5th
+0x6fc64 snd_cfg_g            # LIKELY: short, 7th
+0x6fc66 snd_cfg_a            # LIKELY: short, 1st
+0x55e3a movie_dir            # CONFIRMED: char[] "d:\\MOVIE" in _DATA (movie_dir_exists, movie_dir_make)

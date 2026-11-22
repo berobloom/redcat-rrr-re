@@ -5,7 +5,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 w=.work/src; mkdir -p $w; rm -f $w/RRR.OBJ $w/RRR.obj; cp src/rrr.c $w/RRR.C
-reverse-engineering/tools/wc/wcc.sh $w RRR.C -3r -s -ox -fo=RRR.OBJ | grep -iE 'error|warning' | grep -v ' 0 warnings, 0 errors' || true
+reverse-engineering/tools/wc/wcc.sh $w RRR.C -bt=dos -3r -s -ox -fo=RRR.OBJ | grep -iE 'error|warning' | grep -v ' 0 warnings, 0 errors' || true
 [ -f $w/RRR.OBJ ] || { echo "src/check.sh: no object (see $w/WCC.OUT)"; exit 1; }
 if [ "${1:-}" = -v ]; then .work/venv/bin/python reverse-engineering/tools/wc/objmatch.py rrr $w/RRR.OBJ
 else .work/venv/bin/python reverse-engineering/tools/wc/objmatch.py rrr $w/RRR.OBJ | grep -v '^      '; fi

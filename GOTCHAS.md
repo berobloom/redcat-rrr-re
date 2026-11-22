@@ -34,6 +34,9 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **The Watcom 10.5 CD's loose `BINW\WCC386.EXE` is cut off at 64 KB**, and `BINNT\WCC386.EXE` only
   loads it ("Loader read error"). Install with the CD's own `DOSSETUP.EXE` (watcom.md); 10.0a's
   `WPACK.EXE` cannot unpack 10.5's packs (CRC errors, garbage).
+- **Under Wine the compiler targets NT unless told otherwise:** `__NT__` is defined and `struct find_t`
+  gets a 256-byte name (frame 0x120, not the game's 0x2c, `movie_dir_exists` 0x1002e). Always pass
+  `-bt=dos` (`src/check.sh` does).
 - **Wine wants DOS paths.** Give `wcc386 -fo=` a relative name and run in the source directory
   (`wcc.sh` does); an absolute Unix path fails without a clear message. [generic]
 - **The BINNT tools are stubs for the BINW programs:** a stub copied away from `BINW` fails.

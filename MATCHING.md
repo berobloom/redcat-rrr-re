@@ -23,12 +23,14 @@ stub with DOS/4GW bound in front of an LE program. Addresses are the LE image's 
 | Range | What | Rebuilt from |
 |---|---|---|
 | 0x10000-0x1000F | `BEGTEXT` (`int3`, `jmp $-1`, padding) | the Watcom start-up |
-| 0x10010-0x1B958 | **the game's own C**: sndman.c, main.c, new2io.c, order.c, shade.c, init.c, raceanim.c, heap.c, map.c, ... | `src/rrr.c` (this file's subject) |
-| 0x1B959-0x4142F | library modules in the order WLINK pulled them in: Watcom's clib and math library mixed with Davilex's own libraries (`C:\PROTMOD\WINLIB\mgl2\fg2`, `C:\PROTMOD\SOUNDLIB\wc32\mod`), Fastgraph V4.03 and the Smacker player | Watcom's libraries as they are; the rest not identified yet |
+| 0x10010-0x1B915 | **the game's own C**: sndman.c, main.c, new2io.c, order.c, shade.c, init.c, raceanim.c, heap.c, map.c, ... | `src/rrr.c` (this file's subject) |
+| 0x1B916-0x4142F | library modules in the order WLINK pulled them in: Watcom's clib and math library mixed with Davilex's own libraries (`C:\PROTMOD\WINLIB\mgl2\fg2`, `C:\PROTMOD\SOUNDLIB\wc32\mod`), Fastgraph V4.03 and the Smacker player | Watcom's libraries as they are; the rest not identified yet |
 
-The game's own C ends where the first library module starts (clib `fopen` at 0x1B959): the
-functions before it carry RRR's own source files' names, the ones after it the libraries'
-(`rrr_funcs.tsv`). STRONGLY SUPPORTED.
+The game's own C ends where the first library module starts (clib `sprintf` at 0x1B916, then
+`fopen` at 0x1B959): the functions before it carry RRR's own source files' names, the ones after it
+the libraries' (`rrr_funcs.tsv`). STRONGLY SUPPORTED. The `sprintf` module differs from 10.5's
+CLIB3R.LIB in one byte (`89 d3` mov ebx,edx where the LIB has `88 d3` mov bl,dl), so the game's C
+library may be a patched 10.5 or 10.6 (open question 24).
 
 REKEN, RRRMENU and INTRO have the same structure and come later (REKEN's appended debug info names
 its modules, `research/discoveries.md`).
@@ -37,7 +39,7 @@ its modules, `research/discoveries.md`).
 
 - **Compiler: Watcom C/C++ 10.5.** STRONGLY SUPPORTED: 10.5's CLIB3R.LIB matches RRR in 87 modules
   byte for byte, 10.0a's in 27 (`research/discoveries.md`, "Executables").
-- **Options: `-3r -s -ox`.** CONFIRMED on four functions; `-4r`, `-5r`, `-oneatx`, `-os`, `-ot`
+- **Options: `-3r -s -ox`**, plus `-bt=dos` under Wine (GOTCHAS). CONFIRMED on four functions; `-4r`, `-5r`, `-oneatx`, `-os`, `-ot`
   each change at least two of them.
 - **Install and Wine:** `reverse-engineering/watcom.md`.
 - **Driver:** `reverse-engineering/tools/wc/wcc.sh SRCDIR FILE.C [options]` runs WCC386 under Wine.
@@ -132,6 +134,6 @@ code, not the name.
 ## 8. What is left
 
 - The game's own C, function by function (`PROGRESS.md`).
-- The module boundaries inside 0x10010-0x1B958, then one source file per original module.
+- The module boundaries inside 0x10010-0x1B915, then one source file per original module.
 - Davilex's libraries, then REKEN, RRRMENU and INTRO.
 - A WLINK link that reproduces `RRR.EXE`'s layout.

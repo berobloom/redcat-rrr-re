@@ -34,7 +34,7 @@ MATHLIB = os.path.join(WLIB, 'MATH387R.LIB')
 
 # RRR.EXE's code object (MATCHING.md, "The target"): BEGTEXT, the game's own modules, then the
 # library modules in the order WLINK pulled them in
-C_START, LIB_START, CODE_END = 0x10010, 0x1B959, 0x10000 + 0x31430
+C_START, LIB_START, CODE_END = 0x10010, 0x1B916, 0x10000 + 0x31430
 
 
 def run(args, **kw):
