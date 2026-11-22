@@ -9,3 +9,4 @@
 2 0x103d1 play_fx
 13 0x1043a sound_init
 3 0x1103e start_lights
+6 0x111e8 main

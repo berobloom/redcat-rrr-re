@@ -177,7 +177,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 
 ## The race: frame loop
 
-- CONFIRMED: `race_main` (0x111e8) calls `init_game` (0x10817, called race_init before its debug line "exit init_game" was read), then loops
+- CONFIRMED: `main` (0x111e8, called race_main before its caller was found to be the C start-up) calls `init_game` (0x10817, called race_init before its debug line "exit init_game" was read), then loops
   until Esc (scancode 1) or S (0x1f): `switch_anims`, `objects_tick`
   (0x25c55), `camera_follow`, `sort_draw_order`, `joystick_to_keys`,
   `hud_update`, `draw_view(scroll_y % 40, scroll_x % 32)`; the first pass
@@ -1323,7 +1323,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (sample, distance)` takes the first free of tracks 1..3 with volume
   min(64, (1500 / distance) · 64), which the mixer ignores. Track 0 is
   RRR's music.
-- CONFIRMED (code `init_game` 0x10d8e..0x10ede, `race_main`
+- CONFIRMED (code `init_game` 0x10d8e..0x10ede, `main`
   0x112cb..0x11458): music. On a world's first race (`0x1aea5`: stage 0)
   start.wav plays on track 0 over the loading screen (wacht.pcx) until it
   ends or S, Esc, Enter or Space, which stop it. After the dashboard

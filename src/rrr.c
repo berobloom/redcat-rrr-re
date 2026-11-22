@@ -143,6 +143,20 @@ int key_pressed(int scancode);
 #pragma aux key_pressed parm routine [] modify [eax ecx edx];
 void mix_stop_track(int track);
 void fn_15166(void);
+int switch_anims(void);
+void objects_tick(void);
+void camera_follow(int racer);
+void sort_draw_order(void);
+void joystick_to_keys(void);
+void hud_update(void);
+void draw_view(short dy, short dx);
+#pragma aux draw_view parm routine [];
+void race_end(int quit);
+void user_exit(int code);
+#pragma aux user_exit parm routine [];
+void high_score(char *name, int points);
+void winner_film(int racer);
+void podium(int quit);
 void draw_frame(void *dst, void *img, int x, int y, int w, int h);  /* 0x2425d */
 void delay_ms(int ms);
 #pragma aux delay_ms parm routine [] modify [eax ebx edx];   /* its own code: ECX kept */
@@ -186,7 +200,7 @@ extern int            stereo;               /* 0x6fc50 */
 extern int            sound_enabled;        /* 0x6fc54 */
 extern int            music_on;             /* 0x6fc58 */
 extern int            map_no;               /* 0x6fc5c */
-extern int            v7f978, v7f97c, scroll_b, scroll_a;
+extern int            v7f978, v7f97c, scroll_y, scroll_x;
 struct frame {                              /* 12 bytes: an anim frame image */
     void   *img;
     short   w;                                  /* +4 */
@@ -197,9 +211,11 @@ struct animset {
     char    pad[0x2b4];
     short  *lamp;                               /* +0x2b4: start-light frames, [1] [3] .. [9] */
 };
+extern int            lights_done;          /* 0x55f8b */
 extern int            finish_order[3];      /* 0x55f93 */
 extern int            finish_count;         /* 0x55f9f */
 extern int            finish_done[3];       /* 0x55fa3 */
+extern int            camera_racer;         /* 0x55faf */
 extern int            finished0;            /* 0x55fbc: racer 0's finished flag */
 extern int            finished2;            /* 0x55ff0 */
 extern int            finished4;            /* 0x56014 */
@@ -632,8 +648,8 @@ void init_game(char **argv, int argc)
     fn_1bcb7();
     debug_printf("MUIS Drive Anims initialised ok using %ld bytes. \n", anim_bytes);
     debug_printf("Direction tables initialised ok.\n");
-    scroll_b = 0;
-    scroll_a = 0;
+    scroll_y = 0;
+    scroll_x = 0;
     v7f978 = 0;
     v7f97c = 0;
     debug_printf("Init direction tables.\n");
@@ -762,6 +778,104 @@ void start_lights(void)
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
     snd_play(1, 32, 64);
     delay_ms(500);
+}
+
+/* ---- 0x111e8 -------------------------------------------------------------------------------- */
+
+/* differs: 6 rows, block placement in the quit-after-finish fill (0x1138d..0x11481): the game tests
+   finished2 with jne to the finished2 branch and keeps the finished4 -> order[2] = 2 block before
+   it, ours tests with je and places them the other way round; same size, same stores. 22 spellings
+   of the block tried (nested if/else both ways round, else-if chains on the four cases, && forms,
+   a goto, separate ifs); the others merge the two order[1] = 2 stores (794 bytes) or grow. */
+int main(int argc, char **argv)
+{
+    int quit = 0;
+    int best = -1;
+    int best_points = 0;
+    int i;
+
+    init_game(argv, argc);
+    for (;;) {
+        if (key_pressed(0x01) || key_pressed(0x1f)) {
+            quit = 1;
+            break;
+        }
+        if (key_pressed(0x3b))
+            camera_racer = 0;
+        if (key_pressed(0x3c))
+            camera_racer = 2;
+        if (key_pressed(0x3d))
+            camera_racer = 4;
+        if (switch_anims())
+            rc_error("%s(%d) : Error switching anims", "main.c", 503);
+        objects_tick();
+        camera_follow(camera_racer);
+        sort_draw_order();
+        joystick_to_keys();
+        hud_update();
+        draw_view(scroll_y % 40, scroll_x % 32);
+        if (!lights_done) {
+            start_lights();
+            lights_done = 1;
+        }
+        if (finish_check()) {
+            mix_stop_track(0);
+            if (sound_enabled && music_on)
+                snd_play(0, 29, 64);
+            do {
+                objects_tick();
+                camera_follow(0);
+                sort_draw_order();
+                draw_view(scroll_y % 40, scroll_x % 32);
+            } while (!snd_track_free(0) && music_on && !key_pressed(0x01));
+            break;
+        }
+        if (key_pressed(0x14))
+            play_fx(4, 0);
+        if (key_pressed(0x44) && key_pressed(0x2a) && key_pressed(0x1d))
+            screenshot();
+        if (sound_enabled && music_on) {
+            if (stereo) {
+                debug_printf("playing Stereo Music\n");
+                snd_play(0, 11, 64);
+            } else {
+                debug_printf("playing Stereo Music\n");
+                snd_play(0, 12, 64);
+            }
+        }
+    }
+    if (quit && finished0 && finish_done[0]) {
+        if (finished2) {
+            if (finished4)
+                finish_order[1] = 2;
+            finish_order[2] = 4;
+        } else if (finished4) {
+            finish_order[2] = 2;
+        } else {
+            finish_order[1] = 2;
+            finish_order[2] = 4;
+        }
+        quit = 0;
+    }
+    race_end(quit);
+    if (quit)
+        user_exit(42);
+    high_score(rrrio.names[0], rrrio.points[0]);
+    if (stage_is_last()) {
+        for (i = 0; i < 3; i++) {
+            if (best_points < rrrio.points[i]) {
+                best = i;
+                best_points = rrrio.points[i];
+            }
+        }
+        if (best >= 0 && best < 3)
+            winner_film(best * 2);
+    } else {
+        podium(quit);
+    }
+    user_exit(43);
+    debug_printf("do user_exit succeeded\n");
+    return 43;
 }
 
 /* ---- 0x14861 -------------------------------------------------------------------------------- */

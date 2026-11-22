@@ -15,7 +15,7 @@
 0x22c71 xvga_src_fopen       # STRONGLY SUPPORTED: named in load_xvga_map_images' error string
 0x22e32 fileio_close         # LIKELY: fileio.c, logs 'closing copying..'; not clib fclose, which is 0x1c2ac (libmatch)
 0x2325c rand                 # CONFIRMED: CLIB3R.LIB 10.5 module rand found byte for byte; result % 22 picks a random map
-0x111e8 race_main            # CONFIRMED: calls race_init, then the frame loop until Esc/S; returns 0x2b
+0x111e8 main                 # CONFIRMED: called by the C start-up (0x32d13) with argc, argv; calls init_game, then the frame loop until Esc/S; returns 0x2b
 0x26a9e key_pressed          # CONFIRMED: (scancode on stack, ret 4) -> key state array 0x804c0
 0x26beb delay_ms             # LIKELY: start lights wait 0x5dc/1000/500 between lamps
 0x138ed camera_follow        # CONFIRMED: scroll [0x7f984],[0x7f980] eases 1/16 toward racer + 128 px lead
@@ -384,8 +384,8 @@
 0x6fc5c map_no               # CONFIRMED (code): stage_map_index(), or rand() % 22 when out of range
 0x7f978 v7f978               # SPECULATIVE: cleared before the direction tables are built
 0x7f97c v7f97c               # SPECULATIVE: as v7f978
-0x7f980 scroll_b             # LIKELY: one of camera_follow's two scroll coordinates (0x138ed eases [0x7f984],[0x7f980])
-0x7f984 scroll_a             # LIKELY: the other scroll coordinate
+0x7f980 scroll_y             # LIKELY: draw_view gets scroll_y % 40 (tile height); one of camera_follow's two scroll coordinates (0x138ed eases [0x7f984],[0x7f980])
+0x7f984 scroll_x             # LIKELY: draw_view gets scroll_x % 32 (tile width)
 0x1b929 sprintf              # STRONGLY SUPPORTED: the matched fn_10010 and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
 0x1475f camera_start         # STRONGLY SUPPORTED: puts the camera on the player after init_objects, scroll clamped to the map (discoveries.md)
 0x2425d draw_frame           # LIKELY: (dst, img, x, y, w, h), w and h on the stack; start_lights' lamps; -> 0x32c78 (discoveries.md HUD)
@@ -398,3 +398,5 @@
 0x600d0 frames               # LIKELY: 12-byte anim frame records (image, short w, short h)
 0x7f954 screen_buf           # STRONGLY SUPPORTED: the screen buffer (discoveries.md, smacker and podium)
 0x804bc animset              # SPECULATIVE: pointer to a block whose +0x2b4 is the start-light frame list
+0x55f8b lights_done          # CONFIRMED (code): main runs start_lights once, then sets it
+0x55faf camera_racer         # CONFIRMED (code): F1/F2/F3 set 0/2/4; camera_follow's argument
