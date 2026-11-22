@@ -41,7 +41,7 @@ question 1.
 
 ## The race (RRR.EXE)
 
-`race_init` (0x10817) runs, in order (from its debug messages): allocate
+`init_game` (0x10817, called race_init before its debug line "exit init_game" was read) runs, in order (from its debug messages): allocate
 objects; pick the map (`stage_map_index`, 0x1ae44, or random); load the map
 (`load_map`, 0x1fc4c) and its tileset (`load_xvga_map_images`, 0x1fad6);
 search the waypoints (0x1517a); init anims; load the drive anims of the three

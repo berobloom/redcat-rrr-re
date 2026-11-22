@@ -1,6 +1,6 @@
 # RRR.EXE function names (linear addresses as loaded by tools/leparse.py).
 # Read by tools/disasm.py.  Confidence per AGENTS.md; evidence in the comment.
-0x10817 race_init            # LIKELY: allocs objects, picks + loads map, inits anims (debug strings)
+0x10817 init_game            # STRONGLY SUPPORTED: its last debug line is "exit init_game : %d,%d"; picks + loads the map, sound, anims, objects, music
 0x1517a find_waypoints       # STRONGLY SUPPORTED: result picks 'Waypoint-search found missing waypoint!'
 0x15c02 init_anims           # LIKELY: logged as 'Init anims.'
 0x1ae44 stage_map_index      # CONFIRMED: table 0x57b8c[group][stage] - 1
@@ -365,3 +365,26 @@
 0x6c970 tracks               # CONFIRMED (code): int[4], sample per sound track, -1 = none
 0x7f95e screen_w             # LIKELY: short, screenshot's x range
 0x7f962 screen_h             # LIKELY: short, screenshot's y range
+0x21815 cd_check             # LIKELY: (dir, name): tries drives C..Z for NAME with access(), getenv("NOCD") skips it, exits with a message when not found
+0x55400 font12_name          # CONFIRMED (code): "ascii12.img", the first ascii set init_game loads and selects
+0x5591d font20_name          # CONFIRMED (code): "ascii20.img", the second ascii set
+0x55fb8 view_size            # STRONGLY SUPPORTED: draw_view's view size 0/1/2 (600x400, 540x360, 480x320); init_game sets 0 (discoveries.md)
+0x57a60 track_maps           # CONFIRMED (code): char*[] map files by map index ("track1a.map" ..)
+0x57abc track_imgs           # CONFIRMED (code): char*[] image files by map index ("track1.img" ..)
+0x5feba v5feba               # SPECULATIVE: short set to 1 before the map loads
+0x5ff3c debug_on             # STRONGLY SUPPORTED: has_arg("/DEBUG") != 0
+0x60044 view_tiles_w         # STRONGLY SUPPORTED: view width in tiles, 19 (discoveries.md 'HUD and camera')
+0x60048 view_tiles_h         # STRONGLY SUPPORTED: view height in tiles, 10
+0x600d6 anim_bytes           # LIKELY: long printed as 'Drive Anims initialised ok using %ld bytes'
+0x6cad0 v6cad0               # SPECULATIVE: buffer passed with rcs.ind / sndrcs.ind to fn_218e4
+0x6cb60 v6cb60               # SPECULATIVE: buffer passed with rcs.img / sndrcs.img to fn_218e4
+0x6fc50 stereo               # CONFIRMED (code): has_arg("/STEREO"); picks the stereo or mono music sample
+0x6fc54 sound_enabled        # CONFIRMED (code): rrrio.sound & 1 and sound_init succeeded
+0x6fc58 music_on             # CONFIRMED (code): no /NOMUSIC and rrrio.sound & 2; cleared when the music does not start
+0x6fc5c map_no               # CONFIRMED (code): stage_map_index(), or rand() % 22 when out of range
+0x7f978 v7f978               # SPECULATIVE: cleared before the direction tables are built
+0x7f97c v7f97c               # SPECULATIVE: as v7f978
+0x7f980 scroll_b             # LIKELY: one of camera_follow's two scroll coordinates (0x138ed eases [0x7f984],[0x7f980])
+0x7f984 scroll_a             # LIKELY: the other scroll coordinate
+0x1b929 sprintf              # STRONGLY SUPPORTED: the matched fn_10010 and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
+0x1475f camera_start         # STRONGLY SUPPORTED: puts the camera on the player after init_objects, scroll clamped to the map (discoveries.md)

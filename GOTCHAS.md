@@ -76,6 +76,19 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **Locals' stack slots follow declaration order, not first use:** sound_init's irq/port/dma slots
   matched only with `int dma, port, irq` (score all orders in place).
 
+- **A register set up before a call that never reads it = the NEXT call's argument, hoisted:** the
+  compiler loads it early because the callee preserves it. init_game 0x10817's `mov ebx, esi` before
+  cd_check(0, "intro.img") is has_arg("/V")'s argv; declaring cd_check with three parameters cost 5
+  rows. Read the callee before giving it the register as a parameter.
+- **A caller that passes a short without `movsx` where the callee's own parameter is short:** the
+  calling module declared it with an int. Model that with an alias:
+  `int main_sound_init(int argc, char **argv); #pragma aux main_sound_init "sound_init_";`.
+- **Stack arguments with `ret N` and only ESI/EDI saved:** `#pragma aux f parm routine [] modify [eax
+  ebx ecx edx];` (init_game). Library functions called with pushes and no `add esp` get `parm routine
+  [] modify [eax ecx edx]`; without the modify list the caller keeps values in ECX across them.
+- **A short argc passed to a function taking int is `movsx`ed by the caller** (has_arg's callers), so
+  the callee's parameter is int, not short.
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,

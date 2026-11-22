@@ -9,6 +9,7 @@
  * evidence in reverse-engineering/analysis/rrr_names.txt; the original's are not known.
  */
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <direct.h>
@@ -90,6 +91,58 @@ void fn_1f579(void);
 void fn_1f5a0(void);
 int easy_init(int a, int n, int *handles, char **names, int last);   /* 0x20b80 */
 void __cdecl fn_20d1f(int x0, int x1, int y0, int y1, char *name);
+void goodbye(void);
+int sound_init(short argc, char **argv);
+void fn_1f210(int a);
+void cd_check(char *dir, char *name);                         /* 0x21815 */
+void fn_1f1fe(int a);
+void fn_1f204(int a);
+void fn_1f222(int h, int w);
+#pragma aux fn_1f222 parm routine [] modify [eax ecx edx];
+void fn_21af9(void);
+int fn_218e4(void *p, char *name);
+void fn_22ab5(int ind, int img);
+void fn_22ec9(int ind, int img);
+void fn_1f329(int a);
+void fn_2369f(char *name, int a);
+void fn_1f3dc(void);
+short trans_load(char *name);
+void trans_generate(void);
+void trans_save(char *name);
+short fn_24a9a(char *name);
+void fn_246b5(char *name);
+#pragma aux fn_246b5 parm routine [] modify [eax ecx edx];
+void fn_24879(int a);
+#pragma aux fn_24879 parm routine [] modify [eax ecx edx];
+void fn_24942(int a);
+#pragma aux fn_24942 parm routine [] modify [eax ecx edx];
+int rrrio_load(void);
+void fn_1b469(void);
+short fn_1f83f(int n);
+short fn_25bbd(int n);
+int stage_map_index(void);
+short load_map(char *name);
+short load_xvga_map_images(char *name);
+int find_waypoints(void);
+void init_anims(void);
+int fn_15c66(void);
+int fn_15e02(void);
+int fn_15f9e(void);
+int fn_1613a(void);
+void fn_1bcb7(void);
+void fn_13c34(void);
+void fn_13cba(void);
+void fn_13f00(void);
+void fn_13f91(void);
+void clear_objects(void);
+void init_objects(void);
+void camera_start(int a);
+void find_bonus_objects(void);
+int fn_1aea5(void);
+int key_pressed(int scancode);
+#pragma aux key_pressed parm routine [] modify [eax ecx edx];
+void mix_stop_track(int track);
+void fn_15166(void);
 
 /* ---- globals (addresses in rrr_names.txt) --------------------------------------------------- */
 
@@ -114,6 +167,23 @@ extern int            num_tracks;           /* 0x5fe67 */
 extern int            tracks[4];            /* 0x6c970: sample per track, -1 = none */
 extern short          screen_w;             /* 0x7f95e */
 extern short          screen_h;             /* 0x7f962 */
+extern char           font12_name[];        /* 0x55400: "ascii12.img" */
+extern char           font20_name[];        /* 0x5591d: "ascii20.img" */
+extern char          *track_maps[];         /* 0x57a60: "track1a.map" .. */
+extern char          *track_imgs[];         /* 0x57abc: "track1.img" .. */
+extern int            view_size;
+extern short          v5feba;
+extern int            debug_on;             /* 0x5ff3c */
+extern int            view_tiles_w;
+extern int            view_tiles_h;
+extern long           anim_bytes;           /* 0x600d6 */
+extern char           v6cad0[];
+extern char           v6cb60[];
+extern int            stereo;               /* 0x6fc50 */
+extern int            sound_enabled;        /* 0x6fc54 */
+extern int            music_on;             /* 0x6fc58 */
+extern int            map_no;               /* 0x6fc5c */
+extern int            v7f978, v7f97c, scroll_b, scroll_a;
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
 extern char           strbuf[];             /* 0x6ca08 */
@@ -427,6 +497,186 @@ void goodbye(void)
     printf("\n \n U kunt het spel opstarten door RCRACE in te typen en op [Enter] te drukken.\n");
     printf("\n \n Veel plezier !\n");
     exit(0);
+}
+
+/* ---- 0x10817 -------------------------------------------------------------------------------- */
+
+void init_game(char **argv, int argc);
+/* stack arguments, callee pops (ret 8), saves only ESI/EDI: race_main pushes argc, then argv */
+#pragma aux init_game parm routine [] modify [eax ebx ecx edx];
+
+/* main.c's own declaration of sndman.c's sound_init: an int argc, which init_game passes without
+   the movsx that sndman.c's short parameter gets (0x10a45) */
+int main_sound_init(int argc, char **argv);
+#pragma aux main_sound_init "sound_init_";
+
+void init_game(char **argv, int argc)
+{
+    time_t t;
+
+    view_size = 0;
+    if (!has_arg("/DAVILEX", argc, argv))
+        goodbye();
+    if (!has_arg("/M", argc, argv))
+        fn_1f210(0);
+    debug_on = has_arg("/DEBUG", argc, argv) != 0;
+    cd_check(0, "intro.img");
+    view_tiles_w = 19;
+    view_tiles_h = 10;
+    if (has_arg("/V", argc, argv))
+        fn_1f1fe(1);
+    fn_1f204(25);
+    fn_1f222(480, 640);
+    fn_21af9();
+    fn_22ab5(fn_218e4(v6cad0, "rcs.ind"), fn_218e4(v6cb60, "rcs.img"));
+    fn_22ec9(fn_218e4(v6cad0, "sndrcs.ind"), fn_218e4(v6cb60, "sndrcs.img"));
+    time(&t);
+    srand(t);
+    fn_1f329(0);
+    debug_printf("Loading palette.\n");
+    fn_2369f("wacht.pcx", 15);
+    fn_1f3dc();
+    debug_printf("Palette loaded and stored ok.\n");
+    debug_printf("Loading trans-tables.\n");
+    if (trans_load("trans.dat")) {
+        debug_printf("Load trans-tables failed, generating tables.\n");
+        trans_generate();
+        trans_save("trans.dat");
+        debug_printf("Trans-tables generated & saved ok.\n");
+    } else {
+        debug_printf("Trans-tables loaded ok.\n");
+    }
+    debug_printf("Loading ascii sets.\n");
+    if (fn_24a9a(font12_name))
+        rc_error("unable to create ascii set1");
+    if (fn_24a9a(font20_name))
+        rc_error("unable to create ascii set2");
+    fn_246b5(font12_name);
+    fn_24879(15);
+    fn_24942(0);
+    debug_printf("Ascii sets loaded ok.\n");
+    rrrio_load();
+    fn_1b469();
+    debug_printf("Init sound manager.\n");
+    if ((rrrio.sound & 1) && main_sound_init(argc, argv) == 0) {
+        sound_enabled = 1;
+        debug_printf("Init sound manager ok.\n");
+    } else {
+        sound_enabled = 0;
+        debug_printf("Sound off.\n");
+    }
+    debug_printf("Alloc sprites.\n");
+    if (fn_1f83f(306))
+        rc_error("not enough memory for xvga sprites");
+    debug_printf("Sprites alloc'd ok.\n");
+    debug_printf("Alloc objects.\n");
+    if (fn_25bbd(306))
+        rc_error("not enough memory for objects");
+    debug_printf("Objects alloc'd ok.\n");
+    map_no = stage_map_index();
+    if (map_no < 0 || map_no > 22) {
+        map_no = rand() % 22;
+        if (map_no < 0 || map_no > 22)
+            rc_error("%s(%d) : Illegal ammount of maps in rrrio.inf: %d", "main.c", 270, map_no);
+    }
+    v5feba = 1;
+    debug_printf("Loading bakground map : %s and images track : %s\n", track_maps[map_no], track_imgs[map_no]);
+    if (load_map(track_maps[map_no]))
+        rc_error("not enough memory for foreground map file <%s>", track_maps[rrrio.world]);
+    if (load_xvga_map_images(track_imgs[map_no]))
+        rc_error("not enough memory for foreground map file <'dirt.img'>");
+    debug_printf("Map and images loaded ok.\n");
+    debug_printf("Searching waypoints in map\n");
+    if (find_waypoints())
+        rc_error("Waypoint-search found missing waypoint!");
+    else
+        debug_printf("Waypoints search returned ok.\n");
+    debug_printf("Init anims.\n");
+    init_anims();
+    debug_printf("use config.\n");
+    if (fn_15c66())
+        rc_error("memory overflow initialising anims.");
+    fn_1bcb7();
+    if (fn_15e02())
+        rc_error("memory overflow initialising anims.");
+    fn_1bcb7();
+    debug_printf("RC Drive Anims initialised ok using %ld bytes. \n", anim_bytes);
+    if (fn_15f9e())
+        rc_error("memory overflow initialising anims.");
+    fn_1bcb7();
+    debug_printf("BULL Drive Anims initialised ok using %ld bytes. \n", anim_bytes);
+    if (fn_1613a())
+        rc_error("memory overflow initialising anims.");
+    fn_1bcb7();
+    debug_printf("MUIS Drive Anims initialised ok using %ld bytes. \n", anim_bytes);
+    debug_printf("Direction tables initialised ok.\n");
+    scroll_b = 0;
+    scroll_a = 0;
+    v7f978 = 0;
+    v7f97c = 0;
+    debug_printf("Init direction tables.\n");
+    fn_13c34();
+    fn_13cba();
+    fn_13f00();
+    fn_13f91();
+    debug_printf("Init objects.\n");
+    clear_objects();
+    init_objects();
+    debug_printf("Objects initialised ok.\n");
+    camera_start(0);
+    debug_printf("Searching bonus objects in map\n");
+    find_bonus_objects();
+    debug_printf("Bonus search returned.\n");
+    music_on = (!has_arg("/NOMUSIC", argc, argv) && (rrrio.sound & 2)) ? 1 : 0;
+    stereo = has_arg("/STEREO", argc, argv);
+    if (sound_enabled && fn_1aea5()) {
+        debug_printf("Starting music.\n");
+        snd_play(0, 31, 64);
+        do {
+            if (key_pressed(0x1f)) {
+                while (key_pressed(0x1f))
+                    ;
+                mix_stop_track(0);
+                break;
+            }
+            if (key_pressed(0x01)) {
+                while (key_pressed(0x01))
+                    ;
+                mix_stop_track(0);
+                break;
+            }
+            if (key_pressed(0x1c)) {
+                while (key_pressed(0x1c))
+                    ;
+                mix_stop_track(0);
+                break;
+            }
+            if (key_pressed(0x39)) {
+                while (key_pressed(0x39))
+                    ;
+                mix_stop_track(0);
+                break;
+            }
+        } while (mix_track_free(0));
+    }
+    fn_2369f("racescr3.pcx", 15);
+    debug_printf("Initialising dashboard.\n");
+    fn_15166();
+    if (sound_enabled && music_on) {
+        debug_printf("Starting music.\n");
+        if (stereo) {
+            debug_printf("playing stereo music\n");
+            snd_play(0, 11, 64);
+            if (!mix_track_free(0))
+                music_on = 0;
+        } else {
+            debug_printf("playing mono music\n");
+            snd_play(0, 12, 64);
+            if (!mix_track_free(0))
+                music_on = 0;
+        }
+    }
+    debug_printf("exit init_game : %d,%d\n", view_tiles_w, view_tiles_h);
 }
 
 /* ---- 0x14861 -------------------------------------------------------------------------------- */

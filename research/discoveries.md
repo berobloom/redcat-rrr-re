@@ -113,7 +113,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   2 + 256×1280 + 768 = 328,450, both files. RRR's `load_xvga_map_images`
   (0x1fad6) reads the count, then 0x500 bytes per tile, passing 0x20 and 0x28
   to `0x1fa1b`. Tiles are 32 wide and 40 high (row-major), confirmed visually.
-- CONFIRMED: RRR picks the map in `race_init` (0x10817 → 0x10ae4):
+- CONFIRMED: RRR picks the map in `init_game` (0x10817 → 0x10ae4):
   `map = stage_map_index()` (0x1ae44) = `table_0x57b8c[group][stage] - 1`,
   5 stages per group row. If that is outside 0..22 it falls back to
   `rand() % 22`. Map file names are at 0x57a60[23], their tilesets at
@@ -177,7 +177,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 
 ## The race: frame loop
 
-- CONFIRMED: `race_main` (0x111e8) calls `race_init` (0x10817), then loops
+- CONFIRMED: `race_main` (0x111e8) calls `init_game` (0x10817, called race_init before its debug line "exit init_game" was read), then loops
   until Esc (scancode 1) or S (0x1f): `switch_anims`, `objects_tick`
   (0x25c55), `camera_follow`, `sort_draw_order`, `joystick_to_keys`,
   `hud_update`, `draw_view(scroll_y % 40, scroll_x % 32)`; the first pass
@@ -367,7 +367,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: sprite hotspots are the RC.IMG headers' x, y as signed 16-bit
   values (544 of 544 loaded images match the run-time records).
 - CONFIRMED: the race palette is the tileset's (identical to RACESCR3.PCX's;
-  all 169 colours of a race screenshot are in it). `race_init` loads
+  all 169 colours of a race screenshot are in it). `init_game` loads
   wacht.pcx's palette first, for the loading screen.
 - CONFIRMED: start lights: anim 86's frames (images 32, 43–46) drawn at
   screen (226, 50) for 1500, 1000, 1000, 1000, 500 ms (the port's start
@@ -475,7 +475,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   screen rectangle x 20..620, y 0..400 (inclusive bounds, from `0x26ef4`'s
   arguments; the screenshot's map pixels end at those columns and rows).
   `draw_view` also has 540×360 at (50,20) and 480×320 at (80,40) for
-  [0x55fb8] = 1, 2, but `race_init` sets it to 0 and nothing else writes it.
+  [0x55fb8] = 1, 2, but `init_game` sets it to 0 and nothing else writes it.
 - CONFIRMED: sprites are drawn in the order of the sort list (0x6fc70,
   0x6fc74 = next) with their top-left at the object's (x, y) minus the
   scroll. Kinds (+8 of a sprite slot): 1, 2 opaque with 0xFF transparent
@@ -501,7 +501,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   and 494 for rockets.
 - CONFIRMED: the camera starts on the player (0x1475f, after
   `init_objects`): scroll = (x − 304, y − 200), clamped to 0 ..
-  (map size − view − 1 tile). `race_init` sets the view to 19 × 10 tiles
+  (map size − view − 1 tile). `init_game` sets the view to 19 × 10 tiles
   ([0x60044], [0x60048]); `camera_follow` (0x138ed) eases 1/16 per frame
   toward x − 320 + 128·sx, y − z − 220 + 160·sy.
 
@@ -1047,7 +1047,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   which at run time equals the screen buffer `[0x7f954]` (0x242038). An
   earlier note said the screen kept the last race frame. That did not
   reproduce. LIKELY it came from a poke before the race had started
-  (race_init clears the flags, and `RRR /DEBUG` needs a key on its wait
+  (init_game clears the flags, and `RRR /DEBUG` needs a key on its wait
   screen once the sounds have loaded).
 - CONFIRMED (strings): after a stage-4 race `0x15a14(2 × points leader)`
   plays `wredcat.smk`, `wbrutus.smk` or `wsnitch.smk` instead (Smacker,
@@ -1323,7 +1323,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (sample, distance)` takes the first free of tracks 1..3 with volume
   min(64, (1500 / distance) · 64), which the mixer ignores. Track 0 is
   RRR's music.
-- CONFIRMED (code `race_init` 0x10d8e..0x10ede, `race_main`
+- CONFIRMED (code `init_game` 0x10d8e..0x10ede, `race_main`
   0x112cb..0x11458): music. On a world's first race (`0x1aea5`: stage 0)
   start.wav plays on track 0 over the loading screen (wacht.pcx) until it
   ends or S, Esc, Enter or Space, which stop it. After the dashboard
