@@ -137,6 +137,13 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   before the epilogue; with the constant it knows EAX already holds -1 and jumps past it, as the
   game does (the heap.c spawners 0x180d3-0x18502, 2 bytes per function).
 
+- **A function's entry block can move next to its caller.** In one object Watcom placed
+  hud_count's first 54 bytes (the switch compares) straight after fn_15166, which tail-calls it,
+  and the rest at its own place: the jumps then reach 2 KB away. Compiled in an object of its own
+  it matched. A near miss whose first jump goes far outside the function means a caller earlier
+  in the same file belongs to another module. `.work/objdis.py OBJ NAME` (or objmatch's publics)
+  shows where our object put each function.
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,

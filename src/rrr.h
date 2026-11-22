@@ -349,7 +349,7 @@ int fn_166dc(void);
 int fn_16767(void);
 
 /* rrr.c, still unsplit */
-void fn_19391(int a);
+void hud_count(int a);
 void fn_15166(void);
 int free_object_tick(short n);
 int fn_18886(int v, int lo, int hi);

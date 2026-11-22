@@ -889,8 +889,8 @@ int switch_anims(void)
 
 void fn_15166(void)
 {
-    fn_19391(13);
-    fn_19391(23);
+    hud_count(13);
+    hud_count(23);
 }
 
 

@@ -477,7 +477,7 @@
 0x1bcb7 fn_1bcb7             # SPECULATIVE: animation library, called by raceanim.c
 0x1bd71 fn_1bd71             # SPECULATIVE: animation library, called by raceanim.c
 0x1bda1 fn_1bda1             # SPECULATIVE: animation library, called by raceanim.c
-0x19391 fn_19391             # SPECULATIVE: called with 13 and 23 by fn_15166
+0x19391 hud_count            # CONFIRMED (code): draws boosts (13) or rockets (23) as two digits at (389|494, 415); any other value draws with uninitialised locals
 0x15166 fn_15166             # CONFIRMED (code): fn_19391(13); fn_19391(23)
 0x18886 fn_18886             # CONFIRMED (code): -1 below lo, 1 above hi, else 0
 0x1aea5 fn_1aea5             # CONFIRMED (code): walks stage_table[world-1] down from the stage while entries are non-zero
