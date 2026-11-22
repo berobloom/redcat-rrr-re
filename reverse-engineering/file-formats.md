@@ -109,11 +109,15 @@ The state RRRMENU, REKEN and RRR share (REKEN keeps it at 0x534f4): a raw dump o
 | 0x2c | 0x751a4 | 0 | world 0–5 (row of the map and module tables) |
 | 0x30 | 0x751a8 | 3 | sound mode: bit 0 effects, bit 1 music (REKEN [0x46c87]) |
 | 0x34 | 0x751ac | 0 | joystick on |
+| 0x38 | 0x751b0 | -1 × 6 | six ints, set in the order 0, 1, 4, 5, 2, 3 (joystick calibration? SPECULATIVE) |
 | 0x50 | 0x751c8 | 0x1c, 0x36, 0x4b, 0x4d, 0x48, 0x50 | key scancodes: Enter, right Shift, ←, →, ↑, ↓ |
-| 0x68 | 0x751e0 | | the pupil's name, a C string (RRRMENU 0x10ed1 puts "RedCat" when empty); the 400 bytes up to 0x1f8 are cleared by default |
+| 0x68 | 0x751e0 | | four names of 100 bytes; the first is the pupil's name, a C string (RRRMENU 0x10ed1 puts "RedCat" when empty). The defaults clear only the first byte of each (CONFIRMED: `rrrio_load` rebuilt byte for byte, `src/rrr.c`) |
 | 0x1f8 | 0x75370 | 0 | race done (set by RRR 0x1585e; lets REKEN advance) |
 | 0x1fc | 0x75374 | 0, 2, 4 | start order of the racers |
 | 0x214 | 0x7538c | 0, 0, 0 | points per racer |
+
+`rrrio_load` reads the file and, when its version is not 3, writes the defaults and saves
+them without closing the file it opened (CONFIRMED, `src/rrr.c`).
 
 ## RRRHIGH.DAT
 
