@@ -1,6 +1,6 @@
 /*
- * order.c (the game's own name, from its error strings): the draw-order list, 0x1195f-0x11b0d and
- * on (right after new2io.c's draw_view). A module of its own: its strings start on their own boundary and its functions share no
+ * order.c (the game's own name, from its error strings): the draw-order list, 0x1195f-0x11bb3 (right after
+ * new2io.c's draw_view; blit_sprite, assembly, follows at 0x11bb4). A module of its own: its strings start on their own boundary and its functions share no
  * code with main.c's (GOTCHAS, "One object per module").
  */
 #include "rrr.h"
@@ -98,5 +98,21 @@ int order_has(int sprite)
     for (e = order_head; e != -1; e = order[e].next)
         if (order[e].sprite == sprite)
             return 1;
+    return 0;
+}
+
+/* ---- 0x11b0e -------------------------------------------------------------------------------- */
+
+int sort_draw_order(void)
+{
+    int i;
+    order_clear();
+    for (i = 0; i < 306; i++)
+        if (!order_add(i, (1000 - (bodies[i].x >> 16)) * 10 + (bodies[i].y >> 16) * -1000
+                          + (bodies[i].z >> 16) * -1 - bodies[i].f1c))
+            rc_error(" %s(%d) : illegal add_to_order", "order.c", 135);
+    for (i = 0; i < 306; i++)
+        if (!order_has(i))
+            rc_error(" %s(%d) : illegal order, %d missing", "order.c", 141, i);
     return 0;
 }

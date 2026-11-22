@@ -112,6 +112,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   rows). When a diff ends in a `jmp` to outside the function or in nops, look for a module
   boundary (its source-file strings, the string padding) and give that module its own src/*.c.
 
+- **Operand order inside a sum picks the registers:** trans_generate 0x11ca2 matched only with
+  `palette[a][0] + palette[b][0]`, `palette[a][1] + palette[b][1]`, `palette[a][2] + palette[b][2]`
+  (one of 8 orders; the others swap EBX/ECX for a*3 and b*3).
+- **`x = abs(..)` into a short, then `x * x` in the sum:** nearest_colour 0x11c11 (`imul esi, esi`);
+  an int, or `x *= x`, gives `imul esi, eax`.
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,

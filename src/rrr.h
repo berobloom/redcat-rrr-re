@@ -109,7 +109,7 @@ void fn_2369f(char *name, int a);
 void fn_1f3dc(void);
 short trans_load(char *name);
 void trans_generate(void);
-void trans_save(char *name);
+int trans_save(char *name);
 short fn_24a9a(char *name);
 void fn_246b5(char *name);
 #pragma aux fn_246b5 parm routine [] modify [eax ecx edx];
@@ -147,7 +147,7 @@ void fn_15166(void);
 int switch_anims(void);
 void objects_tick(void);
 void camera_follow(int racer);
-void sort_draw_order(void);
+
 void joystick_to_keys(void);
 void hud_update(void);
 void draw_view(short dy, short dx);
@@ -262,5 +262,10 @@ int order_alloc(void);
 int order_insert_before(int e, int n);
 int order_add(int sprite, int key);
 int order_has(int sprite);
+int sort_draw_order(void);
+
+/* shade.c */
+extern unsigned char  palette[256][3];      /* 0x7fd38 */
+unsigned char nearest_colour(unsigned char r, unsigned char g, unsigned char b);
 
 #endif

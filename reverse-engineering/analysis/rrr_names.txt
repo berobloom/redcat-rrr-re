@@ -412,3 +412,5 @@
 0x119ce order_insert_before  # CONFIRMED (code): (e, n) links n in front of e
 0x11a1a order_add            # CONFIRMED (code): (sprite, key) inserts before the first element with a smaller key; 'illegal free order element' (order.c 71)
 0x11ae3 order_has            # CONFIRMED (code): 1 when the sprite is in the list
+0x11c11 nearest_colour       # CONFIRMED (code): (r, g, b) -> palette index with the smallest squared distance (shade.c)
+0x7fd38 palette              # CONFIRMED (code): 256 x RGB bytes, read by nearest_colour and trans_generate
