@@ -653,6 +653,16 @@ int main(int argc, char **argv)
     return 43;
 }
 
+/* ---- 0x13bb8 -------------------------------------------------------------------------------- */
+
+void fn_13bb8(int racer)
+{
+    objects_tick();
+    fn_13a78(objects[racer].x, objects[racer].y, (short)(bodies[racer].vx >> 16), (short)(bodies[racer].vy >> 16));
+    draw_view(scroll_y % 40, scroll_x % 32);
+}
+
+
 /* ---- 0x13c34 -------------------------------------------------------------------------------- */
 
 /* differs: 2 rows, x's stack slot (0x10, the game 8; frame and code otherwise identical). Matched on
@@ -790,6 +800,18 @@ int left_of(int x1, int y1, int x2, int y2, int x3, int y3)
     x1 *= y3 - y2;
     return y1 - x1 > 0;
 }
+
+/* ---- 0x142dc -------------------------------------------------------------------------------- */
+
+int on_screen(int x, int y)
+{
+    if (x < 40 || x >= screen_w - 40)
+        return 0;
+    if (y < 40 || y >= screen_h - 40)
+        return 0;
+    return 1;
+}
+
 
 /* ---- 0x1467c -------------------------------------------------------------------------------- */
 
@@ -1283,6 +1305,22 @@ int next_module(int set, int world, int groep)
     if (set)
         rrrio.stage = i;
     return i;
+}
+
+
+/* ---- 0x1ae20 -------------------------------------------------------------------------------- */
+
+int next_module_set(void)
+{
+    return next_module(1, -1, -1);
+}
+
+
+/* ---- 0x1ae36 -------------------------------------------------------------------------------- */
+
+int next_module_of(int world, int groep)
+{
+    return next_module(0, world, groep);
 }
 
 

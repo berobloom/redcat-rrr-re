@@ -511,3 +511,9 @@
 0x57b7c hud_speed            # CONFIRMED (code): the same for |speed * 11 / 20| (fixed point)
 0x57b80 hud_rockets          # CONFIRMED (code): the same for rockets (hud_count 23)
 0x57b84 hud_boosts           # CONFIRMED (code): the same for boosts (hud_count 13)
+0x13bb8 fn_13bb8             # CONFIRMED (code): a prologue after a ret; not called directly
+0x142dc on_screen            # CONFIRMED (code): 1 when (x, y) is at least 40 px inside the screen; not called directly
+0x16e46 fn_16e46             # CONFIRMED (code): object callback (its address is stored by the code)
+0x175b4 fn_175b4             # CONFIRMED (code): object callback (its address is stored by the code)
+0x1ae20 next_module_set      # CONFIRMED (code): next_module(1, -1, -1); not called directly
+0x1ae36 next_module_of       # CONFIRMED (code): next_module(0, world, groep); not called directly

@@ -149,6 +149,7 @@ void mix_stop_track(int track);
 void fn_15166(void);
 int switch_anims(void);
 void objects_tick(void);
+#pragma aux objects_tick modify [eax ebx ecx edx];
 void camera_follow(int racer);
 
 void joystick_to_keys(void);
@@ -414,4 +415,9 @@ extern int            hud_speed;            /* 0x57b7c */
 extern int            hud_rockets;          /* 0x57b80 */
 extern int            hud_boosts;           /* 0x57b84 */
 void hud_update(void);
+void fn_13a78(int x, int y, int vx, int vy);
+void fn_13bb8(int racer);
+int on_screen(int x, int y);
+int next_module_set(void);
+int next_module_of(int world, int groep);
 #endif
