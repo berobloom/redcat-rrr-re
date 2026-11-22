@@ -391,4 +391,16 @@ int new_sign(int x, int y, int anim);
 int new_bomb(int x, int y);
 int direction_to_waypoint(int racer, int x, int y);
 int aim_at_player(int racer, int target);
+extern int            crash0, crash2, crash4;   /* 0x56078, 0x56080, 0x5607c: race over for that racer */
+extern int            joy_on;               /* 0x5fdf0 */
+extern int            keymap[7];            /* 0x7144c: [0] rocket, [1] boost, [3] left, [4] back, [5] forward, [6] right */
+extern int            joymap[4];            /* 0x753a0 */
+int __cdecl fn_2779e(int n);
+void start_crash(int racer);
+void set_keys(void);
+extern int            keystate[];           /* 0x804c0: 1 while a key (scancode) is down */
+int __cdecl fn_27837(int n);
+int __cdecl fn_2784e(int n);
+int __cdecl fn_278a4(int n);
+void joystick_to_keys(void);
 #endif

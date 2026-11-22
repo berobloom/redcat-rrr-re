@@ -494,3 +494,15 @@
 0x180d3 spawn_trail          # LIKELY: heap.c; count objects at a racer's position (anim 3, its heading as frame, life 6, callback 0x1733e)
 0x18324 fn_18324             # CONFIRMED (code): new_boost_pickup's twin with anim 9 and obj_callback_16ad9
 0x1733e fn_1733e             # CONFIRMED (code): object callback, set by spawn_trail
+0x56078 crash0               # CONFIRMED: set when the player's fuel/damage runs out (discoveries.md); switch_anims acts on it
+0x56080 crash2               # CONFIRMED: the same for Brutus (racer 2)
+0x5607c crash4               # CONFIRMED: the same for Snitch (racer 4)
+0x5fdf0 joy_on               # CONFIRMED (code): set_keys sets it when rrrio.joystick and fn_2779e(1) == 0
+0x7144c keymap               # CONFIRMED: key bindings in play, [0] rocket, [1] boost (discoveries.md); set_keys fills it
+0x753a0 joymap               # LIKELY: joystick calibration copied by set_keys from rrrio.joy
+0x1b469 set_keys             # CONFIRMED (code): copies RRRIO's keys (or fixed joystick codes) into keymap
+0x2779e fn_2779e             # SPECULATIVE: joystick probe (cdecl, argument 1), 0 = present
+0x804c0 keystate             # CONFIRMED: key state per scancode (key_pressed, joystick_to_keys)
+0x27837 fn_27837             # LIKELY: joystick buttons (cdecl, 1), tested against rrrio +0x220/+0x224
+0x2784e fn_2784e             # LIKELY: joystick x axis
+0x278a4 fn_278a4             # LIKELY: joystick y axis
