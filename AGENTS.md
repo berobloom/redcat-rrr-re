@@ -18,6 +18,13 @@ Use these confidence levels:
 
 Prefer evidence from binaries and runtime experiments over external documentation.
 
+## Session start (in this order)
+
+1. `git status --short`: an interrupted run may have left work behind.
+2. `QUEUE.md`: the human's work list. Its first open item is the task.
+3. `STATUS.md`, then `GOTCHAS.md`.
+4. For decompilation work: `MATCHING.md`.
+
 ## Important files
 
 - `research/discoveries.md`: confirmed discoveries
