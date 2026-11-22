@@ -428,10 +428,10 @@ void init_game(char **argv, int argc)
     tile_y = 0;
     tile_x = 0;
     debug_printf("Init direction tables.\n");
-    fn_13c34();
-    fn_13cba();
-    fn_13f00();
-    fn_13f91();
+    cos_sin_init();
+    dir_tbl_init();
+    turn_tbl_init();
+    merge_tbl_init();
     debug_printf("Init objects.\n");
     clear_objects();
     init_objects();
@@ -651,6 +651,107 @@ int main(int argc, char **argv)
     user_exit(43);
     debug_printf("do user_exit succeeded\n");
     return 43;
+}
+
+/* ---- 0x13c34 -------------------------------------------------------------------------------- */
+
+/* differs: 2 rows, x's stack slot (0x10, the game 8; frame and code otherwise identical). Matched on
+   the way: a double t for the angle (the game's frame has its 8 bytes), x and i and y in that order.
+   Tried: 16 of the 120 declaration orders of i, a, y, x, t; x and y as temporaries
+   (cos_tbl[i = a] = ...), (int)a indexes. */
+void cos_sin_init(void)
+{
+    int i;
+    float a;
+    int y, x;
+    double t;
+    for (a = 0; a < 32; a++) {
+        t = (a + 8.0) * -0.19634954087500001;
+        x = cos(t) * 65536.0;
+        i = a;
+        y = sin(t) * 65536.0;
+        cos_tbl[i] = x;
+        sin_tbl[i] = y;
+    }
+}
+
+/* ---- 0x13cba -------------------------------------------------------------------------------- */
+
+void dir_tbl_init(void)
+{
+    int r, c, d;
+    for (r = 0; r < 33; r++) {
+        for (c = 0; c < 33; c++) {
+            d = atan2(c + -16.0, r + -16.0) * 5.0929581782756487 + 16.0 + 0.5;
+            dir_tbl[r][c] = (32 - d + 24) & 31;
+            debug_printf("%2d ", dir_tbl[r][c]);
+        }
+        debug_printf("\n");
+    }
+}
+
+/* ---- 0x13f00 -------------------------------------------------------------------------------- */
+
+void turn_tbl_init(void)
+{
+    int cur, tgt, d;
+    for (cur = 0; cur < 32; cur++) {
+        for (tgt = 0; tgt < 32; tgt++) {
+            d = tgt - cur;
+            if (d == 0)
+                turn_tbl[tgt][cur] = cur;
+            else if (d > 0) {
+                if (d > 16)
+                    turn_tbl[tgt][cur] = (cur + 31) & 31;
+                else
+                    turn_tbl[tgt][cur] = (cur + 1) & 31;
+            } else {
+                if (d < -16)
+                    turn_tbl[tgt][cur] = (cur + 1) & 31;
+                else
+                    turn_tbl[tgt][cur] = (cur + 31) & 31;
+            }
+        }
+    }
+}
+
+/* ---- 0x13f91 -------------------------------------------------------------------------------- */
+
+void merge_tbl_init(void)
+{
+    int cur, tgt, d;
+    for (cur = 0; cur < 32; cur++) {
+        for (tgt = 0; tgt < 32; tgt++) {
+            d = tgt - cur;
+            if (d == 0)
+                merge_tbl[tgt][cur] = cur;
+            else if (d > 0) {
+                if (d > 16)
+                    merge_tbl[tgt][cur] = (cur + 1) & 31;
+                else
+                    merge_tbl[tgt][cur] = (cur + 31) & 31;
+            } else {
+                if (d < -16)
+                    merge_tbl[tgt][cur] = (cur + 31) & 31;
+                else
+                    merge_tbl[tgt][cur] = (cur + 1) & 31;
+            }
+        }
+    }
+}
+
+/* ---- 0x1401d -------------------------------------------------------------------------------- */
+
+/* differs: 8 rows, the game copies x1 into ESI at entry and computes x1 - x3 there, ours computes
+   in place; 4 bytes shorter. Tried: one expression in four operand orders, a, b locals, if/return,
+   > between the products, compound assignments on y1 and x1 (this one), a copy t = x1. */
+int left_of(int x1, int y1, int x2, int y2, int x3, int y3)
+{
+    y1 -= y3;
+    y1 *= x3 - x2;
+    x1 -= x3;
+    x1 *= y3 - y2;
+    return y1 - x1 > 0;
 }
 
 /* ---- 0x14861 -------------------------------------------------------------------------------- */

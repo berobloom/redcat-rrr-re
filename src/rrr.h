@@ -8,6 +8,7 @@
 #define RRR_H
 
 #include <stdio.h>
+#include <math.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,10 +132,10 @@ int fn_15e02(void);
 int fn_15f9e(void);
 int fn_1613a(void);
 void fn_1bcb7(void);
-void fn_13c34(void);
-void fn_13cba(void);
-void fn_13f00(void);
-void fn_13f91(void);
+void cos_sin_init(void);
+void dir_tbl_init(void);
+void turn_tbl_init(void);
+void merge_tbl_init(void);
 void clear_objects(void);
 void init_objects(void);
 void camera_start(int a);
@@ -239,6 +240,11 @@ extern int            order_head;           /* 0x70f8c */
 extern unsigned char *trans;                /* 0x70f90 */
 extern int            map_w;                /* 0x7f944 */
 extern short          num_sprites;          /* 0x7f964 */
+extern int            turn_tbl[32][32];     /* 0x71de0: [target][current] -> next heading */
+extern int            merge_tbl[32][32];    /* 0x72de0 */
+extern int            cos_tbl[32];          /* 0x73de0 */
+extern int            sin_tbl[32];          /* 0x73e60 */
+extern int            dir_tbl[33][33];      /* 0x73ee0: heading by (dy, dx) + 16 */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
 extern char           strbuf[];             /* 0x6ca08 */

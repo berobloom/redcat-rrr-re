@@ -11,3 +11,5 @@
 3 0x1103e start_lights
 6 0x111e8 main
 51 0x11526 draw_view
+2 0x13c34 cos_sin_init
+8 0x1401d left_of

@@ -469,6 +469,13 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - So a Brutus missile of kind 0 can hit RedCat or Snitch, one of kind 4
   Brutus himself or Snitch; Snitch's own missiles can hit him either way.
 
+## Toolchain: floating point
+
+- CONFIRMED: RRR's floating point was compiled with the compiler's default FP options (no `-fp`
+  option on top of `-3r -s -ox`): dir_tbl_init 0x13cba (fild, IF@DATAN2, __CHP, fistp) rebuilds
+  byte for byte from `src/rrr.c` with exactly those options, and cos_sin_init 0x13c34 (inline
+  fsin/fcos) differs only in one stack slot.
+
 ## The race: drawing (draw_view 0x11526, new2io.c)
 
 - CONFIRMED: the view is drawn into an off-screen buffer and copied to the

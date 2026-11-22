@@ -414,3 +414,13 @@
 0x11ae3 order_has            # CONFIRMED (code): 1 when the sprite is in the list
 0x11c11 nearest_colour       # CONFIRMED (code): (r, g, b) -> palette index with the smallest squared distance (shade.c)
 0x7fd38 palette              # CONFIRMED (code): 256 x RGB bytes, read by nearest_colour and trans_generate
+0x13c34 cos_sin_init         # CONFIRMED (code): cos_tbl/sin_tbl[h] = cos/sin(-(h+8)*pi/16) * 65536
+0x13cba dir_tbl_init         # CONFIRMED (code): dir_tbl[r][c] = (56 - round(atan2(c-16, r-16)*16/pi + 16)) & 31, printed with %2d
+0x13f00 turn_tbl_init        # CONFIRMED (code): turn_tbl[target][current]: one step toward target the short way
+0x13f91 merge_tbl_init       # CONFIRMED (code): merge_tbl, the same with the step the other way
+0x1401d left_of              # LIKELY: sign of the cross product of (p1 - p3) and (p3 - p2), > 0 -> 1
+0x71de0 turn_tbl             # CONFIRMED (code): int[32][32], built by turn_tbl_init (discoveries.md)
+0x72de0 merge_tbl            # CONFIRMED (code): int[32][32], built by merge_tbl_init
+0x73de0 cos_tbl              # CONFIRMED (code): int[32], 16.16 cos per heading
+0x73e60 sin_tbl              # CONFIRMED (code): int[32], 16.16 sin per heading
+0x73ee0 dir_tbl              # CONFIRMED (code): int[33][33], heading for a (dy, dx) offset of -16..16
