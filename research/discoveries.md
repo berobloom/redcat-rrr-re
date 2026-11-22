@@ -466,6 +466,10 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   13 and 15 turn one table step a frame to 0 and fly on straight; speed
   25 → 21.5 over 150 frames, height 40, then the slot holds an explosion
   (life 18).
+  CONFIRMED (matching C, src/rrr.c): a source bug, not a compiler one. The
+  function takes (racer, target) and never reads target; the C that
+  rebuilds it byte for byte subtracts `bodies[racer].x · 2⁻¹⁶` from itself
+  (and the same for y), which Watcom folds into the one fild + FSUB ST(0).
 - So a Brutus missile of kind 0 can hit RedCat or Snitch, one of kind 4
   Brutus himself or Snitch; Snitch's own missiles can hit him either way.
 

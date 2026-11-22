@@ -389,4 +389,6 @@ int fn_18324(int x, int y);
 int new_mine(int x, int y);
 int new_sign(int x, int y, int anim);
 int new_bomb(int x, int y);
+int direction_to_waypoint(int racer, int x, int y);
+int aim_at_player(int racer, int target);
 #endif

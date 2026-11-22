@@ -690,6 +690,43 @@ void dir_tbl_init(void)
     }
 }
 
+/* ---- 0x13d60 -------------------------------------------------------------------------------- */
+
+int direction_to_waypoint(int racer, int x, int y)
+{
+    int i, j;
+    float dy, dx, d;
+
+    dx = bodies[racer].x * (1.0 / 65536) - x * (1.0 / 65536);
+    dy = bodies[racer].y * (1.0 / 65536) - y * (1.0 / 65536);
+    d = sqrt(dx * dx + dy * dy);
+    if (d == 0)
+        return 0;
+    i = (int)((dx / d + 1) * 16.0) % 33;
+    j = (int)((dy / d + 1) * 16.0) % 33;
+    return dir_tbl[i][j];
+}
+
+
+/* ---- 0x13e3d -------------------------------------------------------------------------------- */
+
+/* both coordinates are the racer's own, so dx = dy = 0 and this always returns 0 (one fild, fsub st(0)) */
+int aim_at_player(int racer, int target)
+{
+    int i, j;
+    float dy, dx, d;
+
+    dx = bodies[racer].x * (1.0 / 65536) - bodies[racer].x * (1.0 / 65536);
+    dy = bodies[racer].y * (1.0 / 65536) - bodies[racer].y * (1.0 / 65536);
+    d = sqrt(dx * dx + dy * dy);
+    if (d == 0)
+        return 0;
+    i = (int)((dx / d + 1) * 16.0) % 33;
+    j = (int)((dy / d + 1) * 16.0) % 33;
+    return dir_tbl[i][j];
+}
+
+
 /* ---- 0x13f00 -------------------------------------------------------------------------------- */
 
 void turn_tbl_init(void)
