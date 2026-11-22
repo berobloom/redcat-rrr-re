@@ -75,6 +75,21 @@ struct body {
 
 void fn_261a9(int n);
 void rc_error(char *fmt, ...);
+void debug_printf(char *fmt, ...);
+short has_arg(char *opt, short argc, char **argv);            /* 0x1bc7f, stdlib.c */
+int mix_track_free(int track);                                /* 0x1cd3f */
+int fn_1c5e4(short port, short irq, short dma);
+void fn_1c85b(int stereo);
+void fn_1d2a6(int rate, int n, int *handles, char **names);
+void fn_1d2ac(int v);
+void fn_1d329(int v);
+void fn_1d3a6(int v);
+void fn_1d4a0(int v);
+void sndbuf_play(int track, int sample, int vol);             /* 0x1ec03 */
+void fn_1f579(void);
+void fn_1f5a0(void);
+int easy_init(int a, int n, int *handles, char **names, int last);   /* 0x20b80 */
+void __cdecl fn_20d1f(int x0, int x1, int y0, int y1, char *name);
 
 /* ---- globals (addresses in rrr_names.txt) --------------------------------------------------- */
 
@@ -86,6 +101,19 @@ extern char          *blaster_dmas[3];      /* 0x55f39: "D0", "D1", "D3" */
 extern short          snd_cfg_b;            /* 0x55f45 */
 extern short          snd_cfg_c;            /* 0x55f47 */
 extern short          snd_cfg_d;            /* 0x55f49 */
+extern unsigned char  snd_volume;           /* 0x55ee0 */
+extern int            sound_ready;          /* 0x55ee1 */
+extern short          sb_ports[8];          /* 0x55ee5: 0x210..0x280 */
+extern short          sb_irqs[5];           /* 0x55f15: 2, 3, 5, 7, 10 */
+extern short          sb_dmas[3];           /* 0x55f33: 0, 1, 3 */
+extern char          *dma_opts[3];          /* 0x55f4b: "/DMA:0" .. */
+extern char          *port_opts[8];         /* 0x55f57: "/SBP:210" .. */
+extern char          *irq_opts[5];          /* 0x55f77: "/IRQ:2" .. */
+extern int            shot_no;              /* 0x55f8f */
+extern int            num_tracks;           /* 0x5fe67 */
+extern int            tracks[4];            /* 0x6c970: sample per track, -1 = none */
+extern short          screen_w;             /* 0x7f95e */
+extern short          screen_h;             /* 0x7f962 */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
 extern char           strbuf[];             /* 0x6ca08 */
@@ -219,6 +247,186 @@ int snd_cfg_save(char *name)
     fwrite(&snd_cfg_g, 2, 1, f);
     fclose(f);
     return 0;
+}
+
+/* ---- 0x10303 -------------------------------------------------------------------------------- */
+
+int sound_on(void);
+
+int snd_track_free(int track)
+{
+    if (sound_on()) {
+        if (track < 0 || track >= 4)
+            rc_error("%s(%d): track out of bounds %d (0..4)\n", "sndman.c", 157, track);
+        if (tracks[track] != -1 && mix_track_free(track))
+            return 0;
+    }
+    return 1;
+}
+
+/* ---- 0x10350 -------------------------------------------------------------------------------- */
+
+int snd_play(int track, int sample, int vol)
+{
+    if (!sound_on())
+        return 0;
+    if (track < 0 || track >= 4)
+        rc_error("%s(%d): track out of bounds %d (0..4)\n", "sndman.c", 176, track);
+    if (sample < 0 || sample >= 34)
+        rc_error("%s(%d): sample index out of bounds %d (0..%d)\n", "sndman.c", 179, sample, 33);
+    if (tracks[track] != -1 && !snd_track_free(track))
+        return 0;
+    tracks[track] = sample;
+    sndbuf_play(track, sample, (unsigned char)vol);
+    return 1;
+}
+
+/* ---- 0x103d1 -------------------------------------------------------------------------------- */
+
+/* differs: 2 rows, the game copies dist into EBX before the sound_on call, ours after it (tried:
+   initialiser, statement before the test, body under if (sound_on()), unprototyped sound_on, a
+   second copy local, ?: in the divisor) */
+int play_fx(int sample, int dist)
+{
+    int vol, t;
+    if (!sound_on())
+        return 0;
+    vol = dist;
+    if (dist < 1)
+        vol = 1;
+    vol = 1500 / vol * 64;
+    if (vol > 64)
+        vol = 64;
+    else if (vol < 0)
+        vol = 0;
+    for (t = 1; t < 4; t++) {
+        if (snd_track_free(t)) {
+            snd_play(t, sample, vol);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* ---- 0x1043a -------------------------------------------------------------------------------- */
+
+/* differs: 13 rows, all at the /STEREO argument: the game branches (je; mov eax,1; jmp; xor eax,eax)
+   where ? 1 : 0 gives setne, and keeps EDX/EBX/ECX from fn_1d2a6's call for easy_init. Two calls in
+   an if/else get the branches (cross-jumped) but then reload the three registers (10 rows). Tried:
+   if/else into a local (braced and not), = 0 then if, !x ? 0 : 1, == 0, != 0, (int) cast, short and
+   char parameter aliases. Matched on the way: the two early returns as separate ifs, the tracks
+   fill as a loop (memset gives other registers), declaration order dma, port, irq. */
+int sound_init(short argc, char **argv)
+{
+    int dma, port, irq, i, err;
+
+    for (i = 0; i < 4; i++)
+        tracks[i] = -1;
+    if (has_arg("/NOSOUND", argc, argv))
+        return -1;
+    if (has_arg("/NS", argc, argv))
+        return -1;
+    snd_cfg_load("sb.ins");
+    if (snd_cfg_b == -1) {
+        snd_cfg_b = blaster_port();
+        if (snd_cfg_b == -1)
+            return -1;
+    }
+    if (snd_cfg_c == -1) {
+        snd_cfg_c = blaster_irq();
+        if (snd_cfg_c == -1)
+            return -1;
+    }
+    if (snd_cfg_d == -1) {
+        snd_cfg_d = blaster_dma();
+        if (snd_cfg_d == -1)
+            return -1;
+    }
+    irq = sb_irqs[snd_cfg_c];
+    dma = sb_dmas[snd_cfg_d];
+    port = sb_ports[snd_cfg_b];
+    for (i = 0; i < 5; i++)
+        if (has_arg(irq_opts[i], argc, argv))
+            irq = sb_irqs[i];
+    for (i = 0; i < 8; i++)
+        if (has_arg(port_opts[i], argc, argv))
+            port = sb_ports[i];
+    for (i = 0; i < 3; i++)
+        if (has_arg(dma_opts[i], argc, argv))
+            dma = sb_dmas[i];
+    debug_printf("Adres:%x, IRQ:%d, DMA:%d\n", port, irq, dma);
+    err = fn_1c5e4(port, irq, dma);
+    if (err)
+        rc_error("error setting soundblaster dsp variables {error=%d}", err);
+    fn_1c85b(has_arg("/STEREO", argc, argv) ? 1 : 0);
+    fn_1d2a6(11025, 34, wav_handles, wav_names);
+    num_tracks = 4;
+    if (easy_init(30, 34, wav_handles, wav_names, 33)) {
+        rc_error("Soundblaster initialisatie fout. Probeer andere instellingen");
+        exit(0);
+    }
+    debug_printf("init done\n");
+    if (has_arg("/VMIN", argc, argv)) {
+        snd_volume = 0x33;
+        debug_printf("Volume set to minimum\n");
+    }
+    if (has_arg("/VLOW", argc, argv)) {
+        snd_volume = 0x77;
+        debug_printf("Volume set to low\n");
+    }
+    if (has_arg("/VNORM", argc, argv)) {
+        snd_volume = 0xaa;
+        debug_printf("Volume set to normal\n");
+    }
+    if (has_arg("/VMAX", argc, argv)) {
+        snd_volume = 0xff;
+        debug_printf("Volume set to maximum\n");
+    }
+    fn_1d329(snd_volume);
+    fn_1d3a6(0);
+    fn_1d4a0(0);
+    fn_1d2ac(0xff);
+    sound_ready = 1;
+    return 0;
+}
+
+/* ---- 0x10754 -------------------------------------------------------------------------------- */
+
+int sound_on(void)
+{
+    return sound_ready;
+}
+
+/* ---- 0x1075a -------------------------------------------------------------------------------- */
+
+void screenshot(void)
+{
+    char name[16];
+    fn_1f579();
+    sprintf(name, "screen%#2.2d.pcx", shot_no++);
+    fn_20d1f(0, screen_w - 1, 0, screen_h - 1, name);
+    if (shot_no > 99)
+        shot_no = 0;
+    fn_1f5a0();
+}
+
+/* ---- 0x107c1 -------------------------------------------------------------------------------- */
+
+void banner(void)
+{
+    printf("\xda\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xb7\n");
+    printf("\xb3                                Redcats Razende Rekenrace V1.2               \xba\n");
+    printf("\xb3                                 (c) 1997 Davilex Software BV                \xba\n");
+    printf("\xd4\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xbc\n");
+}
+
+/* ---- 0x107f6 -------------------------------------------------------------------------------- */
+
+void goodbye(void)
+{
+    printf("\n \n U kunt het spel opstarten door RCRACE in te typen en op [Enter] te drukken.\n");
+    printf("\n \n Veel plezier !\n");
+    exit(0);
 }
 
 /* ---- 0x14861 -------------------------------------------------------------------------------- */

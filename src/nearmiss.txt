@@ -6,3 +6,5 @@
 # Status: (empty) = open; MATCH = now byte-identical (baseline raised in the same commit);
 # SKIP: <causes, what was tried> = budget spent, take the next; LAYOUT: = not fixable in C.
 # Take the FIRST line with an empty status. Write the status in the same commit as the code.
+2 0x103d1 play_fx
+13 0x1043a sound_init

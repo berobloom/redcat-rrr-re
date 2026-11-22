@@ -66,6 +66,24 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **Store order is source order:** `rrrio_load` sets `joy[0], joy[1], joy[4], joy[5], joy[2],
   joy[3]` in that order; write the stores as the game does them.
 
+- **A `movzx r, r8` before a call = a cast in the source, not a char parameter:** `snd_play` 0x10350
+  takes an int and calls `sndbuf_play(track, sample, (unsigned char)vol)`; with an `unsigned char`
+  parameter its callers (play_fx) get a `movzx` the game does not have.
+- **`a || b` in a test with the same consequence is two `if`s in the game** (`/NOSOUND`, `/NS` in
+  sound_init 0x1043a: each its own `return -1`).
+- **A fill loop, not memset:** `for (i = 0; i < 4; i++) tracks[i] = -1;` gives the game's `_STOSD`
+  call with ECX = 4, EDX = -1; `memset` gives other registers (sound_init).
+- **Locals' stack slots follow declaration order, not first use:** sound_init's irq/port/dma slots
+  matched only with `int dma, port, irq` (score all orders in place).
+
+### Probes
+
+- **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,
+  804 in place; shared tails between the copies). For anything over ~100 bytes score with
+  `reverse-engineering/tools/wc/inplace.py NAME 0xADDR variant.c ...`, which swaps the definition in
+  a copy of src/rrr.c. `probe.sh` is fine for small leaf functions.
+
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
-(none yet)
+- **A `?:` 0/1 argument the game computes with branches** (sound_init's `/STEREO`): 9 spellings tried,
+  see its `differs:` note.
