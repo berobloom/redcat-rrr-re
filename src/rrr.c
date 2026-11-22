@@ -820,6 +820,25 @@ void fn_15166(void)
 }
 
 
+/* ---- 0x15a14 -------------------------------------------------------------------------------- */
+
+void winner_film(int racer)
+{
+    mix_stop_track(0);
+    switch (racer) {
+    case 0:
+        smk_play(screen_buf, 0, 0, screen_w, screen_h, "wredcat.smk", 42, 0, 33);
+        break;
+    case 2:
+        smk_play(screen_buf, 0, 0, screen_w, screen_h, "wbrutus.smk", 42, 0, 33);
+        break;
+    case 4:
+        smk_play(screen_buf, 0, 0, screen_w, screen_h, "wsnitch.smk", 42, 0, 33);
+        break;
+    }
+}
+
+
 /* ---- 0x16945 -------------------------------------------------------------------------------- */
 
 /* the early return matters: an if around the store keeps the offset in a register */
@@ -996,6 +1015,32 @@ int rrrio_load(void)
     return 0;
 }
 
+/* ---- 0x1ad9a -------------------------------------------------------------------------------- */
+
+int next_module(int set, int world, int groep)
+{
+    int i;
+
+    if (set || world == -1)
+        world = rrrio.world;
+    if (set || groep == -1)
+        groep = rrrio.groep;
+    i = rrrio.stage;
+    if (!rrrio.race_done && i > 0)
+        return i;
+    do
+        i++;
+    while (i <= 4 && module_table[world][i] == 0);
+    if (i > 4 || i < 1)
+        return -1;
+    if (i == 4 && groep == 3)
+        i = groep;
+    if (set)
+        rrrio.stage = i;
+    return i;
+}
+
+
 /* ---- 0x1ae44 -------------------------------------------------------------------------------- */
 
 int stage_map_index(void)
@@ -1052,22 +1097,3 @@ int ai_script_find(int racer, int n)
     }
     return -1;
 }
-
-/* ---- 0x1b67b -------------------------------------------------------------------------------- */
-
-int check_object_nr(int n, char *file, int line)
-{
-    if (n < 0 || n > 255)
-        rc_error(" %s(%d) : objectnr %d error\n", file, line, n);
-    return n;
-}
-
-/* ---- 0x1b69d -------------------------------------------------------------------------------- */
-
-int check_waypoint_nr(int n, char *file, int line)
-{
-    if (n < 0 || n > 150)
-        rc_error(" %s(%d) : Waypointnr %d error\n", file, line, n);
-    return n;
-}
-

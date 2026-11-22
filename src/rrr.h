@@ -365,4 +365,15 @@ struct script {                             /* 24 bytes: one waypoint action of 
 extern struct script  script2[][30];        /* 0x57c90: Brutus (racer 2), per world */
 extern struct script  script4[][30];        /* 0x5bd40: Snitch (racer 4) */
 int ai_script_find(int racer, int n);
+void smk_play(void *buf, int x, int y, int w, int h, char *name, int flags, int track, int sample);
+extern int            module_table[][4];    /* 0x57c2c: [world][stage], 0 = module off (indexed 1..4) */
+int next_module(int set, int world, int groep);
+struct high {                               /* 38 bytes: one RRRHIGH.DAT entry */
+    char    name[30];
+    int     score;                              /* +0x1e */
+    int     world;                              /* +0x22 */
+};
+extern struct high    high[10];             /* 0x753b0: RRRHIGH.DAT, 380 bytes */
+extern char          *high_names[3];        /* 0x5fdf4: the default table's names */
+int high_load(void);
 #endif
