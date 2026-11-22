@@ -481,6 +481,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   scroll. Kinds (+8 of a sprite slot): 1, 2 opaque with 0xFF transparent
   (`0x11bb4`); 4, 5, 6 translucent (`0x17d94`): dst = trans[dst·256 + src].
   Other kinds are an error ("unknown type").
+- CONFIRMED (code, the rebuilt draw_view in `src/rrr.c`): the switch on the
+  kind has no `break` after kinds 4 and 5, so a kind-4 sprite is blended
+  three times (4, 5 and 6 bodies) and a kind-5 sprite twice, each pass at
+  dst = trans[dst·256 + src]. Kind 6 is blended once. Which objects use
+  kinds 4 and 5, and whether the port repeats the blend, is not checked yet.
 - CONFIRMED: the trans table: 255 rows of 255 bytes from TRANS.DAT
   (`0x11e2a`) at row·256 + column, column 255 = row. When the file is
   missing `0x11ca2` builds it: entry (a, b) is the palette colour nearest to
