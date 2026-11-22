@@ -95,6 +95,17 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **`x[n++] = v` vs `x[n] = v; n++;`:** the second gives the game's `inc dword ptr [n]` in memory
   (finish_check 0x10eff, 19 rows -> MATCH).
 
+- **Identical case bodies the game did not merge = fall-through.** draw_view 0x11526's cases 4, 5
+  and 6 each have their own copy of the same blit, and case 4 runs straight into 5 and 5 into 6
+  with no jump: the source had no `break` (Watcom then keeps the copies apart and uses a jump
+  table; with breaks it merged them and compiled a compare chain).
+- **A loop that tests only at the bottom with a non-constant limit is a do-while** in the source
+  (draw_view's tile loops); a `for` gets a jump to the test at the top.
+- **Strings one byte off between our object and the game, at the first string of a new source
+  file:** each module's strings start on a fresh boundary in the game (main.c ends at 0x50c2f,
+  new2io.c's "new2io.c" is at 0x50c30). nmrefs reports it; it is layout, not behaviour, and goes
+  away when src/ is split into the original modules.
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,

@@ -55,11 +55,13 @@ struct object {
 
 /* a sprite slot, 16 bytes, at [sprites] */
 struct sprite {
-    short f0;
-    short f2;
-    short f4, f6;
-    short mode;                 /* +8 */
-    short fa, fc, fe;
+    short x;
+    short y;
+    unsigned char *img;         /* +4 */
+    short mode;                 /* +8: 1, 2 opaque; 4, 5, 6 translucent */
+    short w;                    /* +0xa */
+    short h;                    /* +0xc */
+    short fe;
 };
 
 /* the 40-byte movement record per object at 0x6cbf0 (16.16 fixed point) */
@@ -150,13 +152,17 @@ void sort_draw_order(void);
 void joystick_to_keys(void);
 void hud_update(void);
 void draw_view(short dy, short dx);
-#pragma aux draw_view parm routine [];
+#pragma aux draw_view parm routine [] modify [eax ebx ecx edx];
 void race_end(int quit);
 void user_exit(int code);
 #pragma aux user_exit parm routine [];
 void high_score(char *name, int points);
 void winner_film(int racer);
 void podium(int quit);
+void draw_tile(int tile, int x, int y);                       /* 0x1fa94 */
+void __cdecl blit_sprite(void *dst, unsigned char *src, int x, int y, int w, int h, int skip, int pitch);
+void __cdecl blit_sprite_trans(void *dst, unsigned char *src, unsigned char *trans, int x, int y, int w, int h, int skip, int pitch);
+void __cdecl present_view(int x0, int x1, int y0, int y1, int sx, int sy);
 void draw_frame(void *dst, void *img, int x, int y, int w, int h);  /* 0x2425d */
 void delay_ms(int ms);
 #pragma aux delay_ms parm routine [] modify [eax ebx edx];   /* its own code: ECX kept */
@@ -200,7 +206,7 @@ extern int            stereo;               /* 0x6fc50 */
 extern int            sound_enabled;        /* 0x6fc54 */
 extern int            music_on;             /* 0x6fc58 */
 extern int            map_no;               /* 0x6fc5c */
-extern int            v7f978, v7f97c, scroll_y, scroll_x;
+extern int            tile_y, tile_x, scroll_y, scroll_x;
 struct frame {                              /* 12 bytes: an anim frame image */
     void   *img;
     short   w;                                  /* +4 */
@@ -222,6 +228,17 @@ extern int            finished4;            /* 0x56014 */
 extern struct frame  *frames;               /* 0x600d0 */
 extern void          *screen_buf;           /* 0x7f954 */
 extern struct animset *animset;             /* 0x804bc */
+struct order {                              /* 16 bytes: the draw-order list */
+    int     sprite;
+    int     next;                               /* +4: next element, -1 = end */
+    int     f8, fc;
+};
+extern unsigned char *map;                  /* 0x5fec4: 6 bytes per cell, +0 tile */
+extern struct order   order[];              /* 0x6fc70 */
+extern int            order_head;           /* 0x70f8c */
+extern unsigned char *trans;                /* 0x70f90 */
+extern int            map_w;                /* 0x7f944 */
+extern short          num_sprites;          /* 0x7f964 */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
 extern char           strbuf[];             /* 0x6ca08 */
@@ -650,8 +667,8 @@ void init_game(char **argv, int argc)
     debug_printf("Direction tables initialised ok.\n");
     scroll_y = 0;
     scroll_x = 0;
-    v7f978 = 0;
-    v7f97c = 0;
+    tile_y = 0;
+    tile_x = 0;
     debug_printf("Init direction tables.\n");
     fn_13c34();
     fn_13cba();
@@ -878,6 +895,108 @@ int main(int argc, char **argv)
     return 43;
 }
 
+/* ---- 0x11526 -------------------------------------------------------------------------------- */
+
+/* differs: 51 rows, all register and stack-slot choice, 6 bytes short of the game: in the tile
+   loop the game keeps col in ESI and px in ECX (ours the other way round); in the clip it puts
+   &sprites[n] in EBP/EDI and spills cx, x + w and w to the stack, ours keeps them in registers.
+   Matched on the way: the tile loops as do-while, tx/ty/sx/sy and the stack locals in the game's
+   declaration order, mode 4 and 5 falling through into 6 (no break: a mode-4 sprite is blended
+   three times). Tried: strength-reduced col * 32 (exact size, 124 rows), reusing the sprite
+   variables in the tile loop, w/x locals and ?: in the width clip, operand orders, increment
+   orders. */
+void draw_view(short dy, short dx)
+{
+    int cx, hh, ww, e, sx, ty, tx, sy, n, ox, oy, cy, row, col, px, py;
+
+    tx = tile_x;
+    ty = tile_y;
+    sx = scroll_x;
+    sy = scroll_y;
+    row = 0;
+    py = 0;
+    do {
+        px = 0;
+        col = 0;
+        do {
+            draw_tile(map[((tile_y + row) * map_w + (tile_x + col)) * 6], px, py);
+            col++;
+            px += 32;
+        } while (col <= view_tiles_w);
+        row++;
+        py += 40;
+    } while (row <= view_tiles_h);
+    scroll_x = tx * 32;
+    scroll_y = ty * 40;
+    e = order_head;
+    if (e < 0)
+        rc_error(" %s(%d) : illegal ordering.", "new2io.c", 71);
+    do {
+        n = order[e].sprite;
+        e = order[e].next;
+        if (n < 0 || n > num_sprites)
+            rc_error(" %s(%d) : illegal sprite %d, order element %d.", "new2io.c", 80, n, e);
+        cx = sprites[n].x - scroll_x;
+        if (cx < 0) {
+            ox = -cx;
+            if (ox >= sprites[n].w)
+                continue;
+            cx = 0;
+        } else
+            ox = 0;
+        cy = sprites[n].y - scroll_y;
+        if (cy < 0) {
+            oy = -cy;
+            if (oy >= sprites[n].h)
+                continue;
+            cy = 0;
+        } else
+            oy = 0;
+        if (scroll_y + (view_tiles_h + 1) * 40 > sprites[n].y + sprites[n].h)
+            hh = sprites[n].h;
+        else
+            hh = scroll_y + (view_tiles_h + 1) * 40 - sprites[n].y;
+        if ((view_tiles_w + 1) * 32 + scroll_x > sprites[n].x + sprites[n].w)
+            ww = sprites[n].w;
+        else
+            ww = (view_tiles_w + 1) * 32 + scroll_x - sprites[n].x;
+        if (ww <= 0 || hh <= 0)
+            continue;
+        switch (sprites[n].mode) {
+        case 1:
+        case 2:
+            blit_sprite(screen_buf, sprites[n].img + ox + sprites[n].w * oy, cx, cy, ww - ox, hh - oy,
+                        sprites[n].w - (ww - ox), screen_w);
+            break;
+        case 4:
+            blit_sprite_trans(screen_buf, sprites[n].img + ox + sprites[n].w * oy, trans, cx, cy, ww - ox,
+                              hh - oy, sprites[n].w - (ww - ox), screen_w);
+        case 5:
+            blit_sprite_trans(screen_buf, sprites[n].img + ox + sprites[n].w * oy, trans, cx, cy, ww - ox,
+                              hh - oy, sprites[n].w - (ww - ox), screen_w);
+        case 6:
+            blit_sprite_trans(screen_buf, sprites[n].img + ox + sprites[n].w * oy, trans, cx, cy, ww - ox,
+                              hh - oy, sprites[n].w - (ww - ox), screen_w);
+            break;
+        default:
+            rc_error(" %s (%d) : unknown type %d sprite %d", "new2io.c", 165, sprites[n].mode, n);
+        }
+    } while (e >= 0);
+    scroll_x = sx;
+    scroll_y = sy;
+    switch (view_size) {
+    case 0:
+        present_view(dx, dx + 600, dy, dy + 400, 20, 400);
+        break;
+    case 1:
+        present_view(dx, dx + 540, dy, dy + 360, 50, 380);
+        break;
+    case 2:
+        present_view(dx, dx + 480, dy, dy + 320, 80, 360);
+        break;
+    }
+}
+
 /* ---- 0x14861 -------------------------------------------------------------------------------- */
 
 void clear_objects(void)
@@ -887,7 +1006,7 @@ void clear_objects(void)
         bodies[i].f1c = 0;
         objects[i].period = -1;
         objects[i].sprite = i;
-        sprites[i].f0 = sprites[i].f2 = 4000;
+        sprites[i].x = sprites[i].y = 4000;
         objects[i].anim = 0;
         objects[i].frame = 0;
     }

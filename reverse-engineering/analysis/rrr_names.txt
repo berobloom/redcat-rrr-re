@@ -382,8 +382,8 @@
 0x6fc54 sound_enabled        # CONFIRMED (code): rrrio.sound & 1 and sound_init succeeded
 0x6fc58 music_on             # CONFIRMED (code): no /NOMUSIC and rrrio.sound & 2; cleared when the music does not start
 0x6fc5c map_no               # CONFIRMED (code): stage_map_index(), or rand() % 22 when out of range
-0x7f978 v7f978               # SPECULATIVE: cleared before the direction tables are built
-0x7f97c v7f97c               # SPECULATIVE: as v7f978
+0x7f978 tile_y               # STRONGLY SUPPORTED: view top row in tiles; draw_view draws rows tile_y.. and sets scroll_y = tile_y * 40 while it places sprites
+0x7f97c tile_x               # STRONGLY SUPPORTED: view left column in tiles (scroll_x = tile_x * 32 in draw_view)
 0x7f980 scroll_y             # LIKELY: draw_view gets scroll_y % 40 (tile height); one of camera_follow's two scroll coordinates (0x138ed eases [0x7f984],[0x7f980])
 0x7f984 scroll_x             # LIKELY: draw_view gets scroll_x % 32 (tile width)
 0x1b929 sprintf              # STRONGLY SUPPORTED: the matched fn_10010 and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
@@ -400,3 +400,10 @@
 0x804bc animset              # SPECULATIVE: pointer to a block whose +0x2b4 is the start-light frame list
 0x55f8b lights_done          # CONFIRMED (code): main runs start_lights once, then sets it
 0x55faf camera_racer         # CONFIRMED (code): F1/F2/F3 set 0/2/4; camera_follow's argument
+0x1fa94 draw_tile            # LIKELY: (tile, x, y), draw_view's tile loop, x += 32, y += 40
+0x5fec4 map                  # CONFIRMED (code): map cells, 6 bytes each, +0 = tile number (draw_view)
+0x6fc70 order                # CONFIRMED (code): draw-order list, 16 bytes per element: sprite, next (discoveries 0x6fc70/0x6fc74)
+0x70f8c order_head           # CONFIRMED (code): first element of the draw order, < 0 is 'illegal ordering'
+0x70f90 trans                # CONFIRMED (code): the translucency table blit_sprite_trans gets
+0x7f944 map_w                # CONFIRMED (code): map width in cells (row stride of map)
+0x7f964 num_sprites          # LIKELY: highest valid sprite number in draw_view's check
