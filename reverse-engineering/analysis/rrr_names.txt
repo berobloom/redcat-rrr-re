@@ -506,3 +506,8 @@
 0x27837 fn_27837             # LIKELY: joystick buttons (cdecl, 1), tested against rrrio +0x220/+0x224
 0x2784e fn_2784e             # LIKELY: joystick x axis
 0x278a4 fn_278a4             # LIKELY: joystick y axis
+0x57b74 hud_fuel             # CONFIRMED (code): hud_update redraws the fuel gauge when (fuel>>16)/16 differs
+0x57b78 hud_damage           # CONFIRMED (code): the same for damage / 10
+0x57b7c hud_speed            # CONFIRMED (code): the same for |speed * 11 / 20| (fixed point)
+0x57b80 hud_rockets          # CONFIRMED (code): the same for rockets (hud_count 23)
+0x57b84 hud_boosts           # CONFIRMED (code): the same for boosts (hud_count 13)

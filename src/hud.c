@@ -5,6 +5,53 @@
 
 #include "rrr.h"
 
+/* ---- 0x1918d -------------------------------------------------------------------------------- */
+
+void hud_update(void)
+{
+    int v;
+
+    v = stats[bodies[0].stats].damage / 10;
+    if (v != hud_damage) {
+        hud_damage = v;
+        if (v > 9)
+            v = 9;
+        else if (v < 0)
+            v = 0;
+        draw_frame(screen_buf, frames[animset[21].steps[v].frame].img, 217, 438,
+                   frames[animset[21].steps[v].frame].w, frames[animset[21].steps[v].frame].h);
+    }
+    v = (short)(stats[bodies[0].stats].fuel >> 16) / 16;
+    if (v != hud_fuel) {
+        hud_fuel = v;
+        if (v > 8)
+            v = 8;
+        else if (v < 0)
+            v = 0;
+        draw_frame(screen_buf, frames[animset[20].steps[v].frame].img, 110, 422,
+                   frames[animset[20].steps[v].frame].w, frames[animset[20].steps[v].frame].h);
+    }
+    v = abs((short)(fixdiv(fixmul(bodies[0].speed, 11), 20) >> 16));
+    if (v != hud_speed) {
+        hud_speed = v;
+        if (v > 10)
+            v = 10;
+        else if (v < 0)
+            v = 0;
+        draw_frame(screen_buf, frames[animset[19].steps[v].frame].img, 20, 414,
+                   frames[animset[19].steps[v].frame].w, frames[animset[19].steps[v].frame].h);
+    }
+    if (hud_boosts != stats[bodies[0].stats].boosts) {
+        hud_boosts = stats[bodies[0].stats].boosts;
+        hud_count(13);
+    }
+    if (hud_rockets != stats[bodies[0].stats].rockets) {
+        hud_rockets = stats[bodies[0].stats].rockets;
+        hud_count(23);
+    }
+}
+
+
 /* ---- 0x19391 -------------------------------------------------------------------------------- */
 
 void hud_count(int what)

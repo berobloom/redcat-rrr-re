@@ -403,4 +403,15 @@ int __cdecl fn_27837(int n);
 int __cdecl fn_2784e(int n);
 int __cdecl fn_278a4(int n);
 void joystick_to_keys(void);
+/* 16.16 fixed point, inline as the game's code has them (hud_update) */
+long fixmul(long a, long b);
+#pragma aux fixmul = "imul ebx" "shrd eax,edx,16" parm [eax] [ebx] value [eax] modify [edx];
+long fixdiv(long a, long b);
+#pragma aux fixdiv = "cdq" "shld edx,eax,16" "shl eax,16" "idiv ebx" parm [eax] [ebx] value [eax] modify [edx];
+extern int            hud_fuel;             /* 0x57b74: the value hud_update last drew */
+extern int            hud_damage;           /* 0x57b78 */
+extern int            hud_speed;            /* 0x57b7c */
+extern int            hud_rockets;          /* 0x57b80 */
+extern int            hud_boosts;           /* 0x57b84 */
+void hud_update(void);
 #endif
