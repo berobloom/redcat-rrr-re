@@ -13,3 +13,12 @@
 51 0x11526 draw_view
 2 0x13c34 cos_sin_init
 8 0x1401d left_of
+41 0x167aa follower_tick
+0 0x16b53 mine_tick  waits for dropped2_tick: only its jumps into the shared epilogue at 0x17b59 differ
+0 0x16c5d sign_tick  the same
+0 0x16d30 bomb_tick  the same
+0 0x16e46 fn_16e46  the same (jmp 0x17b5b)
+0 0x17236 cactus_tick  the same
+16 0x178f6 dropped2_tick  damage blocks: the game loads bodies[r].stats into EAX (ours EDX) and merges racer 4's block into racer 2's; tried a local, a pointer, x = x - 10, += -10
+16 0x17b61 dropped0_tick  the same as dropped2_tick
+15 0x17c74 dropped4_tick  the same as dropped2_tick
