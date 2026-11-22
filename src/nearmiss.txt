@@ -22,3 +22,4 @@
 16 0x178f6 dropped2_tick  damage blocks: the game loads bodies[r].stats into EAX (ours EDX) and merges racer 4's block into racer 2's; tried a local, a pointer, x = x - 10, += -10
 16 0x17b61 dropped0_tick  the same as dropped2_tick
 15 0x17c74 dropped4_tick  the same as dropped2_tick
+8 0x18759 spawn_dropped_object

@@ -517,3 +517,5 @@
 0x175b4 rocket_tick          # CONFIRMED: the rocket callback (discoveries.md): life, hit_test against 2, 4, 0, walls and cacti
 0x1ae20 next_module_set      # CONFIRMED (code): next_module(1, -1, -1); not called directly
 0x1ae36 next_module_of       # CONFIRMED (code): next_module(0, world, groep); not called directly
+0x17e87 spawn_puffs          # CONFIRMED (code): heap.c; count exhaust/dust puffs around a racer (anim 7 / 17 by the third argument, life 6)
+0x185d4 fire_rocket          # CONFIRMED: the rocket key fires it (discoveries.md); a rocket_tick object 25 px ahead along the racer's heading, life 100

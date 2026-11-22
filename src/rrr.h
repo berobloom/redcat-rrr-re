@@ -420,7 +420,8 @@ void fn_13bb8(int racer);
 int on_screen(int x, int y);
 int next_module_set(void);
 int next_module_of(int world, int groep);
-void explode_objects(int kind, int n);
+int explode_objects(int count, int racer);
+int spawn_puffs(int count, int racer, int kind);
 int follower_tick(short n);
 int fn_16e46(short n);
 int obj_callback_1709c(short n);
@@ -430,4 +431,6 @@ int rocket_tick(short n);
 int dropped2_tick(short n);
 int dropped0_tick(short n);
 int dropped4_tick(short n);
+int fire_rocket(int racer);
+int spawn_dropped_object(int racer, int kind);
 #endif
