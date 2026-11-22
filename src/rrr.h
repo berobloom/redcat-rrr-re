@@ -126,12 +126,13 @@ int stage_map_index(void);
 short load_map(char *name);
 short load_xvga_map_images(char *name);
 int find_waypoints(void);
-void init_anims(void);
+int init_anims(void);
 int fn_15c66(void);
 int fn_15e02(void);
 int fn_15f9e(void);
 int fn_1613a(void);
 void fn_1bcb7(void);
+#pragma aux fn_1bcb7 modify [eax ebx ecx edx];
 void cos_sin_init(void);
 void dir_tbl_init(void);
 void turn_tbl_init(void);
@@ -287,5 +288,59 @@ int sort_draw_order(void);
 /* shade.c */
 extern unsigned char  palette[256][3];      /* 0x7fd38 */
 unsigned char nearest_colour(unsigned char r, unsigned char g, unsigned char b);
+
+
+/* raceanim.c and the animation library it calls */
+extern int            anims_inited;         /* 0x57a58 */
+extern char           anim_list[];          /* 0x57798 */
+extern char           anim_buf[];           /* 0x7552c */
+extern char           anim_img_path[];      /* 0x750ac */
+extern char           anim_ind_path[];      /* 0x74fe4 */
+extern short          anim_err;             /* 0x600d4 */
+extern char           anim_set_57620[];
+extern char           anim_set_57670[];
+extern char           anim_set_5767c[];
+extern char           anim_set_57684[];
+extern char           anim_set_5768c[];
+extern char           anim_set_57710[];
+extern char           anim_set_57754[];
+short fn_25a9d(void *list);
+short fn_26782(int path, int n);
+short fn_2643f(int img, int ind, void *buf);
+void fn_2670e(void *buf);
+void fn_1bcb7(void);
+#pragma aux fn_1bcb7 modify [eax ebx ecx edx];
+void fn_1bd71(void *set, void *list);
+void fn_1bda1(void *set, void *list);
+#pragma aux fn_1bd71 parm routine [] modify [eax ecx edx];
+#pragma aux fn_1bda1 parm routine [] modify [eax ecx edx];
+int fn_15c66(void);
+int fn_15cf1(void);
+int fn_15d34(void);
+int fn_15dbf(void);
+int fn_15e02(void);
+int fn_15e8d(void);
+int fn_15ed0(void);
+int fn_15f5b(void);
+int fn_15f9e(void);
+int fn_16029(void);
+int fn_1606c(void);
+int fn_160f7(void);
+int fn_1613a(void);
+int fn_161c5(void);
+int fn_16208(void);
+int fn_16293(void);
+int fn_162d6(void);
+int fn_16361(void);
+int fn_163a4(void);
+int fn_1642f(void);
+int fn_16472(void);
+int fn_164fd(void);
+int fn_16540(void);
+int fn_165cb(void);
+int fn_1660e(void);
+int fn_16699(void);
+int fn_166dc(void);
+int fn_16767(void);
 
 #endif

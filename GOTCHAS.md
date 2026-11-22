@@ -124,6 +124,15 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **An unsigned compare (`jae`/`jb`) against a size = an unsigned global:** map_w/map_h are
   unsigned (camera_start 0x1475f's clamp).
 
+- **`__LINE__` constants: `#line N "file.c"`.** A `rc_error(..., __FILE__, __LINE__)` guard pushes
+  the original line number as an immediate (not a fixup). `#line N` alone was ignored by WCC386;
+  `#line N "raceanim.c"` sets it (raceanim.c, all 28 set functions).
+- **A register load hoisted above a library call = the pragma is missing a modify list.** With
+  `parm routine []` alone Watcom assumes EDX survives the call and loads the next argument early;
+  `modify [eax ecx edx]` puts it after the call, as in the game (fn_1bd71/fn_1bda1). A function
+  that saves EBX/ECX/EDX it never uses calls something declared `modify [eax ebx ecx edx]`
+  (fn_1bcb7).
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,
