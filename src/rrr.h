@@ -138,7 +138,8 @@ void turn_tbl_init(void);
 void merge_tbl_init(void);
 void clear_objects(void);
 void init_objects(void);
-void camera_start(int a);
+void camera_start(int racer);
+int ai_unstick(int racer);
 void find_bonus_objects(void);
 int fn_1aea5(void);
 int key_pressed(int scancode);
@@ -238,13 +239,26 @@ extern unsigned char *map;                  /* 0x5fec4: 6 bytes per cell, +0 til
 extern struct order   order[306];           /* 0x6fc6c */
 extern int            order_head;           /* 0x70f8c */
 extern unsigned char *trans;                /* 0x70f90 */
-extern int            map_w;                /* 0x7f944 */
+extern unsigned       map_w;                /* 0x7f944: map size in cells */
+extern unsigned       map_h;                /* 0x7f948 */
 extern short          num_sprites;          /* 0x7f964 */
 extern int            turn_tbl[32][32];     /* 0x71de0: [target][current] -> next heading */
 extern int            merge_tbl[32][32];    /* 0x72de0 */
 extern int            cos_tbl[32];          /* 0x73de0 */
 extern int            sin_tbl[32];          /* 0x73e60 */
 extern int            dir_tbl[33][33];      /* 0x73ee0: heading by (dy, dx) + 16 */
+struct stats {                              /* 48 bytes per racer (discoveries.md) */
+    float   mass;
+    int     heading;                            /* +4: 0..31 */
+    int     fuel, boosts;
+    int     f10, f14, f18;
+    int     rockets;                            /* +0x1c */
+    int     f20, f24;
+    int     damage;                             /* +0x28 */
+    int     top_speed;                          /* +0x2c */
+};
+extern struct stats   stats[];              /* 0x6fbc0 */
+extern int            stuck2, stuck4;       /* 0x56070, 0x56074 */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
 extern char           strbuf[];             /* 0x6ca08 */

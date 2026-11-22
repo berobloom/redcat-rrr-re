@@ -424,3 +424,7 @@
 0x73de0 cos_tbl              # CONFIRMED (code): int[32], 16.16 cos per heading
 0x73e60 sin_tbl              # CONFIRMED (code): int[32], 16.16 sin per heading
 0x73ee0 dir_tbl              # CONFIRMED (code): int[33][33], heading for a (dy, dx) offset of -16..16
+0x56070 stuck2               # CONFIRMED (code): frames racer 2 has stood still (ai_unstick)
+0x56074 stuck4               # CONFIRMED (code): the same for racer 4
+0x6fbc0 stats                # CONFIRMED: 48-byte stats record per racer (discoveries.md); +4 heading
+0x7f948 map_h                # CONFIRMED (code): map height in cells (camera_start's clamp)

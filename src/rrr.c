@@ -754,6 +754,48 @@ int left_of(int x1, int y1, int x2, int y2, int x3, int y3)
     return y1 - x1 > 0;
 }
 
+/* ---- 0x1467c -------------------------------------------------------------------------------- */
+
+int ai_unstick(int racer)
+{
+    if (bodies[racer].vx == 0 && bodies[racer].vy == 0) {
+        if (racer == 2) {
+            stuck2++;
+            if (stuck2 > 20) {
+                stats[bodies[racer].stats].heading = (rand() % 40 + stats[bodies[racer].stats].heading + 8) & 31;
+                stuck2 = 0;
+                return 1;
+            }
+        } else if (racer == 4) {
+            stuck4++;
+            if (stuck4 > 20) {
+                stats[bodies[racer].stats].heading = (rand() % 40 + stats[bodies[racer].stats].heading + 8) & 31;
+                stuck4 = 0;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/* ---- 0x1475f -------------------------------------------------------------------------------- */
+
+void camera_start(int racer)
+{
+    scroll_x = (short)(bodies[racer].x >> 16) - view_tiles_w * 32 / 2;
+    if (scroll_x < 0)
+        scroll_x = 0;
+    if ((map_w - (view_tiles_w + 1)) * 32 < scroll_x)
+        scroll_x = (map_w - (view_tiles_w + 1)) * 32;
+    scroll_y = (short)(bodies[racer].y >> 16) - view_tiles_h * 40 / 2;
+    if (scroll_y < 0)
+        scroll_y = 0;
+    if ((map_h - (view_tiles_h + 1)) * 40 < scroll_y)
+        scroll_y = (map_h - (view_tiles_h + 1)) * 40;
+    tile_x = scroll_x / 32;
+    tile_y = scroll_y / 40;
+}
+
 /* ---- 0x14861 -------------------------------------------------------------------------------- */
 
 void clear_objects(void)

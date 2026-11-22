@@ -118,6 +118,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **`x = abs(..)` into a short, then `x * x` in the sum:** nearest_colour 0x11c11 (`imul esi, esi`);
   an int, or `x *= x`, gives `imul esi, eax`.
 
+- **A store the game makes after a call was written after the call.** Watcom does not move a
+  global store across a call: ai_unstick 0x1467c's `stuck2 = 0` sits after rand() in the game,
+  so the source reset the counter after the heading statement (10 rows -> MATCH).
+- **An unsigned compare (`jae`/`jb`) against a size = an unsigned global:** map_w/map_h are
+  unsigned (camera_start 0x1475f's clamp).
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,
