@@ -21,6 +21,37 @@ levels per AGENTS.md.
 All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 `reverse-engineering/executables.md`.
 
+- CONFIRMED: every LE program carries the strings "WATCOM C/C++32 Run-Time
+  system ... 1988-1995" (and the C/C++16 one from the stub), so the compiler is
+  Watcom C/C++ 10.x. INTRO, RRR and RRRMENU also link Fastgraph V4.03.
+- STRONGLY SUPPORTED: the compiler is Watcom C/C++ 10.5. 10.5's
+  `LIB386\DOS\CLIB3R.LIB` (register convention, 1988-1995 copyright) matches
+  RRR byte for byte, fixups masked, in 87 modules (22,096 bytes: `cstrt386`
+  at the entry 0x26c1c, `fopen` 0x1b959, `fread` 0x1c0d1, `fwrite`, `tzset`,
+  ...); REKEN 84. 10.0a's CLIB3R (copyright 1988-1994) matches only 27 small
+  modules, the stack-convention CLIB3S 15. 10.6 is not ruled out (no 10.6
+  library compared). Tool: `reverse-engineering/tools/wc/libmatch.py`; compiler
+  set-up in `reverse-engineering/watcom.md`.
+- CONFIRMED: RRR was compiled with `wcc386 -3r -s -ox` (10.5). Four functions
+  rewritten in C compile to the game's bytes exactly (fixup bytes excepted):
+  `stage_map_index` 0x1ae44 (35 bytes), `stage_is_last` 0x1ae67 (62),
+  `rrrio_save` 0x1ab7f (55), `clear_objects` 0x14861 (122). `-4r`/`-5r`,
+  `-oneatx` and `-os` each change at least two of them; `-ot` adds `lea`
+  and nop alignment the game lacks. No `__CHK` (stk386) is linked: no stack
+  checks. No function in any of the four LE programs has a `-d2` frame
+  (`leave`), so REKEN's debug block comes from `-d1` or link-time options,
+  which leave the code as it is. Sources: `src/rrr.c`, checked by `src/check.sh`.
+- LIKELY: REKEN, RRRMENU and INTRO use the same options (REKEN's
+  `rrrio_save` 0x10a92 is RRR's instruction for instruction; not checked
+  against other option sets).
+- CONFIRMED: REKEN.EXE ends in a Watcom debug-info block: the trailer at the
+  last 14 bytes has signature 0x8386, format 3.0, 0xa7c3 bytes starting at
+  file offset 0x4aa5f, language table "C". It lists the source modules
+  `C:\WORK\REKENM\PROG\{main,infio,gfx,module1..4,invoer,menuanim,logic,somdata}.c`
+  plus the PROTMOD library modules and the C library functions linked in.
+  RRR, RRRMENU and INTRO have no such trailer. Whether the block also holds
+  locals, types and line numbers has not been checked.
+
 - CONFIRMED: `MOTOR.EXE` (16-bit Watcom C, 19,194 bytes) is the program the
   start batch file runs (`MOTOR /DAVILEX %1..%5`, rcreken.tmp → RCREKEN.BAT).
   It contains the names `intro.exe`, `rrr.exe`, `reken.exe`, `rrrmenu.exe`,

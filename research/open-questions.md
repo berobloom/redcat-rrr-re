@@ -83,3 +83,9 @@
 15. **RESOLVED.** Rockets, explosions, exhaust and over-speed objects:
     discoveries "rockets and explosions", "exhaust, smoke and
     after-images".
+
+24. **PARTLY RESOLVED.** RRR's options are `-3r -s -ox` (discoveries,
+    "Executables"). Open: the FP option (default `-fpi`?) from a function
+    that uses floating point; 10.5 or 10.6 (compare a 10.6 CLIB3R with
+    `tools/wc/libmatch.py`); what else REKEN's debug block holds (locals,
+    types, line numbers).
