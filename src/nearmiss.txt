@@ -8,3 +8,4 @@
 # Take the FIRST line with an empty status. Write the status in the same commit as the code.
 2 0x103d1 play_fx
 13 0x1043a sound_init
+3 0x1103e start_lights

@@ -89,6 +89,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **A short argc passed to a function taking int is `movsx`ed by the caller** (has_arg's callers), so
   the callee's parameter is int, not short.
 
+- **Check a stack-convention callee's real modify list in its own code:** delay_ms 0x26beb changes
+  EAX, EBX, EDX but keeps ECX; with ECX in its pragma's modify list the caller reloads ECX after each
+  call and the ECX/EBX loads come out swapped (start_lights 9 -> 3 rows).
+- **`x[n++] = v` vs `x[n] = v; n++;`:** the second gives the game's `inc dword ptr [n]` in memory
+  (finish_check 0x10eff, 19 rows -> MATCH).
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,

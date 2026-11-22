@@ -143,6 +143,9 @@ int key_pressed(int scancode);
 #pragma aux key_pressed parm routine [] modify [eax ecx edx];
 void mix_stop_track(int track);
 void fn_15166(void);
+void draw_frame(void *dst, void *img, int x, int y, int w, int h);  /* 0x2425d */
+void delay_ms(int ms);
+#pragma aux delay_ms parm routine [] modify [eax ebx edx];   /* its own code: ECX kept */
 
 /* ---- globals (addresses in rrr_names.txt) --------------------------------------------------- */
 
@@ -184,6 +187,25 @@ extern int            sound_enabled;        /* 0x6fc54 */
 extern int            music_on;             /* 0x6fc58 */
 extern int            map_no;               /* 0x6fc5c */
 extern int            v7f978, v7f97c, scroll_b, scroll_a;
+struct frame {                              /* 12 bytes: an anim frame image */
+    void   *img;
+    short   w;                                  /* +4 */
+    short   h;                                  /* +6 */
+    short   f8, fa;
+};
+struct animset {
+    char    pad[0x2b4];
+    short  *lamp;                               /* +0x2b4: start-light frames, [1] [3] .. [9] */
+};
+extern int            finish_order[3];      /* 0x55f93 */
+extern int            finish_count;         /* 0x55f9f */
+extern int            finish_done[3];       /* 0x55fa3 */
+extern int            finished0;            /* 0x55fbc: racer 0's finished flag */
+extern int            finished2;            /* 0x55ff0 */
+extern int            finished4;            /* 0x56014 */
+extern struct frame  *frames;               /* 0x600d0 */
+extern void          *screen_buf;           /* 0x7f954 */
+extern struct animset *animset;             /* 0x804bc */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
 extern char           strbuf[];             /* 0x6ca08 */
@@ -677,6 +699,69 @@ void init_game(char **argv, int argc)
         }
     }
     debug_printf("exit init_game : %d,%d\n", view_tiles_w, view_tiles_h);
+}
+
+/* ---- 0x10eff -------------------------------------------------------------------------------- */
+
+int finish_check(void)
+{
+    if (finished0 && !finish_done[0]) {
+        finish_done[0] = 1;
+        finish_order[finish_count] = 0;
+        finish_count++;
+    }
+    if (finished2 && !finish_done[1]) {
+        finish_done[1] = 1;
+        finish_order[finish_count] = 2;
+        finish_count++;
+    }
+    if (finished4 && !finish_done[2]) {
+        finish_done[2] = 1;
+        finish_order[finish_count] = 4;
+        finish_count++;
+    }
+    if ((finish_count == 2 && finish_done[0]) || finish_count == 3) {
+        if (!finish_done[1])
+            finish_order[finish_count] = 2;
+        else if (!finish_done[2])
+            finish_order[finish_count] = 4;
+        if (finish_order[0] < 0 || finish_order[1] < 0 || finish_order[2] < 0)
+            rc_error("%s(%d) Finish line not complete!", "main.c", 441);
+        debug_printf(" finishline 1 : %d 2 : %d 3 : %d\n", finish_order[0], finish_order[1], finish_order[2]);
+        return 1;
+    }
+    return 0;
+}
+
+/* ---- 0x1103e -------------------------------------------------------------------------------- */
+
+/* differs: 3 rows, the fourth lamp (lamp[7], 0x11144): the game computes frames + i*12 as
+   imul edx; mov eax,[frames]; add eax,edx, ours with the registers swapped. The other four lamps
+   match from the same text. Tried: a frame pointer local, direct frames[..] expressions, frames + i,
+   an int index local, byte arithmetic, f += i, (int) cast, *(frames + i), mixes of these for lamp 7. */
+void start_lights(void)
+{
+    struct frame *f;
+
+    f = &frames[animset->lamp[1]];
+    draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
+    delay_ms(1500);
+    f = &frames[animset->lamp[3]];
+    draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
+    snd_play(1, 30, 64);
+    delay_ms(1000);
+    f = &frames[animset->lamp[5]];
+    draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
+    snd_play(1, 30, 64);
+    delay_ms(1000);
+    f = &frames[animset->lamp[7]];
+    draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
+    snd_play(1, 30, 64);
+    delay_ms(1000);
+    f = &frames[animset->lamp[9]];
+    draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
+    snd_play(1, 32, 64);
+    delay_ms(500);
 }
 
 /* ---- 0x14861 -------------------------------------------------------------------------------- */

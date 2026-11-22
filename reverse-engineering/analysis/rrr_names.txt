@@ -388,3 +388,13 @@
 0x7f984 scroll_a             # LIKELY: the other scroll coordinate
 0x1b929 sprintf              # STRONGLY SUPPORTED: the matched fn_10010 and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
 0x1475f camera_start         # STRONGLY SUPPORTED: puts the camera on the player after init_objects, scroll clamped to the map (discoveries.md)
+0x2425d draw_frame           # LIKELY: (dst, img, x, y, w, h), w and h on the stack; start_lights' lamps; -> 0x32c78 (discoveries.md HUD)
+0x55f93 finish_order         # CONFIRMED (code): int[3], racer numbers in finishing order
+0x55f9f finish_count         # CONFIRMED (code): racers finished so far
+0x55fa3 finish_done          # CONFIRMED (code): int[3], racer 0/2/4 already recorded
+0x55fbc finished0            # CONFIRMED: racer 0's finished flag (discoveries.md)
+0x55ff0 finished2            # CONFIRMED: racer 2's finished flag
+0x56014 finished4            # CONFIRMED: racer 4's finished flag
+0x600d0 frames               # LIKELY: 12-byte anim frame records (image, short w, short h)
+0x7f954 screen_buf           # STRONGLY SUPPORTED: the screen buffer (discoveries.md, smacker and podium)
+0x804bc animset              # SPECULATIVE: pointer to a block whose +0x2b4 is the start-light frame list
