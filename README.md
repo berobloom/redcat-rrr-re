@@ -30,6 +30,26 @@ All of these are the port, captured in the first world, De Welkomstrace.
 **The game itself is not included.** You need your own copy of the CD.
 Nothing here changes or redistributes the original files.
 
+## Matching decompilation
+
+<a href="docs/RRRPROGRESS.HTML"><img src="docs/RRRPROGRESS.SVG" width="40%" alt="RRR.EXE: the share of the race program's own C functions that compile to the original's bytes"></a>
+
+Next to the port, the original's C is being rebuilt function by function so
+that it compiles to the same bytes, with the game's own compiler: Watcom
+C/C++ 10.5, `wcc386 -3r -s -ox`, under Wine. It starts with `RRR.EXE`, the
+race. [`docs/RRRPROGRESS.HTML`](docs/RRRPROGRESS.HTML) lists every function:
+search it, filter it by status or subsystem, and click a near miss to see its
+instruction diff against the game. [`PROGRESS.md`](PROGRESS.md) has the same
+numbers as tables. `reverse-engineering/tools/progress.py` writes all three
+from a fresh build. The workflow is in [`MATCHING.md`](MATCHING.md), the
+compiler set-up in
+[`reverse-engineering/watcom.md`](reverse-engineering/watcom.md).
+
+```sh
+src/check.sh                                          # compile src/rrr.c, compare every function
+.work/venv/bin/python reverse-engineering/tools/progress.py   # rewrite PROGRESS.md and docs/RRRPROGRESS.*
+```
+
 ## Playing
 
 You need CMake, a C compiler and SDL2. Point the launcher at the game's data:
@@ -65,8 +85,9 @@ keeps the files it needs in the browser's storage.
 | `research/hypotheses.md` | Ideas that are not settled yet |
 | `research/open-questions.md` | Open and resolved questions |
 | `reverse-engineering/` | Reference docs: executables, file formats, architecture, running the original under DOSBox-X |
-| `reverse-engineering/tools/` | LE loader, disassembler, function finder, xrefs, Unicorn emulation and the DOSBox-X driver |
+| `reverse-engineering/tools/` | LE loader, disassembler, function finder, xrefs, Unicorn emulation and the DOSBox-X driver; `wc/`: the Watcom compile-and-compare tools |
 | `reverse-engineering/analysis/` | Function lists, names, CD inventory |
+| `src/` | The matching decompilation: `rrr.c`, `check.sh`, the baseline and the near-miss list ([`MATCHING.md`](MATCHING.md)) |
 | `port/` | The C port; [`port/README.md`](port/README.md) is its detailed manual |
 | `port/web/` | The WebAssembly build |
 | `port/rctools/` | Python tools for the game's archives, images and maps |

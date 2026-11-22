@@ -13,7 +13,7 @@
 0x1fad6 load_xvga_map_images # CONFIRMED: named in its own error string (rctools.c line 0x2f7)
 0x1fc4c load_map             # STRONGLY SUPPORTED: 'Kaart bestand kon niet geopend worden.' (rctools.c)
 0x22c71 xvga_src_fopen       # STRONGLY SUPPORTED: named in load_xvga_map_images' error string
-0x22e32 fclose               # LIKELY
+0x22e32 fileio_close         # LIKELY: fileio.c, logs 'closing copying..'; not clib fclose, which is 0x1c2ac (libmatch)
 0x2325c rand                 # LIKELY: result % 22 picks a random map
 0x111e8 race_main            # CONFIRMED: calls race_init, then the frame loop until Esc/S; returns 0x2b
 0x26a9e key_pressed          # CONFIRMED: (scancode on stack, ret 4) -> key state array 0x804c0
@@ -92,3 +92,13 @@
 0x1ce02 mix_stop_track       # CONFIRMED
 0x1db94 mix_irq              # STRONGLY SUPPORTED: Sound Blaster IRQ mixer: sum of tracks / tracks
 0x1ec03 sndbuf_play          # CONFIRMED: sndbuf.c: loads the sample if not cached, then mix_add_track
+# Watcom C library (10.5 CLIB3R.LIB modules found byte for byte by tools/wc/libmatch.py)
+0x1c2ac fclose               # CONFIRMED: CLIB3R module fclose at this address
+0x1c3ef fwrite               # CONFIRMED: CLIB3R module fwrite at this address
+# globals
+0x57b8c stage_table          # CONFIRMED: int [world][5]; stage_map_index, stage_is_last
+0x5fec0 sprites              # LIKELY: pointer to 16-byte sprite slots ([0x5fec0]+8 sprite mode, discoveries)
+0x600c8 num_objects          # LIKELY: short, clear_objects' loop bound over the object slots
+0x6cbf0 bodies               # CONFIRMED: 40-byte movement records per object (discoveries)
+0x75178 rrrio                # CONFIRMED: RRRIO.INF block, 0x228 bytes (file-formats.md)
+0x804b8 objects              # CONFIRMED: pointer to the 16-byte object slots (objects_tick)

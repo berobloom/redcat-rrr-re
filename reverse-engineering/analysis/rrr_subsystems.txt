@@ -1,0 +1,32 @@
+# RRR.EXE's own C (0x10010-0x1B958) grouped by subsystem, for PROGRESS.md and docs/RRRPROGRESS.HTML.
+# The grouping is ours (by what the functions do); the original's modules (sndman.c, main.c, ...) are
+# not known function by function. Functions not listed here are "unsorted". Names as in rrr_names.txt.
+
+## Sound
+snd_track_free snd_play play_fx sound_init
+
+## Race flow and results
+race_init finish_check start_lights race_main race_end winner_film podium
+
+## View, sprites and HUD
+draw_view sort_draw_order blit_sprite blit_sprite_trans trans_generate trans_save trans_load
+camera_follow init_anims switch_anims hud_update
+
+## Racers and computer drivers
+player_tick bull_tick muis_tick follower_tick direction_to_waypoint aim_at_player racer_contact
+racer_bounce ai_unstick start_crash player_crash_tick bull_crash_tick muis_crash_tick
+ai_script_find ai_waypoint_action
+
+## Objects, pickups and hazards
+clear_objects init_objects free_object_tick obj_callback_16a63 obj_callback_16ad9 mine_tick sign_tick
+bomb_tick obj_callback_1709c cactus_tick dropped2_tick dropped0_tick dropped4_tick alloc_object
+free_object explode_objects new_boost_pickup new_cactus new_mine new_sign new_bomb spawn_dropped_object
+
+## Map, waypoints and cells
+find_waypoints find_bonus_objects ground_check cell_checks cell_effect stage_map_index stage_is_last
+
+## Input
+joystick_to_keys
+
+## Saved state and scores
+rrrio_save rrrio_load high_score
