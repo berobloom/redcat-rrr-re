@@ -811,6 +811,26 @@ void clear_objects(void)
     }
 }
 
+/* ---- 0x15166 -------------------------------------------------------------------------------- */
+
+void fn_15166(void)
+{
+    fn_19391(13);
+    fn_19391(23);
+}
+
+
+/* ---- 0x16945 -------------------------------------------------------------------------------- */
+
+/* the early return matters: an if around the store keeps the offset in a register */
+int free_object_tick(short n)
+{
+    if (objects[n].period == -1)
+        return 0;
+    objects[n].period = -1;
+    return 0;
+}
+
 /* ---- 0x17e0b -------------------------------------------------------------------------------- */
 
 int alloc_object(void)
@@ -838,6 +858,18 @@ void free_object(int n)
         free_objects++;
     }
 }
+
+/* ---- 0x18886 -------------------------------------------------------------------------------- */
+
+int fn_18886(int v, int lo, int hi)
+{
+    if (v < lo)
+        return -1;
+    if (v > hi)
+        return 1;
+    return 0;
+}
+
 
 /* ---- 0x1ab7f -------------------------------------------------------------------------------- */
 
@@ -925,3 +957,32 @@ int stage_is_last(void)
         i++;
     return i == 4;
 }
+
+/* ---- 0x1aea5 -------------------------------------------------------------------------------- */
+
+int fn_1aea5(void)
+{
+    int i = rrrio.stage;
+    while (i > 0 && stage_table[rrrio.world - 1][i] != 0)
+        i--;
+    return i == rrrio.stage;
+}
+
+/* ---- 0x1b67b -------------------------------------------------------------------------------- */
+
+int check_object_nr(int n, char *file, int line)
+{
+    if (n < 0 || n > 255)
+        rc_error(" %s(%d) : objectnr %d error\n", file, line, n);
+    return n;
+}
+
+/* ---- 0x1b69d -------------------------------------------------------------------------------- */
+
+int check_waypoint_nr(int n, char *file, int line)
+{
+    if (n < 0 || n > 150)
+        rc_error(" %s(%d) : Waypointnr %d error\n", file, line, n);
+    return n;
+}
+

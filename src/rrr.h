@@ -343,4 +343,12 @@ int fn_16699(void);
 int fn_166dc(void);
 int fn_16767(void);
 
+/* rrr.c, still unsplit */
+void fn_19391(int a);
+void fn_15166(void);
+int free_object_tick(short n);
+int fn_18886(int v, int lo, int hi);
+int fn_1aea5(void);
+int check_object_nr(int n, char *file, int line);
+int check_waypoint_nr(int n, char *file, int line);
 #endif
