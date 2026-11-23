@@ -265,7 +265,7 @@ struct stats {                              /* 48 bytes per racer (discoveries.m
     int     fuel, boosts;
     int     f10, f14, f18;
     int     rockets;                            /* +0x1c */
-    int     f20, f24;
+    int     drops, f24;                         /* +0x20: objects left to drop (ai_waypoint_action) */
     int     damage;                             /* +0x28 */
     int     top_speed;                          /* +0x2c */
 };
@@ -414,6 +414,8 @@ extern struct waypoint waypoint4[150];      /* 0x71924 */
 extern int            waypoint_count0;      /* 0x71448: waypoints found in the map */
 extern int            waypoint_count2;      /* 0x7191c */
 extern int            waypoint_count4;      /* 0x71dd4 */
+extern int            wait2, wait4;         /* 0x55fec, 0x56010: racer 2/4 waits (script action 4) */
+void ai_waypoint_action(int racer, int n);
 extern int            joymap[4];            /* 0x753a0 */
 int __cdecl fn_2779e(int n);
 void start_crash(int racer);

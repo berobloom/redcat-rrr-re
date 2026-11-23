@@ -536,3 +536,6 @@
 0x71448 waypoint_count0      # CONFIRMED: racer 0 waypoints found (find_waypoints clears/increments it, '%d waypoints found for REDCAT')
 0x7191c waypoint_count2      # CONFIRMED: Brutus's (discoveries.md: count [0x7191c])
 0x71dd4 waypoint_count4      # CONFIRMED: Snitch's (discoveries.md: count [0x71dd4])
+0x55fec wait2                # LIKELY: script action 4 (wait) sets it for Brutus, bull_tick 0x12c9d only calls ai_waypoint_action with it set; cleared when the player is past script2[].f14
+0x56010 wait4                # LIKELY: the same for Snitch (muis_tick 0x1355f, script4[].f14)
+0x57c94 script2_action       # CONFIRMED: script2 entry +4 = action (ai_waypoint_action 0x1af83 switches on it: -1/0 nothing, 1 rocket, 2 drop, 3 boost, 4 wait)
