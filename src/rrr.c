@@ -556,9 +556,12 @@ void start_lights(void)
 
 /* differs: 6 rows, block placement in the quit-after-finish fill (0x1138d..0x11481): the game tests
    finished2 with jne to the finished2 branch and keeps the finished4 -> order[2] = 2 block before
-   it, ours tests with je and places them the other way round; same size, same stores. 22 spellings
+   it, ours tests with je and places them the other way round; same size, same stores. 24 spellings
    of the block tried (nested if/else both ways round, else-if chains on the four cases, && forms,
-   a goto, separate ifs); the others merge the two order[1] = 2 stores (794 bytes) or grow. */
+   a goto, separate ifs, both tests negated [11 rows] and the shared order[2] = 4 spelled as an
+   else-if [14]); the others merge the two order[1] = 2 stores (794 bytes) or grow. The game does
+   NOT merge them, and order[2] = 4 is shared with the finished2 branch - a source shape that
+   keeps both order[1] = 2 stores separate is what is missing. */
 int main(int argc, char **argv)
 {
     int quit = 0;
