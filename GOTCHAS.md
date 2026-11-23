@@ -61,6 +61,9 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **Loop shape:** `-ox` rotates loops. The game's top-tested `while` (`cmp; jg exit` at the top)
   needs `while (i <= 4 && t[g][i] == 0) i++;`; the same `for` with `i < 5` tests at the bottom
   (`stage_is_last` 0x1ae67).
+- **Two calls in an if/else, not `cond ? 1 : 0`:** Watcom cross-jumps them into the game's
+  `test ax,ax; je; mov eax,1; jmp; xor eax,eax` (sound_init's `/STEREO`, 13 -> 10 rows); the ternary
+  gives `setne al; movzx eax,al`.
 - **Chained assignment:** `a = b = 4000;` stores `b` and reloads it into `a`; two separate
   statements do not (`clear_objects` 0x14861).
 - **Store order is source order:** `rrrio_load` sets `joy[0], joy[1], joy[4], joy[5], joy[2],
@@ -193,5 +196,7 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **The droppedN_tick damage block's load register (open question 25):** the game loads
   `bodies[2].stats` into EAX, ours into EDX, and no spelling or compiler option moves it (30+ tried).
   It is worth 8 functions, so it is worth a fresh idea, not another 30 spellings - see the note in
-  src/shadeobj.c before starting. (sound_init's `/STEREO`): 9 spellings tried,
-  see its `differs:` note.
+  src/shadeobj.c before starting.
+- **sound_init 0x1043a's last 10 rows:** the game reuses fn_1d2a6's four register arguments as
+  easy_init's; WCC386 rematerialises them in every spelling and in a 3-statement probe (aux pragmas,
+  int returns, locals - nothing helps). Open question 26, not the C.

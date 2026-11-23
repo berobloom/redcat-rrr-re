@@ -108,3 +108,20 @@
     -ox -oa, -ox -oi and -oe alone change nothing (session 13; the full list
     is in the note in src/shadeobj.c). The function is byte-identical to the
     game up to 0x179bd, so the choice is made from the damage statement itself.
+
+26. **Open: Watcom keeps the sound_init 0x1043a argument registers, we
+    don't.** The game sets fn_1d2a6's four register arguments (EAX = 11025,
+    EDX = 34, EBX = wav_handles, ECX = wav_names) and uses the *same*
+    registers as easy_init 0x20b80's first four arguments without reloading;
+    every spelling of those three statements reloads them (16 bytes, 10 rows,
+    and the argument order inside the first block is EAX,ECX,EBX,EDX there vs
+    ECX,EBX,EDX,EAX here). sound_init is otherwise byte-identical, so it is
+    not the statement spelling: tried the /STEREO call as an if/else, a local,
+    !x, the reversed test, a switch, two independent calls; fn_1c85b and
+    fn_1d2a6 as int-returning; `#pragma aux` on fn_1d2a6 (`modify [eax]`,
+    `parm [eax][edx][ebx][ecx] modify [eax]`); wav_names as a 2-D array; the
+    shared arguments factored into locals (worse, 23 rows). A minimal probe
+    (`lib1(...); nt = 4; easy(30, 34, wh, wn, 33)`) reloads in every spelling
+    too, so WCC386 10.5 -ox rematerialises these immediates unless something
+    else in the function makes them live. A new idea is worth more than more
+    spellings - the prize is one MATCH.

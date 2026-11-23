@@ -190,12 +190,15 @@ int play_fx(int sample, int dist)
 
 /* ---- 0x1043a -------------------------------------------------------------------------------- */
 
-/* differs: 13 rows, all at the /STEREO argument: the game branches (je; mov eax,1; jmp; xor eax,eax)
-   where ? 1 : 0 gives setne, and keeps EDX/EBX/ECX from fn_1d2a6's call for easy_init. Two calls in
-   an if/else get the branches (cross-jumped) but then reload the three registers (10 rows). Tried:
-   if/else into a local (braced and not), = 0 then if, !x ? 0 : 1, == 0, != 0, (int) cast, short and
-   char parameter aliases. Matched on the way: the two early returns as separate ifs, the tracks
-   fill as a loop (memset gives other registers), declaration order dma, port, irq. */
+/* differs: 10 rows, all one block: the game keeps EAX/ECX/EBX/EDX from fn_1d2a6's call (0x1d2a6)
+   as easy_init's arguments, we reload them (16 bytes) after it. The /STEREO call now matches: two
+   calls in an if/else, cross-jumped by Watcom into the game's je/mov eax,1/jmp/xor eax,eax.
+   Reload tried: fn_1c85b/fn_1d2a6/easy_init as int-returning, #pragma aux with modify [eax] and with
+   parm [eax][edx][ebx][ecx], wav_names as a 2-D array, the shared arguments factored into locals
+   (worse: 23 rows) - none of them keeps the registers; ? 1 : 0 (13), a local for the test (24),
+   !x and the reversed if/else (14), fn_1c85b(0) then a separate if (16). Watcom's scheduling, not
+   the spelling - open question 26. Matched on the way: the two early returns as separate ifs, the
+   tracks fill as a loop (memset gives other registers), declaration order dma, port, irq. */
 int sound_init(short argc, char **argv)
 {
     int dma, port, irq, i, err;
@@ -238,7 +241,10 @@ int sound_init(short argc, char **argv)
     err = fn_1c5e4(port, irq, dma);
     if (err)
         rc_error("error setting soundblaster dsp variables {error=%d}", err);
-    fn_1c85b(has_arg("/STEREO", argc, argv) ? 1 : 0);
+    if (has_arg("/STEREO", argc, argv))
+        fn_1c85b(1);
+    else
+        fn_1c85b(0);
     fn_1d2a6(11025, 34, wav_handles, wav_names);
     num_tracks = 4;
     if (easy_init(30, 34, wav_handles, wav_names, 33)) {

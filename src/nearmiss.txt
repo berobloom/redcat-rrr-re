@@ -18,7 +18,7 @@
 6 0x111e8 main  SKIP: block placement only in the quit-after-finish fill; 24 spellings, see the note in src/rrr.c - what the game has and we lack is a shape that keeps the two order[1] = 2 stores separate while sharing order[2] = 4
 8 0x1401d left_of  SKIP: register mirror only (the game keeps x1 in ESI and uses EAX for x3 - x2, ours the other way round); 14 spellings tried, see the note in src/rrr.c
 8 0x18759 spawn_dropped_object  SKIP: base/index mirror in the objects[n] stores (game: n<<4 in EAX, objects reloaded per store); switch 8 rows is the best of if/else-if, !kind, (*(objects + n)) [11] and a pointer local [19]
-13 0x1043a sound_init
+10 0x1043a sound_init  SKIP: only the easy_init arguments - the game keeps EAX/ECX/EBX/EDX from fn_1d2a6's call, we reload them (16 bytes); the /STEREO if/else now matches; see open question 26
 15 0x17c74 dropped4_tick  the same one register choice as dropped2_tick
 16 0x178f6 dropped2_tick  ONE register choice: the game loads bodies[2].stats into EAX, ours EDX; that costs a mov edx,eax and pushes the tail merge back 8 bytes, so our epilogue lands at +0x26d not +0x263. 30+ spellings and 4 option sets tried - see the note in src/shadeobj.c. Worth 8 functions: it also unblocks mine_tick, sign_tick, bomb_tick, fn_16e46, cactus_tick (0 rows), dropped0_tick and dropped4_tick
 16 0x17b61 dropped0_tick  the same one register choice as dropped2_tick
