@@ -125,6 +125,9 @@ Levers seen so far (add to this list when one produces a MATCH):
   (`stage_is_last`).
 - **Chained assignments.** `a = b = 4000;` and `b = 4000; a = b;` compile differently
   (`clear_objects`).
+- **Two-value switches nest.** `switch (finish_order[0])` with a `switch (finish_order[1])` in each
+  case gives the game's `<2 / ==2 / ==4` compare tree exactly (`podium`); an if chain gives 40 rows
+  and `else if` 27 (variants.py, 2026-11-23).
 
 ## 6. A near miss is not a proof: `nmrefs.py`
 

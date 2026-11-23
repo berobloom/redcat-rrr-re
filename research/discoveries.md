@@ -1068,6 +1068,14 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   Bulldog  :    %3d", "Max de Muis        :    %3d" with the points
   +0x214.. Then `delay_ms(4000)`. The race loop stops at the finish
   itself (no run-out).
+- CONFIRMED (`0x15a9f` matched byte for byte, 2026-11-23): the text calls go to
+  `0x200b0(x, y, fmt, ...)` (rctools.c: a 0x90-byte buffer, sprintf, screen-limit
+  checks, then rcascii `0x24dbe`); the RedCat line passes two varargs (name at
+  +0x68, points at +0x214), which is why its `add esp` is 0x14 and the others'
+  0x10. `0x246b5(name)` selects the font, `0x24942` sets [0x804b4] and `0x24879`
+  [0x804b6] (0xff and 0xd0 on the podium). The picture switch is on
+  `finish_order[0]` and `finish_order[1]`; no case means no picture (the race's
+  screen stays).
 - CONFIRMED (DOSBox-X, session 6; finished flags of RedCat and Brutus poked
   once the race ran, screenshots every 0.4 s): the podium is on screen
   0.4 s after the poke at the latest and stays until the DOS prompt

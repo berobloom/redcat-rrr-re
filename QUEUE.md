@@ -31,3 +31,7 @@ Rules for the agent:
     fn_13a78 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
     0x11bb4 and blit_sprite_trans 0x17d94 are assembly, so 110 of 147, 23 near misses, 14 unwritten
     (13 C). `src/check.sh` still shows 110 MATCH and no WRONG fixups.
+  - 2026-11-23: podium 0x15a9f byte-identical: `src/check.sh 2>&1 | grep -c ' MATCH at'` says 111 and
+    `grep podium` shows `podium_ 355 bytes MATCH at 0x015a9f` with no WRONG fixup (the world_names
+    0x57c18 and rcascii_printf 0x200b0 targets agree); deleting either switch level or one vararg of
+    the "%-15s : %3d" line makes the check fail. 111 of 147, 23 near misses, 12 unwritten.
