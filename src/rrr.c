@@ -1178,6 +1178,57 @@ void fn_15166(void)
 }
 
 
+/* ---- 0x1585e race_end ---------------------------------------------------------------------
+ * Only after a finished race (quit 0, main 0x111e8): racer 0's stats back
+ * into the RRRIO block (fuel fixed point >> 16, negative damage and fuel to
+ * 0), the waypoints reached per racer to +0x208..+0x210, race_done +0x1f8 = 1,
+ * the finishing order to +0x1fc, then 3/2/1 points per place to
+ * rrrio.points[racer >> 1], and rrrio_save (discoveries.md "race end").
+ * -------------------------------------------------------------------------------------------- */
+
+void race_end(int quit)
+{
+    if (!quit) {
+        if (stats[bodies[0].stats].fuel < 0)
+            rrrio.fuel = 0;
+        else
+            rrrio.fuel = (short)(stats[bodies[0].stats].fuel >> 16);
+        rrrio.boosts = stats[bodies[0].stats].boosts;
+        rrrio.f18 = stats[bodies[0].stats].f10;
+        rrrio.f1c = stats[bodies[0].stats].f14;
+        rrrio.rockets = stats[bodies[0].stats].rockets;
+        if (stats[bodies[0].stats].damage < 0)
+            rrrio.damage = 0;
+        else
+            rrrio.damage = stats[bodies[0].stats].damage;
+        rrrio.f208[0] = waypoint_index0;
+        rrrio.f208[1] = waypoint_index2;
+        rrrio.f208[2] = waypoint_index4;
+        rrrio.race_done = 1;
+        rrrio.start_order[0] = finish_order[0];
+        rrrio.start_order[1] = finish_order[1];
+        rrrio.start_order[2] = finish_order[2];
+        if (finish_order[0] < 0 || finish_order[0] > 4) {
+            rc_error("%s(%d) : finishline not okay", "init.c", 603);
+        } else {
+            rrrio.points[finish_order[0] >> 1] += 3;
+        }
+        if (finish_order[1] < 0 || finish_order[1] > 4) {
+            rc_error("%s(%d) : finishline not okay", "init.c", 608);
+        } else {
+            rrrio.points[finish_order[1] >> 1] += 2;
+        }
+        if (finish_order[2] < 0 || finish_order[2] > 4) {
+            rc_error("%s(%d) : finishline not okay", "init.c", 613);
+        } else {
+            rrrio.points[finish_order[2] >> 1] += 1;
+        }
+        debug_printf("rc:%d b:%d m:%d\n", waypoint_index0, waypoint_index2, waypoint_index4);
+        rrrio_save();
+    }
+}
+
+
 /* ---- 0x15a14 -------------------------------------------------------------------------------- */
 
 void winner_film(int racer)

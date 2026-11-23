@@ -527,3 +527,6 @@
 0x1430e hit_test             # CONFIRMED: hit_test(a, b, size), discoveries.md (9 call sites)
 0x200b0 rcascii_printf       # LIKELY: rctools.c (its errors 'ascii x/y size <?= 0 ???', 'trying to print beyond screen limits %d'); sprintf into a 0x90-byte buffer then rcascii 0x24dbe; args (x, y, fmt, ...) from the pushes and the callee's [esp+0xa0]/[esp+0xa4] screen-limit checks
 0x57c18 world_names          # CONFIRMED (data): char*[6] "De Welkomstrace ".."De Laatste Kans", 16 chars padded; podium's "Punten Totaal voor %s"
+0x71444 waypoint_index0      # LIKELY: racer 0's waypoint reached so far; player_crash_tick 0x19497 indexes the player's list 0x70f94 with it and race_end 0x15858 prints "rc:%d b:%d m:%d" with the two below
+0x71920 waypoint_index2      # CONFIRMED: Brutus's waypoint index (count [0x7191c], list 0x71468, discoveries.md)
+0x71dd8 waypoint_index4      # CONFIRMED: Snitch's waypoint index (discoveries.md)

@@ -120,6 +120,7 @@ void fn_24879(int a);
 void fn_24942(int a);
 #pragma aux fn_24942 parm routine [] modify [eax ecx edx];
 int rrrio_load(void);
+void rrrio_save(void);                    /* 0x1ab7f */
 void fn_1b469(void);
 short fn_1f83f(int n);
 short fn_25bbd(int n);
@@ -401,6 +402,9 @@ extern int            joy_on;               /* 0x5fdf0 */
 extern int            key_right;            /* 0x55fd8: right key held this frame */
 extern int            key_left;             /* 0x55fdc: left key held this frame */
 extern int            keymap[7];            /* 0x7144c: [0] rocket, [1] boost, [3] left, [4] back, [5] forward, [6] right */
+extern int            waypoint_index0;      /* 0x71444: racer 0/2/4's waypoint reached so far */
+extern int            waypoint_index2;      /* 0x71920 */
+extern int            waypoint_index4;      /* 0x71dd8 */
 extern int            joymap[4];            /* 0x753a0 */
 int __cdecl fn_2779e(int n);
 void start_crash(int racer);
