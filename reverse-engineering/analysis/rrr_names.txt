@@ -530,3 +530,9 @@
 0x71444 waypoint_index0      # LIKELY: racer 0's waypoint reached so far; player_crash_tick 0x19497 indexes the player's list 0x70f94 with it and race_end 0x15858 prints "rc:%d b:%d m:%d" with the two below
 0x71920 waypoint_index2      # CONFIRMED: Brutus's waypoint index (count [0x7191c], list 0x71468, discoveries.md)
 0x71dd8 waypoint_index4      # CONFIRMED: Snitch's waypoint index (discoveries.md)
+0x70f94 waypoint0            # CONFIRMED: struct waypoint {x,y} [150] for racer 0, 16.16; filled by find_waypoints 0x1517a, indexed by waypoint_index0
+0x71468 waypoint2            # CONFIRMED: the same for Brutus (find_waypoints case 2, 'BULL wayp.nr')
+0x71924 waypoint4            # CONFIRMED: the same for Snitch (find_waypoints case 4, 'MUIS wayp.nr')
+0x71448 waypoint_count0      # CONFIRMED: racer 0 waypoints found (find_waypoints clears/increments it, '%d waypoints found for REDCAT')
+0x7191c waypoint_count2      # CONFIRMED: Brutus's (discoveries.md: count [0x7191c])
+0x71dd4 waypoint_count4      # CONFIRMED: Snitch's (discoveries.md: count [0x71dd4])

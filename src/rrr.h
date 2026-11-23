@@ -405,6 +405,15 @@ extern int            keymap[7];            /* 0x7144c: [0] rocket, [1] boost, [
 extern int            waypoint_index0;      /* 0x71444: racer 0/2/4's waypoint reached so far */
 extern int            waypoint_index2;      /* 0x71920 */
 extern int            waypoint_index4;      /* 0x71dd8 */
+struct waypoint {                           /* find_waypoints 0x1517a: cell centre in 16.16 */
+    int x, y;
+};
+extern struct waypoint waypoint0[150];      /* 0x70f94: racer 0/2/4's path, by waypoint number */
+extern struct waypoint waypoint2[150];      /* 0x71468 */
+extern struct waypoint waypoint4[150];      /* 0x71924 */
+extern int            waypoint_count0;      /* 0x71448: waypoints found in the map */
+extern int            waypoint_count2;      /* 0x7191c */
+extern int            waypoint_count4;      /* 0x71dd4 */
 extern int            joymap[4];            /* 0x753a0 */
 int __cdecl fn_2779e(int n);
 void start_crash(int racer);

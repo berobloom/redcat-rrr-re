@@ -128,6 +128,15 @@ Levers seen so far (add to this list when one produces a MATCH):
 - **Two-value switches nest.** `switch (finish_order[0])` with a `switch (finish_order[1])` in each
   case gives the game's `<2 / ==2 / ==4` compare tree exactly (`podium`); an if chain gives 40 rows
   and `else if` 27 (variants.py, 2026-11-23).
+- **Write the `default:` the game jumps to.** A ten-arm jump table whose empty arms (kinds 11, 14,
+  17) all go to the switch exit means an explicit `default: break;`: without it Watcom places the
+  merged `check_object_nr`+store+loop-increment block after the last case body, with it after the
+  first, which is where the game has it (`find_bonus_objects` 32 rows -> 1, variants.py 2026-11-25).
+  Case bodies are emitted in source order, so a jump table also fixes the order to write them in.
+- **A function's neighbours decide its tail.** Watcom merges an epilogue into the previous function
+  when they agree; if the function before us is wrong our shared tail lands elsewhere, so the last
+  jmp of an otherwise perfect function can wait for its predecessor (`find_bonus_objects` waits for
+  `find_waypoints`, like `mine_tick` waits for `dropped2_tick`).
 
 ## 6. A near miss is not a proof: `nmrefs.py`
 
