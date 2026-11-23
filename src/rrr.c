@@ -786,9 +786,12 @@ void merge_tbl_init(void)
 
 /* ---- 0x1401d -------------------------------------------------------------------------------- */
 
-/* differs: 8 rows, the game copies x1 into ESI at entry and computes x1 - x3 there, ours computes
-   in place; 4 bytes shorter. Tried: one expression in four operand orders, a, b locals, if/return,
-   > between the products, compound assignments on y1 and x1 (this one), a copy t = x1. */
+/* SKIP: 8 rows, one register mirror. Both sides compute (y1-y3)*(x3-x2) in EDX and
+   (x1-x3)*(y3-y2) in EAX and return their difference with setg; the game saves x1 in ESI at entry
+   (`mov esi,eax`) and uses EAX for the x3 - x2 temp, ours keeps x1 in EAX and uses ESI for the
+   temp. 4 bytes shorter. Tried: one expression in four operand orders, a, b locals, if/return,
+   > between the products, compound assignments on y1 and x1 (this one), a copy t = x1, the two
+   halves swapped, longhand instead of compound, `y1 > x1`, temporaries for the two products. */
 int left_of(int x1, int y1, int x2, int y2, int x3, int y3)
 {
     y1 -= y3;
@@ -796,6 +799,47 @@ int left_of(int x1, int y1, int x2, int y2, int x3, int y3)
     x1 -= x3;
     x1 *= y3 - y2;
     return y1 - x1 > 0;
+}
+
+/* ---- 0x1404a -------------------------------------------------------------------------------- */
+
+/* Differs: 25 rows, all register and stack-slot allocation (658 bytes, the game's length): the same
+   10 slots in a 0x28 frame but the game puts x1 at [esp+0x14], y1 at 0x10, x2 at 0x20, y2 at 4,
+   x3 at 0, y3 at 0x18, x4 at 0x1c (ours differ); it forms the y +/- dy2 pair with
+   `lea ebx,[eax+ebp]` and defers y2's store to after x2's; and its epilogue at 0x142d3 is the one
+   racer_bounce's tail jumps into. The corners are the racer's four 50 px box corners: the heading
+   vector and it rotated by (h+0x28)&0x1f (= 90 deg), so dx2 = -dy1 and dy2 = dx1 in value.
+   Tried: four statement orders for the x1/y1/x2/y2 block (x1,y1,x2,y2 best), ((x+dx1)+dx2) written
+   with parentheses to keep the game's common subexpression (58 -> 35), 54 declaration orders of the
+   twelve locals (110 -> 25 rows). */
+int racer_contact(int a, int b)
+{
+    int dx1, dy1, dx2, dy2, x1, y1, y2, x2, x3, y3, y4, x4;
+
+    dx1 = fixmul(0x320000, cos_tbl[stats[bodies[b].stats].heading]);
+    dy1 = fixmul(0x320000, sin_tbl[stats[bodies[b].stats].heading]);
+    dx2 = fixmul(0x320000, cos_tbl[(stats[bodies[b].stats].heading + 0x28) & 0x1f]);
+    dy2 = fixmul(0x320000, sin_tbl[(stats[bodies[b].stats].heading + 0x28) & 0x1f]);
+    x1 = (short) (((bodies[b].x + dx1) + dx2) >> 16);
+    y1 = (short) (((bodies[b].y + dy1) - dy2) >> 16);
+    x2 = (short) (((bodies[b].x + dx1) - dx2) >> 16);
+    y2 = (short) (((bodies[b].y + dy1) + dy2) >> 16);
+    if (abs(bodies[a].z - bodies[b].z) > 0x3c0000)
+        return 0;
+    if (abs((bodies[a].x >> 16) - (bodies[b].x >> 16))
+            + abs((bodies[a].y >> 16) - (bodies[b].y >> 16)) > 300)
+        return 0;
+    if (!left_of((short) (bodies[a].x >> 16), (short) (bodies[a].y >> 16), x1, y1, x2, y1))
+        return 0;
+    x3 = (short) (((bodies[b].x - dx1) - dx2) >> 16);
+    y3 = (short) (((bodies[b].y - dy1) - dy2) >> 16);
+    if (!left_of((short) (bodies[a].x >> 16), (short) (bodies[a].y >> 16), x2, y1, x3, y3))
+        return 0;
+    x4 = (short) (((bodies[b].x - dx1) + dx2) >> 16);
+    y4 = (short) (((bodies[b].y - dy1) + dy2) >> 16);
+    if (!left_of((short) (bodies[a].x >> 16), (short) (bodies[a].y >> 16), x3, y3, x4, y4))
+        return 0;
+    return left_of((short) (bodies[a].x >> 16), (short) (bodies[a].y >> 16), x4, y4, x1, y2);
 }
 
 /* ---- 0x142dc -------------------------------------------------------------------------------- */

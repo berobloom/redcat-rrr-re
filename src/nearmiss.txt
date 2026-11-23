@@ -7,21 +7,22 @@
 # SKIP: <causes, what was tried> = budget spent, take the next; LAYOUT: = not fixable in C.
 # Take the FIRST line with an empty status. Write the status in the same commit as the code.
 0 0x14534 racer_bounce  LAYOUT: only the tail jmp differs (we share an epilogue with the function before on_screen, the game with fn_142d6 at 0x142d6)
-13 0x1043a sound_init
-3 0x1103e start_lights
-6 0x111e8 main
-51 0x11526 draw_view
-2 0x13c34 cos_sin_init
-8 0x1401d left_of
-41 0x167aa follower_tick
 0 0x16b53 mine_tick  waits for dropped2_tick: only its jumps into the shared epilogue at 0x17b59 differ
 0 0x16c5d sign_tick  the same
 0 0x16d30 bomb_tick  the same
 0 0x16e46 fn_16e46  the same (jmp 0x17b5b)
 0 0x17236 cactus_tick  the same
+2 0x13c34 cos_sin_init
+3 0x1103e start_lights
+6 0x111e8 main
+8 0x1401d left_of  SKIP: register mirror only (the game keeps x1 in ESI and uses EAX for x3 - x2, ours the other way round); 14 spellings tried, see the note in src/rrr.c
+8 0x18759 spawn_dropped_object
+13 0x1043a sound_init
+15 0x17c74 dropped4_tick  the same as dropped2_tick
 16 0x178f6 dropped2_tick  damage blocks: the game loads bodies[r].stats into EAX (ours EDX) and merges racer 4's block into racer 2's; tried a local, a pointer, x = x - 10, += -10
 16 0x17b61 dropped0_tick  the same as dropped2_tick
-15 0x17c74 dropped4_tick  the same as dropped2_tick
-8 0x18759 spawn_dropped_object
-35 0x1889d ground_check
 17 0x18b8d cell_effect
+25 0x1404a racer_contact
+35 0x1889d ground_check
+41 0x167aa follower_tick
+51 0x11526 draw_view

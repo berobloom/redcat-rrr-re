@@ -97,10 +97,16 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   in the game; `vol = dist; if (dist < 1) vol = 1;` after the test copies it after the call instead,
   and every spelling that keeps a separate local before the test is worse.
 
-- **Locals' declaration order picks who gets EBP and who gets the spill slot:** `int hb, ha, s;` (not
-  `ha, hb, s;`) makes Watcom keep the first lookup in EBP and spill the second, as in the game, and
-  with it the second index's `shl/add/mov` shape instead of a scaled index (racer_bounce 0x14534,
-  15 rows -> 0).
+- **Watcom re-associates sums; parentheses keep the game's common subexpression:**
+  `(short) (((bodies[b].x + dx1) + dx2) >> 16)` and `(short) (((bodies[b].x + dx1) - dx2) >> 16)` give
+  the game's one `add edx,[esp+dx1]` shared by both corners; without the inner parentheses Watcom
+  adds `dx1 + dx2` first and recomputes per corner (racer_contact 0x1404a, 58 -> 35 rows).
+
+- **The order of the declaration list picks the stack slots and who keeps a register** (EBP here);
+  `int hb, ha, s;` rather than `ha, hb, s;` gives racer_bounce 0x14534 the game's EBP/spill choice and
+  with it the `shl/add/mov` index shape instead of a scaled index (15 rows -> 0). On a function with
+  ten spilled locals the right order is worth searching in bulk: 54 orders through `inplace.py` took
+  racer_contact 0x1404a from 110 to 25 rows (its exact slot map is still missing).
 
 - **A sum kept in a local and two plain stores, not a chained assignment,** when the game stores the
   left target first: `s = (x + y) >> 1; a = s; b = s;` (racer_bounce 0x14534); `b = a = (x + y) >> 1;`
