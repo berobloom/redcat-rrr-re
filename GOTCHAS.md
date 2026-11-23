@@ -173,5 +173,8 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
+- **cos_sin_init 0x13c34's last 2 rows:** only `x`'s stack slot (ours [esp+0x10], the game [esp+8]);
+  156 spellings (every declaration order of i, a, y, x, t; six statement orders with six declaration
+  lists) stop at 2. It is Watcom's FP local layout - open question 24, not the C.
 - **A `?:` 0/1 argument the game computes with branches** (sound_init's `/STEREO`): 9 spellings tried,
   see its `differs:` note.

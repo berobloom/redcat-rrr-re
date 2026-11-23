@@ -88,7 +88,9 @@
     "Executables"). The FP option is settled: the compiler's default (no `-fp`
     option) rebuilds dir_tbl_init 0x13cba (fild, atan2 as a call to IF@DATAN2, __CHP before
     fistp) byte for byte, and cos_sin_init 0x13c34 (inline fsin/fcos) to the same code apart from
-    one stack slot. Open: 10.5 or 10.6: RRR's `sprintf` (0x1b916) differs from 10.5's CLIB3R
+    one stack slot (all 120 declaration orders of i, a, y, x, t and 36 statement/declaration
+    combinations stop at 2 rows - our `x` lands in [esp+0x10], the game's in [esp+8]; that is Watcom's
+    FP local layout, not the C). Open: 10.5 or 10.6: RRR's `sprintf` (0x1b916) differs from 10.5's CLIB3R
     module in one byte (`89 d3` for `88 d3`), so a 10.5 patch or 10.6 is likely (compare their CLIB3R with
     `tools/wc/libmatch.py`); what else REKEN's debug block holds (locals,
     types, line numbers).

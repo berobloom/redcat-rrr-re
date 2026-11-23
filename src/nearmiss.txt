@@ -12,7 +12,7 @@
 0 0x16d30 bomb_tick  the same
 0 0x16e46 fn_16e46  the same (jmp 0x17b5b)
 0 0x17236 cactus_tick  the same
-2 0x13c34 cos_sin_init
+2 0x13c34 cos_sin_init  SKIP: only x's slot (ours [esp+0x10], the game [esp+8]); 120 declaration orders + 36 statement/declaration combinations all stop at 2 rows - Watcom's FP local layout, open question 24
 3 0x1103e start_lights
 6 0x111e8 main
 8 0x1401d left_of  SKIP: register mirror only (the game keeps x1 in ESI and uses EAX for x3 - x2, ours the other way round); 14 spellings tried, see the note in src/rrr.c

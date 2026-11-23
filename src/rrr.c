@@ -662,10 +662,12 @@ void fn_13bb8(int racer)
 
 /* ---- 0x13c34 -------------------------------------------------------------------------------- */
 
-/* differs: 2 rows, x's stack slot (0x10, the game 8; frame and code otherwise identical). Matched on
-   the way: a double t for the angle (the game's frame has its 8 bytes), x and i and y in that order.
-   Tried: 16 of the 120 declaration orders of i, a, y, x, t; x and y as temporaries
-   (cos_tbl[i = a] = ...), (int)a indexes. */
+/* SKIP: 2 rows, and only the slot of x (ours [esp+0x10], the game [esp+8]; everything else, frame
+   included, is identical). Matched on the way: a double t for the angle (the game's frame has its 8
+   bytes), x and i and y in that order. Tried: all 120 declaration orders of i, a, y, x, t (2 rows is
+   the floor, no order puts x at 8), six statement orders for x = / i = / y = with six declaration
+   orders, x and y as temporaries (cos_tbl[i = a] = ...), (int)a indexes. Open question 24 (10.5 vs a
+   patched 10.5/10.6) is the likely cause: this is Watcom's FP local layout, not the C. */
 void cos_sin_init(void)
 {
     int i;
