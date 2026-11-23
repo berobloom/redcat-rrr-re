@@ -23,3 +23,7 @@ Rules for the agent:
   Accept: every function in 0x10010-0x1B915 is in `src/` (its module's file or `src/rrr.c`), in address order, and `src/check.sh`
   shows it as MATCH or it has a `src/nearmiss.txt` line with a SKIP/LAYOUT status and a
   `/* differs: ... */` note; `PROGRESS.md` regenerated.
+  - 2026-08-09: READY FOR REVIEW - `reverse-engineering/tools/entries.py` proved 10 of
+    the old 157 starts in the range are byte-scan artifacts (the code before them runs
+    straight through the address), so `PROGRESS.md` now reads 147 functions, 110
+    byte-identical (74.8%), 21 near misses, 16 to write (the list is in STATUS.md).
