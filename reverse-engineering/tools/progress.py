@@ -27,6 +27,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 TOOLS = os.path.join(ROOT, 'reverse-engineering', 'tools')
 ANALYSIS = os.path.join(ROOT, 'reverse-engineering', 'analysis')
 sys.path.insert(0, os.path.join(TOOLS, 'wc'))
+sys.path.insert(0, TOOLS)
+from lelib import Image      # noqa: E402
+from entries import sweep    # noqa: E402
 PY = os.path.join(ROOT, '.work', 'venv', 'bin', 'python')
 WLIB = os.path.join(ROOT, '.work', 'watcom', 'dos', 'C', 'WATCOM', 'LIB386')
 CLIB = os.path.join(WLIB, 'DOS', 'CLIB3R.LIB')
@@ -182,14 +185,30 @@ def main():
     # the game's C functions src/rrr.c does not have: funcs.py's starts and the names file's
     # functions in the C range that fall inside none of ours
     named = names_file()
-    found = {int(line.split('\t')[0], 16) for line in open(os.path.join(ANALYSIS, 'rrr_funcs.tsv'))
-             if line.startswith('0x')}
-    found |= set(named)
+    calls_in = {}
+    for line in open(os.path.join(ANALYSIS, 'rrr_funcs.tsv')):
+        if line.startswith('0x'):
+            f = line.split('\t')
+            calls_in[int(f[0], 16)] = int(f[1])
+    found = set(calls_in) | set(named)
     spans = sorted((a, a + s) for a, (_, s, _) in funcs.items())
+    # funcs.py also seeds from a byte scan, so some of its starts are not entries at
+    # all: the body before them runs straight through the address. Drop those, see
+    # tools/entries.py. A start is an entry when something calls it, when the names
+    # file has it, or when the code before it ends before it starts.
+    img = Image('rrr')
+    entries = {a for a in found if a in named or calls_in.get(a)} | set(funcs)
     missing = {}
     for a in sorted(found):
-        if C_START <= a < LIB_START and not any(s <= a < e for s, e in spans):
-            missing[a] = named.get(a, 'fn_%x' % a)
+        if not C_START <= a < LIB_START or any(s <= a < e for s, e in spans):
+            continue
+        below = [e for e in entries if e < a]
+        above = [e for e in found | set(funcs) if e > a]
+        if below and above:
+            ins, _blocks = sweep(img, max(below), min(above))
+            if any(x < a < x + ins[x].size for x in ins):
+                continue
+        missing[a] = named.get(a, 'fn_%x' % a)
 
     al = align_all({a: n for a, (n, _, ok) in funcs.items() if not ok})
     rows = {a: v['d'] for a, v in al.items()}
