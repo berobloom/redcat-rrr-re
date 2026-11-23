@@ -400,6 +400,10 @@ extern int            keymap[7];            /* 0x7144c: [0] rocket, [1] boost, [
 extern int            joymap[4];            /* 0x753a0 */
 int __cdecl fn_2779e(int n);
 void start_crash(int racer);
+int player_crash_tick(short n);
+int bull_crash_tick(short n);
+int muis_crash_tick(short n);
+void racer_bounce(int a, int b);
 void set_keys(void);
 extern int            keystate[];           /* 0x804c0: 1 while a key (scancode) is down */
 int __cdecl fn_27837(int n);

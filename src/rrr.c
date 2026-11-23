@@ -813,6 +813,32 @@ int on_screen(int x, int y)
 }
 
 
+/* ---- 0x14534 -------------------------------------------------------------------------------- */
+
+/* differs: 0 rows of instructions; only the tail jmp's target (we share an epilogue with the
+   function before on_screen, the game with fn_142d6) -> LAYOUT, waits for the code between
+   left_of and on_screen. Locals' declaration order picks which heading lands in EBP: `hb, ha` here. */
+void racer_bounce(int a, int b)
+{
+    int hb, ha, s;
+
+    ha = merge_tbl[stats[bodies[a].stats].heading][stats[bodies[b].stats].heading];
+    hb = merge_tbl[stats[bodies[b].stats].heading][stats[bodies[a].stats].heading];
+    if (abs(stats[bodies[a].stats].heading - ha) > 8)
+        bodies[a].speed = 0;
+    else
+        stats[bodies[a].stats].heading = ha;
+    if (abs(stats[bodies[b].stats].heading - hb) > 8)
+        bodies[b].speed = 0;
+    else
+        stats[bodies[b].stats].heading = hb;
+    spawn_puffs(10, a, 100);
+    s = (bodies[a].speed + bodies[b].speed) >> 1;
+    bodies[a].speed = s;
+    bodies[b].speed = s;
+}
+
+
 /* ---- 0x1467c -------------------------------------------------------------------------------- */
 
 int ai_unstick(int racer)
@@ -869,6 +895,33 @@ void clear_objects(void)
         objects[i].frame = 0;
     }
 }
+
+/* ---- 0x14f3e -------------------------------------------------------------------------------- */
+
+void start_crash(int racer)
+{
+    switch (racer) {
+    case 0:
+        stats[bodies[racer].stats].top_speed -= 0x20000;
+        objects[racer].callback = (void (*)(void))player_crash_tick;
+        objects[racer].frame = 0;
+        objects[racer].anim = stats[bodies[racer].stats].heading + 22;
+        break;
+    case 2:
+        stats[bodies[racer].stats].top_speed -= 0x20000;
+        objects[racer].callback = (void (*)(void))bull_crash_tick;
+        objects[racer].frame = 0;
+        objects[racer].anim = (stats[bodies[racer].stats].heading >> 1) + 54;
+        break;
+    case 4:
+        stats[bodies[racer].stats].top_speed -= 0x20000;
+        objects[racer].callback = (void (*)(void))muis_crash_tick;
+        objects[racer].frame = 0;
+        objects[racer].anim = (stats[bodies[racer].stats].heading >> 1) + 70;
+        break;
+    }
+}
+
 
 /* ---- 0x15084 -------------------------------------------------------------------------------- */
 

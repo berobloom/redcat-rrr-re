@@ -92,6 +92,15 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **Check a stack-convention callee's real modify list in its own code:** delay_ms 0x26beb changes
   EAX, EBX, EDX but keeps ECX; with ECX in its pragma's modify list the caller reloads ECX after each
   call and the ECX/EBX loads come out swapped (start_lights 9 -> 3 rows).
+- **Locals' declaration order picks who gets EBP and who gets the spill slot:** `int hb, ha, s;` (not
+  `ha, hb, s;`) makes Watcom keep the first lookup in EBP and spill the second, as in the game, and
+  with it the second index's `shl/add/mov` shape instead of a scaled index (racer_bounce 0x14534,
+  15 rows -> 0).
+
+- **A sum kept in a local and two plain stores, not a chained assignment,** when the game stores the
+  left target first: `s = (x + y) >> 1; a = s; b = s;` (racer_bounce 0x14534); `b = a = (x + y) >> 1;`
+  stores a first but costs rows elsewhere in the same expression.
+
 - **`x[n++] = v` vs `x[n] = v; n++;`:** the second gives the game's `inc dword ptr [n]` in memory
   (finish_check 0x10eff, 19 rows -> MATCH).
 
