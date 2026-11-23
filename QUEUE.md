@@ -27,3 +27,7 @@ Rules for the agent:
     the old 157 starts in the range are byte-scan artifacts (the code before them runs
     straight through the address), so `PROGRESS.md` now reads 147 functions, 110
     byte-identical (74.8%), 22 near misses, 15 to write (the list is in STATUS.md).
+  - 2026-11-23: still READY FOR REVIEW, counts moved: sound_init 0x1043a 13 -> 10 rows, the new
+    fn_13a78 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
+    0x11bb4 and blit_sprite_trans 0x17d94 are assembly, so 110 of 147, 23 near misses, 14 unwritten
+    (13 C). `src/check.sh` still shows 110 MATCH and no WRONG fixups.

@@ -717,6 +717,54 @@ void camera_follow(int racer)
     tile_y = scroll_y / 40;
 }
 
+/* ---- 0x13a78 --------------------------------------------------------------------------------
+ * camera_follow's twin for a caller that already knows the pixel position: same view size, same
+ * 1/16 easing into scroll_x/scroll_y, same clamps and tile_x/tile_y; the lead is 64 px by 80 px
+ * instead of 128 by 160, and the caller (fn_13bb8, which draws the view from scroll_x/scroll_y
+ * straight after) hands it objects[racer].x/y rather than a body.
+ *
+ * differs: 15 rows, all register mirrors - the game keeps the vx sign in EAX and shifts it there
+ * and puts vw << 4 in EBX (we load vw into EAX and move the sign to EBX), the same mirror for the
+ * vy sign (its -1 goes to EBX), and in the map_h clamp it extends vh, still in DX, into EAX and
+ * loads map_h into EDX, we the other way round; we end up 1 byte longer. Refs agree (nmrefs), so
+ * the C is right and the allocation is Watcom's. Tried: 14 declaration orders of vw/vh/tx/ty/t,
+ * the lead as (sign << 6), sign * 64, (sign * 5) << 4, (x - A) + B and (x + B) - A, the two
+ * leads as separate statements, a hoisted w = vw << 4, sx/sy locals, the clamps as * 32, * 5 * 8,
+ * * 8 * 5, * 40u and with unsigned casts, a separate (map_w - vw) local, vw as int (both spill
+ * differently) and this function compiled in an object of its own with camera_follow and
+ * fn_13bb8 (camera_follow stays at its 62 rows there, the same mirror).
+ * -------------------------------------------------------------------------------------------- */
+
+void fn_13a78(int x, int y, int vx, int vy)
+{
+    short vw, vh;
+    short tx, ty;
+    unsigned t;
+
+    vw = view_tiles_w + 1;
+    vh = view_tiles_h + 1;
+    tx = x - (vw << 4) + ((vx < 0 ? -1 : vx > 0) << 6);
+    ty = y - vh * 20 + (vy < 0 ? -1 : vy > 0) * 80;
+    scroll_step_x = (tx - scroll_x) >> 4;
+    if (tx != scroll_x)
+        scroll_x += scroll_step_x;
+    scroll_step_y = (ty - scroll_y) >> 4;
+    if (ty != scroll_y)
+        scroll_y += scroll_step_y;
+    if (scroll_x < 0)
+        scroll_x = 0;
+    t = (map_w - vw) << 5;
+    if (scroll_x > t)
+        scroll_x = t;
+    if (scroll_y < 0)
+        scroll_y = 0;
+    t = (map_h - vh) * 40;
+    if (scroll_y > t)
+        scroll_y = t;
+    tile_x = scroll_x / 32;
+    tile_y = scroll_y / 40;
+}
+
 /* ---- 0x13bb8 -------------------------------------------------------------------------------- */
 
 void fn_13bb8(int racer)

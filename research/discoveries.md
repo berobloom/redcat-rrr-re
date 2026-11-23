@@ -67,6 +67,14 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `rcobj.c`, `rcimgret.c`, `fileio.c`, `smacker.c`, `sndbuf.c`, `audio.c`,
   `mouse.c`, `irq7.c`. REKEN.EXE keeps full paths:
   `C:\PROTMOD\WINLIB\mgl2\fg2\rctools.c`, `C:\PROTMOD\SOUNDLIB\wc32\mod\audio.c`.
+- CONFIRMED (capstone scan of 0x10010-0x1B915 for `enter`): the only two
+  stack-frame (`enter`) functions in the game's own C are `blit_sprite`
+  0x11bb4 and `blit_sprite_trans` 0x17d94. Both re-read their arguments from
+  EBP every row, keep their loop counters in registers, and are padded with
+  four-NOP alignment runs - none of which `-3r -s -ox` produces (every other
+  function in the range addresses its arguments through ESP). STRONGLY
+  SUPPORTED: those two blits are hand-written assembly modules, not C, so
+  they are not matches to chase.
 - CONFIRMED: Smacker video is decoded by the game's own `smacker.c`
   (INTRO.EXE); there is no Smacker DLL. INTRO.EXE accepts `/NOSMACK`.
 - CONFIRMED: command-line switches in the 32-bit programs: `/DAVILEX`,

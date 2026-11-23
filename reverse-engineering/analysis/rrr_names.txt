@@ -52,8 +52,8 @@
 0x1aedf ai_script_find       # CONFIRMED: finds waypoint in 0x57c90 / 0x5bd40 scripts
 0x13e3d aim_at_player        # LIKELY: heading from atan via 0x73ee0 toward racer 0
 0x18759 spawn_dropped_object # CONFIRMED: anim 16, 25 px ahead, speed 25, life 150
-0x11bb4 blit_sprite          # CONFIRMED: opaque copy, skips 0xFF
-0x17d94 blit_sprite_trans    # CONFIRMED: dst = trans[dst*256 + src], skips 0xFF
+0x11bb4 blit_sprite          # CONFIRMED: opaque copy, skips 0xFF. STRONGLY SUPPORTED assembly, not this compiler's output: one of only two `enter` frames in 0x10010-0x1B915 (with blit_sprite_trans 0x17d94); EBP-relative arguments re-read per row, no -ox register promotion
+0x17d94 blit_sprite_trans    # CONFIRMED: dst = trans[dst*256 + src], skips 0xFF; assembly, see blit_sprite 0x11bb4
 0x11e2a trans_load           # CONFIRMED: reads 255x255 TRANS.DAT (shade.c)
 0x11ca2 trans_generate       # CONFIRMED: nearest colour to the average of two
 0x11db8 trans_save           # CONFIRMED: writes the generated table
@@ -416,6 +416,7 @@
 0x11ae3 order_has            # CONFIRMED (code): 1 when the sprite is in the list
 0x11c11 nearest_colour       # CONFIRMED (code): (r, g, b) -> palette index with the smallest squared distance (shade.c)
 0x7fd38 palette              # CONFIRMED (code): 256 x RGB bytes, read by nearest_colour and trans_generate
+0x13a78 fn_13a78             # CONFIRMED (code): camera_follow's twin for a pixel position - eases scroll_x/scroll_y 1/16 toward (x, y) - view + a lead of 64/80 px following the sign of vx/vy, clamps to the map, recomputes tile_x/tile_y; called only by fn_13bb8
 0x13c34 cos_sin_init         # CONFIRMED (code): cos_tbl/sin_tbl[h] = cos/sin(-(h+8)*pi/16) * 65536
 0x13cba dir_tbl_init         # CONFIRMED (code): dir_tbl[r][c] = (56 - round(atan2(c-16, r-16)*16/pi + 16)) & 31, printed with %2d
 0x13f00 turn_tbl_init        # CONFIRMED (code): turn_tbl[target][current]: one step toward target the short way
