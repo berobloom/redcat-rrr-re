@@ -31,4 +31,4 @@
 51 0x11526 draw_view
 62 0x138ed camera_follow
 71 0x1430e hit_test  allocation only in a 19-local function; shape and size right (552 vs 550 bytes) - see the note in src/rrr.c
-190 0x1517a find_waypoints  written 2026-11-25; shape and every string/line number right, the diff is Watcom's register choice (ECX/EDI/ESI/EBP, no stack slot) vs ours (one spill to [esp]) mirrored through the whole function
+190 0x1517a find_waypoints  written 2026-11-25; shape and every string/line number right, the diff is Watcom's register choice (ECX/EDI/ESI/EBP, no stack slot) vs ours (one spill to [esp]) mirrored through the whole function; in a probe object of its own the same code scores 164, with x/y locals 159 and with `short w` 170 (.work/probe/FWVAR.C) - none of that helps in src/rrr.c, where all three spellings sit at 190
