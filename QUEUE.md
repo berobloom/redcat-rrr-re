@@ -35,3 +35,9 @@ Rules for the agent:
     `grep podium` shows `podium_ 355 bytes MATCH at 0x015a9f` with no WRONG fixup (the world_names
     0x57c18 and rcascii_printf 0x200b0 targets agree); deleting either switch level or one vararg of
     the "%-15s : %3d" line makes the check fail. 111 of 147, 23 near misses, 12 unwritten.
+  - 2026-11-23: race_end 0x1585e byte-identical: `src/check.sh | grep -c ' MATCH at'` = 112, `grep
+    race_end` shows `438 bytes MATCH at 0x01585e`, no WRONG fixup; rc_error's line numbers are
+    603/608/613 and writing 609 makes the check fail (1 row). Also: `fn_1963e` 0x1963e is not a
+    function but a basic block of player_crash_tick 0x19497 (its only "call site" 0x18f3e is the
+    immediate of `mov eax, 0x6fbe8`), so those two PROGRESS.md rows (423 + 1614 B) are one 2037 B
+    function: 10 C functions really remain.

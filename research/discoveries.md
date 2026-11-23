@@ -1046,6 +1046,9 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   points to +0x214 + 4 (object / 2) for places 1–3; then saves. Then if
   `0x1ae67` (in effect stage = 4) `0x15a14(2 × points leader)`, else
   `0x15a9f`, and exit 43 (REKEN).
+- CONFIRMED (`0x1585e` matched byte for byte, 2026-11-23): a finishing order outside 0..4 is
+  reported as `init.c` line 603, 608 or 609 ("%s(%d) : finishline not okay"), so `0x1585e` is
+  init.c; the three points stores are `rrrio.points[finish_order[i] >> 1] += 3/2/1`.
 - So a world is: its stage-0 race, then per enabled module REKEN and the
   race of that stage; after the last REKEN finds no module and goes to
   the menu, which moves on to the next world, whose stage-0 race the

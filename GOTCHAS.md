@@ -55,6 +55,9 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   (`cstrt386` "at 0x10000", `mblen` at 0x1ae36 inside the game's C); trust long modules only.
 - **The function list is a recursive-descent scan (~60% of the code).** Functions reached only
   through pointers are missing until named: 0x10010 and 0x10029 are not in `rrr_funcs.tsv`.
+- **An `e8` byte inside an immediate is not a call.** `fn_1963e` 0x1963e's only "caller" (0x18f3e)
+  is `mov eax, 0x6fbe8`; it is a basic block of `player_crash_tick` 0x19497, and `entries.py` still
+  calls it `loose ... own boundary`. Check the bytes around a "call" before splitting a function.
 
 ### Levers that produced MATCHes on RRR (try these before SKIP)
 
