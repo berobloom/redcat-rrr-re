@@ -501,6 +501,22 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   byte for byte from `src/rrr.c` with exactly those options, and cos_sin_init 0x13c34 (inline
   fsin/fcos) differs only in one stack slot.
 
+## The game's own C is many objects
+
+- CONFIRMED: WCC386 10.5 shares an epilogue (a `jmp` to another function's `pop`/`ret`) only inside
+  one object, and it does that in our build across whole files: with all of `src/rrr.c` in one
+  object, racer_contact 0x1404a and racer_bounce 0x14534 both jmp into main's epilogue. The game
+  never does: in 0x10010-0x1B915 it shares an epilogue exactly 6 times, each time between near
+  neighbours - order_add -> 0x11add, trans_generate -> 0x11e23, camera_follow -> 0x13f8b,
+  racer_bounce -> 0x142d6 (racer_contact's), find_waypoints + find_bonus_objects -> 0x15565,
+  dropped0/2/4_tick + fn_16e46 -> 0x17b5b (scan: capstone over the code object for `jmp rel32`
+  whose target starts with `pop`s and ends in `ret`).
+- Therefore (STRONGLY SUPPORTED): the game's C range is many small objects, and every share names
+  two functions of one object: racer_contact, on_screen, hit_test and racer_bounce (0x1404a-0x1467b)
+  are one module - racer_bounce jmps into racer_contact's epilogue and nothing can sit between them
+  in another object. main (0x111e8) is not in it. Splitting those four into `src/racer.c` made
+  racer_contact and racer_bounce byte-identical (113 -> 115); their C did not change.
+
 ## Toolchain: switch bodies and `lea` operands
 
 - CONFIRMED: two switch cases whose source text is identical get one copy of the bodies and a

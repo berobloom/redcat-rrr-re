@@ -15,22 +15,30 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
-1. QUEUE.md's first open item. Q1's newest step is cell_effect 0x18b8d: `src/check.sh | grep -c
-   ' MATCH at'` = 113 and `grep cell_effect` shows `1536 bytes MATCH at 0x018b8d`; writing case 16 as
-   `damage >= 1 && fuel >= 1` again (87 rows) or the case-22 store as `(y * map_w + x)` (1 row) makes
-   it fail.
+1. QUEUE.md's first open item. Q1's newest step is racer_contact 0x1404a + racer_bounce 0x14534:
+   `src/check.sh | grep -c ' MATCH at'` = 115 and they show `MATCH at 0x01404a` and `MATCH at
+   0x014534`. Three mutations make it fail: moving those four functions (0x1404a-0x1467b) back into
+   `src/rrr.c`, where Watcom merges racer_contact's epilogue into main's (racer_contact 5 rows, and
+   racer_bounce's tail jmp is wrong again); going back to the old local order and statement order
+   (declare `x1, y1, y2, x2`, write x1, y1, x2, y2: 22 rows, the slots move); and the first corner
+   test's old argument
+   list `x1, y1, x2, y1` (59 rows).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
    first (functions whose callees are matched or are library calls).
 3. Near misses: `src/nearmiss.txt`, first line with an empty status (sound_init 0x1043a went to
    SKIP at 10 rows and fn_13a78 0x13a78 arrived at 15, both register allocation - open questions
-   25 and 26). cell_effect 0x18b8d matched on 2026-11-23, so the first near miss with an empty status
-   is `25 0x1404a racer_contact`, then `41 0x1889d ground_check` (35 -> 41 when cell_effect's tail
-   moved) and `41 0x167aa follower_tick`. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the
+   25 and 26). cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
+   racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
+   epilogue sharing is per object, and the game shares one only 6 times in the C range - open
+   question 27 lists the six, which name the function groups that must share a module). The first
+   near miss with an empty status is now `41 0x167aa follower_tick`, then `41 0x1889d ground_check`
+   (35 -> 41 when cell_effect's tail
+   moved), `51 0x11526 draw_view` and `62 0x138ed camera_follow`. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the
    mechanism is pinned
    (a second same-shape `stats[...].damage -=` statement flips the first one's load register; see
    the note in src/shadeobj.c and the probes in .work/probe/S.C) but no block-2 spelling keeps
    block 1 natural *and* the game's RMW tail; it gates mine/sign/bomb/cactus/fn_16e46 (0 rows)
-   and dropped0/dropped4_tick. PROGRESS.md reads 147 functions, 113 identical (76.9%), 25 near misses,
+   and dropped0/dropped4_tick. PROGRESS.md reads 147 functions, 115 identical (78.2%), 23 near misses,
    and 9 not
    written: blit_sprite 0x11bb4 and blit_sprite_trans 0x17d94 are assembly (the only two `enter`
    frames in the C range) so they are not C matches to chase, and 7 C functions remain, smallest
@@ -39,7 +47,12 @@ Short: where the project stands, and what is next. History is in git; no diary.
    player_crash_tick 0x19497 (2037 B - `fn_1963e` 0x1963e is a basic block of it, its only "call"
    at 0x18f3e is `mov eax, 0x6fbe8`, so the 423 + 1614 B in PROGRESS.md are one function),
    bull_tick 0x12826 (2258 B), player_tick 0x11eb5 (2417 B). The next MATCH may still come from a
-   near miss: `find_bonus_objects` 0x15597 is 0 instruction rows and waits on one jmp fixup, and
-   `racer_bounce` 0x14534 the same (layout, see `src/nearmiss.txt`).
-4. Later: module boundaries in 0x10010-0x1B915 (one source file per original module); Davilex's
+   near miss: `find_bonus_objects` 0x15597 is 0 instruction rows and waits on one jmp fixup (its
+   epilogue is find_waypoints', which sits at 190 rows), and the five 0-row dropped/mine/sign/bomb
+   lines wait on dropped2_tick. Another is likely from the module boundaries of item 4: a function
+   whose epilogue the game keeps for itself must not share a file with the one ours merged into
+   (`src/nearmiss.txt`, MATCHING.md).
+4. Later: the rest of the module boundaries in 0x10010-0x1B915 (one source file per original
+   module; `src/racer.c` 0x1404a-0x1467b is the first found from epilogue sharing - open question
+   27 lists the six shares the game has, each pair surely in one module); Davilex's
    libraries (REKEN's debug info names their modules); REKEN, RRRMENU, INTRO.

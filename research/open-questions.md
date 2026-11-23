@@ -125,3 +125,16 @@
     too, so WCC386 10.5 -ox rematerialises these immediates unless something
     else in the function makes them live. A new idea is worth more than more
     spellings - the prize is one MATCH.
+27. **Open: where the original modules start and end inside
+    0x10010-0x1B915.** New lever (2026-11-23): Watcom shares an epilogue
+    between two functions only inside one object, and the game shares one
+    only 6 times in the whole C range (discoveries.md "The game's own C is
+    many objects"). So a function whose epilogue the game gives it own must
+    live in a different file than the one ours merged into: that moved
+    racer_contact and racer_bounce to MATCH (src/racer.c, 113 -> 115). The
+    six shares also say which functions are certainly together: order_add
+    -> 0x11add, trans_generate -> 0x11e23, camera_follow -> 0x13f8b,
+    racer_bounce -> racer_contact 0x142d6, find_waypoints + find_bonus_objects
+    -> 0x15565, dropped0/2/4_tick + mine/sign/bomb/fn_16e46 -> 0x17b5b.
+    Where each module starts is still unknown; string-block boundaries and
+    the error strings' file names are the other two tests MATCHING.md 4 gives.

@@ -184,7 +184,11 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,
   804 in place; shared tails between the copies). For anything over ~100 bytes score with
   `reverse-engineering/tools/wc/inplace.py NAME 0xADDR variant.c ...`, which swaps the definition in
-  a copy of src/rrr.c. `probe.sh` is fine for small leaf functions.
+  a copy of the src/*.c that defines NAME. `probe.sh` is fine for small leaf functions.
+- **A probe object holding several functions misreads under `variants.py`:** it compares each name
+  against the same [ADDR,END) window, so a five-function probe of 0x1401d-0x1467c reported
+  racer_contact at 294 rows where `reverse-engineering/tools/wc/fndiff.py rrr PROBE.OBJ
+  racer_contact 0x1404a` says 0. Score such an object per name with fndiff.py at the game's address.
 
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 

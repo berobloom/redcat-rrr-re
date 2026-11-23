@@ -63,3 +63,18 @@ Rules for the agent:
     113 of 147, 25 near misses, 9 unwritten (7 C); `find_bonus_objects` 0x15597 and `racer_bounce`
     0x14534 now sit at 0 instruction rows but one jmp fixup each, and `ground_check` 0x1889d moved
     35 -> 41 rows when cell_effect's tail grew.
+  - 2026-11-23: racer_contact 0x1404a and racer_bounce 0x14534 byte-identical: `src/check.sh | grep -c
+    ' MATCH at'` = 115. Three causes fixed: the first corner test passes x1, y2, x2, y1 (the old
+    `x1, y1, x2, y1` tested a corner that is not there - left_of's matched body says which register
+    holds which parameter), the corners are declared AND written x1, y2, x2, y1 (in `src/racer.c` the
+    other 23 declaration orders score 6-12 rows; in rrr.c before the split that order scored 5 and the
+    other 23 of its sweep 11+, and the 24 statement orders scored 14-52), and the four functions
+    0x1404a-0x1467b moved
+    to a new `src/racer.c` - racer_bounce jmps into racer_contact's epilogue, and WCC386 shares an
+    epilogue only inside one object, so those four are one module and `racer_contact`'s tail cannot
+    live in rrr.c, where it merged into main's. Putting them back into rrr.c breaks both again
+    (racer_contact 5 rows, racer_bounce 0 instruction rows but the wrong jmp target), and the old
+    ordering scores 22 rows and the old argument list 59 here. New lever in MATCHING.md and new open question 27: the game shares an
+    epilogue exactly 6 times in 0x10010-0x1B915 (list there), and each pair must share a module - the
+    first hard tool for the module boundaries of STATUS item 4. 115 of 147, 23 near misses, 9
+    unwritten (7 C).

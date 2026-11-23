@@ -7,13 +7,14 @@
 # SKIP: <causes, what was tried> = budget spent, take the next; LAYOUT: = not fixable in C.
 # Take the FIRST line with an empty status. Write the status in the same commit as the code.
 
-0 0x14534 racer_bounce  LAYOUT: only the tail jmp differs (we share an epilogue with the function before on_screen, the game with fn_142d6 at 0x142d6)
+0 0x14534 racer_bounce  MATCH 2026-11-23: it jumped into racer_contact's epilogue in the game all along - the four 0x1404a-0x1467b are one object (src/racer.c)
 0 0x16b53 mine_tick  waits for dropped2_tick: only its jumps into the shared epilogue at 0x17b59 differ
 0 0x16c5d sign_tick  the same
 0 0x16d30 bomb_tick  the same
 0 0x16e46 fn_16e46  the same (jmp 0x17b5b)
 0 0x17236 cactus_tick  the same
 0 0x18b8d cell_effect  MATCH 2026-11-23: case 16 verbatim-duplicates case 15 (the game re-tests and jmps into 15's blocks), case-22 store reads `x + y * map_w` - see the note in src/map.c
+0 0x1404a racer_contact  MATCH 2026-11-23: corners declared and written x1, y2, x2, y1 (the game's ten slots), first corner test passes x1, y2, x2, y1, and the four 0x1404a-0x1467b go in src/racer.c so the epilogue stops merging into main's
 0 0x15597 find_bonus_objects  0 instruction rows since find_waypoints was written, but one jmp fixup still points elsewhere: the game's epilogue is find_waypoints' pop/ret at 0x15565, ours merged with an earlier function (0x145d2). Its `default: break;` is what puts the merged check_object_nr/store/increment block after the case-13 body (32 rows -> 1)
 2 0x13c34 cos_sin_init  SKIP: only x's slot (ours [esp+0x10], the game [esp+8]); 120 declaration orders + 36 statement/declaration combinations all stop at 2 rows - Watcom's FP local layout, open question 24
 3 0x1103e start_lights  SKIP: one lamp's product register only (the game imuls i*12 into EDX and loads frames into EAX, ours the mirror; the other four lamps come from identical text); ~10 spellings across two sessions, see the note in src/rrr.c
@@ -30,6 +31,6 @@
 41 0x167aa follower_tick
 51 0x11526 draw_view
 62 0x138ed camera_follow
-71 0x1430e hit_test  allocation only in a 19-local function; shape and size right (552 vs 550 bytes) - see the note in src/rrr.c
+71 0x1430e hit_test  allocation only in a 19-local function; shape and size right (552 vs 550 bytes) - see the note in src/racer.c
 145 0x1af83 ai_waypoint_action  written 2026-11-25 in src/ai.c; Watcom merges/hoists what the game keeps apart (stats reloads per check, duplicated check pairs) - see its differs note
 190 0x1517a find_waypoints  written 2026-11-25; shape and every string/line number right, the diff is Watcom's register choice (ECX/EDI/ESI/EBP, no stack slot) vs ours (one spill to [esp]) mirrored through the whole function; in a probe object of its own the same code scores 164, with x/y locals 159 and with `short w` 170 (.work/probe/FWVAR.C) - none of that helps in src/rrr.c, where all three spellings sit at 190

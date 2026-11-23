@@ -142,6 +142,14 @@ Levers seen so far (add to this list when one produces a MATCH):
   blocks, which is exactly what the game does at 0x19123 (`cell_effect` 17 rows -> MATCH). Any other
   spelling of the same behaviour (`damage >= 1 && fuel >= 1`, `> 0 &&`, `!(<= 0 ||)`, nested ifs,
   early break/return) folds or duplicates the blocks instead - `>= 1 &&` costs 87 rows.
+- **Watcom shares an epilogue only inside one object.** When the game gives a function its own
+  `pop`/`ret` and ours jmps into an earlier function's, the two are in different objects: move the
+  function and everything the jmp crosses into a new `src/` file and re-check. `racer_contact` (5 rows
+  left) and `racer_bounce` (0 rows, tail jmp only) both went to MATCH with no C change at all that way
+  (`src/racer.c`, 0x1404a-0x1467b: racer_bounce jmps into racer_contact's epilogue, so those four are
+  one module). The game shares an epilogue only 6 times in 0x10010-0x1B915, our one-object `rrr.c`
+  dozens of times - which is how the mismatch is spotted (discoveries.md "The game's own C is many
+  objects").
 - **Operand order picks the SIB pair in `lea`.** `map[(x + y * map_w) * 6 + 4]` gives
   `lea eax, [edi + ebx]` (x as base) and `(y * map_w + x)` gives `[ebx + edi]`; same semantics,
   one row (last row of `cell_effect`). Where Watcom uses a plain `add` the order is invisible.
