@@ -92,6 +92,11 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **Check a stack-convention callee's real modify list in its own code:** delay_ms 0x26beb changes
   EAX, EBX, EDX but keeps ECX; with ECX in its pragma's modify list the caller reloads ECX after each
   call and the ECX/EBX loads come out swapped (start_lights 9 -> 3 rows).
+- **Clamp the parameter, not a copy of it:** `if (dist < 1) dist = 1;` (play_fx 0x103d1, 2 rows ->
+  MATCH). Watcom then moves the parameter into EBX *before* the call because it must survive it, as
+  in the game; `vol = dist; if (dist < 1) vol = 1;` after the test copies it after the call instead,
+  and every spelling that keeps a separate local before the test is worse.
+
 - **Locals' declaration order picks who gets EBP and who gets the spill slot:** `int hb, ha, s;` (not
   `ha, hb, s;`) makes Watcom keep the first lookup in EBP and spill the second, as in the game, and
   with it the second index's `shl/add/mov` shape instead of a scaled index (racer_bounce 0x14534,

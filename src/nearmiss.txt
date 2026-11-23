@@ -7,7 +7,6 @@
 # SKIP: <causes, what was tried> = budget spent, take the next; LAYOUT: = not fixable in C.
 # Take the FIRST line with an empty status. Write the status in the same commit as the code.
 0 0x14534 racer_bounce  LAYOUT: only the tail jmp differs (we share an epilogue with the function before on_screen, the game with fn_142d6 at 0x142d6)
-2 0x103d1 play_fx
 13 0x1043a sound_init
 3 0x1103e start_lights
 6 0x111e8 main

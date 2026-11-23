@@ -166,18 +166,15 @@ int snd_play(int track, int sample, int vol)
 
 /* ---- 0x103d1 -------------------------------------------------------------------------------- */
 
-/* differs: 2 rows, the game copies dist into EBX before the sound_on call, ours after it (tried:
-   initialiser, statement before the test, body under if (sound_on()), unprototyped sound_on, a
-   second copy local, ?: in the divisor) */
 int play_fx(int sample, int dist)
 {
     int vol, t;
+
     if (!sound_on())
         return 0;
-    vol = dist;
     if (dist < 1)
-        vol = 1;
-    vol = 1500 / vol * 64;
+        dist = 1;
+    vol = 1500 / dist * 64;
     if (vol > 64)
         vol = 64;
     else if (vol < 0)
