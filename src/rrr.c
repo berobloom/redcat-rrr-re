@@ -1197,6 +1197,61 @@ void winner_film(int racer)
 }
 
 
+/* ---- 0x15a9f podium -------------------------------------------------------------------------
+ * The picture of the first two places (r RedCat, b Brutus, s Snitch) with
+ * flags 0xf (picture, palette, shown), then the points of the three racers
+ * in Ascii20, fg 0xd0 on background 0xff, kept 4 s (discoveries.md "podium").
+ * An order the two switches have no case for leaves the race's screen.
+ * -------------------------------------------------------------------------------------------- */
+
+void podium(int quit)
+{
+    if (!quit) {
+        switch (finish_order[0]) {
+        case 0:
+            switch (finish_order[1]) {
+            case 2:
+                fn_2369f("rbs.pcx", 15);
+                break;
+            case 4:
+                fn_2369f("rsb.pcx", 15);
+                break;
+            }
+            break;
+        case 2:
+            switch (finish_order[1]) {
+            case 0:
+                fn_2369f("brs.pcx", 15);
+                break;
+            case 4:
+                fn_2369f("bsr.pcx", 15);
+                break;
+            }
+            break;
+        case 4:
+            switch (finish_order[1]) {
+            case 0:
+                fn_2369f("srb.pcx", 15);
+                break;
+            case 2:
+                fn_2369f("sbr.pcx", 15);
+                break;
+            }
+            break;
+        }
+        fn_246b5(font20_name);
+        fn_24942(0xff);
+        fn_24879(0xd0);
+        debug_printf(" Naam:%s\n", rrrio.names[0]);
+        rcascii_printf(150, 20, "Punten Totaal voor %s", world_names[rrrio.world]);
+        rcascii_printf(200, 50, "%-15s    :    %3d", rrrio.names[0], rrrio.points[0]);
+        rcascii_printf(200, 70, "Brutus de Bulldog  :    %3d", rrrio.points[1]);
+        rcascii_printf(200, 90, "Max de Muis        :    %3d", rrrio.points[2]);
+        delay_ms(4000);
+    }
+}
+
+
 /* ---- 0x1ab7f -------------------------------------------------------------------------------- */
 
 void rrrio_save(void)

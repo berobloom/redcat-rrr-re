@@ -114,6 +114,7 @@ int trans_save(char *name);
 short fn_24a9a(char *name);
 void fn_246b5(char *name);
 #pragma aux fn_246b5 parm routine [] modify [eax ecx edx];
+void rcascii_printf(int x, int y, char *fmt, ...);   /* 0x200b0: rctools.c, sprintf + rcascii */
 void fn_24879(int a);
 #pragma aux fn_24879 parm routine [] modify [eax ecx edx];
 void fn_24942(int a);
@@ -195,6 +196,7 @@ extern short          screen_w;             /* 0x7f95e */
 extern short          screen_h;             /* 0x7f962 */
 extern char           font12_name[];        /* 0x55400: "ascii12.img" */
 extern char           font20_name[];        /* 0x5591d: "ascii20.img" */
+extern char          *world_names[];        /* 0x57c18: the six world names, padded to 16 */
 extern char          *track_maps[];         /* 0x57a60: "track1a.map" .. */
 extern char          *track_imgs[];         /* 0x57abc: "track1.img" .. */
 extern int            view_size;

@@ -525,3 +525,5 @@
 0x55fd8 key_right            # STRONGLY SUPPORTED (code): player_tick stores key_pressed(keymap[6]) here (0x11fcd)
 0x55fdc key_left             # STRONGLY SUPPORTED (code): player_tick stores key_pressed(keymap[3]) here (0x11fdd)
 0x1430e hit_test             # CONFIRMED: hit_test(a, b, size), discoveries.md (9 call sites)
+0x200b0 rcascii_printf       # LIKELY: rctools.c (its errors 'ascii x/y size <?= 0 ???', 'trying to print beyond screen limits %d'); sprintf into a 0x90-byte buffer then rcascii 0x24dbe; args (x, y, fmt, ...) from the pushes and the callee's [esp+0xa0]/[esp+0xa4] screen-limit checks
+0x57c18 world_names          # CONFIRMED (data): char*[6] "De Welkomstrace ".."De Laatste Kans", 16 chars padded; podium's "Punten Totaal voor %s"
