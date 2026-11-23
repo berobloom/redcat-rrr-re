@@ -26,4 +26,4 @@ Rules for the agent:
   - 2026-08-09: READY FOR REVIEW - `reverse-engineering/tools/entries.py` proved 10 of
     the old 157 starts in the range are byte-scan artifacts (the code before them runs
     straight through the address), so `PROGRESS.md` now reads 147 functions, 110
-    byte-identical (74.8%), 21 near misses, 16 to write (the list is in STATUS.md).
+    byte-identical (74.8%), 22 near misses, 15 to write (the list is in STATUS.md).
