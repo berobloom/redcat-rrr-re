@@ -210,6 +210,8 @@ extern int            sound_enabled;        /* 0x6fc54 */
 extern int            music_on;             /* 0x6fc58 */
 extern int            map_no;               /* 0x6fc5c */
 extern int            tile_y, tile_x, scroll_y, scroll_x;
+extern int            scroll_step_x;        /* 0x56060: this frame's scroll_x delta */
+extern int            scroll_step_y;        /* 0x56064: this frame's scroll_y delta */
 struct frame {                              /* 12 bytes: an anim frame image */
     void   *img;
     short   w;                                  /* +4 */

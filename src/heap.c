@@ -295,9 +295,12 @@ int fire_rocket(int racer)
 
 /* ---- 0x18759 -------------------------------------------------------------------------------- */
 
-/* differs: 8 rows, the game keeps n * 16 in EAX and the objects pointer in ECX/EDX for the
-   first stores, ours copies n to ECX; tried if/else-if, a switch (this one), a struct object
-   pointer, a short kind. */
+/* differs: 8 rows, only the base/index choice: the game keeps n * 16 in EAX (the alloc_object
+   result, shifted in place) and loads the objects pointer into ECX/EDX per store, ours copies n
+   to ECX and shifts that, so every store encodes base/index the other way round. This switch is
+   the best shape found: if/else-if, else-if with !kind, and (*(objects + n)) all give 11 rows and
+   299 bytes (the game is 301); a struct object pointer local, a short kind and a second n copy
+   are worse. */
 int spawn_dropped_object(int racer, int kind)
 {
     int n;

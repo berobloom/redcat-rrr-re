@@ -386,6 +386,8 @@
 0x7f97c tile_x               # STRONGLY SUPPORTED: view left column in tiles (scroll_x = tile_x * 32 in draw_view)
 0x7f980 scroll_y             # LIKELY: draw_view gets scroll_y % 40 (tile height); one of camera_follow's two scroll coordinates (0x138ed eases [0x7f984],[0x7f980])
 0x7f984 scroll_x             # LIKELY: draw_view gets scroll_x % 32 (tile width)
+0x56060 scroll_step_x        # LIKELY: this frame's scroll_x delta ((target - scroll_x) >> 4); written only by camera_follow 0x138ed and fn_13a78 0x13a78, never read here
+0x56064 scroll_step_y        # LIKELY: the same for scroll_y
 0x1b929 sprintf              # STRONGLY SUPPORTED: the matched fn_10010 and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
 0x1475f camera_start         # STRONGLY SUPPORTED: puts the camera on the player after init_objects, scroll clamped to the map (discoveries.md)
 0x2425d draw_frame           # LIKELY: (dst, img, x, y, w, h), w and h on the stack; start_lights' lamps; -> 0x32c78 (discoveries.md HUD)

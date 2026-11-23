@@ -520,6 +520,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (map size − view − 1 tile). `init_game` sets the view to 19 × 10 tiles
   ([0x60044], [0x60048]); `camera_follow` (0x138ed) eases 1/16 per frame
   toward x − 320 + 128·sx, y − z − 220 + 160·sy.
+- CONFIRMED (code, `camera_follow` 0x138ed, `fn_13a78` 0x13a78): the lead
+  signs sx/sy are the signs of the racer's own 16.16 velocities vx/vy, the view
+  size used is (view + 1) tiles, and each frame's scroll delta
+  ((target - scroll) >> 4) is stored to 0x56060/0x56064
+  (`scroll_step_x`/`scroll_step_y`), which nothing in RRR.EXE reads.
 
 ## The race: speed
 

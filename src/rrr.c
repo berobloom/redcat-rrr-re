@@ -650,6 +650,64 @@ int main(int argc, char **argv)
     return 43;
 }
 
+/* ---- 0x138ed camera_follow -----------------------------------------------------------------
+ * The view eases 1/16 of the way per frame toward the racer minus the view
+ * size plus a lead of 128 px horizontally and 160 px vertically, the lead
+ * following the sign of the racer's own velocity; scroll_x/scroll_y are then
+ * clamped to 0 .. map size - view size and tile_x/tile_y recomputed.
+ * scroll_step_x/scroll_step_y (0x56060, 0x56064) are written here and by
+ * fn_13a78 and read nowhere in RRR.EXE.
+ *
+ * near miss: 62 rows. The shape is the game's (two velocity signs as
+ * v < 0 ? -1 : v > 0, both scroll steps, both clamps, tile_x via the shift
+ * trick, tile_y via idiv); what differs is allocation. The game loads
+ * view_tiles_w/view_tiles_h as *words* into CX/BX at the top and keeps them,
+ * vw/vh<<4 and vh*20, in those registers to the clamps at the end; ours
+ * reloads them as ints. Declaring them short in rrr.h costs two byte-identical
+ * functions elsewhere (new2io.c), so the word load is not reachable that way.
+ * Tried: x/y/vx/vy/vw/vh/tx/ty statement and declaration orders (62 is the
+ * floor found), short vw/vh locals (84), (a > 0) - (a < 0) for the signs,
+ * `t < scroll` instead of `scroll > t` for the clamps.
+ * -------------------------------------------------------------------------------------------- */
+
+void camera_follow(int racer)
+{
+    int x, y;
+    short tx;
+    int vx, vy, sx, sy, vw, vh;
+    unsigned t;
+    short ty;
+
+    x = (short)(bodies[racer].x >> 16);
+    y = (short)((bodies[racer].y - bodies[racer].z) >> 16);
+    vx = bodies[racer].vx;
+    vy = bodies[racer].vy;
+    vw = view_tiles_w + 1;
+    vh = view_tiles_h + 1;
+    sx = vx < 0 ? -1 : vx > 0;
+    sy = vy < 0 ? -1 : vy > 0;
+    tx = (short)(x - (vw << 4) + (sx << 7));
+    ty = (short)(y - vh * 20 + sy * 160);
+    scroll_step_x = (tx - scroll_x) >> 4;
+    if (tx != scroll_x)
+        scroll_x += scroll_step_x;
+    scroll_step_y = (ty - scroll_y) >> 4;
+    if (ty != scroll_y)
+        scroll_y += scroll_step_y;
+    if (scroll_x < 0)
+        scroll_x = 0;
+    t = (map_w - vw) << 5;
+    if (scroll_x > t)
+        scroll_x = t;
+    if (scroll_y < 0)
+        scroll_y = 0;
+    t = (map_h - vh) * 40;
+    if (scroll_y > t)
+        scroll_y = t;
+    tile_x = scroll_x / 32;
+    tile_y = scroll_y / 40;
+}
+
 /* ---- 0x13bb8 -------------------------------------------------------------------------------- */
 
 void fn_13bb8(int racer)

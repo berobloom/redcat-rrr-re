@@ -164,6 +164,15 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   in the same file belongs to another module. `.work/objdis.py OBJ NAME` (or objmatch's publics)
   shows where our object put each function.
 
+- **Plain C division reproduces both of Watcom's forms.** `x / 32` → the `sar 0x1f` / `shl` /
+  `sbb` / `sar` shift trick; `x / 40` → `mov reg, 40` + `idiv reg` (a non-power-of-two constant
+  goes into a register). camera_follow 0x138ed needs both, and neither needs help.
+
+- **Do not retype a global to force a load width.** The game loads `view_tiles_w`/`view_tiles_h`
+  (0x60044, 0x60048) as *words* inside camera_follow but as dwords in new2io.c: Watcom narrows
+  where it knows the value fits. Declaring them `short` in rrr.h costs two byte-identical
+  functions there for two rows here (110 -> 108).
+
 ### Probes
 
 - **Appended copies of a big function compile differently** (sound_init: 565 bytes as a probe copy,
@@ -173,6 +182,11 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
+- **`objects[n]` store encoding (spawn_dropped_object 0x18759, 8 rows):** the game keeps `n << 4`
+  in EAX (the alloc_object result, shifted in place) and reloads the objects pointer into
+  ECX/EDX per store, so the pointer is the base and the index the displacement's index; ours
+  mirrors that. `switch` is the best shape found (8 rows); if/else-if, `!kind`, `(*(objects + n))`
+  give 11 rows, a `struct object *` local 19.
 - **cos_sin_init 0x13c34's last 2 rows:** only `x`'s stack slot (ours [esp+0x10], the game [esp+8]);
   156 spellings (every declaration order of i, a, y, x, t; six statement orders with six declaration
   lists) stop at 2. It is Watcom's FP local layout - open question 24, not the C.
