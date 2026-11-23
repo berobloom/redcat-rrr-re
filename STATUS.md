@@ -23,6 +23,13 @@ Short: where the project stands, and what is next. History is in git; no diary.
    (declare `x1, y1, y2, x2`, write x1, y1, x2, y2: 22 rows, the slots move); and the first corner
    test's old argument
    list `x1, y1, x2, y1` (59 rows).
+   2026-11-26, no new MATCH but follower_tick 0x167aa went 41 -> 9 rows: `nearmiss.sh | grep
+   follower` says `9 0x0167aa follower_tick` and its differs note names the two Watcom choices left.
+   Two mutations make that 9 worse: the damage/fuel test as `damage <= 0 || fuel <= 0` (the game's
+   fall-through arm is the 32 store, so it wrote `!(damage > 0 && fuel > 0)`; 13 rows in the split
+   file), and putting follower_tick back in the callbacks' object, where Watcom merges its epilogue
+   into fn_16e46's (`src/shadeobj2.c`; 13 rows). `src/check.sh | grep -c ' MATCH at'` stays 115 and
+   the other 12 callbacks are unchanged.
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
    first (functions whose callees are matched or are library calls).
 3. Near misses: `src/nearmiss.txt`, first line with an empty status (sound_init 0x1043a went to
@@ -31,12 +38,12 @@ Short: where the project stands, and what is next. History is in git; no diary.
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
    question 27 lists the six, which name the function groups that must share a module). The first
-   near miss with an empty status is now `41 0x167aa follower_tick`, then `41 0x1889d ground_check`
-   (35 -> 41 when cell_effect's tail
-   moved), `51 0x11526 draw_view` and `62 0x138ed camera_follow`. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the
+   near miss with an empty status is now `41 0x1889d ground_check` (35 -> 41 when cell_effect's tail
+   moved), then `51 0x11526 draw_view` and `62 0x138ed camera_follow`; follower_tick 0x167aa went to
+   SKIP at 9. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the
    mechanism is pinned
    (a second same-shape `stats[...].damage -=` statement flips the first one's load register; see
-   the note in src/shadeobj.c and the probes in .work/probe/S.C) but no block-2 spelling keeps
+   the note in src/shadeobj2.c and the probes in .work/probe/S.C) but no block-2 spelling keeps
    block 1 natural *and* the game's RMW tail; it gates mine/sign/bomb/cactus/fn_16e46 (0 rows)
    and dropped0/dropped4_tick. PROGRESS.md reads 147 functions, 115 identical (78.2%), 23 near misses,
    and 9 not

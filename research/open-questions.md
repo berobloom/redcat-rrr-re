@@ -106,7 +106,7 @@
     0x16e46 and cactus_tick 0x17236 - all otherwise byte-identical - jump to.
     Prize: 8 functions. 30+ spellings and the option sets -ox, -ox -oe,
     -ox -oa, -ox -oi and -oe alone change nothing (session 13; the full list
-    is in the note in src/shadeobj.c). The function is byte-identical to the
+    is in the note in src/shadeobj2.c). The function is byte-identical to the
     game up to 0x179bd, so the choice is made from the damage statement itself.
 
 26. **Open: Watcom keeps the sound_init 0x1043a argument registers, we
@@ -138,3 +138,24 @@
     -> 0x15565, dropped0/2/4_tick + mine/sign/bomb/fn_16e46 -> 0x17b5b.
     Where each module starts is still unknown; string-block boundaries and
     the error strings' file names are the other two tests MATCHING.md 4 gives.
+    2026-11-26, the two tests agree at shadeobj.c: a padding byte 0x51783 between
+    'illegal shade object : %d following :%d' (used only by follower_tick 0x167aa)
+    and 'illegal object : %d ' (used only from obj_callback_1696c 0x1696c to
+    dropped4_tick 0x17c74) puts a module boundary at 0x16945, which is exactly
+    where the epilogue evidence puts one - follower_tick keeps its own pop/ret
+    while fn_16e46 jumps into dropped2_tick's at 0x17b5b. Splitting follower_tick
+    into src/shadeobj.c and the callbacks into src/shadeobj2.c won 4 rows
+    (13 -> 9) and changed nothing else.
+28. **Open: follower_tick 0x167aa's last 9 rows are two register choices.**
+    (a) the game turns the short parameter into an int where it sits -
+    `cwde`, then `mov esi,eax` for the objects index and `dec eax` for the
+    check_object_nr argument, all before the call - we sign-extend into the
+    index register with `movsx` and derive the argument with `lea`, and our
+    `shl esi,4` lands after the call; (b) in the `frame = 32` store the game
+    keeps objects in EAX and puts n<<4 in EDX, we mirror. ~60 variants
+    (.work/probe/ft2, each compiled alone) do not move either: parameter and
+    local types, every declaration order, `0x20`/`(short)32`/braces, `--n`,
+    `(int)`/`(short)`/`L` casts, `t = n - 1` split in two, an extra local, and
+    the mode/period/anim/bodies statements reordered. The rest of the function
+    is byte-identical, so - as in open questions 25 and 26 - a new mechanism is
+    worth more than more spellings.

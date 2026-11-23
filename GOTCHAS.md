@@ -203,7 +203,13 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **The droppedN_tick damage block's load register (open question 25):** the game loads
   `bodies[2].stats` into EAX, ours into EDX, and no spelling or compiler option moves it (30+ tried).
   It is worth 8 functions, so it is worth a fresh idea, not another 30 spellings - see the note in
-  src/shadeobj.c before starting.
+  src/shadeobj2.c before starting.
+- **follower_tick 0x167aa's last 9 rows:** two Watcom choices, the short parameter's sign extension
+  (`cwde` + `mov esi,eax` + `dec eax` in the game, `movsx` + `lea` in ours) and an EAX/EDX swap in the
+  `frame = 32` store; ~60 variants stop there (.work/probe/ft2). What did work, and is worth trying
+  in the other object callbacks: the two-part test written as `!(damage > 0 && fuel > 0)` (30 rows
+  better than `damage <= 0 || fuel <= 0`), and follower_tick alone in its own file so its epilogue
+  stops merging into fn_16e46's (4 rows).
 - **sound_init 0x1043a's last 10 rows:** the game reuses fn_1d2a6's four register arguments as
   easy_init's; WCC386 rematerialises them in every spelling and in a 3-statement probe (aux pragmas,
   int returns, locals - nothing helps). Open question 26, not the C.

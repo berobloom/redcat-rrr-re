@@ -149,7 +149,16 @@ Levers seen so far (add to this list when one produces a MATCH):
   (`src/racer.c`, 0x1404a-0x1467b: racer_bounce jmps into racer_contact's epilogue, so those four are
   one module). The game shares an epilogue only 6 times in 0x10010-0x1B915, our one-object `rrr.c`
   dozens of times - which is how the mismatch is spotted (discoveries.md "The game's own C is many
-  objects").
+  objects"). `follower_tick` 0x167aa is the other direction: the game gives it its own epilogue, so it
+  now sits alone in `src/shadeobj.c` and the callbacks moved to `src/shadeobj2.c` (13 -> 9 rows);
+  there the string blocks say the same thing (one padding byte, 0x51783, between the two modules'
+  strings) - take the boundary when both tests agree.
+- **Negate the whole test to choose the fall-through arm.** Two conditions joined by `||` are not the
+  same text as the negated pair: the game's `jle` into the `frame = 32` store with the `heading` store
+  forward means it wrote `if (!(damage > 0 && fuel > 0)) frame = 32; else frame = heading & 31;`.
+  `damage <= 0 || fuel <= 0` costs 30 rows and swapping the arms 20 (`follower_tick` 41 -> 13). Same
+  family as the duplicated switch case above: it is the source text, not the meaning, that picks the
+  block layout.
 - **Operand order picks the SIB pair in `lea`.** `map[(x + y * map_w) * 6 + 4]` gives
   `lea eax, [edi + ebx]` (x as base) and `(y * map_w + x)` gives `[ebx + edi]`; same semantics,
   one row (last row of `cell_effect`). Where Watcom uses a plain `add` the order is invisible.

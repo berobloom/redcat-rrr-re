@@ -516,6 +516,15 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   are one module - racer_bounce jmps into racer_contact's epilogue and nothing can sit between them
   in another object. main (0x111e8) is not in it. Splitting those four into `src/racer.c` made
   racer_contact and racer_bounce byte-identical (113 -> 115); their C did not change.
+- CONFIRMED: a module boundary also shows as one padding byte between string blocks, and there the
+  epilogue evidence agrees. In the data object: raceanim.c's last string ends at 0x5174e, pad byte
+  0x5174f, then 'shadeobj.c' (0x51750) + 'illegal shade object : %d following :%d' (0x5175b, used
+  only by follower_tick 0x167aa) with no gap between them, pad byte 0x51783, then 'illegal object :
+  %d ' (0x51784, used only from obj_callback_1696c 0x1696c to dropped4_tick 0x17c74), pad bytes
+  0x51799-0x5179b, then 'heap.c'. So shadeobj.c is follower_tick alone and the callbacks are another
+  module (src/shadeobj2.c): the game gives follower_tick its own pop/ret at 0x1693a although
+  fn_16e46 + dropped0/2/4_tick share one at 0x17b5b. Splitting them won follower_tick 4 rows (13 -> 9)
+  and is the first boundary that both of MATCHING.md 4's tests give at the same address.
 
 ## Toolchain: switch bodies and `lea` operands
 
@@ -525,6 +534,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   blocks instead (`damage >= 1 && fuel >= 1`: 87 rows against 0 in cell_effect 0x18b8d).
 - CONFIRMED: in `lea`, Watcom's base/index pair follows the source operand order:
   `x + y * map_w` gives `[edi + ebx]` and `y * map_w + x` gives `[ebx + edi]` (cell_effect's last row).
+- CONFIRMED: a two-part test keeps the game's arm layout when written in the negated-and form:
+  `if (!(stats[i].damage > 0 && stats[i].fuel > 0)) frame = 32; else frame = heading & 31;` gives the
+  game's `cmp damage,0 / jle -> fall-through 32 store / cmp fuel,0 / jg -> forward heading store`; the
+  equivalent `damage <= 0 || fuel <= 0` costs 30 rows more and putting the heading arm in the `if` 20
+  (follower_tick 0x167aa, 41 -> 13 rows, .work/probe/ft2).
 
 ## The race: drawing (draw_view 0x11526, new2io.c)
 
