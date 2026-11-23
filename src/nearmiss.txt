@@ -13,7 +13,8 @@
 0 0x16d30 bomb_tick  the same
 0 0x16e46 fn_16e46  the same (jmp 0x17b5b)
 0 0x17236 cactus_tick  the same
-1 0x15597 find_bonus_objects  waits for find_waypoints: one jmp only, the game's epilogue is find_waypoints' pop/ret at 0x15565, ours merged with an earlier function (0x145d2). Its `default: break;` is what puts the merged check_object_nr/store/increment block after the case-13 body (32 rows -> 1)
+0 0x18b8d cell_effect  MATCH 2026-11-23: case 16 verbatim-duplicates case 15 (the game re-tests and jmps into 15's blocks), case-22 store reads `x + y * map_w` - see the note in src/map.c
+0 0x15597 find_bonus_objects  0 instruction rows since find_waypoints was written, but one jmp fixup still points elsewhere: the game's epilogue is find_waypoints' pop/ret at 0x15565, ours merged with an earlier function (0x145d2). Its `default: break;` is what puts the merged check_object_nr/store/increment block after the case-13 body (32 rows -> 1)
 2 0x13c34 cos_sin_init  SKIP: only x's slot (ours [esp+0x10], the game [esp+8]); 120 declaration orders + 36 statement/declaration combinations all stop at 2 rows - Watcom's FP local layout, open question 24
 3 0x1103e start_lights  SKIP: one lamp's product register only (the game imuls i*12 into EDX and loads frames into EAX, ours the mirror; the other four lamps come from identical text); ~10 spellings across two sessions, see the note in src/rrr.c
 6 0x111e8 main  SKIP: block placement only in the quit-after-finish fill; 24 spellings, see the note in src/rrr.c - what the game has and we lack is a shape that keeps the two order[1] = 2 stores separate while sharing order[2] = 4
@@ -24,9 +25,8 @@
 15 0x13a78 fn_13a78  SKIP: three register mirrors (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
 16 0x178f6 dropped2_tick  SKIP: ONE register choice: the game loads bodies[2].stats into EAX, ours EDX; that costs a mov edx,eax and pushes the tail merge back 8 bytes, so our epilogue lands at +0x26d not +0x263. 30+ spellings, 4 option sets, and the 2026-11-23 synthetic-probe mechanism (second same-shape damage statement flips the first; assign-form block 2 keeps block 1 natural but loses the RMW tail) - see the note in src/shadeobj.c. Worth 8 functions: it also unblocks mine_tick, sign_tick, bomb_tick, fn_16e46, cactus_tick (0 rows), dropped0_tick and dropped4_tick
 16 0x17b61 dropped0_tick  the same one register choice as dropped2_tick
-17 0x18b8d cell_effect
 25 0x1404a racer_contact
-35 0x1889d ground_check
+41 0x1889d ground_check
 41 0x167aa follower_tick
 51 0x11526 draw_view
 62 0x138ed camera_follow

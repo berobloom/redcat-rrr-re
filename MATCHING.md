@@ -137,6 +137,14 @@ Levers seen so far (add to this list when one produces a MATCH):
   when they agree; if the function before us is wrong our shared tail lands elsewhere, so the last
   jmp of an otherwise perfect function can wait for its predecessor (`find_bonus_objects` waits for
   `find_waypoints`, like `mine_tick` waits for `dropped2_tick`).
+- **Two switch cases with the same code: write the text twice, identically.** Duplicating case 15's
+  test and bodies in case 16 made Watcom re-emit the two compares and jump into case 15's shared
+  blocks, which is exactly what the game does at 0x19123 (`cell_effect` 17 rows -> MATCH). Any other
+  spelling of the same behaviour (`damage >= 1 && fuel >= 1`, `> 0 &&`, `!(<= 0 ||)`, nested ifs,
+  early break/return) folds or duplicates the blocks instead - `>= 1 &&` costs 87 rows.
+- **Operand order picks the SIB pair in `lea`.** `map[(x + y * map_w) * 6 + 4]` gives
+  `lea eax, [edi + ebx]` (x as base) and `(y * map_w + x)` gives `[ebx + edi]`; same semantics,
+  one row (last row of `cell_effect`). Where Watcom uses a plain `add` the order is invisible.
 
 ## 6. A near miss is not a proof: `nmrefs.py`
 

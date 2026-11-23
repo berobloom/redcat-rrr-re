@@ -290,6 +290,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   −100000 (under everything). Driving over it does nothing, and the
   explosion does no damage. Measured: track1b's 11 bombs lost life at
   about 9.3 per second, and each vanished when its life reached 0.
+- CONFIRMED (`cell_effect` 0x18b8d byte-identical, 2026-11-23): cell types 15 and 16 (the cacti)
+  do exactly the same under a racer: if `damage <= 0 || fuel <= 0` racer 0 hears play_fx(23) and
+  loses 2 more damage; otherwise, below z = 30 px, the cell's object (byte 1) gets f24 = 5,
+  damage -= 1, the cell is cleared and play_fx(25) sounds. Watcom keeps a separate test for 16
+  (0x19123) that jumps into case 15's blocks at 0x19099 and 0x190cd.
 - CONFIRMED: racer–racer contact (`0x1404a`): within 60 height units and
   300 px, four corner tests 50 px along the heading; on contact (`0x14534`)
   headings merge through the table at 0x72de0 and both speeds become their
@@ -495,6 +500,15 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   option on top of `-3r -s -ox`): dir_tbl_init 0x13cba (fild, IF@DATAN2, __CHP, fistp) rebuilds
   byte for byte from `src/rrr.c` with exactly those options, and cos_sin_init 0x13c34 (inline
   fsin/fcos) differs only in one stack slot.
+
+## Toolchain: switch bodies and `lea` operands
+
+- CONFIRMED: two switch cases whose source text is identical get one copy of the bodies and a
+  re-emitted test in the second: the game's case 16 (0x19123) re-tests `damage <= 0` and `fuel <= 0`
+  and jumps into case 15's blocks. Any other spelling of the same condition folds or duplicates the
+  blocks instead (`damage >= 1 && fuel >= 1`: 87 rows against 0 in cell_effect 0x18b8d).
+- CONFIRMED: in `lea`, Watcom's base/index pair follows the source operand order:
+  `x + y * map_w` gives `[edi + ebx]` and `y * map_w + x` gives `[ebx + edi]` (cell_effect's last row).
 
 ## The race: drawing (draw_view 0x11526, new2io.c)
 

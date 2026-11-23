@@ -54,3 +54,12 @@ Rules for the agent:
     `src/check.sh | grep -c ' MATCH at'` stays 112; PROGRESS.md: 26 near misses, 9 unwritten (7 C).
     New levers in MATCHING.md: the explicit `default: break;` (find_bonus_objects 32 -> 0 rows) and
     "a function's neighbours decide its tail".
+  - 2026-11-23: cell_effect 0x18b8d byte-identical: `src/check.sh | grep -c ' MATCH at'` = 113, `grep
+    cell_effect` shows `1536 bytes MATCH at 0x018b8d` with no WRONG fixup, and map.c's fixups went from
+    3 to 90 named targets agree. Two mutations make it fail: case 16 written as `damage >= 1 && fuel
+    >= 1` instead of a verbatim copy of case 15 (87 rows), and the case-22 store as `(y * map_w + x)`
+    instead of `(x + y * map_w)` (1 row, `lea [ebx+edi]` vs the game's `[edi+ebx]`). New levers in
+    MATCHING.md: duplicate an identical case body word for word; operand order picks the `lea` SIB pair.
+    113 of 147, 25 near misses, 9 unwritten (7 C); `find_bonus_objects` 0x15597 and `racer_bounce`
+    0x14534 now sit at 0 instruction rows but one jmp fixup each, and `ground_check` 0x1889d moved
+    35 -> 41 rows when cell_effect's tail grew.

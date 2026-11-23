@@ -89,11 +89,14 @@ void cell_checks(int n)
 
 /* ---- 0x18b8d -------------------------------------------------------------------------------- */
 
-/* differs: 17 rows. Watcom folds case 16 into case 15 (the same two blocks under the opposite
-   test), the game keeps a separate test for 16 that jumps into them; `>= 1` (this spelling) keeps
-   it apart at the cost of the two compares. Tried >0 &&, !(<=0 ||), 0 <, nested ifs, early
-   break/return, swapped case order. Also case 12 and 22 compute the cell index in another
-   register. The empty `case 10` gives the game's switch tree (without it the tree splits at 15). */
+/* Byte-identical 2026-11-23. Two spellings carry it:
+   - case 16 repeats case 15's test and both bodies verbatim. The game's case 16 (0x19123) re-tests
+     `damage <= 0` / `fuel <= 0` and jumps into case 15's blocks (0x19099 and 0x190cd), so Watcom
+     must see the same text: any other test for 16 (>= 1 &&, > 0 &&, !(<= 0 ||), nested ifs, early
+     break/return, swapped case order) folds or duplicates the blocks - 87 rows for `>= 1 &&`.
+   - the case-22 store reads `map[(x + y * map_w) * 6 + 4]`: operand order picks the SIB pair, the
+     game has lea [edi + ebx] (x as base) and `y * map_w + x` gives [ebx + edi] (1 row).
+   The empty `case 10` gives the game's switch tree (without it the tree splits at 15). */
 void cell_effect(int n, int x, int y, int r)
 {
     int type, obj;
@@ -130,7 +133,7 @@ void cell_effect(int n, int x, int y, int r)
                      + abs((bodies[n].y >> 16) - (bodies[obj].y >> 16)));
             free_object(obj);
             stats[bodies[n].stats].f18++;
-            map[(y * map_w + x) * 6 + 4] = 0;
+            map[(x + y * map_w) * 6 + 4] = 0;
         }
         break;
     case 12:
@@ -175,17 +178,15 @@ void cell_effect(int n, int x, int y, int r)
         }
         break;
     case 16:
-        if (stats[bodies[n].stats].damage >= 1 && stats[bodies[n].stats].fuel >= 1) {
-            if (bodies[n].z < 0x1e0000) {
-                bodies[map[(y * map_w + x) * 6 + 1]].f24 = 5;
-                stats[bodies[n].stats].damage--;
-                map[(y * map_w + x) * 6 + 4] = 0;
-                play_fx(25, 0);
-            }
-        } else {
+        if (stats[bodies[n].stats].damage <= 0 || stats[bodies[n].stats].fuel <= 0) {
             if (n == 0)
                 play_fx(23, 0);
             stats[bodies[n].stats].damage -= 2;
+        } else if (bodies[n].z < 0x1e0000) {
+            bodies[map[(y * map_w + x) * 6 + 1]].f24 = 5;
+            stats[bodies[n].stats].damage--;
+            map[(y * map_w + x) * 6 + 4] = 0;
+            play_fx(25, 0);
         }
         break;
     case 10:
