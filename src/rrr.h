@@ -426,6 +426,7 @@ void hud_update(void);
 void fn_13a78(int x, int y, int vx, int vy);
 void fn_13bb8(int racer);
 int on_screen(int x, int y);
+int hit_test(int a, int b, int size);              /* 0x1430e */
 int next_module_set(void);
 int next_module_of(int world, int groep);
 int explode_objects(int count, int racer);

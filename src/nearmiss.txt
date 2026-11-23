@@ -28,3 +28,4 @@
 41 0x167aa follower_tick
 51 0x11526 draw_view
 62 0x138ed camera_follow
+71 0x1430e hit_test  allocation only in a 19-local function; shape and size right (552 vs 550 bytes) - see the note in src/rrr.c

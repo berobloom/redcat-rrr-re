@@ -917,6 +917,57 @@ int on_screen(int x, int y)
 }
 
 
+/* ---- 0x1430e -------------------------------------------------------------------------------- */
+
+/* differs: 71 rows, register/stack allocation of a 19-local function (the game keeps b's index in
+   a slot and fills 13 slots; ours keeps more in ESI/EBX/EDX/EAX). Shape and size are right: the
+   four corners and the centre go into locals before the five tests, which took 195 rows to 111,
+   and the probe locals grouped x1..x4 then y1..y4 took it to 71 (GOTCHAS). Six declaration orders
+   and three statement orders tried. */
+
+/* hit_test(a, b, size) (discoveries.md): 1..5 when one of racer b's four corners, 30 px along
+   and across its heading, or its centre lies strictly inside object a's box (bodies[a].x/y +/-
+   size in 16.16); 0 when either object is free. Heights are not compared. The second product
+   reads cos_tbl[h + 8] unmasked: with h >= 24 that runs into sin_tbl, which follows cos_tbl in
+   memory and holds the same value. */
+int hit_test(int a, int b, int size)
+{
+    int x, xl, xh, yl, yh, h, fx, fy, gx, gy, x1, x2, x3, x4, y1, y2, y3, y4;
+
+    x = size << 16;
+    xh = bodies[a].x + x;
+    xl = bodies[a].x - x;
+    yl = bodies[a].y - x;
+    yh = bodies[a].y + x;
+    h = stats[bodies[b].stats].heading;
+    if (objects[a].period == -1 || objects[b].period == -1)
+        return 0;
+    fx = fixmul(0x1e0000, cos_tbl[h]);
+    fy = fixmul(0x1e0000, cos_tbl[h + 8]);
+    gx = fixmul(0x1e0000, cos_tbl[(h + 8) & 31]);
+    gy = fixmul(0x1e0000, sin_tbl[(h + 8) & 31]);
+    x1 = bodies[b].x + fx + gx;
+    y1 = bodies[b].y + fy + gy;
+    x2 = bodies[b].x + fx - gx;
+    y2 = bodies[b].y + fy - gy;
+    x3 = bodies[b].x - fx - gx;
+    y3 = bodies[b].y - fy - gy;
+    x4 = bodies[b].x - fx + gx;
+    y4 = bodies[b].y - fy + gy;
+    if (xl < x1 && x1 < xh && yl < y1 && y1 < yh)
+        return 1;
+    if (xl < x2 && x2 < xh && yl < y2 && y2 < yh)
+        return 2;
+    if (xl < x3 && x3 < xh && yl < y3 && y3 < yh)
+        return 3;
+    if (xl < x4 && x4 < xh && yl < y4 && y4 < yh)
+        return 4;
+    if (xl < bodies[b].x && bodies[b].x < xh && yl < bodies[b].y && bodies[b].y < yh)
+        return 5;
+    return 0;
+}
+
+
 /* ---- 0x14534 -------------------------------------------------------------------------------- */
 
 /* differs: 0 rows of instructions; only the tail jmp's target (we share an epilogue with the
