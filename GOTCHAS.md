@@ -190,5 +190,8 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **cos_sin_init 0x13c34's last 2 rows:** only `x`'s stack slot (ours [esp+0x10], the game [esp+8]);
   156 spellings (every declaration order of i, a, y, x, t; six statement orders with six declaration
   lists) stop at 2. It is Watcom's FP local layout - open question 24, not the C.
-- **A `?:` 0/1 argument the game computes with branches** (sound_init's `/STEREO`): 9 spellings tried,
+- **The droppedN_tick damage block's load register (open question 25):** the game loads
+  `bodies[2].stats` into EAX, ours into EDX, and no spelling or compiler option moves it (30+ tried).
+  It is worth 8 functions, so it is worth a fresh idea, not another 30 spellings - see the note in
+  src/shadeobj.c before starting. (sound_init's `/STEREO`): 9 spellings tried,
   see its `differs:` note.

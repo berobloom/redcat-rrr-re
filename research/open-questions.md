@@ -94,3 +94,17 @@
     module in one byte (`89 d3` for `88 d3`), so a 10.5 patch or 10.6 is likely (compare their CLIB3R with
     `tools/wc/libmatch.py`); what else REKEN's debug block holds (locals,
     types, line numbers).
+
+25. **Open: the droppedN_tick damage-block register choice.** In
+    dropped2_tick 0x178f6 (and dropped0_tick 0x17b61, dropped4_tick 0x17c74)
+    the game's first damage block loads `bodies[2].stats` with
+    `mov eax, [0x6cc60]` and builds the stats index in EDX; every C spelling
+    found so far loads EDX first, pays a `mov edx,eax`, and merges its tail
+    with the second (racer 4) damage block 8 bytes later. That leaves our
+    shared epilogue at +0x26d instead of +0x263, which is where
+    mine_tick 0x16b53, sign_tick 0x16c5d, bomb_tick 0x16d30, fn_16e46
+    0x16e46 and cactus_tick 0x17236 - all otherwise byte-identical - jump to.
+    Prize: 8 functions. 30+ spellings and the option sets -ox, -ox -oe,
+    -ox -oa, -ox -oi and -oe alone change nothing (session 13; the full list
+    is in the note in src/shadeobj.c). The function is byte-identical to the
+    game up to 0x179bd, so the choice is made from the damage statement itself.

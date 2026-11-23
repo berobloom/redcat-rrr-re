@@ -19,9 +19,9 @@
 8 0x1401d left_of  SKIP: register mirror only (the game keeps x1 in ESI and uses EAX for x3 - x2, ours the other way round); 14 spellings tried, see the note in src/rrr.c
 8 0x18759 spawn_dropped_object  SKIP: base/index mirror in the objects[n] stores (game: n<<4 in EAX, objects reloaded per store); switch 8 rows is the best of if/else-if, !kind, (*(objects + n)) [11] and a pointer local [19]
 13 0x1043a sound_init
-15 0x17c74 dropped4_tick  the same as dropped2_tick
-16 0x178f6 dropped2_tick  damage blocks: the game loads bodies[r].stats into EAX (ours EDX) and merges racer 4's block into racer 2's; tried a local, a pointer, x = x - 10, += -10
-16 0x17b61 dropped0_tick  the same as dropped2_tick
+15 0x17c74 dropped4_tick  the same one register choice as dropped2_tick
+16 0x178f6 dropped2_tick  ONE register choice: the game loads bodies[2].stats into EAX, ours EDX; that costs a mov edx,eax and pushes the tail merge back 8 bytes, so our epilogue lands at +0x26d not +0x263. 30+ spellings and 4 option sets tried - see the note in src/shadeobj.c. Worth 8 functions: it also unblocks mine_tick, sign_tick, bomb_tick, fn_16e46, cactus_tick (0 rows), dropped0_tick and dropped4_tick
+16 0x17b61 dropped0_tick  the same one register choice as dropped2_tick
 17 0x18b8d cell_effect
 25 0x1404a racer_contact
 35 0x1889d ground_check

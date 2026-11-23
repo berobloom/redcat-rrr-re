@@ -378,9 +378,22 @@ int rocket_tick(short n)
 
 /* ---- 0x178f6 -------------------------------------------------------------------------------- */
 
-/* differs: 16 rows, the two damage blocks (the game loads bodies[r].stats into EAX and merges
-   racer 4's block into racer 2's; ours loads EDX and does not). mine_tick, sign_tick, bomb_tick,
-   fn_16e46 and cactus_tick differ only in their jumps into this function's epilogue. */
+/* differs: 16 rows, all from one instruction. In the FIRST damage block the game loads
+   bodies[2].stats into EAX and computes the stats index (x*3 << 4) in EDX; ours loads EDX, copies
+   to EAX, computes there and copies back (`mov edx,eax`, 2 bytes). That also moves the tail merge
+   with the second (racer 4) block back by 8 bytes: the game's racer-4 block ends at
+   `mov eax, [bodies[4].stats]` + `jmp 0x179c3`, ours repeats the multiply chain and joins at
+   0x179cd. Net: our epilogue sits 10 bytes late (0x26d into the function instead of 0x263), so
+   mine_tick, sign_tick, bomb_tick, fn_16e46 and cactus_tick - which are otherwise byte-identical -
+   miss the `jmp 0x17b59` into this epilogue, and dropped0_tick/dropped4_tick show the same 16 rows.
+   Fixing that one register choice is worth 8 functions.
+   Nothing tried moves it: index locals (int/short, every declaration order), (stats + i)->damage,
+   *(stats + i), bodies[i].stats + 0, * 1, (int) casts, = x - 10, += -10, + -10, 0x0a, an
+   else-if chain, swapping the two blocks, a propagated `r = 2; r = 4;` local for both the
+   hit_test and the damage index, `--bodies[n].f24`, moving `bodies[n].f1c = 0` before the
+   `if (n < 0)` check; and no compiler option (-ox -oe, -oa, -oi, -oe alone) changes it.
+   The head is byte-identical up to 0x179bd, so the choice is made after that point; look for a
+   source shape in which the loaded stats index naturally lands in EAX. */
 int dropped2_tick(short n)
 {
     int h;
