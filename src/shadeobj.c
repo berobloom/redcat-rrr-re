@@ -392,8 +392,18 @@ int rocket_tick(short n)
    else-if chain, swapping the two blocks, a propagated `r = 2; r = 4;` local for both the
    hit_test and the damage index, `--bodies[n].f24`, moving `bodies[n].f1c = 0` before the
    `if (n < 0)` check; and no compiler option (-ox -oe, -oa, -oi, -oe alone) changes it.
-   The head is byte-identical up to 0x179bd, so the choice is made after that point; look for a
-   source shape in which the loaded stats index naturally lands in EAX. */
+   2026-11-23 synthetic probe mechanism (S.OBJ, .work/probe): with ONE damage statement Watcom
+   emits the game's load-EAX shape (s4); adding a SECOND same-shape damage statement anywhere in
+   the function flips the first to our load-EDX+copy shape, even when the two cannot merge
+   (different constants, s6; aim tail removed, s5). rocket_tick's game code has the flipped
+   (load-EDX) shape and matches as is, so the game's dropped2 source must keep the first
+   statement natural while carrying a second damage site: writing block 2's damage in assign
+   form (`x = x - 10`) keeps block 1 in the game's shape (s8) but block 2 then compiles to
+   load-sub-store, not the game's `jmp` into block 1's RMW `sub [edx+0x6fbe8],0xa`; pointer
+   spellings (`*(int *)((char *)stats + s*48 + 40) -= 10`) fold to the same tree and flip it
+   back; `register` locals, bare-reference statements and paren variants change nothing. Look
+   for a block-2 statement shape that is structurally distinct for the allocator yet still
+   codegens to immediate-RMW `sub mem, imm`; nothing tried does. */
 int dropped2_tick(short n)
 {
     int h;

@@ -548,3 +548,14 @@ here is a thing to try, not a fact about RRR: when one works or fails on RRR, wr
 - `tools/le/disasm.py` stops at the first undecodable byte, so a sweep of the whole code object is
   silently truncated and a grep for "this address is never stored" may only have seen the first part.
   Use `tools/le/gd.py <prog> <from> <to>` (same annotation, skips a bad byte and resumes). `[generic]`
+- Two structurally-identical compound assignments to the same struct field (`stats[...].damage -= 10`)
+  in one function: Watcom's allocator flips the FIRST one's load register (EAX -> EDX plus a copy);
+  a single such statement compiles in the natural form. A structurally different second statement
+  (assign form) keeps the first natural but changes its own codegen (load-sub-store, not RMW
+  `sub mem,imm`); pointer spellings fold back to the same tree (dropped2_tick 0x178f6, probes in
+  .work/probe/S.C). [generic]
+- A switch case whose test is the literal De Morgan complement of another case, with the bodies
+  swapped, is merged by Watcom into ONE shared test block (both dispatch jumps target it): case 15
+  `d <= 0 || f <= 0` + case 16 `d > 0 && f > 0` in cell_effect 0x18b8d collapsed 43 bytes. If the
+  game keeps two test blocks, no `>` spelling reproduces it; a non-normalised comparison (`>= 1`,
+  cmp imm 1) keeps them apart. [generic]

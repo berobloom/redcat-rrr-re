@@ -23,8 +23,13 @@ Short: where the project stands, and what is next. History is in git; no diary.
 3. Near misses: `src/nearmiss.txt`, first line with an empty status (sound_init 0x1043a went to
    SKIP at 10 rows and fn_13a78 0x13a78 arrived at 15, both register allocation - open questions
    25 and 26). The smallest empty status is now `1 0x15597 find_bonus_objects`, which waits on
-   `find_waypoints`; the first one to actually work on is `15 0x17c74 dropped4_tick`, which waits on
-   dropped2_tick. PROGRESS.md reads 147 functions, 112 identical (76.2%), 26 near misses, and 9 not
+   `find_waypoints`. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the mechanism is pinned
+   (a second same-shape `stats[...].damage -=` statement flips the first one's load register; see
+   the note in src/shadeobj.c and the probes in .work/probe/S.C) but no block-2 spelling keeps
+   block 1 natural *and* the game's RMW tail; it gates mine/sign/bomb/cactus/fn_16e46 (0 rows)
+   and dropped0/dropped4_tick. The first near miss to actually work on is therefore
+   `17 0x18b8d cell_effect` (prior spellings tried, note in src/map.c), then `25 0x1404a
+   racer_contact`. PROGRESS.md reads 147 functions, 112 identical (76.2%), 26 near misses, and 9 not
    written: blit_sprite 0x11bb4 and blit_sprite_trans 0x17d94 are assembly (the only two `enter`
    frames in the C range) so they are not C matches to chase, and 7 C functions remain, smallest
    first: init_objects 0x148db (1635 B),

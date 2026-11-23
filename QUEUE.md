@@ -35,6 +35,13 @@ Rules for the agent:
     `grep podium` shows `podium_ 355 bytes MATCH at 0x015a9f` with no WRONG fixup (the world_names
     0x57c18 and rcascii_printf 0x200b0 targets agree); deleting either switch level or one vararg of
     the "%-15s : %3d" line makes the check fail. 111 of 147, 23 near misses, 12 unwritten.
+  - 2026-11-23: dropped2_tick 0x178f6 SKIPped after the budget: a synthetic probe series
+    (.work/probe/S.C) pins the mechanism - one damage statement compiles in the game's load-EAX
+    shape, a second same-shape one flips the first to our load-EDX form; the game's rocket_tick
+    has the flipped shape and matches, so the game's dropped2 differs in a block-2 statement
+    shape that stays RMW-coded; assign-form block 2 fixes block 1 but not itself. check.sh
+    still 112 MATCH.
+
   - 2026-11-23: race_end 0x1585e byte-identical: `src/check.sh | grep -c ' MATCH at'` = 112, `grep
     race_end` shows `438 bytes MATCH at 0x01585e`, no WRONG fixup; rc_error's line numbers are
     603/608/613 and writing 609 makes the check fail (1 row). Also: `fn_1963e` 0x1963e is not a
