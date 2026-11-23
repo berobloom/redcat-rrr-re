@@ -18,18 +18,31 @@ int fn_18886(int v, int lo, int hi)
 
 /* ---- 0x1889d -------------------------------------------------------------------------------- */
 
-/* differs: 35 rows, register choice (the game keeps cx in EBP and ox on the stack); tried seven
-   declaration orders, ox/oy inlined, separate h variables, clamping per branch (this one). */
+/* differs: 15 rows (was 41). Writing the x and y cell indices inline (no ox/oy locals) puts n in
+   ESI, the cell height h in EDI and the division by 40 in EDI, as the game has them: the ox/oy
+   locals made Watcom keep n in EDI and h in ESI, a mirror of 20+ rows. What is left:
+   - the second cell lookup (0x189ff): the game keeps (bodies[n].y >> 16) / 40 in EAX and multiplies
+     into a fresh register (`mov edx,[map_w]; imul edx,eax; add edx,ebp; imul edi,edx,6`), so its
+     third lookup recomputes `imul eax,[map_w]` at 0x18aab; 10.5 propagates the product instead
+     (`imul eax,[map_w]; add ebp,eax; imul edi,ebp,6`) and reuses it, 9 bytes shorter, which moves
+     our epilogue back. That is Watcom's choice of which temporary to keep live across the inner
+     branch, not a C spelling - open question 29. Tried: ox/oy as locals and inline (both), the
+     product as its own local, `map_w * oy` operand order (unsigned map_w turns the division into
+     `div`, 59 rows), an int map_w (same), all four index orders, reassigned cy, every declaration
+     order of the locals, and the if/ternary/key-test spellings; the game's shape does come out of
+     the same expression in a probe with one register less busy (.work/probe/gc3/Q.C q0/q1:
+     `mov esi,[map_w]; imul esi,eax`), so pressure, not the text, picks it here.
+   - in the d == -1 arm (0x1898e) the game takes bodies[n].stats into EAX (its d is dead there) and
+     we into EDX; same family, no spelling found. */
 int ground_check(int n)
 {
-    int h, cx, cy, ox, oy, d;
+    int h, cx, cy, d;
 
     cx = ((bodies[n].x + bodies[n].vx) >> 16) / 32;
     cy = ((bodies[n].y + bodies[n].vy) >> 16) / 40;
     h = map[(cy * map_w + cx) * 6 + 5];
     if (h * 1000 << 16 > bodies[n].z) {
-        ox = (bodies[n].x >> 16) / 32;
-        h = map[(cy * map_w + ox) * 6 + 5];
+        h = map[(cy * map_w + (bodies[n].x >> 16) / 32) * 6 + 5];
         if (h * 1000 << 16 <= bodies[n].z) {
             d = fn_18886(bodies[n].vy, -0x30000, 0x30000);
             if (!key_left && !key_right) {
@@ -43,8 +56,7 @@ int ground_check(int n)
                 h = 0;
             return h;
         } else {
-            oy = (bodies[n].y >> 16) / 40;
-            h = map[(oy * map_w + cx) * 6 + 5];
+            h = map[((bodies[n].y >> 16) / 40 * map_w + cx) * 6 + 5];
             if (h * 1000 << 16 <= bodies[n].z) {
                 d = fn_18886(bodies[n].vx, -0x30000, 0x30000);
                 if (!key_left && !key_right) {
@@ -58,7 +70,7 @@ int ground_check(int n)
                     h = 0;
                 return h;
             } else {
-                h = map[(oy * map_w + ox) * 6 + 5];
+                h = map[((bodies[n].y >> 16) / 40 * map_w + (bodies[n].x >> 16) / 32) * 6 + 5];
                 bodies[n].vx = 0;
                 bodies[n].vy = 0;
                 if (h < 0)

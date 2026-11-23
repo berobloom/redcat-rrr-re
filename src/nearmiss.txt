@@ -24,10 +24,10 @@
 9 0x167aa follower_tick  SKIP: two Watcom choices left - the game sign-extends the short parameter in place (cwde, mov esi,eax, dec eax), we movsx+lea, and the `frame = 32` store swaps EAX/EDX; ~60 variants (.work/probe/ft2) stop at 9. It got there from 41: the damage/fuel test as `!(damage > 0 && fuel > 0)` (30 rows off as `<= 0 ||`) and follower_tick alone in src/shadeobj.c so its epilogue stops merging into fn_16e46's (string padding byte 0x51783 says the module ends there, open question 27)
 10 0x1043a sound_init  SKIP: only the easy_init arguments - the game keeps EAX/ECX/EBX/EDX from fn_1d2a6's call, we reload them (16 bytes); the /STEREO if/else now matches; see open question 26
 15 0x17c74 dropped4_tick  the same one register choice as dropped2_tick
+15 0x1889d ground_check  41 -> 15: no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c
 15 0x13a78 fn_13a78  SKIP: three register mirrors (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
 16 0x178f6 dropped2_tick  SKIP: ONE register choice: the game loads bodies[2].stats into EAX, ours EDX; that costs a mov edx,eax and pushes the tail merge back 8 bytes, so our epilogue lands at +0x26d not +0x263. 30+ spellings, 4 option sets, and the 2026-11-23 synthetic-probe mechanism (second same-shape damage statement flips the first; assign-form block 2 keeps block 1 natural but loses the RMW tail) - see the note in src/shadeobj2.c. Worth 8 functions: it also unblocks mine_tick, sign_tick, bomb_tick, fn_16e46, cactus_tick (0 rows), dropped0_tick and dropped4_tick
 16 0x17b61 dropped0_tick  the same one register choice as dropped2_tick
-41 0x1889d ground_check
 51 0x11526 draw_view
 62 0x138ed camera_follow
 71 0x1430e hit_test  allocation only in a 19-local function; shape and size right (552 vs 550 bytes) - see the note in src/racer.c

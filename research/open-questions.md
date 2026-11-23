@@ -159,3 +159,21 @@
     the mode/period/anim/bodies statements reordered. The rest of the function
     is byte-identical, so - as in open questions 25 and 26 - a new mechanism is
     worth more than more spellings.
+29. **Open: which temporary WCC386 keeps live across a branch.**
+    ground_check 0x1889d's last 15 rows are that choice. In the game the
+    second cell lookup preserves the division result: `mov edx,[map_w]`,
+    `imul edx,eax` (EAX stays (bodies[n].y >> 16) / 40), `add edx,ebp`,
+    `imul edi,edx,6`, and its third lookup therefore recomputes
+    `imul eax,[map_w]` at 0x18aab - 9 bytes the game has and we do not,
+    which is also why our epilogue sits 9 bytes early. 10.5 propagates the
+    product instead (`imul eax,[map_w]`, `add ebp,eax`, `imul edi,ebp,6`)
+    and reuses it in the third lookup. The same expression written in a
+    probe with one register less busy does come out the game's way
+    (.work/probe/gc3/Q.C q0/q1: `mov esi,[map_w]; imul esi,eax`), so
+    pressure, not the source text, picks it: index operand orders, all 720
+    declaration orders of the six locals, ox/oy local or inline, the
+    product as its own local, an `int` map_w and the if/ternary/key-test
+    spellings all stay at 15. Same family as open questions 25, 26 and 28
+    (dropped2_tick's load register, sound_init's reloaded arguments,
+    follower_tick's sign extension): one register choice, the rest of the
+    function byte-identical.

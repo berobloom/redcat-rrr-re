@@ -30,6 +30,12 @@ Short: where the project stands, and what is next. History is in git; no diary.
    file), and putting follower_tick back in the callbacks' object, where Watcom merges its epilogue
    into fn_16e46's (`src/shadeobj2.c`; 13 rows). `src/check.sh | grep -c ' MATCH at'` stays 115 and
    the other 12 callbacks are unchanged.
+   2026-11-24, no new MATCH: ground_check 0x1889d went 41 -> 15 rows by dropping its `ox`/`oy`
+   locals and writing the two cell indices inline (`nearmiss.sh | grep ground` says `15 0x01889d
+   ground_check`; `src/check.sh | grep -c ' MATCH at'` stays 115 and fn_18886/cell_checks/
+   cell_effect still MATCH). Putting the `ox`/`oy` locals back is the mutation that fails it: the
+   mirror comes back (n in EDI, h in ESI) and it is 41 rows again. `nmrefs.py` says the only address
+   difference left is one extra `map_w` load, the game's recompute at 0x18aab - open question 29.
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
    first (functions whose callees are matched or are library calls).
 3. Near misses: `src/nearmiss.txt`, first line with an empty status (sound_init 0x1043a went to
@@ -38,8 +44,9 @@ Short: where the project stands, and what is next. History is in git; no diary.
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
    question 27 lists the six, which name the function groups that must share a module). The first
-   near miss with an empty status is now `41 0x1889d ground_check` (35 -> 41 when cell_effect's tail
-   moved), then `51 0x11526 draw_view` and `62 0x138ed camera_follow`; follower_tick 0x167aa went to
+   near miss with an empty status is now `15 0x1889d ground_check` (41 -> 15 on 2026-11-24, inline
+   cell indices instead of `ox`/`oy` locals; what is left is open question 29), then `51 0x11526
+   draw_view` and `62 0x138ed camera_follow`; follower_tick 0x167aa went to
    SKIP at 9. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the
    mechanism is pinned
    (a second same-shape `stats[...].damage -=` statement flips the first one's load register; see

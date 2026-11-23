@@ -162,6 +162,10 @@ Levers seen so far (add to this list when one produces a MATCH):
 - **Operand order picks the SIB pair in `lea`.** `map[(x + y * map_w) * 6 + 4]` gives
   `lea eax, [edi + ebx]` (x as base) and `(y * map_w + x)` gives `[ebx + edi]`; same semantics,
   one row (last row of `cell_effect`). Where Watcom uses a plain `add` the order is invisible.
+- **A value used twice is not automatically a local.** `ground_check` 0x1889d computed its x and y
+  cell numbers into `ox`/`oy` locals; writing them inline in the two `map[]` reads moved the whole
+  register picture to the game's (n in ESI, the cell height and the `/40` divisor in EDI): 41 rows
+  -> 15. Declaration order changes nothing (all 720 permutations of the six locals: best 33 rows).
 
 ## 6. A near miss is not a proof: `nmrefs.py`
 

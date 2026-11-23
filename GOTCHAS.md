@@ -189,6 +189,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   against the same [ADDR,END) window, so a five-function probe of 0x1401d-0x1467c reported
   racer_contact at 294 rows where `reverse-engineering/tools/wc/fndiff.py rrr PROBE.OBJ
   racer_contact 0x1404a` says 0. Score such an object per name with fndiff.py at the game's address.
+- **Variants of one function merge with each other in a shared probe object,** so both their length
+  and their row count lie (ground_check: 648 spellings in chunks of 54 ranked 25-51 rows, and the
+  best of them, 575 bytes, was really 575/15 only when compiled alone; most of the "525 bytes"
+  entries were cut off mid-function). Spellings of one near miss need one object each: WCC386 takes
+  only one source file per run (`E1139`), so a sweep is one Wine start per variant - ~10 s each
+  (.work/probe/gc3/one.py, sweep1.py). Static barrier functions between the variants do not stop it.
 
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
@@ -213,3 +219,10 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **sound_init 0x1043a's last 10 rows:** the game reuses fn_1d2a6's four register arguments as
   easy_init's; WCC386 rematerialises them in every spelling and in a 3-statement probe (aux pragmas,
   int returns, locals - nothing helps). Open question 26, not the C.
+- **ground_check 0x1889d's last 15 rows:** which temporary survives the inner branch. The game keeps
+  `(bodies[n].y >> 16) / 40` in EAX, multiplies into a fresh register (`mov edx,[map_w]; imul
+  edx,eax; add edx,ebp; imul edi,edx,6`) and recomputes `imul eax,[map_w]` at 0x18aab; 10.5 keeps the
+  product instead and so is 9 bytes shorter. The same expression with one register less busy does
+  come out the game's way (.work/probe/gc3/Q.C q0/q1), so it is register pressure, not the text:
+  index operand orders, 720 declaration orders, ox/oy local or inline, the product as its own local,
+  an int map_w and the if/ternary/key spellings all stay at 15.
