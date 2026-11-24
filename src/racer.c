@@ -65,20 +65,27 @@ int on_screen(int x, int y)
 
 /* ---- 0x1430e -------------------------------------------------------------------------------- */
 
-/* differs: 71 rows, register/stack allocation of a 19-local function (the game keeps b's index in
-   a slot and fills 13 slots; ours keeps more in ESI/EBX/EDX/EAX). Shape and size are right: the
-   four corners and the centre go into locals before the five tests, which took 195 rows to 111,
-   and the probe locals grouped x1..x4 then y1..y4 took it to 71 (GOTCHAS). Six declaration orders
-   and three statement orders tried. */
+/* differs: 5 rows (550 vs 550 bytes) - two swapped stack slots and nothing else: the game keeps
+   h at [esp+0x14] and x1 at [esp+0x10], ours the other way round (h's store and reload, x1's store
+   and two reloads). Prologue, the four products, all five tests, the frame size and the epilogue
+   are byte-identical. 71 -> 5: sin_tbl[h] as the second product and (h + 0x28) & 0x1f as the
+   third/fourth index (11 rows, the racer_contact convention), test 5's y-check as `bodies[b].y > yl`
+   (14 rows: the game loads bodies[b].y into a register once and compares twice), and the corner
+   declaration order below. Standalone probes plateaued at 24 rows; it only comes to 5 inside
+   racer.o with the natural statement order and the tail y1, x2, y2, x3, y3, x4, x1, y4 (the whole
+   file, not hit_test alone, picks the allocation - .work/probe/ht sweeps incl. 3600 declaration
+   orders and 1400 with h moved into the tail, which always breaks the frame). h/x1 slot numbering
+   is not steerable from C; GOTCHAS dead end. */
 
 /* hit_test(a, b, size) (discoveries.md): 1..5 when one of racer b's four corners, 30 px along
    and across its heading, or its centre lies strictly inside object a's box (bodies[a].x/y +/-
-   size in 16.16); 0 when either object is free. Heights are not compared. The second product
-   reads cos_tbl[h + 8] unmasked: with h >= 24 that runs into sin_tbl, which follows cos_tbl in
-   memory and holds the same value. */
+   size in 16.16); 0 when either object is free. Heights are not compared. The four products are
+   (30 << 16) x cos_tbl[h], sin_tbl[h], cos_tbl[(h + 0x28) & 0x1f] and sin_tbl[(h + 0x28) & 0x1f]
+   - the same +0x28 wrap (32 headings, 8 = a quarter turn) that racer_contact uses; for h >= 24 an
+   unmasked cos_tbl[h + 8] would read into sin_tbl, which holds the same values there. */
 int hit_test(int a, int b, int size)
 {
-    int x, xl, xh, yl, yh, h, fx, fy, gx, gy, x1, x2, x3, x4, y1, y2, y3, y4;
+    int x, xl, xh, yl, yh, h, fx, fy, gx, gy, y1, x2, y2, x3, y3, x4, x1, y4;
 
     x = size << 16;
     xh = bodies[a].x + x;
@@ -89,9 +96,9 @@ int hit_test(int a, int b, int size)
     if (objects[a].period == -1 || objects[b].period == -1)
         return 0;
     fx = fixmul(0x1e0000, cos_tbl[h]);
-    fy = fixmul(0x1e0000, cos_tbl[h + 8]);
-    gx = fixmul(0x1e0000, cos_tbl[(h + 8) & 31]);
-    gy = fixmul(0x1e0000, sin_tbl[(h + 8) & 31]);
+    fy = fixmul(0x1e0000, sin_tbl[h]);
+    gx = fixmul(0x1e0000, cos_tbl[(h + 0x28) & 0x1f]);
+    gy = fixmul(0x1e0000, sin_tbl[(h + 0x28) & 0x1f]);
     x1 = bodies[b].x + fx + gx;
     y1 = bodies[b].y + fy + gy;
     x2 = bodies[b].x + fx - gx;
@@ -100,15 +107,15 @@ int hit_test(int a, int b, int size)
     y3 = bodies[b].y - fy - gy;
     x4 = bodies[b].x - fx + gx;
     y4 = bodies[b].y - fy + gy;
-    if (xl < x1 && x1 < xh && yl < y1 && y1 < yh)
+    if (x1 > xl && x1 < xh && y1 > yl && y1 < yh)
         return 1;
-    if (xl < x2 && x2 < xh && yl < y2 && y2 < yh)
+    if (x2 > xl && x2 < xh && y2 > yl && y2 < yh)
         return 2;
-    if (xl < x3 && x3 < xh && yl < y3 && y3 < yh)
+    if (x3 > xl && x3 < xh && y3 > yl && y3 < yh)
         return 3;
-    if (xl < x4 && x4 < xh && yl < y4 && y4 < yh)
+    if (x4 > xl && x4 < xh && y4 > yl && y4 < yh)
         return 4;
-    if (xl < bodies[b].x && bodies[b].x < xh && yl < bodies[b].y && bodies[b].y < yh)
+    if (xl < bodies[b].x && bodies[b].x < xh && bodies[b].y > yl && bodies[b].y < yh)
         return 5;
     return 0;
 }

@@ -34,7 +34,11 @@ Short: where the project stands, and what is next. History is in git; no diary.
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
    question 27 lists the six, which name the function groups that must share a module). The first
-   near miss with an empty status is now `71 0x1430e hit_test` (`62 0x138ed camera_follow` went to
+   near miss with an empty status is now `145 0x1af83 ai_waypoint_action` (`71 0x1430e hit_test`
+   went to SKIP on 2026-11-24: 71 -> 5, 550 = 550 bytes - only the h/x1 stack slot numbers remain;
+   the sin_tbl[h] second product, (h + 0x28) & 0x1f, test 5's y-check as `bodies[b].y > yl` and the
+   racer.o declaration tail y1, x2, y2, x3, y3, x4, x1, y4 are the C - see the differs note in
+   src/racer.c; `62 0x138ed camera_follow` went to
    SKIP on 2026-11-26: 62 -> 19 with the C established - short vw/vh/tx/ty, int x/y with (short)
    casts, int vx/vy locals, ternaries inline - and what is left is two Watcom allocation ties, one
    declaration family spills tx like the game but mirrors vx/vy, the other does the reverse;

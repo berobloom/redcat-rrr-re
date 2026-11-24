@@ -432,7 +432,12 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED (`0x1430e`): hit_test(a, b, size) is 1–5 when one of the four
   corners (± 30 px along b's heading, ± 30 px across) or the centre of
   racer b lies strictly inside a's box x ± size, y ± size; 0 when either
-  object is free. Heights are not compared.
+  object is free. Heights are not compared. The four products are
+  (30 << 16) × cos_tbl[h], sin_tbl[h], cos_tbl[(h + 0x28) & 0x1f] and
+  sin_tbl[(h + 0x28) & 0x1f] — the same +0x28 quarter-turn wrap that
+  racer_contact uses (byte-identical reconstruction probes, 2026-11-24;
+  an unmasked cos_tbl[h + 8] reads the same values from sin_tbl for
+  h ≥ 24, so both spellings behave the same for real headings).
 - CONFIRMED (`0x17faa`, `0x1709c`): an explosion takes the first free slot
   (often the rocket's own, just freed), period 1, anim 17 (18 frames) from
   frame 0, the position of the object it is set off at, no velocity, life

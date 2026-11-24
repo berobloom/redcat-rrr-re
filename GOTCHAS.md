@@ -216,6 +216,15 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   in the other object callbacks: the two-part test written as `!(damage > 0 && fuel > 0)` (30 rows
   better than `damage <= 0 || fuel <= 0`), and follower_tick alone in its own file so its epilogue
   stops merging into fn_16e46's (4 rows).
+- **hit_test 0x1430e's last 5 rows (71 -> 5):** only two swapped stack slots - the game has h at
+  [esp+0x14] and x1 at [esp+0x10], ours the other way; every other byte of the 550 matches. What
+  got it to 5 only works inside racer.o (a standalone probe of hit_test alone never beats ~24):
+  `sin_tbl[h]` as the second product and `(h + 0x28) & 0x1f` for the third/fourth, test 5's
+  y-check as `bodies[b].y > yl` (the game loads `bodies[b].y` into a register once and compares
+  twice), natural corner statement order, declaration tail `y1, x2, y2, x3, y3, x4, x1, y4`.
+  ~5000 in-module declaration orders (3600 with the winning shape, 1400 with `h` moved into the
+  tail, .work/probe/ht) each move another slot or flip x1 to a register - the slot *numbers* are
+  not steerable from C.
 - **sound_init 0x1043a's last 10 rows:** the game reuses fn_1d2a6's four register arguments as
   easy_init's; WCC386 rematerialises them in every spelling and in a 3-statement probe (aux pragmas,
   int returns, locals - nothing helps). Open question 26, not the C.
