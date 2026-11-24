@@ -54,6 +54,15 @@ Rules for the agent:
     `src/check.sh | grep -c ' MATCH at'` stays 112; PROGRESS.md: 26 near misses, 9 unwritten (7 C).
     New levers in MATCHING.md: the explicit `default: break;` (find_bonus_objects 32 -> 0 rows) and
     "a function's neighbours decide its tail".
+  - 2026-11-24: init.c found and find_bonus_objects 0x15597 byte-identical: find_waypoints 0x1517a
+    rewritten with `unsigned short w` and no n local (`(w & 0xff)` where used) goes 190 -> 0
+    instruction rows, and the two functions move to `src/init.c` (their own 'init.c' `__FILE__`
+    strings, and they share the epilogue at 0x15565). `src/check.sh | grep -c ' MATCH at'` = 116,
+    `grep find_bonus` shows `MATCH at 0x015597 (fixup bytes not compared; 1 rel32 branch compared
+    by target)`, no WRONG fixup. Two mutations make it fail: `int w` + an `n` local again (177 rows,
+    tail jmp wrong again at +207), or moving either function back to `src/rrr.c` (the merged epilogue returns).
+    find_waypoints is a near miss on one pad byte only (open question 30).
+
   - 2026-11-23: cell_effect 0x18b8d byte-identical: `src/check.sh | grep -c ' MATCH at'` = 113, `grep
     cell_effect` shows `1536 bytes MATCH at 0x018b8d` with no WRONG fixup, and map.c's fixups went from
     3 to 90 named targets agree. Two mutations make it fail: case 16 written as `damage >= 1 && fuel

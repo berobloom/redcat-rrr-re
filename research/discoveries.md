@@ -526,6 +526,28 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   fn_16e46 + dropped0/2/4_tick share one at 0x17b5b. Splitting them won follower_tick 4 rows (13 -> 9)
   and is the first boundary that both of MATCHING.md 4's tests give at the same address.
 
+## Toolchain: narrow types, and jump-table padding inside one object
+
+- CONFIRMED (compile, 2026-11-24): WCC386 10.5 -ox keeps a value read as `*(unsigned short *)p` in
+  a 16-bit register as long as the source does not give it an `int` of its own: the holder is masked
+  in place (`mov bx, word [edi+eax+2]` / `xor bh, bh`, the game at 0x151f4/0x151ff) and an `movzx`
+  copy of it indexes arrays with a scale-8 SIB. Writing `int w` plus a second local for `w & 0xff`
+  instead costs four 32-bit live values, a `[esp]` slot for the shifted store value, `n*8` kept
+  where the SIB is free, and immediates compared in place of a hoisted -1: `find_waypoints`
+  0x1517a went 190 -> 0 instruction rows, with behaviour, strings and line numbers unchanged
+  (`.work/probe/FW2VAR.C`: `unsigned short w` 7 rows, `short w` 10, `int w` 147+, and dropping the
+  n local is worth ~140 rows on its own).
+- CONFIRMED: WCC386 4-aligns a switch's jump table inside its own object, so the nop before it is
+  1-4 bytes and follows from the size mod 4 of everything the object holds earlier. The game's
+  `find_bonus_objects` table (ten entries, 0x1556f) sits behind a 3-byte `lea eax,[eax]`; ours is
+  4-aligned inside INIT.OBJ at +1012 behind a 2-byte `mov eax,eax`. So a function can match
+  instruction for instruction and still differ by one pad byte, and only the module's content fixes
+  it (MATCHING.md 5; `find_waypoints`, 0x15597's table).
+- CONFIRMED: `init.c` is one of the game's own source files: `find_waypoints` and
+  `find_bonus_objects` pass the literal 'init.c' (0x50e22) with the game's line numbers 398..557 to
+  `check_waypoint_nr` (0x1b69d) and `rc_error`, and it is `src/init.c` now. What else sits in that
+  object before find_waypoints is open (open question 30).
+
 ## Toolchain: switch bodies and `lea` operands
 
 - CONFIRMED: two switch cases whose source text is identical get one copy of the bodies and a

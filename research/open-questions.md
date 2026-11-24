@@ -146,6 +146,10 @@
     while fn_16e46 jumps into dropped2_tick's at 0x17b5b. Splitting follower_tick
     into src/shadeobj.c and the callbacks into src/shadeobj2.c won 4 rows
     (13 -> 9) and changed nothing else.
+    2026-11-24, the same evidence names init.c: find_waypoints 0x1517a and
+    find_bonus_objects 0x15597 share the epilogue at 0x15565 and both pass the
+    literal 'init.c'; in src/init.c find_bonus_objects went to MATCH with no C
+    change at all (its tail jmp now resolves to find_waypoints' pop/ret).
 28. **Open: follower_tick 0x167aa's last 9 rows are two register choices.**
     (a) the game turns the short parameter into an int where it sits -
     `cwde`, then `mov esi,eax` for the objects index and `dec eax` for the
@@ -177,3 +181,21 @@
     (dropped2_tick's load register, sound_init's reloaded arguments,
     follower_tick's sign extension): one register choice, the rest of the
     function byte-identical.
+30. **Open: what the init.c object holds before find_waypoints 0x1517a.**
+    find_waypoints is now 0 instruction rows: +0..+1009 (through its ret at
+    0x1556b) are byte-identical, and the only difference left is the padding in
+    front of find_bonus_objects' ten-entry jump table - three bytes
+    (`lea eax,[eax]`, the game at 0x1556c) against our two (`mov eax,eax`,
+    +1010). Watcom 4-aligns a jump table inside its own object, so the pad is
+    set by the size mod 4 of everything earlier in the object: ours is empty in
+    front (find_waypoints is INIT.OBJ's first function). Putting fn_15166
+    (0x15166, 20 B = 0 mod 4) in front keeps the two-byte pad, so it is not
+    enough; init_objects 0x148db is 1635 B = 3 mod 4 and would land the table
+    at +1013 like the game. Which functions are in init.o is unknown: its
+    string block runs from 'init.c' 0x50e22 (find_waypoints' first use, 0x1523d)
+    at least to '(%s):%d Cannot initialise boost object.' 0x5103a
+    (find_bonus_objects, 0x15627); clear_objects 0x14861, init_objects 0x148db,
+    start_crash 0x14f3e and switch_anims 0x15084 sit right before it and are
+    candidates. Writing init_objects and adding it to src/init.c is the test:
+    find_waypoints goes to MATCH if that is right, and a pad byte of the wrong
+    candidate shows up immediately in src/check.sh.

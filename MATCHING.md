@@ -162,6 +162,22 @@ Levers seen so far (add to this list when one produces a MATCH):
 - **Operand order picks the SIB pair in `lea`.** `map[(x + y * map_w) * 6 + 4]` gives
   `lea eax, [edi + ebx]` (x as base) and `(y * map_w + x)` gives `[ebx + edi]`; same semantics,
   one row (last row of `cell_effect`). Where Watcom uses a plain `add` the order is invisible.
+- **Narrow type, no temp for a subexpression.** `find_waypoints` 0x1517a sat at 190 rows through
+  14 declaration orders and five probe files; `int w` + `int n` costs four 32-bit live values, a
+  spill of the shifted x/y to `[esp]`, `n*8` kept instead of a scale-8 SIB, and `-1` compared as an
+  immediate in the hole-check loop instead of hoisted into EBX. Writing `unsigned short w` and no
+  `n` at all - `(w & 0xff)` wherever the number is used - gives the game's allocation exactly: the
+  value stays in BX (load `mov bx, word [...]`, mask `xor bh, bh`), its int copy in ESI indexes
+  with the SIB, the shifted value in EBP, no stack slot: **0 instruction rows** (variants.py,
+  2026-11-24; `.work/probe/FW2VAR.C` V04, `unsigned short` beats `short` 7 to 10 rows and inline
+  `(w & 0xff)` beats an `n` local by ~140). The 16-bit holder is what frees the register.
+- **A jump table's pad belongs to the object, not the function.** Watcom 4-aligns a switch's jump
+  table inside its own object, so the pad before it (a 2-byte `mov eax,eax` or a 3-byte
+  `lea eax,[eax]`) depends on the size mod 4 of everything the object holds before it. That is the
+  whole remaining diff of `find_waypoints`: +0..+1009 identical, then the game pads
+  `find_bonus_objects`' ten-entry table with three bytes and we with two (LAYOUT in
+  `src/nearmiss.txt`). Adding a function to the module can fix or break it - `fn_15166` (20 B,
+  0 mod 4) changes nothing, `init_objects` 0x148db (1635 B, 3 mod 4) would land the table right.
 - **A value used twice is not automatically a local.** `ground_check` 0x1889d computed its x and y
   cell numbers into `ox`/`oy` locals; writing them inline in the two `map[]` reads moved the whole
   register picture to the game's (n in ESI, the cell height and the `/40` divisor in EDI): 41 rows
