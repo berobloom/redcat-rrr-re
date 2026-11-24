@@ -443,6 +443,11 @@ here is a thing to try, not a fact about RRR: when one works or fails on RRR, wr
 
 ### General rebuild facts
 
+- **Equal instruction count, frame and spill-slot count with different homes = register tie, not
+  spelling** (draw_view 0x11526, 51 rows, 2026-11-25: 190 in-place spellings - loop/clip/increment
+  mutations, 72 declaration shuffles, pointer locals, pragma forms - never move ESI from `px` to
+  `col`; only the C *shape* the compiler saw would). Do not spend a second session on such a line.
+  [generic]
 - **Open Watcom is no model of 9.5b's register choices** (iter 93q): of the 205 functions 9.5b
   builds byte-identical, WC 10.0 prerelease gives 99, 10.0a 74, Open Watcom 2.0 19 (median 23 rows
   off; native `.work/toolchains/ow2`, 9.5b headers lower-cased in `.work/toolchains/h95b`). Use

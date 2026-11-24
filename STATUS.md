@@ -30,15 +30,13 @@ Short: where the project stands, and what is next. History is in git; no diary.
    would land it).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
    first (functions whose callees are matched or are library calls).
-3. Near misses: `src/nearmiss.txt`, first line with an empty status (draw_view 0x11526, 51 rows,
-   since everything under it is SKIPped or LAYOUT - ground_check 0x1889d's 15 rows are open
-   question 29). cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
+3. Near misses: `src/nearmiss.txt`, first line with an empty status. cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
    question 27 lists the six, which name the function groups that must share a module). The first
-   near miss with an empty status is now `15 0x1889d ground_check` (41 -> 15 on 2026-11-24, inline
-   cell indices instead of `ox`/`oy` locals; what is left is open question 29), then `51 0x11526
-   draw_view` and `62 0x138ed camera_follow`; follower_tick 0x167aa went to
+   near miss with an empty status is now `62 0x138ed camera_follow` (`15 0x1889d ground_check`, 41 -> 15 on 2026-11-24, inline
+   cell indices instead of `ox`/`oy` locals, is open question 29, and `51 0x11526 draw_view` went to
+   SKIP on 2026-11-25: register homes only, 190 in-place spellings moved nothing); follower_tick 0x167aa went to
    SKIP at 9. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the
    mechanism is pinned
    (a second same-shape `stats[...].damage -=` statement flips the first one's load register; see

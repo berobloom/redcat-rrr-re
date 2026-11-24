@@ -7,14 +7,23 @@
 
 /* ---- 0x11526 -------------------------------------------------------------------------------- */
 
-/* differs: 51 rows, all register and stack-slot choice, 6 bytes short of the game: in the tile
-   loop the game keeps col in ESI and px in ECX (ours the other way round); in the clip it puts
-   &sprites[n] in EBP/EDI and spills cx, x + w and w to the stack, ours keeps them in registers.
-   Matched on the way: the tile loops as do-while, tx/ty/sx/sy and the stack locals in the game's
-   declaration order, mode 4 and 5 falling through into 6 (no break: a mode-4 sprite is blended
-   three times). Tried: strength-reduced col * 32 (exact size, 124 rows), reusing the sprite
-   variables in the tile loop, w/x locals and ?: in the width clip, operand orders, increment
-   orders. */
+/* differs: 51 rows, register homes only - and they do not move. Tile loop: the game keeps col in
+   ESI and px in ECX (ours the other way round, which costs `mov edx,ecx` before draw_tile); in the
+   clip it holds &sprites[n] in EBP/EDI and spills cx, ox and x + w to slots; in the blit arms it
+   spills ww and cx where we hold ox, oy and ww in registers. Matched on the way: the tile loops as
+   do-while, tx/ty/sx/sy and the stack locals in the game's declaration order, mode 4 and 5 falling
+   through into 6 (no break: a mode-4 sprite is blended three times). Tried, all in place
+   (inplace.py, .work/probe/dv2): 128 tile-loop x clip x cx-mutations (strength-reduced px, hoisted
+   row base, increment orders, reversed clip tests, hoisted y+h/x+w and x/y/w/h locals, ?: forms),
+   72 declaration-order swaps and shuffles (nothing: 51 rows, the levers' "declaration order acts
+   only through ties"), pointer locals (&sprites[n], used everywhere or only in the clip: 167-268
+   rows, the game re-materialises n << 4 per block), hoisted blit subexpressions (102-212), and nine
+   `#pragma aux draw_tile` forms (parm registers or narrower modify lists: 64-143). The pragma
+   probes also say the game's draw_tile call was plain push-based cdecl - no register parameters.
+   Both sides have 263 instructions, frame 0x2c and 11 spill slots, so the frame is not the
+   constraint; the game spends its three pushed registers on col/py/temps and we spend them on
+   px/ox/oy, and no spelling shifts the tie (watcom-levers "9.5b frame and evaluation-order rules",
+   (b): IR counts, not C counts). */
 void draw_view(short dy, short dx)
 {
     int cx, hh, ww, e, sx, ty, tx, sy, n, ox, oy, cy, row, col, px, py;
