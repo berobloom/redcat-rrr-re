@@ -668,36 +668,50 @@ int main(int argc, char **argv)
  * scroll_step_x/scroll_step_y (0x56060, 0x56064) are written here and by
  * fn_13a78 and read nowhere in RRR.EXE.
  *
- * near miss: 62 rows. The shape is the game's (two velocity signs as
- * v < 0 ? -1 : v > 0, both scroll steps, both clamps, tile_x via the shift
- * trick, tile_y via idiv); what differs is allocation. The game loads
- * view_tiles_w/view_tiles_h as *words* into CX/BX at the top and keeps them,
- * vw/vh<<4 and vh*20, in those registers to the clamps at the end; ours
- * reloads them as ints. Declaring them short in rrr.h costs two byte-identical
- * functions elsewhere (new2io.c), so the word load is not reachable that way.
- * Tried: x/y/vx/vy/vw/vh/tx/ty statement and declaration orders (62 is the
- * floor found), short vw/vh locals (84), (a > 0) - (a < 0) for the signs,
- * `t < scroll` instead of `scroll > t` for the clamps.
+ * near miss: 62 -> 19 rows. The C is established: vw/vh/tx/ty short (the word
+ * loads of view_tiles_w/h are Watcom narrowing the short locals' assignments),
+ * x/y int with (short) casts, int vx/vy locals (the game tests registers),
+ * both ternaries inline in tx/ty (the (5*sy)<<5 shape of sy*160 says no sy
+ * local), statements vw,vh,x,y,vx,vy,tx,ty. Prologue, [eax*8] indexing, x/y
+ * normalize-at-def/plain-reload, both easings, both clamps (map_h - vh) * 40
+ * and the vh*20 shape then match line for line, and our epilogue jmps the
+ * shared turn_tbl_init epilogue like the game's. What is left is Watcom
+ * allocation ties, and the declaration order resolves one but never both:
+ * one family of orders spills tx to [esp+8] (frame 0xc, x@0, y@4, the game's)
+ * but mirrors vx/vy (ours EDX/ESI, the game ESI/EDX; sx, ty and the step
+ * registers ripple); the order below assigns vx/vy right but keeps tx in ESI
+ * (frame 0x8) and y's reload, the step registers and the map_w clamp ripple.
+ * ~200 spellings: 50+ declaration orders (random sweeps, all 55
+ * transpositions of the one below, statement interleavings, casts,
+ * short/int/unsigned mixes, an unsigned short alias for view_tiles_w/h,
+ * vw * 16, sx * 128, (map_w - vw) * 32, renamed locals, an int txs
+ * intermediate, sx/sy locals, register keyword, int t). Same class as
+ * draw_view 0x11526's homes (watcom-levers "register tie"); take the next
+ * line.
  * -------------------------------------------------------------------------------------------- */
 
 void camera_follow(int racer)
 {
-    int x, y;
-    short tx;
-    int vx, vy, sx, sy, vw, vh;
+    int x;
+    int sx;
     unsigned t;
+    short tx;
+    short vh;
+    int vx;
     short ty;
+    short vw;
+    int vy;
+    int sy;
+    int y;
 
+    vw = view_tiles_w + 1;
+    vh = view_tiles_h + 1;
     x = (short)(bodies[racer].x >> 16);
     y = (short)((bodies[racer].y - bodies[racer].z) >> 16);
     vx = bodies[racer].vx;
     vy = bodies[racer].vy;
-    vw = view_tiles_w + 1;
-    vh = view_tiles_h + 1;
-    sx = vx < 0 ? -1 : vx > 0;
-    sy = vy < 0 ? -1 : vy > 0;
-    tx = (short)(x - (vw << 4) + (sx << 7));
-    ty = (short)(y - vh * 20 + sy * 160);
+    tx = (short)(x - (vw << 4) + ((vx < 0 ? -1 : vx > 0) << 7));
+    ty = (short)(y - vh * 20 + (vy < 0 ? -1 : vy > 0) * 160);
     scroll_step_x = (tx - scroll_x) >> 4;
     if (tx != scroll_x)
         scroll_x += scroll_step_x;

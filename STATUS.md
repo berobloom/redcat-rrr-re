@@ -34,7 +34,11 @@ Short: where the project stands, and what is next. History is in git; no diary.
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
    question 27 lists the six, which name the function groups that must share a module). The first
-   near miss with an empty status is now `62 0x138ed camera_follow` (`15 0x1889d ground_check`, 41 -> 15 on 2026-11-24, inline
+   near miss with an empty status is now `71 0x1430e hit_test` (`62 0x138ed camera_follow` went to
+   SKIP on 2026-11-26: 62 -> 19 with the C established - short vw/vh/tx/ty, int x/y with (short)
+   casts, int vx/vy locals, ternaries inline - and what is left is two Watcom allocation ties, one
+   declaration family spills tx like the game but mirrors vx/vy, the other does the reverse;
+   `15 0x1889d ground_check`, 41 -> 15 on 2026-11-24, inline
    cell indices instead of `ox`/`oy` locals, is open question 29, and `51 0x11526 draw_view` went to
    SKIP on 2026-11-25: register homes only, 190 in-place spellings moved nothing); follower_tick 0x167aa went to
    SKIP at 9. dropped2_tick 0x178f6 went to SKIP on 2026-11-23: the
