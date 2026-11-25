@@ -126,6 +126,21 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: Smacker 2.0's DOS `SMACK.LIB` (`C:\DEVEL\PROJECTS\SMACK\20\`, two builds found on
   game CDs) matches none of RRR's Smacker code. RAD's history says the later SDK was built with
   Watcom 10.6 and shipped as SmackW32.LIB; RRR's version is still unknown.
+- CONFIRMED (2026-11-25): RRR.EXE is a WLINK 10.6 `format os2 le` link, and its layout is now
+  reproduced exactly: blobs carved from the game (`tools/link/blob.py`) linked by WLINK 10.6 under
+  Wine with `tools/link/RRR.LNK` give a file `cmp`-identical to RRR.EXE (`tools/link/link.sh`,
+  lecmp `LINK: 419179 of 419179`). What that proves about the original link:
+  - the 11,408-byte stub is 10.6's `BINW\WSTUB.EXE` (11,308 image bytes identical) with the header
+    WLINK rewrites (6 header paragraphs, relocations at 0x40, e_lfanew at 0x3c);
+  - both objects are PRELOAD (LE object flags 0x2045/0x2043): `segment type code preload` and
+    `segment type data preload`; without them the object table differs by 2 bytes;
+  - the module name is lower case `rrr` (`option modname=rrr`, or a lower-case `name`);
+  - the data object's initialised part reaches at least 0x1c96c (a pointer ends there); WLINK
+    stores no trailing zero bytes of the last page, so the file's 0x1c96b is not a segment boundary;
+  - WLINK keeps each page's fixups in 512-byte blocks filled in input order and writes the blocks
+    newest first, so the fixup records preserve the order the original objects carried their
+    fixups. In 9 pages that order is not ascending - doscalls.asm (0x2b3xx) and the Smacker code
+    (0x2ecb0-) - assembler output, not WCC386's.
 - Ownership of every byte of 0x1B916-0x4142F: `reverse-engineering/analysis/
   rrr_libmap.tsv` (`tools/libmap.py`, evidence column per range); the totals are
   in `PROGRESS.md`. 8,413 bytes are still unknown.

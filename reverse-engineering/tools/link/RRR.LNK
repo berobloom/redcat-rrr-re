@@ -1,0 +1,9 @@
+format os2 le
+option osname='DOS/4G'
+option stub=%WATCOM%\binw\wstub.exe
+option quiet, map, nodefaultlibs
+name RRR.EXE
+option modname=rrr
+file CODEBLOB.OBJ, DATABLOB.OBJ
+segment type code preload
+segment type data preload

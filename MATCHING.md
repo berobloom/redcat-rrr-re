@@ -251,4 +251,5 @@ code, not the name.
 - The game's own C, function by function (`PROGRESS.md`).
 - The module boundaries inside 0x10010-0x1B915, then one source file per original module.
 - Davilex's libraries, then REKEN, RRRMENU and INTRO.
-- A WLINK link that reproduces `RRR.EXE`'s layout.
+- A WLINK link that reproduces `RRR.EXE`'s layout: the all-blob link is byte-identical
+  (`reverse-engineering/tools/link/link.sh`); what is left is linking real objects in place of the blobs.

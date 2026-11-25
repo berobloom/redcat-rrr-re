@@ -214,6 +214,13 @@ Rules for the agent:
   own bytes for the parts not rebuilt yet) into an LE executable, and a tool reports how many bytes
   of the code object, data object and fixup table equal RRR.EXE's.
 
+  - 2026-11-25: first link done, not yet the Accept line. `reverse-engineering/tools/link/link.sh`
+    carves RRR.EXE into CODEBLOB/DATABLOB.OBJ (blob.py), links them with WLINK 10.6 under Wine
+    (RRR.LNK: os2 le, wstub, modname rrr, preload code and data) and compares (lecmp.py): `LINK: 419179
+    of 419179 file bytes identical`, `cmp` clean. Mutation: drop the two `preload` lines -> 419177.
+    Open: link src/ objects and the Watcom/Fastgraph LIBs in place of blob ranges (blob.py's
+    `--keep-out`, which needs a blob fixup into a replaced range to go through that object's public).
+
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.

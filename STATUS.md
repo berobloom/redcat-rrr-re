@@ -18,7 +18,9 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
-0. QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
+0. QUEUE Q4: an all-blob WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
+   link/link.sh`, `LINK: 419179 of 419179`). Next: swap blob ranges for src/ objects and the LIBs.
+   QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
    data-segment bytes identical in place` = `src/data.baseline`; mutation: one character of order.c's
    rc_error string -> 1834. Next is Q4 (first WLINK). Smacker hunt (2026-11-25): RRR's Smacker is
    2.1e-2.1j, its decompressor identical to the 2.1g SMACKW32.DLL; no DOS SDK found (discoveries).
