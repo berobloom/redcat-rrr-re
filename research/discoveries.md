@@ -243,6 +243,10 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
     ("sndman.c" at 0x10303/0x10350, "main.c" at 0x10eff/0x111e8) in one object means an #include.
     So that module links as itself only once start_lights 0x1103e matches. A trial split at 0x10817
     also found a missing "!" in sound_init's "Probeer andere instellingen!" (fixed in src/rrr.c).
+  - STRONGLY SUPPORTED: init.c runs 0x148db-0x15c02, with start_crash, switch_anims, fn_15166,
+    race_end, winner_film and podium (in src/rrr.c today). race_end uses init's literal at 0x50e22
+    (Watcom merges literals only inside one object), and those functions' strings continue init's
+    CONST block.
   - LIKELY: clib nomem is not in RRR. Its 18-byte _TEXT is identical to noefgfmt's (both "found"
     at 0x33abf), and noefgfmt's 36-byte CONST is what sits at 0x54e0c, where nomem's CONST would
     have to be.

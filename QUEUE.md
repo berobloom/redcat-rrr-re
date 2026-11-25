@@ -370,7 +370,9 @@ Rules for the agent:
     0x10010-0x11526 (sndman.c #included in main.c, discoveries) is one module and waits on
     start_lights (3 rows, nearmiss). The other whole-module candidates are one function short each,
     and each of those is a long-standing register-tie SKIP: HEAP (spawn_dropped_object), MAP
-    (ground_check), NEW2IO (draw_view), SHADEOBJ (hit_test).
+    (ground_check), NEW2IO (draw_view), SHADEOBJ (hit_test). rrr.c's race_end/winner_film/podium
+    (0x1585e-0x15c02) are init.c's: they share a merged literal with it (0x50e22) and their strings
+    continue its CONST (0x5113b -> 0x5116a), so init.c = 0x148db-0x15c02, waiting on init_objects.
 
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
