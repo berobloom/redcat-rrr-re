@@ -36,6 +36,11 @@ PY = os.path.join(ROOT, '.work', 'venv', 'bin', 'python')
 WLIB = os.path.join(ROOT, '.work', 'watcom', 'dos', 'C106', 'WATCOM', 'LIB386')
 LIBS = [('clib', os.path.join(WLIB, 'DOS', 'CLIB3R.LIB')), ('math', os.path.join(WLIB, 'MATH387R.LIB')),
         ('emu', os.path.join(WLIB, 'DOS', 'EMU387.LIB')), ('math', os.path.join(WLIB, 'MATH3R.LIB'))]
+# Fastgraph 4.00's 32-bit library (FGL400-2.ZIP/FG32.ARJ, discmaster.textfiles.com), when present:
+# RRR links 4.03, so only the modules 4.01-4.03 left unchanged match (13, research/discoveries.md).
+FG400 = os.path.join(ROOT, '.work', 'dl', 'dm', 'fg400', 'FG32.LIB')
+if os.path.exists(FG400):
+    LIBS.append(('fastgraph', FG400))
 LIB_START, CODE_END = 0x1B916, 0x10000 + 0x31430
 STARTUP = {'cstrt386', 'cmain386', 'inirt386', 'initargv', 'stack386', 'cinit', 'argcv386', 'seg386',
            'dosinite', 'chk8087', 'ini87386', 'hook387', 'inirmsel', 'enterdb', 'set386', 'chint386'}

@@ -206,13 +206,17 @@
 0x26ead	0x26ee8	59	startup	reken	cstrt386 __do_exit_with_msg__
 0x26ee8	0x26ef3	11	startup	reken	cstrt386 ___GETDSStart_
 0x26ef3	0x26ef4	1	unknown	-	
-0x26ef4	0x2764c	1880	fastgraph	reken	VBPASTE.ASM _fg_vbpaste
+0x26ef4	0x2764c	1880	fastgraph	libmatch	VBPASTE.ASM
 0x2764c	0x2772f	227	clib	libmatch	nmalloc
 0x2772f	0x27730	1	unknown	-	
 0x27730	0x2774d	29	math	libmatch	fchop
 0x2774d	0x2774e	1	unknown	-	
 0x2774e	0x27794	70	math	libmatch	atan387
-0x27794	0x278fa	358	unknown	-	
+0x27794	0x2779e	10	unknown	-	
+0x2779e	0x27837	153	fastgraph	libmatch	INITJOY.ASM
+0x27837	0x2784e	23	fastgraph	libmatch	BUTTON.ASM
+0x2784e	0x278a4	86	fastgraph	libmatch	GETXJOY.ASM
+0x278a4	0x278fa	86	fastgraph	libmatch	GETYJOY.ASM
 0x278fa	0x284d8	3038	clib	libmatch	prtf
 0x284d8	0x284e6	14	clib	libmatch	tolower
 0x284e6	0x2851a	52	clib	libmatch	seterrno
@@ -306,7 +310,7 @@
 0x2b82e	0x2b84f	33	clib	libmatch	fprintf
 0x2b84f	0x2bb5c	781	fastgraph	reken	INITPM.ASM _fg_initpm
 0x2bb5c	0x2db23	8135	fastgraph	reken	SVGAINIT.ASM _fg_svgainit
-0x2db23	0x2dcce	427	fastgraph	reken	ERASE.ASM _fg_erase
+0x2db23	0x2dcce	427	fastgraph	libmatch	ERASE.ASM
 0x2dcce	0x2dcec	30	unknown	-	
 0x2dcec	0x2ddf0	260	winlib	reken	C:\PROTMOD\WINLIB\mgl2\fg2\rcbutton.c init_mem_button_
 0x2ddf0	0x2de85	149	winlib	reken	C:\PROTMOD\WINLIB\mgl2\fg2\rcbutton.c INIT_BUTTON_INDEX
@@ -335,7 +339,7 @@
 0x31ef1	0x31f08	23	clib	libmatch	rewind
 0x31f08	0x31fcb	195	clib	libmatch	gtctm
 0x31fcb	0x3211f	340	clib	libmatch	mktime
-0x3211f	0x3215d	62	fastgraph	reken	SETDACS.ASM _fg_setdacs
+0x3211f	0x3215d	62	fastgraph	libmatch	SETDACS.ASM
 0x3215d	0x321f4	151	fastgraph	reken	MEASURE.ASM _fg_measure
 0x321f4	0x32241	77	fastgraph	reken	STALL.ASM _fg_stall
 0x32241	0x3227c	59	winlib	reken	C:\PROTMOD\WINLIB\mgl2\fg2\pal.c RESET_VGA_PALETTE
@@ -364,11 +368,11 @@
 0x33bec	0x33bfd	17	clib	libmatch	tell
 0x33bfd	0x33c74	119	clib	libmatch	initfile
 0x33c74	0x33cdd	105	clib	libmatch	ioexit
-0x33cdd	0x33d82	165	fastgraph	reken	MOUSEBUT.ASM _fg_mousebut
+0x33cdd	0x33d82	165	fastgraph	libmatch	MOUSEBUT.ASM
 0x33d82	0x33e09	135	fastgraph	reken	MOUSEPOS.ASM _fg_mousepos
 0x33e09	0x34c01	3576	fastgraph	reken	MOUSEINI.ASM _fg_mouseini
-0x34c01	0x34c8f	142	fastgraph	reken	MOUSELIM.ASM _fg_mouselim
-0x34c8f	0x34d35	166	fastgraph	reken	MOUSEMOV.ASM _fg_mousemov
+0x34c01	0x34c8f	142	fastgraph	libmatch	MOUSELIM.ASM
+0x34c8f	0x34d35	166	fastgraph	libmatch	MOUSEMOV.ASM
 0x34d35	0x34e09	212	clib	libmatch	setenvp
 0x34e09	0x34e3d	52	clib	libmatch	flushall
 0x34e3d	0x34e5a	29	clib	libmatch	gtche
@@ -417,7 +421,7 @@
 0x35f2d	0x36374	1095	clib	libmatch	timeutil
 0x36374	0x364b4	320	clib	libmatch	gmtime
 0x364b4	0x36884	976	clib	libmatch	tzset
-0x36884	0x368c2	62	fastgraph	reken	WAITFOR.ASM _fg_waitfor
+0x36884	0x368c2	62	fastgraph	libmatch	WAITFOR.ASM
 0x368c2	0x36905	67	fastgraph	reken	GETDACS.ASM _fg_getdacs
 0x36905	0x36993	142	clib	libmatch	clock
 0x36993	0x3699c	9	startup	libmatch	stack386

@@ -235,7 +235,7 @@ def main():
         if line.startswith('0x'):
             f = line.rstrip('\n').split('\t')
             owners[f[3]] = owners.get(f[3], 0) + int(f[2])
-            if f[4] == 'libmatch':
+            if f[4] == 'libmatch' and f[3] in ('clib', 'math', 'emu', 'startup'):
                 watcom_bytes += int(f[2])
 
     order, sub_of = subsystems()
@@ -303,7 +303,7 @@ def main():
         ('davilex-diff', 'Davilex WINLIB/SOUNDLIB functions that differ from REKEN\'s copy',
          'owned by their source-file strings, not byte-matched; C to rebuild'),
         ('davilex-asm', 'Davilex assembly (doscalls.asm, cpy.asm)', 'byte for byte the same as REKEN\'s copy'),
-        ('fastgraph', 'Fastgraph V4.03 (the upper-case *.ASM modules)', 'byte for byte the same as REKEN\'s copy; commercial, wanted as its LIB'),
+        ('fastgraph', 'Fastgraph V4.03 (the upper-case *.ASM modules)', 'byte for byte the same as REKEN\'s copy; 13 modules also against Fastgraph 4.00\'s FG32.LIB (unchanged up to 4.03)'),
         ('smacker', 'Smacker player (RAD)', 'shared byte for byte with INTRO, RRRMENU and install, called only from smacker.c; commercial, wanted as its LIB'),
         ('unknown', 'Not identified yet', 'nothing matched'),
     ]

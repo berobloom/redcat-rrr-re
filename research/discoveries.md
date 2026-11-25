@@ -94,6 +94,18 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `smacker.c` wrapper 0x21a67-0x22ab5 (56 call sites), every call into the second
   from the first; the pieces start on 16-byte boundaries, which Watcom C does not
   emit. No RAD string names it.
+- CONFIRMED (2026-11-25): the Fastgraph code is Fastgraph's 32-bit library. 13 modules of
+  Fastgraph **4.00**'s `FG32.LIB` (FGL400-2.ZIP/FG32.ARJ on discmaster.textfiles.com, kept in
+  `.work/dl/dm/fg400/`, not in git) occur in RRR byte for byte with fixups masked: VBPASTE.ASM
+  (1,880 B), ERASE.ASM (427), MOUSEBUT/MOUSELIM/MOUSEMOV.ASM, SETDACS.ASM, WAITFOR.ASM and the four
+  joystick modules INITJOY/BUTTON/GETXJOY/GETYJOY.ASM at 0x2779e-0x278fa, which REKEN does not link.
+  The rest differ: RRR links 4.03 (Fastgraph's own 4.01-4.03 READ.MEs list changed 32-bit routines).
+  A Watcom + DOS/4GW program links `FG32.LIB` + `FG32DPMI.LIB` (+ `FG32WC.LIB`), per updat403's
+  READ.ME. Fastgraph's official patches updat401/402/403.zip (www.fastgraph.com/fg/) are RTPatch
+  deltas; applied in order to the 4.00 files they should give 4.03's libraries exactly - not run yet.
+- CONFIRMED: Smacker 2.0's DOS `SMACK.LIB` (`C:\DEVEL\PROJECTS\SMACK\20\`, two builds found on
+  game CDs) matches none of RRR's Smacker code. RAD's history says the later SDK was built with
+  Watcom 10.6 and shipped as SmackW32.LIB; RRR's version is still unknown.
 - Ownership of every byte of 0x1B916-0x4142F: `reverse-engineering/analysis/
   rrr_libmap.tsv` (`tools/libmap.py`, evidence column per range); the totals are
   in `PROGRESS.md`. 8,413 bytes are still unknown.
