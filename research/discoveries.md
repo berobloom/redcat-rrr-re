@@ -340,10 +340,15 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   {waypoint, action, …}, 30 per block, block [0x751a4]; actions 1 rocket
   aimed by `0x13e3d`, 2 drop, 3 boost, 4 wait). Entry +8 is the argument: a
   kind for action 2 (`0x18759`) and the rival's racer number for action 1,
-  whose heading `0x13e3d` aims with; entry +0x14 is a waypoint number compared
+  whose heading `0x13e3d` aims with - except in Snitch's own rocket arm, which
+  reads Brutus's entry: 0x1b3bf is `mov edx, [eax + 0x57c98]` (script2 +8),
+  while Snitch's drop arm uses 0x5bd48 (script4 +8); entry +0x14 is a waypoint number compared
   with `waypoint_index0 - 1`, and action 4 turns 0x55fec (Brutus) / 0x56010
   (Snitch) on below it (zeroing bodies[racer]+0x1c and facing the racer at the
-  player once, `0x13e3d`) and off above it; with the flag on, `0x12c9d` and
+  player once, `0x13e3d`) and off above it (the zeroed dword is 0x1b2f0's
+  `mov [r*40 + 0x6cc08], 0` = bodies[r].speed, the same field the boost's
+  `add word [r*40 + 0x6cc0a], 8` raises - an earlier note here said +0x1c);
+  with the flag on, `0x12c9d` and
   `0x1355f` call `0x1af83` again for the waypoint just left (index - 1).
   Action 1 also needs stats +0x1c (rockets) and fires `0x185d4`; 2 needs +0x20 and damage >= 0; the rocket and drop actions play
   sample 20, the boost 16 then 17. Both tables are empty in

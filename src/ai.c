@@ -15,14 +15,29 @@
  * once and adds the two table bases as displacements.
  * -------------------------------------------------------------------------------------------- */
 
-/* differs (145 rows): Watcom shares what the game keeps apart. The game reloads
- * bodies[racer].stats from scratch for every one of the four checks in the fallback
- * (mov edx,ebx; *5; load; *48) and duplicates the two check pairs, one per kind branch,
- * sharing only the spawn call; ours hoists the loads and merges the checks (854 bytes vs
- * 1254). Case bodies go in the game's order (2 before 1 - the jump table at 0x1af53 has
- * f4=1 at index 2 but its body sits at 0x1b196, after the f4=2 body at 0x1b157), which
- * took 164 rows to 145; the game also keeps ESI for i*24 where we use ECX, and passes
- * kind in EAX->EDX through a register the other way round. No wrong address (nmrefs).
+/* differs (145 -> 64 rows, 1151 of the game's 1254 bytes): the content was missing, not
+ * the spelling. Three things were:
+ * 1. The switch has a SIXTH arm. Both jump tables (0x1af53, 0x1af6b) hold six entries for
+ *    f4+1 = 0..5, so f4 = 4 exists: wait. Its body (0x1b2c7 for racer 2, 0x1b407 for racer 4)
+ *    is `if (waypoint_index0 - 1 < script[world][i].f14) { wait2/4 = 1; bodies[racer].speed
+ *    = 0; stats[...].heading = aim_at_player(racer, 0); } else wait2/4 = 0;` - 90 bytes each,
+ *    -77 rows. Both tables' f4 = 3 arm points at the ONE boost body at 0x1b25e, so case 3 is
+ *    written in both switches and Watcom emits it once (like cell_effect's duplicated case).
+ * 2. Racer 4's rocket arm reads BRUTUS's script: 0x1b3bf is `mov edx, [eax + 0x57c98]` =
+ *    script2[world][i].f8; script4's f8 (0x5bd48) is only used in that switch's drop arm
+ *    (0x1b37e). CONFIRMED - writing script2 there is what makes check.sh's fixup agree.
+ * 3. The fallback's drop kind is an immediate in the call's second register (`xor edx,edx`
+ *    at 0x1b012, `mov edx,4` at 0x1b064), and the mine arm carries its own copy of
+ *    spawn+play_fx(20,0)+return while the bomb arm falls into the shared one. Writing the
+ *    kind into the parameter `n` and one shared call after the if/else costs 4 rows; two
+ *    symmetric `spawn_dropped_object()` calls cost 11.
+ * What is left is allocation, again: the game re-derives bodies[racer].stats * 48 at every
+ * check inside the case bodies (nmrefs: 3 more bodies reads, 1 more stats read, 1 more
+ * [rrrio.world] read and one more aim_at_player call site) where we keep the value or the
+ * base offset in a register, and it keeps ECX = i and ESI = i * 24 where we keep i * 24 in
+ * ECX. Guard-clause vs `&&` conditions in the arms (all three), an `int h` for the aim
+ * argument, the switch expression in an `int act` local: all exactly 64. `default: break;`
+ * instead of `case -1: case 0:` costs 4, and writing case 4's `else` arm first costs 13.
  */
 
 void ai_waypoint_action(int racer, int n)
@@ -36,15 +51,16 @@ void ai_waypoint_action(int racer, int n)
                     return;
                 if (stats[bodies[racer].stats].damage < 0)
                     return;
-                n = 0;
+                spawn_dropped_object(racer, 0);
+                play_fx(20, 0);
+                return;
             } else {
                 if (stats[bodies[racer].stats].drops == 0)
                     return;
                 if (stats[bodies[racer].stats].damage < 0)
                     return;
-                n = 4;
+                spawn_dropped_object(racer, 4);
             }
-            spawn_dropped_object(racer, n);
             play_fx(20, 0);
             return;
         }
@@ -89,6 +105,15 @@ void ai_waypoint_action(int racer, int n)
                 play_fx(17, 0);
             }
             break;
+        case 4:
+            if (waypoint_index0 - 1 < script2[rrrio.world][i].f14) {
+                wait2 = 1;
+                bodies[racer].speed = 0;
+                stats[bodies[racer].stats].heading = aim_at_player(racer, 0);
+            } else {
+                wait2 = 0;
+            }
+            break;
         }
     } else if (racer == 4) {
                 switch (script4[rrrio.world][i].f4) {
@@ -103,7 +128,7 @@ void ai_waypoint_action(int racer, int n)
             if (stats[bodies[racer].stats].rockets != 0
                 && stats[bodies[racer].stats].damage >= 0) {
                 stats[bodies[racer].stats].heading = aim_at_player(racer,
-                    stats[bodies[script4[rrrio.world][i].f8].stats].heading);
+                    stats[bodies[script2[rrrio.world][i].f8].stats].heading);
                 fire_rocket(racer);
                 play_fx(20, 0);
             }
@@ -118,6 +143,15 @@ void ai_waypoint_action(int racer, int n)
                 play_fx(16, 0);
                 stats[bodies[racer].stats].boosts--;
                 play_fx(17, 0);
+            }
+            break;
+        case 4:
+            if (waypoint_index0 - 1 < script4[rrrio.world][i].f14) {
+                wait4 = 1;
+                bodies[racer].speed = 0;
+                stats[bodies[racer].stats].heading = aim_at_player(racer, 0);
+            } else {
+                wait4 = 0;
             }
             break;
         }
