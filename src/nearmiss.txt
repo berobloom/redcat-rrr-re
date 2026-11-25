@@ -27,6 +27,14 @@
 15 0x17c74 dropped4_tick  the same one register choice as dropped2_tick
 15 0x1889d ground_check  41 -> 15: no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c
 15 0x13a78 fn_13a78  SKIP: three register mirrors (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
+91 0x130f8 muis_tick  written 2026-11-27, src/tick.c; 2032 of 2037 B. Three fifths of it is
+   muis_crash_tick's C (the AI block, the v56018-v5602c state, f24/want, throttle/turn, the z tail) -
+   see the note there - plus the damage/fuel test that sets crash4, play_fx(7, distance to RedCat),
+   puffs whose kind is the damage, and an anim offset by vz. Levers: the damage and fuel tests are two
+   separate `if`s with the same body, which is what makes the second jl jump back into the first crash
+   store (112 -> 99), the vz thresholds are negative constants (0xfffb0000 as an int is a huge
+   positive and WCC compares unsigned; -0x50000 gives the game's jge), and the vz table sets
+   objects[n].frame (+0xa), not anim (+8).
 282 0x19497 player_crash_tick  written 2026-11-27, src/tick.c; 2047 of 2037 B, from the
    disassembly. RedCat's crash tick: refreshes the player's input flags 0x55fd0-0x55fe8 from
    key_pressed(keymap[]), rocket/boost on key edges (0x55fc8/0x55fcc), throttle + fuel on

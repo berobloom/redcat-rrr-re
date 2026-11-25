@@ -415,7 +415,9 @@ int new_sign(int x, int y, int anim);
 int new_bomb(int x, int y);
 int direction_to_waypoint(int racer, int x, int y);
 int aim_at_player(int racer, int target);
-extern int            crash0, crash2, crash4;   /* 0x56078, 0x56080, 0x5607c: race over for that racer */
+extern int            crash0, crash2, crash4;   /* 0x56078, 0x56080, 0x5607c: set when that racer's
+                                           damage or fuel runs out (muis_tick 0x13177), and its tick
+                                           switches to the crash tick then */
 extern int            joy_on;               /* 0x5fdf0 */
 extern int            key_right;            /* 0x55fd8: right key held this frame */
 extern int            key_left;             /* 0x55fdc: left key held this frame */
