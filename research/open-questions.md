@@ -162,6 +162,14 @@
     find_bonus_objects 0x15597 share the epilogue at 0x15565 and both pass the
     literal 'init.c'; in src/init.c find_bonus_objects went to MATCH with no C
     change at all (its tail jmp now resolves to find_waypoints' pop/ret).
+    2026-11-25, the negative case works too: the three crash ticks 0x19497 /
+    0x19c8c / 0x1a42a sit back to back and share no epilogue in the game (each
+    has its own xor eax,eax + add esp,0xc + pops + ret), so they cannot be one
+    object; splitting src/tick.c into tick.c (player) + crashbull.c + crashmuis.c
+    took player_crash_tick 282 -> 276 rows. Three consecutive functions can be
+    three objects, so "back to back" does not say "one module" - only a shared
+    epilogue does. What the three modules' names are stays unknown (no string
+    block in any of the three).
 28. **Open: follower_tick 0x167aa's last 9 rows are two register choices.**
     (a) the game turns the short parameter into an int where it sits -
     `cwde`, then `mov esi,eax` for the objects index and `dec eax` for the

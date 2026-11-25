@@ -57,12 +57,15 @@ def nearmiss_notes():
     """Game address -> the hand-kept status text of its src/nearmiss.txt line (MATCH/SKIP/LAYOUT/ASM)."""
     out, cur = {}, None
     for line in open(os.path.join(ROOT, 'src', 'nearmiss.txt')):
-        f = line.split(None, 3)
-        if len(f) >= 4 and f[1].startswith('0x'):
-            cur = int(f[1], 16)
-            out[cur] = f[3].strip()
-        elif cur is not None and line[:1].isspace() and line.strip():
-            out[cur] += ' ' + line.strip()          # wrapped status line
+        if line[:1].isspace():                                   # wrapped status text
+            if cur is not None and line.strip():
+                out[cur] += ' ' + line.strip()
+            continue
+        f = line.split()
+        at = next((i for i in range(min(5, len(f))) if re.fullmatch(r'0x[0-9a-f]+', f[i])), None)
+        if at is not None and len(f) > at + 2:
+            cur = int(f[at], 16)
+            out[cur] = ' '.join(f[at + 2:])
         else:
             cur = None
     return out

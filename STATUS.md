@@ -59,7 +59,15 @@ Short: where the project stands, and what is next. History is in git; no diary.
    is unsigned (the game's tests on it are `test` + `jbe`/`ja`), which is worth four rows on its own,
    and `if (f <= 0) {...} else if (f == 3) {...}` lands the game's block order where
    `if (f > 0) { if (f == 3) ... } else {...}` puts the same bodies the other way round (78 -> 70).
-3. Near misses: `src/nearmiss.txt`, first line with an empty status. **The compiler-version
+3. Near misses: `src/nearmiss.txt`, first line with an empty status. 2026-11-25: one word takes
+   25 rows off `bull_crash_tick` 0x19c8c - the `go == 0` arm's f24 guard is `if (f <= 0)`, not
+   `if (f == 0)`, because the game's test is unsigned (`test` + `ja`, discoveries "Toolchain:
+   narrow types"), and it is worth 3 more on `muis_crash_tick` 0x1a42a (70 -> 67, now SKIPped:
+   36 spellings of the f24/want chains leave one block-placement decision, 22 rows, untouched).
+   Splitting `src/tick.c` into one file per crash tick (they share no epilogue in the game, open
+   question 27) took `player_crash_tick` 282 -> 276. That is 538 -> 501 rows over the three, the
+   biggest single-day drop outside the shared-index-holder commit; the counts in `PROGRESS.md`
+   are unchanged (124 of 147) because no function reached MATCH. **The compiler-version
    explanation is dead** (2026-11-27): the game does link 10.6, but 10.5 and 10.6 produce identical
    segments for all 16 modules, so `src/check.sh` reads 117 MATCH and the same 28 near misses with
    both - the one-register-choice family (open questions 25, 26, 28, 29, 31) is still a C question.

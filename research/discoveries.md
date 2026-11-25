@@ -553,6 +553,13 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   set first) and at its epilogue (0x17b5b) - so the three dropped ticks are one object and dropped2
   is the tail's host. Our SHADEOBJ2.OBJ does the same once dropped2_tick's code has the game's shape
   (2026-11-27, all three byte-identical).
+- CONFIRMED: the three crash ticks are back to back in the image (0x19497, 0x19c8c, 0x1a42a) but are
+  **not** one object: none of them is in the six-share list, and each ends in its own `xor eax,eax` +
+  `add esp,0xc` + six pops + `ret` (muis_crash_tick's at 0x1ab73-0x1ab7e). With all three in one
+  `src/tick.c`, WCC ended bull_crash_tick's and muis_crash_tick's tails in a `jmp` to
+  player_crash_tick's epilogue; splitting them into `src/crashbull.c` and `src/crashmuis.c`
+  (2026-11-25) took player_crash_tick 282 -> 276 instruction rows and stopped the other two carrying
+  a borrowed tail. Mutation: back in one file, player_crash_tick returns to 282.
 
 ## Toolchain: narrow types, and jump-table padding inside one object
 
@@ -565,6 +572,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   0x1517a went 190 -> 0 instruction rows, with behaviour, strings and line numbers unchanged
   (`.work/probe/FW2VAR.C`: `unsigned short w` 7 rows, `short w` 10, `int w` 147+, and dropping the
   n local is worth ~140 rows on its own).
+- CONFIRMED (compile, 2026-11-25): an unsigned `if (f <= 0)` compiles to `test` + `ja`/`jbe`, which
+  is what the game has for `stats[].f24` (0x1a63d `jbe`, 0x1a72c `ja`), while `if (f == 0)` gives
+  `test` + `jne`. The field cannot go below zero, so only the compiler's shape tells the C which
+  spelling to use: one word in `src/crashmuis.c` and `src/crashbull.c` took bull_crash_tick 0x19c8c
+  185 -> 158 instruction rows and muis_crash_tick 0x1a42a 70 -> 67.
 - CONFIRMED: WCC386 4-aligns a switch's jump table inside its own object, so the nop before it is
   1-4 bytes and follows from the size mod 4 of everything the object holds earlier. The game's
   `find_bonus_objects` table (ten entries, 0x1556f) sits behind a 3-byte `lea eax,[eax]`; ours is
