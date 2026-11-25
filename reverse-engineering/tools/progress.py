@@ -304,7 +304,7 @@ def main():
          'owned by their source-file strings, not byte-matched; C to rebuild'),
         ('davilex-asm', 'Davilex assembly (doscalls.asm, cpy.asm)', 'byte for byte the same as REKEN\'s copy'),
         ('fastgraph', 'Fastgraph V4.03 (the upper-case *.ASM modules)', 'byte for byte against Fastgraph 4.03\'s FG32.LIB and FG32DPMI.LIB (29 modules); commercial, linked from the LIB'),
-        ('smacker', 'Smacker player (RAD)', 'shared byte for byte with INTRO, RRRMENU and install, called only from smacker.c; commercial, wanted as its LIB'),
+        ('smacker', 'Smacker player 2.1e-2.1j (RAD)', 'shared byte for byte with INTRO, RRRMENU and install, called only from smacker.c; the decompressor core equals the 2.1g SMACKW32.DLL; the DOS SDK LIB is not found'),
         ('unknown', 'Not identified yet', 'nothing matched'),
     ]
     for k, what, how in LIBROWS:

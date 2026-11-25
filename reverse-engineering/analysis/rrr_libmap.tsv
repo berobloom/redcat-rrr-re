@@ -333,7 +333,7 @@
 0x2e967	0x2e9a2	59	clib	libmatch	accss
 0x2e9a2	0x2eab1	271	clib	libmatch	splitpat
 0x2eab1	0x2ecb0	511	clib	libmatch	makepath
-0x2ecb0	0x31dd9	12585	smacker	smacker	Smacker player (called from smacker.c 56 times)
+0x2ecb0	0x31dd9	12585	smacker	smacker	Smacker player 2.1e-2.1j (called from smacker.c 56 times)
 0x31dd9	0x31eb4	219	fastgraph	libmatch	GETMODE.ASM
 0x31eb4	0x31ef1	61	clib	libmatch	filelen
 0x31ef1	0x31f08	23	clib	libmatch	rewind
@@ -502,4 +502,4 @@
 0x3d453	0x3d472	31	clib	libmatch	iobaddr
 0x3d472	0x3d4ed	123	clib	libmatch	fputs
 0x3d4ed	0x3d500	19	unknown	-	
-0x3d500	0x41430	16176	smacker	smacker	Smacker player (called from smacker.c 56 times)
+0x3d500	0x41430	16176	smacker	smacker	Smacker player 2.1e-2.1j (called from smacker.c 56 times)

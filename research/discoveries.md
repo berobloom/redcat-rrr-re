@@ -111,6 +111,18 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (SVGAINIT 8,135 B, MOUSEINI 3,576, MAKEPCX 2,680, MAKEGIF 2,491, SETMODE 2,206, VBPASTE 1,880, ...)
   and FG32DPMI.LIB's INITPM.ASM (781) byte for byte - every Fastgraph module the debug-info route
   found, plus the joystick four. FG32WC.LIB (the Watcom auxiliary C library) is not linked.
+- CONFIRMED (2026-11-25): RRR's Smacker is version **2.1e-2.1j** (mid-1996), most likely ~2.1g.
+  Measured as the share of RRR's Smacker code (24-byte runs clear of fixups) found in RAD's
+  SMACKW32.DLL per version (github.com/vogonsorg/radgametools, labelled builds; `.work/dl/`, not
+  in git): 2.0t-2.0x 5-10%, 2.1c (1996-04-09) 10%, **2.1g (1996-06-19) 64%**, a 1996-08-23 build
+  (2.1k by date) 37%, 2.1m-3.0j 31-37%. The jump fits RAD's history ("2.1e - 05/25/96: Rewrote
+  low-level decompressor", radgametools.com/smkhist.htm). Against 2.1g every function of the second
+  range 0x3d500-0x4142f (17.6 KB, the decompressor core) is found whole with fixups masked; of the
+  first range (the API layer, 12.5 KB) only 0x2ecb0, 0x2fe60, 0x30250, 0x302c0, 0x313e0 and 0x31db0
+  are - the rest is DOS-only (video modes, DOS sound) or rebuilt for the DLL's stdcall exports.
+  No DOS SDK of 2.1e-2.1j has been found (discmaster has only 2.0e/2.0y headers and 2.0 LIBs).
+- Davilex's `smacker.c` includes RAD's `radmal.i` (string 'radmal.i' at the '%d bytes alloc'
+  function 0x21995): RAD's allocator source, copy in the JA2 1.13 source release.
 - CONFIRMED: Smacker 2.0's DOS `SMACK.LIB` (`C:\DEVEL\PROJECTS\SMACK\20\`, two builds found on
   game CDs) matches none of RRR's Smacker code. RAD's history says the later SDK was built with
   Watcom 10.6 and shipped as SmackW32.LIB; RRR's version is still unknown.

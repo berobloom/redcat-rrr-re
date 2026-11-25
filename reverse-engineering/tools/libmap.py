@@ -119,7 +119,7 @@ def main():
                     spans.append((a, a + n, klass(m.group(3), cls), m.group(3), 'libmatch'))
     calls = check_smacker()
     for s, e in SMACKER:
-        spans.append((s, e, 'smacker', 'Smacker player (called from smacker.c %d times)' % calls, 'smacker'))
+        spans.append((s, e, 'smacker', 'Smacker player 2.1e-2.1j (called from smacker.c %d times)' % calls, 'smacker'))
     # one owner per byte: libmatch first, then reken, then smacker
     owner = {}
     order = {'libmatch': 0, 'reken': 1, 'smacker': 2}
