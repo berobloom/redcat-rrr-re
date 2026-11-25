@@ -27,6 +27,14 @@
 15 0x17c74 dropped4_tick  the same one register choice as dropped2_tick
 15 0x1889d ground_check  41 -> 15: no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c
 15 0x13a78 fn_13a78  SKIP: three register mirrors (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
+208 0x12826 bull_tick  written 2026-11-27, src/tick.c; 2144 of 2258 B. Transplanted from muis_tick
+   (which is itself muis_crash_tick's AI): the two damage/fuel tests that set crash2, the waypoint2
+   block on v55ff8-v5600c, boost limit 0x1c0000, play_fx(6, |x-x0|+|y-y0|) as the engine sound, and
+   the one thing only the living Brutus has here: `if (!racer_contact(n, 4)) v55ff4 = 0; else if
+   (!v55ff4) { racer_bounce(n, 4); play_fx(13, |speed|/65536*10); v55ff4 = 1; }`. The length gap is
+   not a missing statement: the shift grows 13 -> 29 -> 114 bytes across the function, i.e. the game
+   reloads `n` and recomputes the bodies[] index where we keep it in a register, and that costs a
+   few bytes per block.
 91 0x130f8 muis_tick  written 2026-11-27, src/tick.c; 2032 of 2037 B. Three fifths of it is
    muis_crash_tick's C (the AI block, the v56018-v5602c state, f24/want, throttle/turn, the z tail) -
    see the note there - plus the damage/fuel test that sets crash4, play_fx(7, distance to RedCat),

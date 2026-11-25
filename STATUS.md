@@ -35,9 +35,18 @@ Short: where the project stands, and what is next. History is in git; no diary.
    pad bytes at 0x1556c needed something 3 mod 4 bytes in front of find_waypoints in init.o, and
    init_objects (1635 B) is it (open question 30, resolved).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
-   first (functions whose callees are matched or are library calls). Four are left: the assembly
-   blit_sprite 0x11bb4 and the three C ticks bull_tick 0x12826, muis_tick 0x130f8 and player_tick
-   0x11eb5. 2026-11-27 wrote the three crash ticks into a new `src/tick.c`, muis_crash_tick
+   first (functions whose callees are matched or are library calls). One C function is left,
+   player_tick 0x11eb5, plus the assembly blit_sprite 0x11bb4 (it has an `enter` frame, as does
+   blit_sprite_trans 0x17d94; both are SKIP). 2026-11-27 then wrote the three normal ticks into the
+   same `src/tick.c`: muis_tick 0x130f8 (91 rows) and bull_tick 0x12826 (208). muis_tick is
+   muis_crash_tick's AI plus the damage/fuel test that sets crash4, play_fx(7, distance to RedCat)
+   and an anim offset chosen by vz; the two levers that took 112 -> 91 are the separate `if`s for
+   damage and fuel (the second `jl` then jumps back into the first crash store) and writing the vz
+   thresholds as negative ints (`0xfffb0000` as an int is a huge positive, so WCC compares unsigned;
+   -0x50000 gives the game's `jge`); the vz table writes `objects[n].frame` (+0xa), not `anim` (+8).
+   bull_tick's 208 is register allocation, not a missing statement: the byte shift between the two
+   grows 13 -> 29 -> 114 across the function, the game re-deriving the bodies[] index where we keep
+   it in a register. Earlier the same day: the three crash ticks, muis_crash_tick
    0x1a42a (70 rows), bull_crash_tick 0x19c8c (185) and player_crash_tick 0x19497 (282); the three
    crash ticks are per-racer C, not copies - under half their
    instruction streams agree, and only bull's has the racer_contact/racer_bounce block.
