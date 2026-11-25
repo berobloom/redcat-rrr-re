@@ -541,6 +541,16 @@
 0x7191c waypoint_count2      # CONFIRMED: Brutus's (discoveries.md: count [0x7191c])
 0x71dd4 waypoint_count4      # CONFIRMED: Snitch's (discoveries.md: count [0x71dd4])
 0x55fec wait2                # LIKELY: script action 4 (wait) sets it for Brutus, bull_tick 0x12c9d only calls ai_waypoint_action with it set; cleared when the player is past script2[].f14
+0x55fd0 key_forward           # CONFIRMED (code): player_crash_tick 0x195a0 = key_pressed(keymap[5]); with key_back it selects steer_tbl row 0 (0x19869)
+0x55fd4 key_back              # CONFIRMED (code): key_pressed(keymap[4]) (0x195b0); selects steer_tbl row 2 (0x1987a)
+0x55fe0 v55fe0                # LIKELY: a steering key is held (set 0x19668 when key_forward/back/left/right)
+0x55fe4 v55fe4                # LIKELY: rocket key held, key_pressed(keymap[0]) (0x195da)
+0x55fe8 v55fe8                # LIKELY: boost key held, key_pressed(keymap[1]) (0x195d0)
+0x55fc4 v55fc4                # LIKELY: the player bounced off a racer last frame (set after racer_bounce 0x14534, 0x19b03)
+0x55fc8 v55fc8                # LIKELY: a rocket was fired since the rocket key went down (0x1973d)
+0x55fcc v55fcc                # LIKELY: the boost was applied since the boost key went down (0x197be)
+0x56030 steer_tbl             # CONFIRMED: int[3][3], [key_forward?2:0+key_back?..][key_left/key_right] -> heading step into turn_tbl, -1 = none (0x19889)
+0x75174 v75174                # LIKELY: player throttle counter, 0-3 then reset (player_crash_tick 0x1981b), the same role as v71918/v71ddc for racers 2/4
 0x55ff4 v55ff4               # LIKELY: racer 2 bounced from a racer last frame (set after racer_bounce 0x14534 in bull_crash_tick 0x1a2e5)
 0x55ff8 v55ff8               # LIKELY: racer 2 drives (bull_crash_tick 0x19e1d)
 0x55ffc v55ffc               # LIKELY: racer 2 brakes (bull_crash_tick 0x19fda)

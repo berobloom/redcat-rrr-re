@@ -270,6 +270,16 @@ struct stats {                              /* 48 bytes per racer (discoveries.m
     int     top_speed;                          /* +0x2c */
 };
 extern struct stats   stats[];              /* 0x6fbc0 */
+extern int            key_forward, key_back;  /* 0x55fd0, 0x55fd4: keymap[5]/keymap[4] held, set by
+                                           player_crash_tick 0x195a0 and read by player_tick */
+extern int            v55fe0;             /* 0x55fe0: a steering key is held this frame */
+extern int            v55fe4, v55fe8;     /* 0x55fe4, 0x55fe8: rocket/boost key held (keymap[0]/[1]) */
+extern int            v55fc4;             /* 0x55fc4: the player bounced off a racer last frame */
+extern int            v55fc8, v55fcc;     /* 0x55fc8: rocket fired since the key went down;
+                                           0x55fcc: boost applied since the key went down */
+extern int            v75174;             /* 0x75174: player throttle counter (0-4 per puff) */
+extern int            steer_tbl[3][3];    /* 0x56030: [forward/back/straight][left/right/straight]
+                                           -> heading step, -1 = keep heading */
 extern int            v55ff4;             /* 0x55ff4: racer 2 bounced off a racer last frame */
 extern int            v55ff8, v55ffc, v56000, v56004, v56008, v5600c;
                                         /* 0x55ff8-0x5600c: racer 2's tick state, read only by

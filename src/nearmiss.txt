@@ -27,6 +27,14 @@
 15 0x17c74 dropped4_tick  the same one register choice as dropped2_tick
 15 0x1889d ground_check  41 -> 15: no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c
 15 0x13a78 fn_13a78  SKIP: three register mirrors (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
+282 0x19497 player_crash_tick  written 2026-11-27, src/tick.c; 2047 of 2037 B, from the
+   disassembly. RedCat's crash tick: refreshes the player's input flags 0x55fd0-0x55fe8 from
+   key_pressed(keymap[]), rocket/boost on key edges (0x55fc8/0x55fcc), throttle + fuel on
+   v75174, steering through steer_tbl[3][3] 0x56030 applied twice through turn_tbl, and the
+   friction test uses ground_check's return (g * 1000 << 16 > z) where the other crash ticks use
+   z < 0. Its go/want pair is never set, so the `if (go)` arm at 0x19672 is dead code the game
+   carries; want is unsigned (jbe at 0x19681). Diff rows are register homes again: m in a stack
+   slot at [esp+8] and vv at [esp+0xc], we keep m in EBP.
 188 0x19c8c bull_crash_tick  written 2026-11-27, src/tick.c; 1937 of 1877+73=1950 B, first pass
    transplanted from muis_crash_tick with racer 2's globals (v55ff8-v5600c, v55ff4, v71918) and the
    extra racer_contact/racer_bounce block the other crash ticks do without; register allocation and
