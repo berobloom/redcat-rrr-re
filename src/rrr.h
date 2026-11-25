@@ -260,7 +260,7 @@ extern int            cos_tbl[32];          /* 0x73de0 */
 extern int            sin_tbl[32];          /* 0x73e60 */
 extern int            dir_tbl[33][33];      /* 0x73ee0: heading by (dy, dx) + 16 */
 struct stats {                              /* 48 bytes per racer (discoveries.md) */
-    float   mass;
+    int     mass;                             /* +0: 16.16, 60<<16 RedCat/Snitch, 90<<16 Brutus */
     int     heading;                            /* +4: 0..31 */
     int     fuel, boosts;
     int     f10, f14, f18;
@@ -422,6 +422,10 @@ void start_crash(int racer);
 int player_crash_tick(short n);
 int bull_crash_tick(short n);
 int muis_crash_tick(short n);
+int player_tick(short n);                   /* 0x11eb5, not rebuilt yet */
+int bull_tick(short n);                     /* 0x12826, not rebuilt yet */
+int muis_tick(short n);                     /* 0x130f8, not rebuilt yet */
+extern int            racer_top_speeds[];   /* 0x57b18: 16.16 top speed per map, by map_no */
 void racer_bounce(int a, int b);
 void set_keys(void);
 extern int            keystate[];           /* 0x804c0: 1 while a key (scancode) is down */

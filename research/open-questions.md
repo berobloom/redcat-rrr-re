@@ -181,7 +181,18 @@
     (dropped2_tick's load register, sound_init's reloaded arguments,
     follower_tick's sign extension): one register choice, the rest of the
     function byte-identical.
-30. **Open: what the init.c object holds before find_waypoints 0x1517a.**
+30. **RESOLVED 2026-11-27: init_objects 0x148db is in the init.o object, in front of
+    find_waypoints.** Writing it in src/init.c put find_waypoints' three-byte jump-table pad at
+    0x1556c exactly like the game and it went to MATCH (src/check.sh, 116 -> 117); with the same
+    file but init_objects 14 bytes shorter (a different statement order in its player-stats block)
+    find_waypoints fails again at +1010, which is the mutation that makes the check fail. Two more
+    supports: init_objects' only string 'player_direction : %d wp: %d\n' sits at 0x50e04 and runs
+    into 'init.c' at 0x50e22 (29 + 1 bytes, and the four bytes before it are zero), so its string
+    is the head of the init.c string block; and start_crash 0x14f3e, switch_anims 0x15084 and
+    fn_15166 0x15166 sit between init_objects and find_waypoints, still candidates for the same
+    module (their strings are still in rrr.c's pool, which is why find_waypoints' __FILE__ strings
+    now land 1-2 bytes off the game's - layout, no match lost).
+    Original question, kept for the record:
     find_waypoints is now 0 instruction rows: +0..+1009 (through its ret at
     0x1556b) are byte-identical, and the only difference left is the padding in
     front of find_bonus_objects' ten-entry jump table - three bytes
@@ -199,3 +210,14 @@
     candidates. Writing init_objects and adding it to src/init.c is the test:
     find_waypoints goes to MATCH if that is right, and a pad byte of the wrong
     candidate shows up immediately in src/check.sh.
+
+31. **Open: init_objects 0x148db's last 7 rows are two register ties.** The player's
+    `rrrio.fuel << 16` product: the game keeps it in EBX and only then loads rrrio.boosts
+    into EDX, we keep it in EDX (5 rows at +607); and the MUIS heading store, which floats
+    past the racer_top_speeds[] load in the game (its result sits in EBX) and is forced
+    early in ours. Length is exact (1635 = 1635 bytes) and every address aligns, so the C
+    is right; BULL's identical text matches. Tried: * 0x10000, * 65536, < 16, (int) casts,
+    an extra store, all four spellings of the crash0 test, and 192 statement permutations
+    of the player, BULL and MUIS stats blocks (.work/probe/io/y*.c, inplace.py) - best 7.
+    Same family as open questions 25, 26, 28 and 29; here the tie sits at the END of a
+    long straight-line block, so a new mechanism for it may be the one that cracks those.

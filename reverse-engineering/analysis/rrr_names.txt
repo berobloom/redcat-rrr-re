@@ -509,6 +509,10 @@
 0x27837 fn_27837             # LIKELY: joystick buttons (cdecl, 1), tested against rrrio +0x220/+0x224
 0x2784e fn_2784e             # LIKELY: joystick x axis
 0x278a4 fn_278a4             # LIKELY: joystick y axis
+0x57b18 racer_top_speeds    # CONFIRMED (code): int[] read as [map_no] into stats[].top_speed (+0x2c,
+                           #   0x6fbec BULL, 0x6fc4c MUIS) by init_objects 0x148db; nothing in
+                           #   RRR.EXE writes it, so it is filled by another program or loader.
+                           # SPECULATIVE: the name; the values are per-map top speeds, 16.16.
 0x57b74 hud_fuel             # CONFIRMED (code): hud_update redraws the fuel gauge when (fuel>>16)/16 differs
 0x57b78 hud_damage           # CONFIRMED (code): the same for damage / 10
 0x57b7c hud_speed            # CONFIRMED (code): the same for |speed * 11 / 20| (fixed point)

@@ -15,19 +15,25 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
-1. QUEUE.md's first open item. Q1's newest step is `src/init.c`: `find_waypoints` 0x1517a rewritten
-   with `unsigned short w` and no n local (190 -> 0 instruction rows, its 1010 code bytes identical),
-   and it plus `find_bonus_objects` 0x15597 moved out of `src/rrr.c` into a module named after their
-   own `__FILE__` string 'init.c'. `src/check.sh | grep -c ' MATCH at'` = 116, `grep find_bonus` in
-   the output shows `MATCH at 0x015597 (fixup bytes not compared; 1 rel32 branch compared by
-   target)` and no WRONG fixup. Two mutations make it fail: writing `int w` and an `n` local again
-   (find_waypoints back to 177 rows, find_bonus_objects' tail jmp wrong again at +207), and putting either
-   function back in `src/rrr.c`, where Watcom merges find_bonus_objects' tail into an earlier
-   epilogue (its old near miss). `find_waypoints` itself stays a near miss on one pad byte: the game
-   pads find_bonus_objects' jump table with 3 bytes at 0x1556c and we with 2, because Watcom
-   4-aligns a jump table inside its own object and the game's init.o holds 3 mod 4 bytes before it
-   (open question 30; adding `fn_15166`, 20 B, keeps the 2-byte pad, `init_objects` 0x148db, 1635 B,
-   would land it).
+1. QUEUE.md's first open item. Q1's newest step is `init_objects` 0x148db written in `src/init.c`:
+   that puts it in front of `find_waypoints` 0x1517a in the same object, which lands the game's
+   three-byte jump-table pad at 0x1556c and takes `find_waypoints` to MATCH - `src/check.sh |
+   grep -c ' MATCH at'` = 117, `grep find_waypoints` shows `1053 bytes MATCH at 0x01517a` with no
+   WRONG fixup. The mutation that makes it fail: any spelling of init_objects' player-stats block
+   that changes its length (e.g. `damage` stored last instead of after `fuel`, 1630 bytes instead
+   of the game's 1635) sends `find_waypoints` back to a diff at +1010. `init_objects` itself is a
+   7-row near miss at the exact game length (two register ties, open question 31), and its only
+   string 'player_direction : %d wp: %d\n' (0x50e04) runs into 'init.c' at 0x50e22, which is what
+   says it belongs to this module (open question 30). Earlier in the same file: `find_waypoints`
+   0x1517a rewritten with `unsigned short w` and no n local (190 -> 0 instruction rows), and it plus
+   `find_bonus_objects` 0x15597 moved out of `src/rrr.c` into a module named after their own
+   `__FILE__` string 'init.c'. Those two mutations still make those checks fail: writing `int w`
+   and an `n` local again (find_waypoints back to 177 rows, find_bonus_objects' tail jmp wrong
+   again at +207), and putting either function back in `src/rrr.c`, where Watcom merges
+   find_bonus_objects' tail into an earlier epilogue (its old near miss). The pad byte that used to
+   hold find_waypoints back: Watcom 4-aligns a jump table inside its own object, so the game's three
+   pad bytes at 0x1556c needed something 3 mod 4 bytes in front of find_waypoints in init.o, and
+   init_objects (1635 B) is it (open question 30, resolved).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
    first (functions whose callees are matched or are library calls).
 3. Near misses: `src/nearmiss.txt`, first line with an empty status. cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
@@ -50,22 +56,22 @@ Short: where the project stands, and what is next. History is in git; no diary.
    (a second same-shape `stats[...].damage -=` statement flips the first one's load register; see
    the note in src/shadeobj2.c and the probes in .work/probe/S.C) but no block-2 spelling keeps
    block 1 natural *and* the game's RMW tail; it gates mine/sign/bomb/cactus/fn_16e46 (0 rows)
-   and dropped0/dropped4_tick. PROGRESS.md reads 147 functions, 116 identical (78.9%), 22 near misses,
-   and 9 not
+   and dropped0/dropped4_tick. PROGRESS.md reads 147 functions, 117 identical (79.6%), 21 near misses,
+   and 8 not
    written: blit_sprite 0x11bb4 and blit_sprite_trans 0x17d94 are assembly (the only two `enter`
    frames in the C range) so they are not C matches to chase, and 7 C functions remain, smallest
-   first: init_objects 0x148db (1635 B),
+   first:
    muis_crash_tick 0x1a42a (1877 B), bull_crash_tick 0x19c8c (1950 B), muis_tick 0x130f8 (2037 B),
    player_crash_tick 0x19497 (2037 B - `fn_1963e` 0x1963e is a basic block of it, its only "call"
    at 0x18f3e is `mov eax, 0x6fbe8`, so the 423 + 1614 B in PROGRESS.md are one function),
    bull_tick 0x12826 (2258 B), player_tick 0x11eb5 (2417 B). The next MATCH may still come from a
-   near miss: `find_waypoints` 0x1517a is 0 instruction rows and waits on one pad byte, which
-   init_objects 0x148db would settle (open question 30), and the five 0-row dropped/mine/sign/bomb
+   near miss: the five 0-row dropped/mine/sign/bomb
    lines wait on dropped2_tick. Another is likely from the module boundaries of item 4: a function
    whose epilogue the game keeps for itself must not share a file with the one ours merged into
    (`src/nearmiss.txt`, MATCHING.md).
 4. Later: the rest of the module boundaries in 0x10010-0x1B915 (one source file per original
    module; `src/racer.c` 0x1404a-0x1467b found from epilogue sharing and `src/init.c`
-   0x1517a-0x1585d from the 'init.c' strings plus their shared epilogue - open question
+   0x148db-0x1585d from its string block head ('player_direction : %d wp: %d' 0x50e04 runs into
+   'init.c' 0x50e22), the shared epilogue and now the jump-table pad - open question
    27 lists the six shares the game has, each pair surely in one module); Davilex's
    libraries (REKEN's debug info names their modules); REKEN, RRRMENU, INTRO.

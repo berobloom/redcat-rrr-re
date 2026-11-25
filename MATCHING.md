@@ -171,6 +171,12 @@ Levers seen so far (add to this list when one produces a MATCH):
   with the SIB, the shifted value in EBP, no stack slot: **0 instruction rows** (variants.py,
   2026-11-24; `.work/probe/FW2VAR.C` V04, `unsigned short` beats `short` 7 to 10 rows and inline
   `(w & 0xff)` beats an `n` local by ~140). The 16-bit holder is what frees the register.
+- **Where a store sits in a long store sequence decides whether Watcom re-reads it.** `init_objects`
+  0x148db stored the twelve player/racer fields in the order its disassembly reads; writing
+  `stats[bodies[0].stats].damage = rrrio.damage;` after `fuel` instead of last (its own store is
+  then not the last one) makes WCC386 emit the game's `cmp dword [stats+0x28],0` reload in the
+  crash0 test instead of `test edx,edx`, and with it the game's exact 1635-byte length: 16 rows ->
+  7, and the two following racers' heading stores came right with it (one of the two).
 - **A jump table's pad belongs to the object, not the function.** Watcom 4-aligns a switch's jump
   table inside its own object, so the pad before it (a 2-byte `mov eax,eax` or a 3-byte
   `lea eax,[eax]`) depends on the size mod 4 of everything the object holds before it. That is the
