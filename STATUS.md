@@ -127,7 +127,15 @@ Short: where the project stands, and what is next. History is in git; no diary.
    lines wait on dropped2_tick. Another is likely from the module boundaries of item 4: a function
    whose epilogue the game keeps for itself must not share a file with the one ours merged into
    (`src/nearmiss.txt`, MATCHING.md).
-   2026-11-28, two near misses rewritten against their own dataflow; `src/check.sh` stays at 124
+   2026-11-28: `sound_init` 0x1043a went to MATCH (125) on a Watcom declaration, not a spelling:
+   fn_1d2a6 0x1d2a6 is `mov [0x5fe99],eax; ret`, so `#pragma aux fn_1d2a6 parm [edx][ebx][ecx][eax]
+   modify exact [eax]` lets easy_init reuse its ECX/EBX/EDX (10 -> 2) and the reversed parm list lands
+   the game's argument-materialisation order (2 -> 0). The old rule in open question 26, "WCC
+   rematerialises register arguments whatever it knows about the callee", came from probing plain
+   `modify`, which only adds to the default clobber set; it is withdrawn and the two levers are in
+   `reverse-engineering/watcom-levers.md`. They are worth re-checking against every near miss where the
+   game reuses argument registers across a call.
+   2026-11-28, two near misses rewritten against their own dataflow; `src/check.sh` was at 124
    MATCH and `PROGRESS.md` reads 124 of 147 (84.4%), 21 near misses, 0 not written, 2 assembly.
    Content, not spelling, is what moves the big ones now: `ai_waypoint_action` 0x1af83 145 -> 64 rows
    because the game has a sixth waypoint action, `f4 == 4` "wait" (both jump tables 0x1af53/0x1af6b

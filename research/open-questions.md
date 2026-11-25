@@ -114,22 +114,21 @@
     and `if (f <= 0) A else if (f == 3) B` block order) do not apply here: dropped2_tick has no such
     multi-test chain on one field, and `f24 <= 0` at its head already matches byte for byte.
 
-26. **Open: Watcom keeps the sound_init 0x1043a argument registers, we
-    don't.** The game sets fn_1d2a6's four register arguments (EAX = 11025,
-    EDX = 34, EBX = wav_handles, ECX = wav_names) and uses the *same*
-    registers as easy_init 0x20b80's first four arguments without reloading;
-    every spelling of those three statements reloads them (16 bytes, 10 rows,
-    and the argument order inside the first block is EAX,ECX,EBX,EDX there vs
-    ECX,EBX,EDX,EAX here). sound_init is otherwise byte-identical, so it is
-    not the statement spelling: tried the /STEREO call as an if/else, a local,
-    !x, the reversed test, a switch, two independent calls; fn_1c85b and
-    fn_1d2a6 as int-returning; `#pragma aux` on fn_1d2a6 (`modify [eax]`,
-    `parm [eax][edx][ebx][ecx] modify [eax]`); wav_names as a 2-D array; the
-    shared arguments factored into locals (worse, 23 rows). A minimal probe
-    (`lib1(...); nt = 4; easy(30, 34, wh, wn, 33)`) reloads in every spelling
-    too, so WCC386 10.5 -ox rematerialises these immediates unless something
-    else in the function makes them live. A new idea is worth more than more
-    spellings - the prize is one MATCH.
+26. **RESOLVED: `#pragma aux f modify exact [eax]` is the lever, and plain
+    `modify` is not.** The 2026-11-27 conclusion ("WCC rematerialises register
+    arguments whatever it knows about the callee") came from probing
+    `modify [eax]` and `parm [...] modify [eax]`: plain `modify` only *adds* to
+    the default clobber set, so those probes could not change anything. With
+    `modify exact [eax]` - correct, because fn_1d2a6 0x1d2a6 is literally
+    `mov [0x5fe99], eax; ret` - WCC keeps ECX/EBX/EDX live from the fn_1d2a6
+    call into easy_init 0x20b80's arguments: 10 -> 2 rows. The last 2 rows were
+    the order of the four argument loads (game EAX,ECX,EBX,EDX at 0x10624, WCC
+    default ECX,EBX,EDX,EAX): WCC materialises the parm list back to front, so
+    `parm [edx][ebx][ecx][eax]` plus `fn_1d2a6(34, wav_handles, wav_names,
+    11025)` lands the order with the same registers and fixups, and sound_init
+    is byte-identical (MATCH count 125). CONFIRMED: the pragma behaviour and
+    the reverse emission order (two parm orders measured). SPECULATIVE: that
+    RRR's own header wrote such a parm list.
     2026-11-27, the clobber-assumption idea is dead: `#pragma aux` `modify []`, `modify [eax]` on
     fn_1d2a6, on easy_init, on both, `parm [eax][edx][ebx][ecx] value [eax]`, and shared arguments
     as locals plus `modify [eax]` all stay at 10 rows / 809 bytes (.work/probe/si). The pragmas are

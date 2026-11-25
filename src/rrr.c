@@ -191,21 +191,6 @@ int play_fx(int sample, int dist)
 
 /* ---- 0x1043a -------------------------------------------------------------------------------- */
 
-/* differs: 10 rows, all one block: the game keeps EAX/ECX/EBX/EDX from fn_1d2a6's call (0x1d2a6)
-   as easy_init's arguments, we reload them (16 bytes) after it. The /STEREO call now matches: two
-   calls in an if/else, cross-jumped by Watcom into the game's je/mov eax,1/jmp/xor eax,eax.
-   Reload tried: fn_1c85b/fn_1d2a6/easy_init as int-returning, #pragma aux with modify [eax] and with
-   parm [eax][edx][ebx][ecx], wav_names as a 2-D array, the shared arguments factored into locals
-   (worse: 23 rows) - none of them keeps the registers; ? 1 : 0 (13), a local for the test (24),
-   !x and the reversed if/else (14), fn_1c85b(0) then a separate if (16). Watcom's scheduling, not
-   the spelling - open question 26. 2026-11-27: the clobber assumption is ruled out too.
-   `#pragma aux fn_1d2a6 modify []` / `modify [eax]`, the same for easy_init, `parm
-   [eax][edx][ebx][ecx]` on either, and the shared arguments as locals *with* `modify [eax]` all
-   stay at 10 rows (809 bytes). The pragmas are not inert - narrowing/widening the modify list of
-   free_object/explode_objects does change another function's code (.work/probe/d2/p06,p08,p09) -
-   so WCC386 10.5 materialises register-passed arguments at every call site whatever it knows
-   about the callee. Matched on the way: the two early returns as separate ifs, the
-   tracks fill as a loop (memset gives other registers), declaration order dma, port, irq. */
 int sound_init(short argc, char **argv)
 {
     int dma, port, irq, i, err;
@@ -252,7 +237,7 @@ int sound_init(short argc, char **argv)
         fn_1c85b(1);
     else
         fn_1c85b(0);
-    fn_1d2a6(11025, 34, wav_handles, wav_names);
+    fn_1d2a6(34, wav_handles, wav_names, 11025);
     num_tracks = 4;
     if (easy_init(30, 34, wav_handles, wav_names, 33)) {
         rc_error("Soundblaster initialisatie fout. Probeer andere instellingen");

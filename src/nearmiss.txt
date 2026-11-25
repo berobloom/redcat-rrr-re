@@ -38,7 +38,17 @@
 8 0x1401d left_of  SKIP: register mirror only (the game keeps x1 in ESI and uses EAX for x3 - x2, ours the other way round); 14 spellings tried, see the note in src/rrr.c
 8 0x18759 spawn_dropped_object  SKIP: base/index mirror in the objects[n] stores (game: n<<4 in EAX, objects reloaded per store); switch 8 rows is the best of if/else-if, !kind, (*(objects + n)) [11] and a pointer local [19]
 9 0x167aa follower_tick  SKIP: two Watcom choices left - the game sign-extends the short parameter in place (cwde, mov esi,eax, dec eax), we movsx+lea, and the `frame = 32` store swaps EAX/EDX; ~60 variants (.work/probe/ft2) stop at 9. It got there from 41: the damage/fuel test as `!(damage > 0 && fuel > 0)` (30 rows off as `<= 0 ||`) and follower_tick alone in src/shadeobj.c so its epilogue stops merging into fn_16e46's (string padding byte 0x51783 says the module ends there, open question 27)
-10 0x1043a sound_init  SKIP (pragma aux modify lists 2026-11-27 change nothing; WCC rematerialises call arguments whatever it knows about the callee): only the easy_init arguments - the game keeps EAX/ECX/EBX/EDX from fn_1d2a6's call, we reload them (16 bytes); the /STEREO if/else now matches; see open question 26
+0 0x1043a sound_init  MATCH 2026-11-28: `#pragma aux fn_1d2a6 parm [edx][ebx][ecx][eax] modify exact
+   [eax]` in src/rrr.h. Two facts, both measured: fn_1d2a6 0x1d2a6 is `mov [0x5fe99],eax; ret` so it
+   clobbers only EAX, and `modify exact` (not plain `modify`, which only ADDS to the default clobber
+   set - that is why the 2026-11-27 probes did nothing) is what lets easy_init 0x20b80 reuse the
+   ECX/EBX/EDX arguments of the fn_1d2a6 call 16 bytes earlier (10 -> 2 rows). The last 2 rows were
+   the order of the four argument loads: the game materialises EAX,ECX,EBX,EDX (0x10624), WCC emits
+   the parm list back to front, so the declaration lists the parameters in reverse register order and
+   the call reads fn_1d2a6(34, wav_handles, wav_names, 11025); the registers and fixups are unchanged
+   (EAX=11025, EDX=34, EBX=wav_handles, ECX=wav_names). No C spelling of the arguments, in-tree or in
+   a local, moves the order without the parm list (5 tried). Whether the game's header really wrote a
+   parm list is SPECULATIVE; what is CONFIRMED is that it is the only spelling that lands the order.
 15 0x1889d ground_check  41 -> 15: no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c. 2026-11-27: raising register
    pressure is not the lever either - hoisted row/column/raw-shifted-coordinate/z locals in place
    (.work/gc/v1-v8, inplace.py) give 46-158 rows; nmclass.py reads the 15 as 2 register homes, 3 shape

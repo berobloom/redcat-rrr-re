@@ -155,6 +155,18 @@ here is a thing to try, not a fact about RRR: when one works or fails on RRR, wr
 
 ### Levers that produced MATCHes (try these before SKIP)
 
+- **`#pragma aux f modify exact [regs]` stops WCC re-materialising register-passed arguments after a
+  call - plain `#pragma aux f modify [regs]` does not**, because plain `modify` only *adds* to the
+  default clobber set (this is why the 2026-11-27 sound_init probes looked inert and produced the wrong
+  rule; open question 26). Declare it when the callee's own body proves the clobber set is small -
+  fn_1d2a6 0x1d2a6 is `mov [0x5fe99],eax; ret`, so `modify exact [eax]` lets the game's next call reuse
+  the ECX/EBX/EDX arguments set 16 bytes earlier (sound_init 0x1043a 10 -> 2 rows). [generic]
+- **WCC materialises a call's arguments in reverse `parm` order**, so an explicit
+  `#pragma aux f parm [edx][ebx][ecx][eax]` plus the matching argument order at the call site lands a
+  game that sets its arguments in ascending register order without touching which register holds what
+  (sound_init's last 2 rows -> MATCH; `parm [eax][ecx][ebx][edx]` gives the reverse, `parm
+  [eax][edx][ebx][ecx]` = the default gives nothing). [generic]
+
 - **Frame size first: our `sub esp, N` differs from the game's = a local array has the wrong size.**
   Read the array sizes off the game's slots: overlay_draw's frame 0x34 with buf at [esp+0x14] and
   dword slots from 0x20 meant `char buf[0xc]`, not 0x14 (62 -> 46, every scalar slot moved back);

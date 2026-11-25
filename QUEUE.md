@@ -31,6 +31,15 @@ Rules for the agent:
     fn_13a78 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
     0x11bb4 and blit_sprite_trans 0x17d94 are assembly, so 110 of 147, 23 near misses, 14 unwritten
     (13 C). `src/check.sh` still shows 110 MATCH and no WRONG fixups.
+  - 2026-11-28 (later): `sound_init` 0x1043a byte-identical: `src/check.sh 2>&1 | grep -c ' MATCH at'`
+    = 125 of 147 (85.0%), 20 near misses. What it needed was a declaration, not a spelling:
+    `#pragma aux fn_1d2a6 parm [edx][ebx][ecx][eax] modify exact [eax];` in src/rrr.h. Two facts behind
+    it: fn_1d2a6 0x1d2a6 is `mov [0x5fe99],eax; ret` (clobbers only EAX), and WCC materialises a call's
+    arguments in reverse `parm` order. Mutations that fail: deleting the pragma (2 rows), `modify [eax]`
+    instead of `modify exact [eax]` (10 rows - plain `modify` only adds to the default clobber set, so
+    the 2026-11-27 probes of this were inert and open question 26's rule is withdrawn), and
+    `parm [eax][ecx][ebx][edx]` (6 rows, the reverse order). 2026-11-27's `#pragma aux` probes are
+    retracted: they used plain `modify`, which could not have worked.
   - 2026-11-28: still READY FOR REVIEW. `src/check.sh 2>&1 | grep -c ' MATCH at'` = 124 of 147
     (84.4%), 21 near misses, 0 C functions unwritten; no function went to MATCH today, but the two
     biggest near misses moved on content rather than spelling. `ai_waypoint_action` 0x1af83 145 -> 64

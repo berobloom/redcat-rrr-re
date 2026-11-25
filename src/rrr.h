@@ -83,7 +83,14 @@ short has_arg(char *opt, short argc, char **argv);            /* 0x1bc7f, stdlib
 int mix_track_free(int track);                                /* 0x1cd3f */
 int fn_1c5e4(short port, short irq, short dma);
 void fn_1c85b(int stereo);
-void fn_1d2a6(int rate, int n, int *handles, char **names);
+/* 0x1d2a6 is literally `mov [0x5fe99], eax; ret`, so it clobbers only EAX, and `modify exact`
+   (plain `modify` only adds to the default clobber set) lets sound_init 0x1043a reuse the
+   ECX/EBX/EDX it set for this call as easy_init's arguments, which is what the game does at
+   0x10624-0x10638. Watcom materialises arguments in reverse parm order, so the list is written back
+   to front to land the game's EAX,ECX,EBX,EDX; the registers holding the values do not change.
+   watcom-levers.md, open question 26. */
+#pragma aux fn_1d2a6 parm [edx][ebx][ecx][eax] modify exact [eax];
+void fn_1d2a6(int n, int *handles, char **names, int rate);
 void fn_1d2ac(int v);
 void fn_1d329(int v);
 void fn_1d3a6(int v);
