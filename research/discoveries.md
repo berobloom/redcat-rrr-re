@@ -548,6 +548,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   module (src/shadeobj2.c): the game gives follower_tick its own pop/ret at 0x1693a although
   fn_16e46 + dropped0/2/4_tick share one at 0x17b5b. Splitting them won follower_tick 4 rows (13 -> 9)
   and is the first boundary that both of MATCHING.md 4's tests give at the same address.
+- CONFIRMED: inside that module dropped0_tick 0x17b61 and dropped4_tick 0x17c74 end by jmping into
+  dropped2_tick 0x178f6 - at its `call aim_at_player` (0x17a11 and 0x17a0f, only the EDX argument is
+  set first) and at its epilogue (0x17b5b) - so the three dropped ticks are one object and dropped2
+  is the tail's host. Our SHADEOBJ2.OBJ does the same once dropped2_tick's code has the game's shape
+  (2026-11-27, all three byte-identical).
 
 ## Toolchain: narrow types, and jump-table padding inside one object
 
@@ -579,6 +584,18 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   blocks instead (`damage >= 1 && fuel >= 1`: 87 rows against 0 in cell_effect 0x18b8d).
 - CONFIRMED: in `lea`, Watcom's base/index pair follows the source operand order:
   `x + y * map_w` gives `[edi + ebx]` and `y * map_w + x` gives `[ebx + edi]` (cell_effect's last row).
+- CONFIRMED (compile, 2026-11-27): WCC386 -ox emits one copy of a repeated address chain only when
+  both sites read the index through the SAME variable. Two `stats[bodies[r].stats].damage -= 10;`
+  statements (racers 2 and 4) give two temporaries with different register pairs - first
+  `mov edx,[..]`, chain in EAX, copy back; second chain in EDX - so the two `*3 << 4` chains are
+  different text and the second block can only jmp into a shared `shl edx,4`. Writing the FIRST site
+  as `h = bodies[2].stats; stats[h].damage -= 10;`, with the `int h` the function uses again later,
+  makes both chains one value: WCC emits the chain once and the second block ends `mov eax,
+  [bodies[4].stats]` + `jmp <chain>`, like the game. A separate `int s` does not (44 rows); a
+  `short s` merges the chains but truncates the load to `mov ax,[..]` + `cwtl` (21 rows); the holder
+  in both blocks does not (43). dropped2_tick 0x178f6 went 16 -> 2 rows and dropped0_tick,
+  dropped4_tick, mine_tick, sign_tick, bomb_tick, fn_16e46 and cactus_tick to MATCH with it (117 ->
+  124): the 10 bytes the split chains cost were what put the shared epilogue at 0x17b59 out of reach.
 - CONFIRMED: a two-part test keeps the game's arm layout when written in the negated-and form:
   `if (!(stats[i].damage > 0 && stats[i].fuel > 0)) frame = 32; else frame = heading & 31;` gives the
   game's `cmp damage,0 / jle -> fall-through 32 store / cmp fuel,0 / jg -> forward heading store`; the

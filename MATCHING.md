@@ -202,6 +202,17 @@ Levers seen so far (add to this list when one produces a MATCH):
   cell numbers into `ox`/`oy` locals; writing them inline in the two `map[]` reads moved the whole
   register picture to the game's (n in ESI, the cell height and the `/40` divisor in EDI): 41 rows
   -> 15. Declaration order changes nothing (all 720 permutations of the six locals: best 33 rows).
+- **... but two identical address chains only merge if the index comes from one variable.**
+  `dropped2_tick` 0x178f6's two damage blocks both compute `stats[bodies[r].stats] * 48`; written with
+  the literal racers (`stats[bodies[2].stats].damage -= 10;`, `stats[bodies[4].stats]...`) WCC colours
+  the two index temporaries with different register pairs, so the chains are different text, the
+  second block cannot `jmp` into the first's, and the function lands 10 bytes long - which also puts
+  the epilogue the five 0-row callbacks jmp to out of place. Reading the first site's index through
+  the `int h` the function reuses later (`h = bodies[2].stats; stats[h].damage -= 10;`) matches:
+  16 -> 2 rows and seven functions to MATCH (117 -> 124). A dedicated `int s` does not merge (44
+  rows), a `short s` merges but truncates the load to `mov ax,[..]` + `cwtl` (21), and the holder in
+  both blocks does not (43) - the second site keeps its literal index (variants.py/inplace.py,
+  .work/probe/d4-d7).
 
 ## 6. A near miss is not a proof: `nmrefs.py`
 

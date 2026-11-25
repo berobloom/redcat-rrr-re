@@ -236,3 +236,16 @@
     of the player, BULL and MUIS stats blocks (.work/probe/io/y*.c, inplace.py) - best 7.
     Same family as open questions 25, 26, 28 and 29; here the tie sits at the END of a
     long straight-line block, so a new mechanism for it may be the one that cracks those.
+
+32. **Open: dropped2_tick 0x178f6's last 2 rows are one register tie.** The last x store:
+    the game does `sub edi,0x10` and stores DI, ours `lea esi,[edi-0x10]` and stores SI, for
+    the same `(bodies[n].x >> 16) - frames[k].f8 - 16`. Both are 3 bytes and EDI is dead after
+    it in both builds; 619 = 619 bytes with every address aligned. Tried: parens, operand
+    order, `- 16 - frames[k].f8`, `- (frames[k].f8 + 16)`, `- 8 - 8`, `(short)` cast, `h =
+    bodies[n].x >> 16` and `h = ... - frames[k].f8` holders, the same for the y line, hex and
+    decimal constants, `objects[n].x = ...; objects[n].x -= 16;`, moving the vy statement,
+    the f24 decrement form, and the `k` index casts (~70 spellings, .work/probe/d8-d11,
+    inplace.py) - all 2 rows or worse. Same family as open questions 25, 26, 28, 29 and 31;
+    the lever that cracked the other 14 rows of this function was a shared index holder
+    (discoveries, "switch bodies and `lea` operands"), which suggests the tie is a
+    value-identity question, not a spelling one.

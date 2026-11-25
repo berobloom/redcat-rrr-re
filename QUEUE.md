@@ -31,6 +31,15 @@ Rules for the agent:
     fn_13a78 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
     0x11bb4 and blit_sprite_trans 0x17d94 are assembly, so 110 of 147, 23 near misses, 14 unwritten
     (13 C). `src/check.sh` still shows 110 MATCH and no WRONG fixups.
+  - 2026-11-27: still READY FOR REVIEW, counts moved: `src/check.sh 2>&1 | grep -c ' MATCH at'` =
+    124 of 147 (84.4%), 21 near misses, 2 unwritten. The lever is a shared index holder:
+    `dropped2_tick` 0x178f6's FIRST damage block reads its stats index through the `int h` its aim
+    block uses (`h = bodies[2].stats; stats[h].damage -= 10;`), which makes Watcom emit the
+    `*3 << 4` chain once and puts its epilogue at the game's 0x17b59. Seven functions went to MATCH
+    with it (dropped0_tick 0x17b61, dropped4_tick 0x17c74, mine_tick, sign_tick, bomb_tick,
+    fn_16e46, cactus_tick) and dropped2_tick itself is 16 -> 2 rows at the exact 619 bytes. The
+    mutation that makes the check fail: `stats[bodies[2].stats].damage -= 10;` back in that block
+    (dropped2_tick 16 rows, the other seven differ again); a separate `int s` also fails (44 rows).
   - 2026-11-27: still READY FOR REVIEW, and every C function of the range now has a spelling:
     `src/check.sh 2>&1 | grep -c ' MATCH at'` = 117 of 146 (80.1%), 28 near misses, 1 unwritten
     (blit_sprite 0x11bb4, assembly). The six ticks were written the same day: the crash ticks in

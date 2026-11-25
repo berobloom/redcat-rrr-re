@@ -67,6 +67,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Levers that produced MATCHes on RRR (try these before SKIP)
 
+- **Same index variable, not the same value:** two sites that write `stats[bodies[2].stats]` and
+  `stats[bodies[4].stats]` get two temporaries with different register pairs, so the `*3 << 4` chains
+  never merge and the function grows. Reading one of them through a local the function uses again
+  (`h = bodies[2].stats; stats[h].damage -= 10;`) merges the chains: dropped2_tick 0x178f6 16 -> 2
+  rows, dropped0/dropped4_tick and five callbacks to MATCH (117 -> 124). A dedicated `int s` fails,
+  a `short s` merges but truncates the load.
 - **Loop shape:** `-ox` rotates loops. The game's top-tested `while` (`cmp; jg exit` at the top)
   needs `while (i <= 4 && t[g][i] == 0) i++;`; the same `for` with `i < 5` tests at the bottom
   (`stage_is_last` 0x1ae67).

@@ -18,25 +18,19 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
-1. QUEUE.md's first open item. Q1's newest step is `init_objects` 0x148db written in `src/init.c`:
-   that puts it in front of `find_waypoints` 0x1517a in the same object, which lands the game's
-   three-byte jump-table pad at 0x1556c and takes `find_waypoints` to MATCH - `src/check.sh |
-   grep -c ' MATCH at'` = 117, `grep find_waypoints` shows `1053 bytes MATCH at 0x01517a` with no
-   WRONG fixup. The mutation that makes it fail: any spelling of init_objects' player-stats block
-   that changes its length (e.g. `damage` stored last instead of after `fuel`, 1630 bytes instead
-   of the game's 1635) sends `find_waypoints` back to a diff at +1010. `init_objects` itself is a
-   7-row near miss at the exact game length (two register ties, open question 31), and its only
-   string 'player_direction : %d wp: %d\n' (0x50e04) runs into 'init.c' at 0x50e22, which is what
-   says it belongs to this module (open question 30). Earlier in the same file: `find_waypoints`
-   0x1517a rewritten with `unsigned short w` and no n local (190 -> 0 instruction rows), and it plus
-   `find_bonus_objects` 0x15597 moved out of `src/rrr.c` into a module named after their own
-   `__FILE__` string 'init.c'. Those two mutations still make those checks fail: writing `int w`
-   and an `n` local again (find_waypoints back to 177 rows, find_bonus_objects' tail jmp wrong
-   again at +207), and putting either function back in `src/rrr.c`, where Watcom merges
-   find_bonus_objects' tail into an earlier epilogue (its old near miss). The pad byte that used to
-   hold find_waypoints back: Watcom 4-aligns a jump table inside its own object, so the game's three
-   pad bytes at 0x1556c needed something 3 mod 4 bytes in front of find_waypoints in init.o, and
-   init_objects (1635 B) is it (open question 30, resolved).
+1. QUEUE.md's first open item. Q1's newest step is a shared index holder in `src/shadeobj2.c`:
+   `dropped2_tick` 0x178f6's first damage block reads its stats index through the `int h` the aim
+   block uses (`h = bodies[2].stats; stats[h].damage -= 10;`). That makes Watcom emit the `*3 << 4`
+   chain once, so the racer-4 block ends in `jmp <chain>` like the game's, the function is exactly
+   619 bytes, and the epilogue at 0x17b59 that five callbacks jmp to lands right: `src/check.sh |
+   grep -c ' MATCH at'` = 124 of 147 (84.4%), with `dropped0_tick` 0x17b61, `dropped4_tick` 0x17c74,
+   `mine_tick`, `sign_tick`, `bomb_tick`, `fn_16e46` and `cactus_tick` MATCHing. The mutations that
+   make it fail: `stats[bodies[2].stats].damage -= 10;` back in that block (dropped2_tick to 16 rows,
+   the other seven differ again), or a separate `int s` instead of `h` (44 rows). `dropped2_tick`
+   itself is a 2-row near miss at the exact length now - one register tie in its last x store, open
+   question 32. Earlier in `src/init.c`: `init_objects` 0x148db (1635 B) in front of
+   `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
+   `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
    first (functions whose callees are matched or are library calls). Only the assembly
    blit_sprite 0x11bb4 is unwritten now (it has an `enter` frame, as does blit_sprite_trans 0x17d94;
