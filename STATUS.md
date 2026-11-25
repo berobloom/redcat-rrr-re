@@ -65,9 +65,14 @@ Short: where the project stands, and what is next. History is in git; no diary.
    narrow types"), and it is worth 3 more on `muis_crash_tick` 0x1a42a (70 -> 67, now SKIPped:
    36 spellings of the f24/want chains leave one block-placement decision, 22 rows, untouched).
    Splitting `src/tick.c` into one file per crash tick (they share no epilogue in the game, open
-   question 27) took `player_crash_tick` 282 -> 276. That is 538 -> 501 rows over the three, the
-   biggest single-day drop outside the shared-index-holder commit; the counts in `PROGRESS.md`
-   are unchanged (124 of 147) because no function reached MATCH. **The compiler-version
+   question 27) took `player_crash_tick` 282 -> 276. Same day, in the tick group: the game's
+   arithmetic truth test `if (h - stats[bodies[n].stats].heading && h != -1)` (it computes the
+   difference and tests it, discoveries "Toolchain: narrow types") is worth 35 rows on `bull_tick`
+   0x12826 (208 -> 172) and 5 on `bull_crash_tick`, where the identical two words cost 5 rows on
+   `muis_crash_tick` and 72 on `muis_tick` (86) - four near-copies of one routine, four winners, so
+   per function only `src/check.sh` decides. Over the six tick and crash-tick functions that is
+   1025 -> 947 instruction rows today; `PROGRESS.md`'s counts are unchanged (124 of 147) because
+   none of them reached MATCH. **The compiler-version
    explanation is dead** (2026-11-27): the game does link 10.6, but 10.5 and 10.6 produce identical
    segments for all 16 modules, so `src/check.sh` reads 117 MATCH and the same 28 near misses with
    both - the one-register-choice family (open questions 25, 26, 28, 29, 31) is still a C question.

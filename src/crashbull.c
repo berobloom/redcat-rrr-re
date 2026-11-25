@@ -11,12 +11,13 @@
    0x190000 boost limit instead of 0x170000 and anim set 0x36 instead of 0x46 - but it also has the
    racer-racer contact test the other crash ticks do without (0x55ff4 records that it bounced),
    which is why it is the bigger of the two. */
-/* differs: 158 rows, first-pass C - the logic reads complete, the layout does not. Register homes
+/* differs: 153 rows (was 185), first-pass C - the logic reads complete, the layout does not. Register homes
    (the game keeps `n` re-derived and reloads bodies[]/stats[] per block, so the byte shift between
    the two grows across the function), the go/want body placement (same out-of-line arms as
    muis_crash_tick 0x1a42a, see its note), and the extra racer_contact/racer_bounce block's argument
    registers. Two spellings here are NOT the ones that suit muis_crash_tick: the mirrored abs()
-   operands below are -2 rows here and +7 there. src/nearmiss.txt. */
+   operands below (-2 here, +7 there) and the arithmetic heading test `if (h - stats[...].heading
+   && h != -1)` (-5 here, +5 there). src/nearmiss.txt. */
 int bull_crash_tick(short n)
 {
     int go, m, d, h;
@@ -41,7 +42,7 @@ int bull_crash_tick(short n)
             if (!ai_unstick(n)) {
                 h = direction_to_waypoint(2, waypoint2[waypoint_index2].x,
                                           waypoint2[waypoint_index2].y);
-                if (h != stats[bodies[n].stats].heading && h != -1)
+                if (h - stats[bodies[n].stats].heading && h != -1)
                     stats[bodies[n].stats].heading =
                         turn_tbl[h][stats[bodies[n].stats].heading];
             }

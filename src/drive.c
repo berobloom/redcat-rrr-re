@@ -18,7 +18,12 @@
    racer plays play_fx(13, ...) plus - one time in ten against racer 4, one in five against racer 2
    - play_fx(4, 0). Its go/want pair is dead code like the crash tick's, and the game's own oddity is
    copied with it: the second bounce test compares rand() % 100 with 20 at 0x12696 and then jumps
-   into racer 4's comparison with 10, so the 20 is dead. */
+   into racer 4's comparison with 10, so the 20 is dead.
+
+   differs: 193 rows, and 71 of them are register homes (nmclass.py): the game spills m, vv and t to
+   [esp+8]/[esp+0xc]/[esp+0x10] where we keep them in registers, and re-derives the bodies[] index per
+   block. No C spelling moves the homes (the drive.c/tick.c module split is already in). Rest: the
+   f24/want arm placement and the bounce-test chain. src/nearmiss.txt. */
 int player_tick(short n)
 {
     int go, m, d, h, vv, t, g;
@@ -213,7 +218,15 @@ int player_tick(short n)
 /* Brutus driving normally: bull_crash_tick 0x19c8c's head and AI, muis_tick 0x130f8's shape below,
    and the two things only the living Brutus does - the engine sound play_fx(6, distance to RedCat)
    and the racer-contact test, whose bump sound is play_fx(13, |speed| / 65536 * 10). Boost limit
-   0x1c0000, puffs of kind damage, crash2 when damage or fuel runs out. */
+   0x1c0000, puffs of kind damage, crash2 when damage or fuel runs out.
+
+   differs: 172 rows (was 208). Two spellings found 2026-11-25: the heading test is the game's
+   arithmetic truth test `if (h - stats[bodies[n].stats].heading && h != -1)` (the game computes the
+   difference and tests it - `mov ebx,edx; sub ebx,[eax+@]` at 0x12a3e - not `h != ...`, worth 35 rows
+   here, the opposite of muis_tick below), and the go==0 arm's f24 guard is `if (f <= 0)` (unsigned,
+   `test` + `ja`). What is left is the same allocation wall as the crash ticks: the game re-derives
+   `n` and the bodies[] index per block (the byte shift between the two grows across the function),
+   plus the f24/want arm placement (src/nearmiss.txt). */
 int bull_tick(short n)
 {
     int go, m, d, h;
@@ -246,7 +259,7 @@ int bull_tick(short n)
             if (!ai_unstick(n)) {
                 h = direction_to_waypoint(2, waypoint2[waypoint_index2].x,
                                           waypoint2[waypoint_index2].y);
-                if (h != stats[bodies[n].stats].heading && h != -1)
+                if (h - stats[bodies[n].stats].heading && h != -1)
                     stats[bodies[n].stats].heading =
                         turn_tbl[h][stats[bodies[n].stats].heading];
             }
@@ -283,7 +296,7 @@ int bull_tick(short n)
                 stats[bodies[n].stats].f24 = 0;
         } else {
             f = stats[bodies[n].stats].f24;
-            if (f == 0) {
+            if (f <= 0) {
                 if (v55ff8) {
                     if (bodies[n].speed < stats[bodies[n].stats].top_speed) {
                         if (bodies[n].speed < 0x20000)
@@ -384,7 +397,15 @@ int bull_tick(short n)
    tick, the drive sound (play_fx 7 with the distance to RedCat as its volume), puffs whose kind is
    the current damage instead of a fixed 100, no racer-contact test at all, and an anim number picked
    by how fast the body is rising or falling (0x20/0x40 climbing, 0x60/0x80 falling) instead of a
-   frame from the heading. The boost limit is 0x1a0000, not Snitch's wreck 0x170000. */
+   frame from the heading. The boost limit is 0x1a0000, not Snitch's wreck 0x170000.
+
+   differs: 86 rows (was 87). Here the heading test must stay `if (h != stats[...].heading &&
+   h != -1)`: the game's `mov ebx,edx; sub ebx,[eax+@]` at 0x1327b does come out of `h - ...` and that
+   then matches the game's size to the byte (2037 = 2037), but 86 -> 158 rows, because the spelling
+   moves the f24/want arm placement that costs 22 rows in muis_crash_tick too. bull_tick 0x12826 above
+   wants the other spelling (-36 there). Rest: the f24/want chain arms (both out of line in the game,
+   fall-through in ours), the distance-to-RedCat pair spilled through [esp] in the game where we keep
+   it in a register, and the want<=0 arm. src/nearmiss.txt. */
 int muis_tick(short n)
 {
     int go, m, d, h;
@@ -454,7 +475,7 @@ int muis_tick(short n)
                 stats[bodies[n].stats].f24 = 0;
         } else {
             f = stats[bodies[n].stats].f24;
-            if (f == 0) {
+            if (f <= 0) {
                 if (v56018) {
                     if (bodies[n].speed < stats[bodies[n].stats].top_speed) {
                         if (bodies[n].speed < 0x20000)

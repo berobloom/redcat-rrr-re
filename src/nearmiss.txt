@@ -44,7 +44,11 @@
    (.work/gc/v1-v8, inplace.py) give 46-158 rows; nmclass.py reads the 15 as 2 register homes, 3 shape
    rows and 8 only-ours against 2 only-game instructions
 15 0x13a78 fn_13a78  SKIP: three register mirrors (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
-208 0x12826 bull_tick  written 2026-11-27, src/drive.c; 2144 of 2258 B. Transplanted from muis_tick
+208 -> 172 0x12826 bull_tick  written 2026-11-27, src/drive.c; 2146 of 2258 B. 2026-11-25: two words -
+   the heading test is the game's arithmetic truth test `if (h - stats[bodies[n].stats].heading &&
+   h != -1)` (the game computes the difference and tests it: `mov ebx,edx; sub ebx,[eax+@]` 0x12a3e),
+   and the go==0 arm's f24 guard is `if (f <= 0)` (unsigned). -35 and -1. The same heading spelling
+   costs 5 in muis_crash_tick and 72 in muis_tick, so it is per function, see their lines. Transplanted from muis_tick
    (which is itself muis_crash_tick's AI): the two damage/fuel tests that set crash2, the waypoint2
    block on v55ff8-v5600c, boost limit 0x1c0000, play_fx(6, |x-x0|+|y-y0|) as the engine sound, and
    the one thing only the living Brutus has here: `if (!racer_contact(n, 4)) v55ff4 = 0; else if
@@ -62,7 +66,9 @@
    in its own module next to bull_tick/muis_tick (the game lays those three back to back and the
    three crash ticks back to back, with other modules between) is worth 7 rows here and 4 on
    muis_tick: the cross-group tail merge disappears.
-87 0x130f8 muis_tick  written 2026-11-27, src/drive.c; 2030 of 2037 B. Three fifths of it is
+87 -> 86 0x130f8 muis_tick  written 2026-11-27, src/drive.c; 2030 of 2037 B. 2026-11-25: `if (f <= 0)`
+   guard (+1). The `h - ...` heading test is tempting here (it lands the game's size 2037 = 2037 and its
+   `sub ebx,[eax+@]` at 0x1327b) but scores 158 instead of 86: it moves the f24/want arm placement. Three fifths of it is
    muis_crash_tick's C (the AI block, the v56018-v5602c state, f24/want, throttle/turn, the z tail) -
    see the note there - plus the damage/fuel test that sets crash4, play_fx(7, distance to RedCat),
    puffs whose kind is the damage, and an anim offset by vz. Levers: the damage and fuel tests are two
@@ -79,10 +85,11 @@
    z < 0. Its go/want pair is never set, so the `if (go)` arm at 0x19672 is dead code the game
    carries; want is unsigned (jbe at 0x19681). Diff rows are register homes again: m in a stack
    slot at [esp+8] and vv at [esp+0xc], we keep m in EBP.
-185 -> 158 0x19c8c bull_crash_tick  written 2026-11-27, src/crashbull.c (its own object, see the
+185 -> 153 0x19c8c bull_crash_tick  written 2026-11-27, src/crashbull.c (its own object, see the
    note in src/tick.c); 1929 of 1877+73=1950 B. 2026-11-25: the go==0 arm's f24 guard is
    `if (f <= 0)`, not `if (f == 0)` - the game's test is unsigned (`test` + `ja`), and that one word
-   takes 25 rows off here (and 3 off muis_crash_tick); here the waypoint-distance abs() pair also
+   takes 25 rows off here (and 3 off muis_crash_tick); `if (h - stats[...].heading && h != -1)` is -5
+   more; the waypoint-distance abs() pair also
    wants its operands mirrored (`abs((bodies[2].x >> 16) - (waypoint2[...].x >> 16))`, -2), which
    costs 7 on muis_crash_tick and 1 on player_crash_tick, so the three copies differ. First pass
    transplanted from muis_crash_tick with racer 2's globals (v55ff8-v5600c, v55ff4, v71918) and the
@@ -101,6 +108,8 @@
    cost 31-47 rows, so the tail is allocation, not typing; mirroring the abs() operands costs 7 here.
    Homes as before: the sprites base in EBP (we spill to [esp]), the turn_tbl block's ECX/EBX, the
    tail's sprite-positioning registers, and the game's epilogue saves one register more than ours.
+   2026-11-25: the arithmetic heading test `if (h - stats[...].heading && h != -1)` that wins 35 rows in
+   bull_tick 0x12826 and 5 in bull_crash_tick 0x19c8c costs 5 rows here.
    Written 2026-11-27: the game's f24/want tests are unsigned (test/jbe, test/ja) so those locals are
    `unsigned`, and `objects[n].frame = 2`, not anim. Not a copy of bull_crash_tick 0x19c8c or
    player_crash_tick 0x19497: under half the instruction stream is shared.

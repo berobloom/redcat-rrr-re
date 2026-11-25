@@ -588,6 +588,15 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `check_waypoint_nr` (0x1b69d) and `rc_error`, and it is `src/init.c` now. What else sits in that
   object before find_waypoints is open (open question 30).
 
+- CONFIRMED: the game tests "different" as an arithmetic truth test, `if (h - stats[...].heading &&
+  h != -1)`, so Watcom emits `mov r, h` + `sub r, [stats+heading]` + `test/j...` instead of a `cmp`.
+  The first copy of it was already in the matching C (dropped2_tick 0x178f6's `h - bodies[n].stats`);
+  applying it where it fits is worth 35 rows on bull_tick 0x12826 (`sub ebx,[eax+@]` at 0x12a3e) and 5
+  on bull_crash_tick 0x19c8c - and it costs 5 on muis_crash_tick 0x1a42a and 72 on muis_tick 0x130f8,
+  where the same two words land the game's size exactly (2037 = 2037) but move the f24/want block
+  placement. Four near-copies of one routine, four different winners: spelling is per function, and
+  only `src/check.sh`'s row count decides (src/drive.c, src/crashbull.c, src/crashmuis.c notes).
+
 ## Toolchain: switch bodies and `lea` operands
 
 - CONFIRMED: two switch cases whose source text is identical get one copy of the bodies and a
