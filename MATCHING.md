@@ -69,7 +69,8 @@ after the game's own C (REKEN keeps their full paths).
 - `src/nearmiss.txt`: every function that compiles but differs, ranked by instruction rows
   (`reverse-engineering/tools/wc/nearmiss.sh` regenerates the numbers; the status column is kept by
   hand). Status: empty = open, `MATCH`, `SKIP: <causes, what was tried>`, `LAYOUT: <why it is not
-  fixable in C>`.
+  fixable in C>`, `ASM: <why the game's function is hand-written assembly, so check.sh never compares
+  it and nearmiss.sh never lists it>` (that line is written by hand).
 - `reverse-engineering/analysis/rrr_subsystems.txt`: our grouping of the functions, for the report.
 - `PROGRESS.md`, `docs/RRRPROGRESS.HTML` and `docs/RRRPROGRESS.SVG`: written by
   `reverse-engineering/tools/progress.py` from a fresh build, never by hand.

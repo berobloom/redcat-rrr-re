@@ -53,6 +53,21 @@ def names_file():
     return out
 
 
+def nearmiss_notes():
+    """Game address -> the hand-kept status text of its src/nearmiss.txt line (MATCH/SKIP/LAYOUT/ASM)."""
+    out, cur = {}, None
+    for line in open(os.path.join(ROOT, 'src', 'nearmiss.txt')):
+        f = line.split(None, 3)
+        if len(f) >= 4 and f[1].startswith('0x'):
+            cur = int(f[1], 16)
+            out[cur] = f[3].strip()
+        elif cur is not None and line[:1].isspace() and line.strip():
+            out[cur] += ' ' + line.strip()          # wrapped status line
+        else:
+            cur = None
+    return out
+
+
 def subsystems():
     order, of = [], {}
     cur = None
@@ -123,10 +138,12 @@ def logo_png():
     return base64.b64encode(buf.getvalue()).decode()
 
 
-def write_html(path, allf, sub_of, order, al, head):
+def write_html(path, allf, sub_of, order, al, head, notes):
     fs = []
     for a, n, s in allf:
         f = {'a': a, 'n': n, 's': s, 'sub': sub_of.get(n, 'unsorted')}
+        if s == 'asm':
+            f['t'] = notes.get(a, '')
         if s == 'near' and a in al:
             f.update(al[a])
         elif s == 'near':
@@ -210,6 +227,7 @@ def main():
                 continue
         missing[a] = named.get(a, 'fn_%x' % a)
 
+    notes = nearmiss_notes()          # an unwritten function can already carry a status (ASM:)
     al = align_all({a: n for a, (n, _, ok) in funcs.items() if not ok})
     rows = {a: v['d'] for a, v in al.items()}
 
@@ -218,11 +236,14 @@ def main():
 
     order, sub_of = subsystems()
     allf = [(a, n, 'match' if ok else 'near') for a, (n, _, ok) in funcs.items()]
-    allf += [(a, n, 'none') for a, n in missing.items()]
+    allf += [(a, n, 'asm' if notes.get(a, '').startswith('ASM') else 'none')
+             for a, n in missing.items()]
     allf.sort()
     total = len(allf)
     done = sum(1 for _, _, s in allf if s == 'match')
     near = sum(1 for _, _, s in allf if s == 'near')
+    asm = sum(1 for _, _, s in allf if s == 'asm')
+    unwritten = total - done - near - asm
     head = run(['git', 'rev-parse', '--short', 'HEAD']).strip()
 
     def pct(a, b):
@@ -263,8 +284,10 @@ def main():
     w('| Part | Code | Status |')
     w('|---|---|---|')
     w('| The game\'s own C (sndman.c, main.c, new2io.c, order.c, shade.c, init.c, raceanim.c, heap.c, map.c, ...), `src/rrr.c` '
-      '| 0x%05X-0x%05X, %s bytes | %d of %d functions byte-identical (%s), %d near misses, %d not written yet |'
-      % (C_START, LIB_START - 1, num(LIB_START - C_START), done, total, pct(done, total), near, total - done - near))
+      '| 0x%05X-0x%05X, %s bytes | %d of %d functions byte-identical (%s), %d near misses, '
+      '%d not written yet, %d assembly |'
+      % (C_START, LIB_START - 1, num(LIB_START - C_START), done, total, pct(done, total), near,
+         unwritten, asm))
     w('| Watcom C library (`CLIB3R.LIB` 10.5) | inside 0x%05X-0x%05X | %d modules, %s bytes, identified byte for byte; '
       'linked from the library, nothing to rewrite |' % (LIB_START, CODE_END - 1, clib_mods, num(clib_bytes)))
     w('| Watcom math library (`MATH387R.LIB` 10.5) | inside 0x%05X-0x%05X | %d modules, %s bytes, identified byte for byte |'
@@ -278,16 +301,17 @@ def main():
     w('The original\'s modules are not known function by function, so the subsystems are groups of')
     w('functions, not files. The grouping is ours: `reverse-engineering/analysis/rrr_subsystems.txt`.')
     w('')
-    w('| Subsystem | Functions | Byte-identical | Near misses | Not written | Done |')
-    w('|---|---:|---:|---:|---:|---:|')
+    w('| Subsystem | Functions | Byte-identical | Near misses | Not written | Assembly | Done |')
+    w('|---|---:|---:|---:|---:|---:|---:|')
     groups = order + (['unsorted'] if any(n not in sub_of for _, n, _ in allf) else [])
     for g in groups:
         fs = [s for _, n, s in allf if sub_of.get(n, 'unsorted') == g]
         if not fs:
             continue
-        m_, n_, x_ = fs.count('match'), fs.count('near'), fs.count('none')
-        w('| %s | %d | %d | %d | %d | %s |' % (g, len(fs), m_, n_, x_, pct(m_, len(fs))))
-    w('| **All** | **%d** | **%d** | **%d** | **%d** | **%s** |' % (total, done, near, total - done - near, pct(done, total)))
+        m_, n_, x_, a_ = (fs.count('match'), fs.count('near'), fs.count('none'), fs.count('asm'))
+        w('| %s | %d | %d | %d | %d | %d | %s |' % (g, len(fs), m_, n_, x_, a_, pct(m_, len(fs))))
+    w('| **All** | **%d** | **%d** | **%d** | **%d** | **%d** | **%s** |'
+      % (total, done, near, unwritten, asm, pct(done, total)))
     w('')
     w('## Every function')
     w('')
@@ -297,16 +321,17 @@ def main():
     w('| Address | Function | Subsystem | Status |')
     w('|---|---|---|---|')
     for a, n, s in allf:
-        st = {'match': 'byte-identical', 'none': 'not in src/ yet'}.get(s)
+        st = {'match': 'byte-identical', 'none': 'not in src/ yet',
+              'asm': 'assembly, not C (ASM note in src/nearmiss.txt)'}.get(s)
         if s == 'near':
             st = 'near miss, %s instructions differ' % rows[a] if rows.get(a) is not None else 'near miss'
         w('| 0x%05X | `%s` | %s | %s |' % (a, n, sub_of.get(n, 'unsorted'), st))
     w('')
     open(out, 'w').write('\n'.join(L))
-    write_html(os.path.join(ROOT, 'docs', 'RRRPROGRESS.HTML'), allf, sub_of, order, al, head)
+    write_html(os.path.join(ROOT, 'docs', 'RRRPROGRESS.HTML'), allf, sub_of, order, al, head, notes)
     write_svg(os.path.join(ROOT, 'docs', 'RRRPROGRESS.SVG'), done, total)
-    print('%s: %d of %d byte-identical (%s), %d near misses, %d not written'
-          % (os.path.relpath(out, ROOT), done, total, pct(done, total), near, total - done - near))
+    print('%s: %d of %d byte-identical (%s), %d near misses, %d not written, %d assembly'
+          % (os.path.relpath(out, ROOT), done, total, pct(done, total), near, unwritten, asm))
 
 
 if __name__ == '__main__':

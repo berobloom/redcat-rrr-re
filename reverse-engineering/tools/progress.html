@@ -166,6 +166,7 @@ const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&
 
 function pctText(f) {
   if (f.s === 'none') return '<span class="s-none">not written</span>';
+  if (f.s === 'asm') return '<span class="s-none">assembly</span>';
   if (f.s === 'match') return '<span class="s-match">100%</span>';
   return '<span class="s-near">' + (Math.min(f.r, 0.999) * 100).toFixed(1) + '%</span>';
 }
@@ -183,13 +184,14 @@ function rows() {
     return n.includes(q) || a.includes(q) || s.includes(q);
   });
   const k = st.key, d = st.dir;
-  const val = f => k === 'pct' ? (f.s === 'match' ? 2 : f.s === 'none' ? -1 : f.r) : k === 'addr' ? f.a : f[k === 'name' ? 'n' : 'sub'];
+  const val = f => k === 'pct' ? (f.s === 'match' ? 2 : (f.s === 'none' || f.s === 'asm') ? -1 : f.r) : k === 'addr' ? f.a : f[k === 'name' ? 'n' : 'sub'];
   r.sort((x, y) => (val(x) < val(y) ? -1 : val(x) > val(y) ? 1 : x.a - y.a) * d);
   return r;
 }
 
 function diffHtml(f) {
   if (f.s === 'none') return '<p class="diffnote">Not in src/rrr.c yet.</p>';
+  if (f.s === 'asm') return '<p class="diffnote">' + esc(f.t || 'Assembly module in the game, not C to match (src/nearmiss.txt).') + '</p>';
   if (f.s === 'match') return '<p class="diffnote">Byte-identical to the game.</p>';
   let h = '<p class="diffnote">' + f.d + ' of ' + f.i + ' aligned instruction rows differ' +
     (f.d === 0 ? ': the code lines up, but an address it uses does not' : '') + '.</p>';
@@ -228,8 +230,9 @@ function render() {
 function init() {
   const fs = REPORT.functions, done = fs.filter(f => f.s === 'match').length;
   const near = fs.filter(f => f.s === 'near').length, pct = (100 * done / fs.length).toFixed(1);
+  const asm = fs.filter(f => f.s === 'asm').length;
   $('headline').textContent = done + ' of ' + fs.length + ' C functions byte-identical (' + pct + '%)';
-  $('sub').textContent = near + ' near misses, ' + (fs.length - done - near) + ' not written';
+  $('sub').textContent = near + ' near misses, ' + (fs.length - done - near - asm) + ' not written, ' + asm + ' assembly';
   $('bar').style.width = pct + '%';
   $('barwrap').setAttribute('aria-label', pct + '% byte-identical');
   $('commit').textContent = REPORT.commit;

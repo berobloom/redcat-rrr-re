@@ -31,10 +31,12 @@ Short: where the project stands, and what is next. History is in git; no diary.
    question 32. Earlier in `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
-2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
-   first (functions whose callees are matched or are library calls). Only the assembly
-   blit_sprite 0x11bb4 is unwritten now (it has an `enter` frame, as does blit_sprite_trans 0x17d94;
-   both are SKIP). 2026-11-27 then wrote the three normal ticks, player_tick 0x11eb5 (193 rows),
+2. Otherwise: a near miss (item 3). Nothing in 0x10010-0x1B915 is unwritten C any more:
+   `blit_sprite` 0x11bb4 and `blit_sprite_trans` 0x17d94 carry `ASM:` lines in `src/nearmiss.txt`
+   (the game's two `enter`-frame assembly modules, discoveries "Executables"), so `PROGRESS.md` reads
+   124 of 147 (84.4%), 21 near misses, 0 not written, 2 assembly, and `grep -c 'not in src/ yet'
+   PROGRESS.md` is 0. What follows is how that C got written: 2026-11-27 wrote the three normal
+   ticks, player_tick 0x11eb5 (193 rows),
    bull_tick 0x12826 (208) and muis_tick 0x130f8 (87), into a second new module `src/drive.c`: the
    game lays those three back to back and the three crash ticks back to back with other modules in
    between, and the split is worth 7 rows on player_tick and 4 on muis_tick, because it removes the

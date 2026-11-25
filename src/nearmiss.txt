@@ -5,7 +5,19 @@
 # status column by hand).
 # Status: (empty) = open; MATCH = now byte-identical (baseline raised in the same commit);
 # SKIP: <causes, what was tried> = budget spent, take the next; LAYOUT: = not fixable in C.
+# ASM: <why> = the game's function is not our C to match: hand-written assembly, so src/check.sh
+# never compares it and nearmiss.sh never lists it (the line is kept by hand).
 # Take the FIRST line with an empty status. Write the status in the same commit as the code.
+
+0 0x11bb4 blit_sprite  ASM: one of the game's own assembly modules, nothing to match in C. Evidence:
+   one of only two `enter` stack frames in all of 0x10010-0x1B915 (with blit_sprite_trans 0x17d94 -
+   capstone scan, research/discoveries.md "Executables"); it re-reads its arguments from EBP every
+   row, keeps the loop counters in registers, and pads with four-NOP alignment runs, none of which
+   -3r -s -ox produces (every other function of the range addresses its arguments through ESP).
+   Prototype in src/rrr.h, called by draw_view in src/new2io.c; name evidence in rrr_names.txt.
+0 0x17d94 blit_sprite_trans  ASM: same class as blit_sprite 0x11bb4 (the other `enter` frame of the
+   range, EBP-relative arguments re-read per row, NOP padding) - dst = trans[dst*256 + src], skips
+   0xFF, trans 0x70f90. Assembly module, not C, so not a match to chase.
 
 0 0x14534 racer_bounce  MATCH 2026-11-23: it jumped into racer_contact's epilogue in the game all along - the four 0x1404a-0x1467b are one object (src/racer.c)
 0 0x16b53 mine_tick  MATCH 2026-11-27: no change here - dropped2_tick 0x178f6's stats-index holder (see its differs note) put the shared epilogue back at 0x17b59, where this jmp lands

@@ -112,3 +112,14 @@ Rules for the agent:
     epilogue exactly 6 times in 0x10010-0x1B915 (list there), and each pair must share a module - the
     first hard tool for the module boundaries of STATUS item 4. 115 of 147, 23 near misses, 9
     unwritten (7 C).
+
+  - 2026-11-25: READY FOR REVIEW - the last gap in the Accept line is closed. `blit_sprite` 0x11bb4
+    and `blit_sprite_trans` 0x17d94 are the game's own assembly, not C, and now say so: two `ASM:`
+    lines in `src/nearmiss.txt` (the only two `enter` stack frames in 0x10010-0x1B915, arguments
+    re-read from EBP every row, four-NOP alignment runs, none of which `-3r -s -ox` emits; capstone
+    scan in research/discoveries.md "Executables"). `tools/progress.py` reads those statuses, so
+    `PROGRESS.md` reads 124 of 147 (84.4%), 21 near misses, 0 not written, 2 assembly. The check:
+    `grep -c 'not in src/ yet' PROGRESS.md` = 0 while `src/check.sh 2>&1 | grep -c ' MATCH at'` stays
+    124 (no C changed, `src/matched.baseline` untouched). The mutation that makes it fail: delete the
+    `ASM:` line for blit_sprite - that row goes back to "not in src/ yet" and PROGRESS.md counts 1 not
+    written. Every function of the range is now MATCH, a near miss with a SKIP/LAYOUT status, or ASM.
