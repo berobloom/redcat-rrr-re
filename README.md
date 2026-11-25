@@ -32,12 +32,12 @@ Nothing here changes or redistributes the original files.
 
 ## Matching decompilation
 
-<a href="docs/RRRPROGRESS.HTML"><img src="docs/RRRPROGRESS.SVG" width="40%" alt="RRR.EXE: the share of the race program's own C functions that compile to the original's bytes"></a>
+<a href="https://berobloom.github.io/redcat-rrr-re/RRRPROGRESS.HTML"><img src="docs/RRRPROGRESS.SVG" width="40%" alt="RRR.EXE: the share of the race program's own C functions that compile to the original's bytes"></a>
 
 Next to the port, the original's C is being rebuilt function by function so
 that it compiles to the same bytes, with the game's own compiler: Watcom
 C/C++ 10.5, `wcc386 -3r -s -ox`, under Wine. It starts with `RRR.EXE`, the
-race. [`docs/RRRPROGRESS.HTML`](docs/RRRPROGRESS.HTML) lists every function:
+race. [`docs/RRRPROGRESS.HTML`](https://berobloom.github.io/redcat-rrr-re/RRRPROGRESS.HTML) lists every function:
 search it, filter it by status or subsystem, and click a near miss to see its
 instruction diff against the game. [`PROGRESS.md`](PROGRESS.md) has the same
 numbers as tables. `reverse-engineering/tools/progress.py` writes all three
