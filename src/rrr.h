@@ -270,10 +270,14 @@ struct stats {                              /* 48 bytes per racer (discoveries.m
     int     top_speed;                          /* +0x2c */
 };
 extern struct stats   stats[];              /* 0x6fbc0 */
+extern int            v55ff4;             /* 0x55ff4: racer 2 bounced off a racer last frame */
+extern int            v55ff8, v55ffc, v56000, v56004, v56008, v5600c;
+                                        /* 0x55ff8-0x5600c: racer 2's tick state, read only by
+                                           bull_tick 0x12826 and bull_crash_tick 0x19c8c */
 extern int            v56018, v5601c, v56020, v56024, v56028, v5602c;
                                         /* 0x56018-0x5602c: racer 4's tick state, read only by
                                            muis_tick 0x130f8 and muis_crash_tick 0x1a42a */
-extern int            v71ddc;           /* 0x71ddc: racer 4's puff counter (spawn_puffs) */
+extern int            v71918, v71ddc;   /* 0x71918, 0x71ddc: racer 2/4's puff counter (spawn_puffs) */
 extern int            stuck2, stuck4;       /* 0x56070, 0x56074 */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
@@ -431,6 +435,7 @@ int bull_tick(short n);                     /* 0x12826, not rebuilt yet */
 int muis_tick(short n);                     /* 0x130f8, not rebuilt yet */
 extern int            racer_top_speeds[];   /* 0x57b18: 16.16 top speed per map, by map_no */
 void racer_bounce(int a, int b);
+int racer_contact(int a, int b);
 void set_keys(void);
 extern int            keystate[];           /* 0x804c0: 1 while a key (scancode) is down */
 int __cdecl fn_27837(int n);
