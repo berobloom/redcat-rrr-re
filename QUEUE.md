@@ -256,6 +256,35 @@ Rules for the agent:
       clib3r_fpeintel.OBJ@3d3f4 back -> fixup records drop to 81862 of 84546 (pages stay identical,
       all 9909 fixups semantically right).
 
+  - 2026-11-25: **the data-object segment order is known**, and `inirt386` now links as itself -
+    **104 real objects still byte-identical**: `link.sh OUT $(cat .work/link/libobjs.args4)
+    --obj .work/exp/.../clib3r_inirt386.OBJ@32d22 --dseg XI@6c668 --dseg YI@6c6a4-12
+    --dseg DATA32@6c6b8` -> `LINK: 419179 of 419179`, `fixups: 9909 in ours, 9909 in the game, 9909
+    identical`. New tool `tools/link/dataobj.py` content-matches every candidate module's data
+    segments against the game's data object (linker-filled bytes masked on both sides): it pins 23
+    segments - CONST 10, CONST2 2, _DATA 9, DATA32 2 - and its last section reports **0 out of
+    code-address order** per segment name, so WLINK's data object is one run per segment name and
+    inside a run the modules come in the order they were fed, the same order as the code object
+    (dosret._DATA 0x60370/code 0x28a0c then SETMODE.ASM._DATA 0x60384/0x28ac1; DATA.ASM._DATA
+    0x60a56 between SVGAINIT 0x6050c and MAKEGIF 0x64f9c). WLINK's own map names the runs and their
+    fixed order - CONST, CONST2, _DATA, XIB, XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK - each run
+    starting on a 4-byte boundary (the game's YI ends 0x6c6b6, DATA32 starts 0x6c6b8), which is
+    exactly the order the content matches give. `blob.py --dseg NAME@ADDR[-LEN][:CLASS]` carves the
+    data blob into those runs. Why that fixes inirt386: **XIB/XIE/YIB/YIE are WLINK's own symbols**,
+    the bounds of the merged XI and YI runs (no clib module has them as a public), so without XI/YI
+    runs of the game's length its four fixups land on the end of DGROUP, silently. The game's XI run
+    = 10 far pointers 0x6c668-0x6c6a4, YI = 3 more 0x6c6a4-0x6c6b6, and their bytes are all fixup
+    sites, so the blob supplies them. Mutations that fail the check: drop the XI block -> 419177,
+    drop the YI block -> 419173, move the XI block to 0x6c600 -> 419177; and emitting the data-blob
+    fixups run by run instead of in page input order -> fixup records 83227 of 84546.
+    Still open for the 43 data-carrying modules and every src/ object: blob.py places only code
+    segments, so a real object's own `_DATA`/`CONST` cannot go in yet. What it needs: data addresses
+    per object (dataobj.py pins 23; the rest follow from the run order and their neighbours), the
+    data blob cut into one object per gap so FILES order fixes the merge order (one merged run per
+    name does not interleave with real objects), blob fixups into a placed range routed through that
+    object's data publics, and the STACK segment shrunk by the placed `_BSS` lengths. Pilot to start
+    with: clib3r/dosret (code 0x28a0c, _DATA 20 B at 0x60370, next to fg32/SETMODE.ASM at 0x60384).
+
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.

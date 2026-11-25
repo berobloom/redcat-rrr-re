@@ -2,13 +2,23 @@
 """blob.py: carve an LE program back into OMF objects that WLINK links into the same program, with
 real objects (library modules, src/ objects) in place of the ranges they fill.
 
-usage: blob.py EXE OUTDIR [--obj FILE.OBJ@ADDR ...] [--lib LIB ...]
+usage: blob.py EXE OUTDIR [--obj FILE.OBJ@ADDR ...] [--lib LIB ...] [--dseg NAME@ADDR[:CLASS] ...]
 
 Without --obj it writes OUTDIR/CODEBLOB_0.OBJ (the code object) and OUTDIR/DATABLOB.OBJ (the data
 object): every LE fixup site written back as an OMF 32-bit offset fixup (frame FLAT, the target's
 offset kept in the data bytes, the way Watcom's own objects carry the addend), in the order the
-original objects gave them to the linker (input_order). DATABLOB is group DGROUP: _DATA (class DATA)
-= the initialised bytes, STACK (class STACK) = the rest (the LE ESP is the object's end).
+original objects gave them to the linker (input_order). DATABLOB is group DGROUP: the initialised
+bytes as one SEGDEF per --dseg block, STACK (class STACK) = the rest (the LE ESP is the object's end).
+
+`--dseg NAME@ADDR[:CLASS]` starts a data-object segment block: WLINK merges every segment of one
+name and class into one run of the data object, in input order, so the original data object is
+[run of CONST][CONST2][_DATA][XI][YI][DATA32]... - see tools/link/dataobj.py. Naming a data blob
+piece after the block it covers is what lets a real object's same-named data segment merge into it
+at its measured address, and it is how WLINK gets the Watcom bookkeeping symbols right: it defines
+XIB/XIE (and YIB/YIE) itself as the bounds of the merged XI (YI) segment, so with no XI segment in
+the link cinit's four XIB/XIE/YIB/YIE fixups silently aim at the end of DGROUP. Each block runs to
+the next --dseg address (the last one to the end of the initialised bytes); blocks are named _DATA
+unless given a name.
 
 `--obj FILE.OBJ@ADDR` puts a real object's _TEXT at code address ADDR (hex). Its range is left out
 of the code blob, which is cut into CODEBLOB_<n>.OBJ pieces (public `blob_<addr>` at each start):
@@ -27,6 +37,7 @@ from real fixup sites (`--obj` objects' `needs`).
 import os
 import struct
 import sys
+from bisect import bisect_right
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'wc'))
@@ -159,15 +170,24 @@ def input_order(le, obj):
     return out
 
 
-def emit_ordered(o, seg, base, img, lo, hi, sites, target_of, flat, order):
-    """the bytes lo..hi without fixup sites as plain LEDATA, then one LEDATA+FIXUPP per fixup site in
-    `order` (a list of source addresses; a site in two pages comes once, at its first place)"""
+def emit_ordered(o, segof, base, img, lo, hi, sites, target_of, flat, order, bounds=()):
+    """the bytes lo..hi without fixup sites as plain LEDATA (never across a `bounds` address), then
+    one LEDATA+FIXUPP per fixup site in `order` (a list of source addresses; a site in two pages
+    comes once, at its first place), each in the segment that segof(addr) -> (segment, segment base)
+    covers"""
     cut = sorted(s for s in sites if lo <= s < hi)
     a = lo
     for s in cut + [hi]:
         while a < min(s, hi):
             e = min(s, hi, a + 1024)
-            o.ledata(seg, a - lo, bytes(img[a - base:e - base]), [], flat)
+            k = bisect_right(bounds, a)
+            if k < len(bounds):
+                e = min(e, bounds[k])
+            seg, slo = segof(a)
+            if seg is None:                       # a hole between blocks: WLINK's own padding
+                a = slo
+                continue
+            o.ledata(seg, a - slo, bytes(img[a - base:e - base]), [], flat)
             a = e
         a = max(a, s + 4)
     done = set()
@@ -176,7 +196,8 @@ def emit_ordered(o, seg, base, img, lo, hi, sites, target_of, flat, order):
             continue
         done.add(s)
         tseg, toff = target_of(s)
-        o.ledata(seg, s - lo, struct.pack('<I', toff), [(0, tseg)], flat)
+        seg, slo = segof(s)
+        o.ledata(seg, s - slo, struct.pack('<I', toff), [(0, tseg)], flat)
     missing = [s for s in cut if s not in done]
     if missing:
         raise SystemExit('%d fixup sites not in the page order, first %#x' % (len(missing), missing[0]))
@@ -223,13 +244,18 @@ class RealObj:
 def main():
     exe, out = sys.argv[1], sys.argv[2]
     os.makedirs(out, exist_ok=True)
-    objs, libs = [], []
+    objs, libs, dsegs = [], [], []
     for i, a in enumerate(sys.argv):
         if a == '--obj':
             p, _, at = sys.argv[i + 1].rpartition('@')
             objs.append(RealObj(p, int(at, 16)))
         elif a == '--lib':
             libs.append(sys.argv[i + 1])
+        elif a == '--dseg':
+            nm, _, at = sys.argv[i + 1].rpartition('@')
+            nm, _, cls = nm.partition(':')
+            at, _, ln = at.partition('-')
+            dsegs.append((nm, cls or 'DATA', int(at, 16), int(ln, 16) if ln else None))
     objs.sort(key=lambda o: o.addr)
     le = leparse.LE(open(exe, 'rb').read())
     imgs, _ = le.load()
@@ -372,16 +398,39 @@ def main():
             if r[0] == 'seg':
                 return text, r[1] - lo
             return r
-        emit_ordered(ob, text, cbase, code, lo, hi, sites, tgt, flat, corder)
+        emit_ordered(ob, lambda t, text=text, lo=lo: (text, lo), cbase, code, lo, hi, sites, tgt, flat, corder)
         ob.modend((flat, text, le.eip - (lo - cbase)) if lo <= cbase + le.eip < hi else None)
         fn = 'CODEBLOB_%x.OBJ' % lo
         ob.write(os.path.join(out, fn))
         files.append(fn)
 
+    # the data object as one SEGDEF per segment-name block (--dseg NAME@ADDR[-LEN][:CLASS]; the block
+    # runs to the next block's address unless a length says otherwise). WLINK merges every segment of
+    # one name into one run of the data object, in its fixed DGROUP order CONST, CONST2, _DATA, XIB,
+    # XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK (its own map lists those runs), starts every run on
+    # a 4-byte boundary, and defines XIB/XIE/YIB/YIE as the bounds of the XI and YI runs: with no
+    # XI/YI run of the game's length in the link, cinit's four fixups aim at the end of DGROUP.
+    dsegs.sort(key=lambda b: b[2])
+    if len({b[2] for b in dsegs}) != len(dsegs):
+        raise SystemExit('--dseg addresses must be distinct')
+    regs, prev = [], dbase
+    for i, (nm, cls, at, ln) in enumerate(dsegs):
+        end = at + ln if ln else (dsegs[i + 1][2] if i + 1 < len(dsegs) else dbase + dinit)
+        if at > prev and any(data[prev - dbase:at - dbase]):
+            regs.append(('_DATA', 'DATA', prev, at))   # an unnamed block; a hole of zeros is padding
+        if end > at:
+            regs.append((nm, cls, at, end))
+        prev = max(prev, end)
+    if prev < dbase + dinit:
+        regs.append(('_DATA', 'DATA', prev, dbase + dinit))
+    for nm, cls, lo, hi in regs:
+        if hi <= dbase or lo >= dbase + dinit:
+            raise SystemExit('--dseg block %s@%x outside the initialised data bytes' % (nm, lo))
+
     od = Obj('datablob')
-    dseg = od.segdef('_DATA', 'DATA', dinit)
+    segidx = [od.segdef(n, c, hi - lo) for n, c, lo, hi in regs]
     sseg = od.segdef('STACK', 'STACK', stack, combine=5)
-    od.grpdef('DGROUP', [dseg, sseg])
+    od.grpdef('DGROUP', segidx + [sseg])
     flat = od.grpdef('FLAT', [])
     extmap = {}
     go = resolver(od, 'data', flat, extmap)
@@ -389,7 +438,12 @@ def main():
     targets = {s: go(s) for s in sorted(dsites)}
     if extmap:
         od.extdef([n for n, i in sorted(extmap.items(), key=lambda q: q[1])])
-    od.pubdef(0, dseg, [('blob_data', 0)] + sorted((n, t - dbase) for n, t in need.items() if dbase <= t < dbase + dinit))
+    for i, (n, c, lo, hi) in enumerate(regs):
+        pub = sorted((nm, t - lo) for nm, t in need.items() if lo <= t < hi)
+        if i == 0:
+            pub = [('blob_data', 0)] + pub
+        if pub:
+            od.pubdef(0, segidx[i], pub)
     tail = sorted((n, t - dbase - dinit) for n, t in need.items() if dbase + dinit <= t <= dend)
     if tail:                                        # uninitialised data: publics in the tail segment
         od.pubdef(0, sseg, tail)
@@ -398,15 +452,29 @@ def main():
         r = targets[s]
         if r[0] == 'seg':
             t = r[1]
-            return (dseg, t - dbase) if t < dbase + dinit else (sseg, t - dbase - dinit)
+            for i, (n, c, lo, hi) in enumerate(regs):
+                if lo <= t < hi:
+                    return (segidx[i], t - lo)
+            return (sseg, t - dbase - dinit)
         return r
-    emit_ordered(od, dseg, dbase, data, dbase, dbase + dinit, dsites, dtgt, flat, dorder)
+    def dsegof(t):
+        for i, (n, c, lo, hi) in enumerate(regs):
+            if lo <= t < hi:
+                return segidx[i], lo
+        for i, (n, c, lo, hi) in enumerate(regs):     # a padding hole: nothing to emit up to lo
+            if t < lo:
+                return None, lo
+        return sseg, dbase + dinit
+    emit_ordered(od, dsegof, dbase, data, dbase, dbase + dinit, dsites, dtgt, flat, dorder,
+                 bounds=sorted({x for r in regs for x in r[2:]}))
     od.modend()
     od.write(os.path.join(out, 'DATABLOB.OBJ'))
     files.append('DATABLOB.OBJ')
     open(os.path.join(out, 'FILES.LNK'), 'w').write(''.join('file %s\n' % f for f in files))
-    print('%d code pieces, %d real objects (%d bytes), %d publics defined for them; data %#x + stack %#x'
-          % (len(pieces), len(objs), sum(o.size for o in objs), len(need), dinit, stack))
+    print('%d code pieces, %d real objects (%d bytes), %d publics defined for them; data %#x in %d'
+          ' blocks %s + stack %#x'
+          % (len(pieces), len(objs), sum(o.size for o in objs), len(need), dinit, len(regs),
+             ','.join('%s@%x' % (n, lo) for n, c, lo, hi in regs), stack))
 
 
 if __name__ == '__main__':

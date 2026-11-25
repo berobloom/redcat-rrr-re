@@ -19,11 +19,18 @@ Short: where the project stands, and what is next. History is in git; no diary.
 ## Next
 
 0. QUEUE Q4: a WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
-   link/link.sh`, `LINK: 419179 of 419179`), and since 2026-11-25 **103 library modules link as
-   themselves** in place of their blob ranges (`$(cat .work/link/libobjs.args4)`: 91 clib/math/emu +
-   27 Fastgraph ASM; dead Fastgraph EXTDEFs resolved through DATA.ASM anchored at 0x60a56). Next:
-   the original segment order inside the data object - it blocks the 37 data-carrying library modules,
-   inirt386's XIB/XIE/YIB/YIE bookkeeping fixups, and every src/ object. Code pages 0x29000/0x3d000
+   link/link.sh`, `LINK: 419179 of 419179`), and since 2026-11-25 **104 library modules link as
+   themselves** in place of their blob ranges (`$(cat .work/link/libobjs.args4)` plus
+   `--obj .../clib3r_inirt386.OBJ@32d22 --dseg XI@6c668 --dseg YI@6c6a4-12 --dseg DATA32@6c6b8`;
+   74 clib + 10 math387 + 20 Fastgraph ASM; dead Fastgraph EXTDEFs resolved through DATA.ASM anchored at
+   0x60a56). **The data-object segment order is settled** (discoveries "the data object's segment
+   order", `tools/link/dataobj.py`): one merged run per segment name in WLINK's fixed order CONST,
+   CONST2, _DATA, XIB, XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK, runs 4-byte aligned, and inside a
+   run the modules in feed order = code-object order (23 content-pinned segments, 0 out of order);
+   XIB/XIE/YIB/YIE are WLINK's own bounds-of-XI/YI symbols, which is what blocked inirt386. Next:
+   let blob.py place real objects' `_DATA`/`CONST` at their measured addresses (43 data-carrying
+   library modules, then every src/ object) - the pieces are listed in the QUEUE Q4 note, pilot
+   clib3r/dosret (code 0x28a0c, _DATA 20 B at 0x60370). Code pages 0x29000/0x3d000
    stay blobs (the original feed order there is not placement order, QUEUE Q4 note).
    QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
    data-segment bytes identical in place` = `src/data.baseline`; mutation: one character of order.c's

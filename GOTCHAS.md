@@ -47,9 +47,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **WLINK wants a definition for every EXTDEF a linked module lists, even dead ones**: Fastgraph
   4.03's ASM modules list DATA.ASM globals their code never touches, and the link fails on them with
   no fixup site anywhere to read an address from.
-- **clib startup modules fixup to zero-size bookkeeping segments** (XIB/XI/XIE/YIB/YI/YIE): their
-  bytes merge from other modules' data segments at link time; place such a module without those and
-  WLINK resolves them silently to the end of DGROUP (wrong, no error).
+- **XIB/XIE/YIB/YIE are WLINK's own symbols, not a module's** (2026-11-25): they are the bounds of
+  the merged XI and YI runs, so a clib module that references them (inirt386) links with those four
+  fixups aimed silently at the end of DGROUP, and no error, unless the link contains XI/YI runs of
+  the right length. Fix: give the data blob segments those names (`blob.py --dseg XI@6c668
+  --dseg YI@6c6a4-12`). WLINK's run order and the 4-byte run alignment are in discoveries "the data
+  object's segment order".
 - **archive.org ISOs need a UA and ranged GETs:** a plain `curl` through the download redirect dies at
   0 bytes; `-A "Mozilla/5.0"` plus `-r start-end` chunks work (watcom.md, 10.6). Background downloads
   started inside a tool call are killed when it returns - keep them foreground and resumable.

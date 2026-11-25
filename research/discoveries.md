@@ -156,6 +156,31 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
     newest first, so the fixup records preserve the order the original objects carried their
     fixups. In 9 pages that order is not ascending - doscalls.asm (0x2b3xx) and the Smacker code
     (0x2ecb0-) - assembler output, not WCC386's.
+- CONFIRMED (2026-11-25): the data object's segment order. WLINK merges every segment of one name
+  and class into one run of the data object, and its own map (`RRR.map`, `option map`) prints the
+  runs and their order: **CONST, CONST2, _DATA, XIB, XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK**.
+  Every run starts on a 4-byte boundary. Inside a run the segments come in feed order, which is the
+  same order as the code object: `tools/link/dataobj.py` content-matches each library module's data
+  segments (linker-filled bytes masked on both sides) and pins 23 of them - CONST 10, CONST2 2,
+  _DATA 9, DATA32 2 - with **0 out of code-address order**, e.g. clib dosret._DATA 0x60370 (code
+  0x28a0c) then Fastgraph SETMODE.ASM._DATA 0x60384 (code 0x28ac1), and strerror.noefgfmt.initfile.
+  chipbug.hook387.inirmsel CONST 0x54ccc-0x5513c (code 0x322a4-0x3a56d). So the data address of a
+  library module is predictable from where its code sits.
+  In the game's data object: the _DATA run ends at 0x6c668, XI = 10 far pointers 0x6c668-0x6c6a4,
+  YI = 3 more 0x6c6a4-0x6c6b6, 2 bytes of run-alignment padding, DATA32 (chipa32, chipd32)
+  0x6c6b8-0x6c96c, then _BSS/STACK to the LE ESP 0x8b478.
+- CONFIRMED (2026-11-25): XIB/XIE and YIB/YIE are **not** defined by any module - no clib module has
+  them as a public - WLINK defines them itself as the bounds of the merged XI and YI runs (its map
+  lists them as zero-size runs). clib's `inirt386` is the module that references them, four fixups;
+  with no XI/YI run of the game's length in the link those four silently aim at the end of DGROUP
+  (0x6c96c) instead of 0x6c668/0x6c6a4/0x6c6b6. `blob.py --dseg XI@6c668 --dseg YI@6c6a4-12
+  --dseg DATA32@6c6b8` reproduces the runs out of the blob and inirt386 then links exactly: 104 real
+  objects, `LINK: 419179 of 419179 file bytes identical`, 9909/9909 fixup pairs identical.
+  Mutations: drop `--dseg XI@6c668` -> 419177, drop the YI block -> 419173, move XI to 0x6c600 ->
+  419177. The XI/YI blocks' own bytes are all fixup sites, so they come from the blob, not from
+  modules, and the run order is what makes the targets right.
+  One trap in reproducing a split data object from blobs: the fixups must still be emitted in the
+  page input order across all runs, not run by run (that costs 1300 bytes of fixup records).
 - Ownership of every byte of 0x1B916-0x4142F: `reverse-engineering/analysis/
   rrr_libmap.tsv` (`tools/libmap.py`, evidence column per range); the totals are
   in `PROGRESS.md`. 8,413 bytes are still unknown.
