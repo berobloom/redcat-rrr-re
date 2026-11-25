@@ -240,7 +240,7 @@ int sound_init(short argc, char **argv)
     fn_1d2a6(34, wav_handles, wav_names, 11025);
     num_tracks = 4;
     if (easy_init(30, 34, wav_handles, wav_names, 33)) {
-        rc_error("Soundblaster initialisatie fout. Probeer andere instellingen");
+        rc_error("Soundblaster initialisatie fout. Probeer andere instellingen!");
         exit(0);
     }
     debug_printf("init done\n");

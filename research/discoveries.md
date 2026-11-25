@@ -235,6 +235,14 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   - STRONGLY SUPPORTED: 0x1ab7f-0x1af52 (rrrio_save .. ai_script_find) is one module whose CONST
     is 0x51984-0x51a59 and which defines game_names (0x57c04, unused in RRR) and world_names
     (0x57c18); src/rrrio.c links as itself with both. module_table is int [6][4] at 0x57c30.
+  - STRONGLY SUPPORTED: sndman.c is not a module of its own: main.c #includes it. 0x10010-0x11526
+    is one object. Its CONST runs on with no padding from goodbye's last string into init_game's
+    "/DAVILEX" (0x505be, unaligned), and its _DATA does the same: sndman's tables end at 0x55f8b
+    and main's lights_done starts there, unaligned, followed by shot_no, which screenshot (in the
+    sndman range) uses. A separate main.c object would start both on a dword. Two __FILE__ values
+    ("sndman.c" at 0x10303/0x10350, "main.c" at 0x10eff/0x111e8) in one object means an #include.
+    So that module links as itself only once start_lights 0x1103e matches. A trial split at 0x10817
+    also found a missing "!" in sound_init's "Probeer andere instellingen!" (fixed in src/rrr.c).
   - LIKELY: clib nomem is not in RRR. Its 18-byte _TEXT is identical to noefgfmt's (both "found"
     at 0x33abf), and noefgfmt's 36-byte CONST is what sits at 0x54e0c, where nomem's CONST would
     have to be.

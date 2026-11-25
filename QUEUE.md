@@ -367,6 +367,10 @@ Rules for the agent:
     starts its CONST on a fresh dword (0x51a4c) and the link breaks (381533, data object 4 bytes
     long). module_table moves to 0x57c30 and is read `[world][i - 1]` (the code's base 0x57c2c was
     that -4 folded in, and it fell inside world_names).
+    0x10010-0x11526 (sndman.c #included in main.c, discoveries) is one module and waits on
+    start_lights (3 rows, nearmiss). The other whole-module candidates are one function short each,
+    and each of those is a long-standing register-tie SKIP: HEAP (spawn_dropped_object), MAP
+    (ground_check), NEW2IO (draw_view), SHADEOBJ (hit_test).
 
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
