@@ -169,6 +169,17 @@
     three objects, so "back to back" does not say "one module" - only a shared
     epilogue does. What the three modules' names are stays unknown (no string
     block in any of the three).
+    2026-11-28, a negative for the string-block test, at main.c: putting
+    init_game 0x10817, finish_check 0x10eff, start_lights 0x1103e and main
+    0x111e8 in their own file (rrr_funcs.tsv carries 'main.c' strings at
+    0x10817, 0x10eff and 0x111e8, and the first new2io.c strings at draw_view
+    0x11526, so main is the last function of that candidate module) changes
+    nothing: check.sh reads the same 126 MATCH and the same first-diff offset
+    on every near miss, and start_lights stays at 3 rows. So that candidate
+    boundary is inert for matching (the four functions share no epilogue in
+    the game, and ours share none either once main is byte-identical), and the
+    string-block test alone does not earn a file split - keep a split only when
+    a row count or a jmp target changes.
 28. **Open: follower_tick 0x167aa's last 9 rows are two register choices.**
     (a) the game turns the short parameter into an int where it sits -
     `cwde`, then `mov esi,eax` for the objects index and `dec eax` for the

@@ -23,6 +23,17 @@ Rules for the agent:
   Accept: every function in 0x10010-0x1B915 is in `src/` (its module's file or `src/rrr.c`), in address order, and `src/check.sh`
   shows it as MATCH or it has a `src/nearmiss.txt` line with a SKIP/LAYOUT status and a
   `/* differs: ... */` note; `PROGRESS.md` regenerated.
+  - 2026-11-28: still READY FOR REVIEW. `main` 0x111e8 byte-identical: `src/check.sh 2>&1 | grep -c '
+    MATCH at'` = 126 of 147 (85.7%), 19 near misses (plus the 2 ASM). One shape carries it: the
+    quit-after-finish fill is `if (!finished2)` with `if (!finished4)` inside each arm. Mutations that
+    fail: delete any one of the three `!` (1 row each, 806 bytes); spell the same behaviour with a
+    positive test (the spelling that was in the tree, and 71 more in .work/probe/mn: 794-833 bytes,
+    6-30 rows - every positive-test form merges the game's two `finish_order[1] = 2` stores). Checked
+    and rejected: making init_game/finish_check/start_lights/main their own object (the rrr_funcs.tsv
+    main.c string blocks) changes no row count, so that boundary stays unproven and unsplit (open
+    question 27). `nmrefs main` reads refs 75/75 same with no one-sided jump-target block - after
+    fixing nmrefs, which filtered unnamed 0x40000-0x60000 addresses on the game's side only and so
+    called every string-printing MATCH a DIFFER.
   - 2026-08-09: READY FOR REVIEW - `reverse-engineering/tools/entries.py` proved 10 of
     the old 157 starts in the range are byte-scan artifacts (the code before them runs
     straight through the address), so `PROGRESS.md` now reads 147 functions, 110

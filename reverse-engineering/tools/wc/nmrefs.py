@@ -176,8 +176,11 @@ def main():
         todo = []
         for line in open(os.path.join(ROOT, 'src', 'nearmiss.txt')):
             f = line.split()
-            if len(f) >= 3 and f[1].startswith('0x') and 'MATCH' not in line:
-                todo.append((f[2], int(f[1], 16)))
+            if len(f) >= 3 and 'MATCH' not in line and 'ASM:' not in line:
+                # the address follows the row count, which may read "282 -> 276"; the name follows it
+                a = next((i for i, x in enumerate(f[:5]) if re.fullmatch(r'0x[0-9a-f]{5}', x)), None)
+                if a is not None and a + 1 < len(f) and re.fullmatch(r'[a-z_][a-z_0-9]*', f[a + 1]):
+                    todo.append((f[a + 1], int(f[a], 16)))
 
     def game_end(addr, size, ours, mask):
         """the end of the game's function: its ret aligned with our last ret (the game's may be longer)"""
@@ -310,8 +313,13 @@ def main():
         # library calls: our externals without a name in PROG_names.txt against unnamed game calls
         # above the program's own code (the C/audio library) - reported, not counted
         lib = [r for r in ro if isinstance(r, str) and r.startswith('?')]
-        libg = [r for r in rg if isinstance(r, int) and LIB <= r < 0x60000 and label(r) == '0x%x' % r]
-        so, sg = set(ro) - set(lib), set(rg) - set(libg)
+        # unnamed addresses in [LIB, 0x60000): library calls AND unnamed CONST literals. Filter them
+        # on BOTH sides - our literals resolve to the same addresses through their segment fixup, so
+        # filtering only the game's side made every MATCHed function that prints a string DIFFER.
+        unamed = lambda r: isinstance(r, int) and LIB <= r < 0x60000 and label(r) == '0x%x' % r
+        libg = [r for r in rg if unamed(r)]
+        libo = [r for r in ro if unamed(r)]
+        so, sg = set(ro) - set(lib) - set(libo), set(rg) - set(libg)
         bad = so != sg                   # an address only one side uses at all
         counts = not bad and bool(r_ours or r_game)   # same addresses, used a different number of times
         flagged += bad

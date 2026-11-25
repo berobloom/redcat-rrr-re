@@ -153,6 +153,18 @@ Short: where the project stands, and what is next. History is in git; no diary.
    spellings and four spellings of the friction test (the game's `imul eax,edi,0x3e8` + `shl eax,0x10`
    against WCC's shift chain for the folded 65536000, the only nmrefs constant difference there) all
    score 193 or worse. `dropped2_tick` 0x178f6 stays at 2 rows.
+   2026-11-28: `main` 0x111e8 went to MATCH, `src/check.sh 2>&1 | grep -c ' MATCH at'` = 126 of 147
+   (85.7%), 19 near misses listed by check.sh (21 with the two ASM). It was block placement, and the
+   lever is a negated test pair: the quit-after-finish fill is `if (!finished2)` with `if
+   (!finished4)` inside each arm. Every positive-test spelling of that same behaviour merges the
+   game's two `finish_order[1] = 2` stores (794 of 806 bytes, 11-14 rows) and removing any one of the
+   three `!` costs a row; 72 spellings in .work/probe/mn, each compiled in place by `tools/wc/inplace.py`
+   (0.8 s a compile). Matched with it: the expected module prize is not there - giving init_game
+   0x10817, finish_check 0x10eff, start_lights 0x1103e and main their own file (the main.c string
+   blocks in `rrr_funcs.tsv`) changes no row count, so start_lights' 3 rows are not an object question
+   (open question 27). Tool fix: nmrefs filtered unnamed 0x40000-0x60000 addresses off the game's side
+   only, so every MATCHed function that prints a string read `DIFFER`; both sides are filtered now and
+   `nmrefs main` says refs 75/75 same with no one-sided jump-target block (GOTCHAS, Matching).
 4. Later: the rest of the module boundaries in 0x10010-0x1B915 (one source file per original
    module; `src/racer.c` 0x1404a-0x1467b found from epilogue sharing and `src/init.c`
    0x148db-0x1585d from its string block head ('player_direction : %d wp: %d' 0x50e04 runs into

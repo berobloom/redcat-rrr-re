@@ -622,6 +622,17 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   in both blocks does not (43). dropped2_tick 0x178f6 went 16 -> 2 rows and dropped0_tick,
   dropped4_tick, mine_tick, sign_tick, bomb_tick, fn_16e46 and cactus_tick to MATCH with it (117 ->
   124): the 10 bytes the split chains cost were what put the shared epilogue at 0x17b59 out of reach.
+- CONFIRMED (compile, 2026-11-28): which of two identical store blocks survives depends on the test
+   polarity, not on the source text alone. `main` 0x111e8's quit-after-finish fill has four cases over
+   finished2/finished4 and stores `finish_order[1] = 2` twice (0x113a0, 0x11477) and `finish_order[2]
+   = 4` once (0x11481, reached by a jmp from 0x113aa, by a je from 0x11475 and by falling through from
+   0x11477). Every positive-test spelling of that behaviour (`if (finished2) ... else if (finished4)
+   ... else ...`, and the same nested with either test negated) merges the two order[1] stores into
+   one block: 794 bytes instead of 806, 11-14 rows. Writing BOTH tests negated, `if (!finished2)` with
+   `if (!finished4)` in each arm, keeps them apart and lands the game's block order exactly (0 rows).
+   Dropping any single `!` costs a row. 72 spellings (.work/probe/mn): both polarities x 3 negation
+   spellings, flat else-if arms, and if/else-if chains over the four cases in all 24 orders (best 823
+   bytes, 18 rows).
 - CONFIRMED: a two-part test keeps the game's arm layout when written in the negated-and form:
   `if (!(stats[i].damage > 0 && stats[i].fuel > 0)) frame = 32; else frame = heading & 31;` gives the
   game's `cmp damage,0 / jle -> fall-through 32 store / cmp fuel,0 / jg -> forward heading store`; the

@@ -554,14 +554,16 @@ void start_lights(void)
 
 /* ---- 0x111e8 -------------------------------------------------------------------------------- */
 
-/* differs: 6 rows, block placement in the quit-after-finish fill (0x1138d..0x11481): the game tests
-   finished2 with jne to the finished2 branch and keeps the finished4 -> order[2] = 2 block before
-   it, ours tests with je and places them the other way round; same size, same stores. 24 spellings
-   of the block tried (nested if/else both ways round, else-if chains on the four cases, && forms,
-   a goto, separate ifs, both tests negated [11 rows] and the shared order[2] = 4 spelled as an
-   else-if [14]); the others merge the two order[1] = 2 stores (794 bytes) or grow. The game does
-   NOT merge them, and order[2] = 4 is shared with the finished2 branch - a source shape that
-   keeps both order[1] = 2 stores separate is what is missing. */
+/* The quit-after-finish fill (0x1138d..0x11481) is written with BOTH tests negated: `if
+   (!finished2)` and inside each arm `if (!finished4)`. That is what puts the game's blocks where
+   they are: the !finished2 && !finished4 arm falls through (0x113a0 order[1] = 2, jmp 0x11481), its
+   inner else (order[2] = 2, jmp the quit = 0 at 0x1148b) sits out of line at 0x11462, and the
+   finished2 arm at 0x1146e tests finished4 with `je` straight to the shared order[2] = 4. The two
+   order[1] = 2 stores (0x113a0, 0x11477) stay separate - one jumps to the shared store, the other
+   falls into it - while every positive-test spelling of the same behaviour merges them (794 bytes,
+   11-14 rows). 72 spellings in .work/probe/mn: nested with both test polarities x 3 negation
+   spellings, flat else-if arms, and if/else-if chains over the four cases in all 24 orders (best 823
+   bytes, 18 rows). */
 int main(int argc, char **argv)
 {
     int quit = 0;
@@ -620,15 +622,20 @@ int main(int argc, char **argv)
         }
     }
     if (quit && finished0 && finish_done[0]) {
-        if (finished2) {
-            if (finished4)
+        if (!finished2) {
+            if (!finished4) {
                 finish_order[1] = 2;
-            finish_order[2] = 4;
-        } else if (finished4) {
-            finish_order[2] = 2;
+                finish_order[2] = 4;
+            } else {
+                finish_order[2] = 2;
+            }
         } else {
-            finish_order[1] = 2;
-            finish_order[2] = 4;
+            if (!finished4) {
+                finish_order[2] = 4;
+            } else {
+                finish_order[1] = 2;
+                finish_order[2] = 4;
+            }
         }
         quit = 0;
     }

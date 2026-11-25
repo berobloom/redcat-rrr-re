@@ -62,6 +62,10 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **RRR was several modules.** `src/rrr.c` is one file; where a function's code depends on what
   else is in its module (static functions, inlining, shared string pools), note it as LAYOUT, not as
   a lever problem.
+- **nmrefs filtered library calls off the game's side only**, so every MATCHed function that prints a
+  string printed `DIFFER` (an unnamed 0x40000-0x60000 address is a clib call on the game's side and one
+  of our own CONST literals through the segment fixup on ours). Both sides are filtered now (2026-11-28,
+  `main` 0x111e8: DIFFER -> same, 75/75 refs). Read `DIFFER` on a MATCH as a tool bug first.
 - **libmatch's short hits are not evidence.** A module under ~40 bytes can match anywhere
   (`cstrt386` "at 0x10000", `mblen` at 0x1ae36 inside the game's C); trust long modules only.
 - **The function list is a recursive-descent scan (~60% of the code).** Functions reached only

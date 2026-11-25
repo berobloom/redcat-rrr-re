@@ -146,6 +146,13 @@ Levers seen so far (add to this list when one produces a MATCH):
   blocks, which is exactly what the game does at 0x19123 (`cell_effect` 17 rows -> MATCH). Any other
   spelling of the same behaviour (`damage >= 1 && fuel >= 1`, `> 0 &&`, `!(<= 0 ||)`, nested ifs,
   early break/return) folds or duplicates the blocks instead - `>= 1 &&` costs 87 rows.
+- **Negate the tests, not the arms, to keep two identical store blocks apart.** A nested if/else over
+   four cases merges them: `if (finished2) {...} else if (finished4) {...} else {...}` and the
+   positive-test nested forms all fold the two `finish_order[1] = 2;` stores into one block (794 of
+   the game's 806 bytes, 11-14 rows). Writing both tests negated - `if (!finished2)` and `if
+   (!finished4)` inside each arm - keeps them separate the way the game has them, because one of them
+   jumps to the shared `finish_order[2] = 4` and the other falls into it (`main` 0x111e8 6 rows ->
+   MATCH; removing any one of the three `!` costs a row, 72 spellings in .work/probe/mn).
 - **Watcom shares an epilogue only inside one object.** When the game gives a function its own
   `pop`/`ret` and ours jmps into an earlier function's, the two are in different objects: move the
   function and everything the jmp crosses into a new `src/` file and re-check. `racer_contact` (5 rows
