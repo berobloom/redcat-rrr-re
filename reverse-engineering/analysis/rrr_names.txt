@@ -490,7 +490,7 @@
 0x57c90 script2              # CONFIRMED: Brutus's waypoint script, 24-byte entries, 720 bytes per world (ai_script_find)
 0x5bd40 script4              # CONFIRMED: Snitch's, the same layout
 0x1ad9a next_module          # CONFIRMED: the next enabled module after the stage (discoveries.md, REKEN 0x10cad)
-0x57c2c module_table         # STRONGLY SUPPORTED: next_module reads [world*16 + i*4] for i 1..4, 0 = off
+0x57c30 module_table         # STRONGLY SUPPORTED: int [6][4], next_module reads [world][stage - 1] (the code's base 0x57c2c is that -4 folded in), 0 = off; 6 rows of 0/1 flags in the game
 0x1b82c high_load            # CONFIRMED (code): reads RRRHIGH.DAT (380 bytes) into high, else 10 random default entries
 0x753b0 high                 # CONFIRMED (code): 10 x 38-byte high-score entries {name[30], score, world}
 0x5fdf4 high_names           # CONFIRMED (code): 3 default names, picked by rand() % 3

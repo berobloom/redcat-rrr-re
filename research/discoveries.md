@@ -232,6 +232,9 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
     4-byte boundary), and Watcom always emits an initialiser's literals ahead of the functions'.
     With the split (src/guard.c, src/hiscore.c) both objects' code and data are identical in place
     and link as themselves. set_keys/joystick_to_keys may close the module before instead.
+  - STRONGLY SUPPORTED: 0x1ab7f-0x1af52 (rrrio_save .. ai_script_find) is one module whose CONST
+    is 0x51984-0x51a59 and which defines game_names (0x57c04, unused in RRR) and world_names
+    (0x57c18); src/rrrio.c links as itself with both. module_table is int [6][4] at 0x57c30.
   - LIKELY: clib nomem is not in RRR. Its 18-byte _TEXT is identical to noefgfmt's (both "found"
     at 0x33abf), and noefgfmt's 36-byte CONST is what sits at 0x54e0c, where nomem's CONST would
     have to be.

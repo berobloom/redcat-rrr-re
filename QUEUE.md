@@ -358,6 +358,16 @@ Rules for the agent:
     calls are Fastgraph's (fg_initjoy/fg_button/fg_getxjoy/fg_getyjoy, CONFIRMED by the linked
     FG32 modules; as fn_2779e etc. WLINK left them undefined).
 
+  - 2026-11-26 (later): **150 real objects**, `$(cat .work/link/libobjs.args9)` -> `LINK: 419179 of
+    419179`. New `src/rrrio.c` = rrr.c's 0x1ab7f-0x1af52 (rrrio_save .. ai_script_find, 9 functions,
+    all MATCH) plus `game_names` (0x57c04) and `world_names` (0x57c18), now defined there: CONST 213 B
+    at 0x51984 and _DATA 44 B at 0x57c04 both identical in place (data.baseline 2109 -> 2366).
+    Evidence: the module's CONST starts right after map.c's padding with those tables' strings, and
+    its "wb"/"RRRIO.INF"/"rb" sit unaligned at 0x51a49 after them. Without the tables the object
+    starts its CONST on a fresh dword (0x51a4c) and the link breaks (381533, data object 4 bytes
+    long). module_table moves to 0x57c30 and is read `[world][i - 1]` (the code's base 0x57c2c was
+    that -4 folded in, and it fell inside world_names).
+
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.

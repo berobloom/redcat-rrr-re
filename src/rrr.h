@@ -398,7 +398,7 @@ extern struct script  script2[][30];        /* 0x57c90: Brutus (racer 2), per wo
 extern struct script  script4[][30];        /* 0x5bd40: Snitch (racer 4) */
 int ai_script_find(int racer, int n);
 void smk_play(void *buf, int x, int y, int w, int h, char *name, int flags, int track, int sample);
-extern int            module_table[][4];    /* 0x57c2c: [world][stage], 0 = module off (indexed 1..4) */
+extern int            module_table[][4];    /* 0x57c30: [world][stage - 1], 0 = module off */
 int next_module(int set, int world, int groep);
 struct high {                               /* 38 bytes: one RRRHIGH.DAT entry */
     char    name[30];
