@@ -221,6 +221,18 @@ Rules for the agent:
     Open: link src/ objects and the Watcom/Fastgraph LIBs in place of blob ranges (blob.py's
     `--keep-out`, which needs a blob fixup into a replaced range to go through that object's public).
 
+  - 2026-11-25 (later): real objects link in place of blobs. `link.sh OUTDIR --obj FILE.OBJ@ADDR ...`
+    (blob.py cuts the code blob around each object, defines the externals it needs at the addresses
+    read back from the game, routes blob fixups into it through its publics). Ten 10.6 clib modules
+    (sprintf..fwrite, 0x1b916-0x1c5af, 2,476 B) linked as themselves: still `cmp`-identical.
+    Mutation: 10.5's sprintf instead -> 419178 (the one-byte fingerprint at 0x1b918).
+    `tools/link/libplace.py` picks 117 code-only modules (clib, math, emu, Fastgraph 4.03); linking
+    all of them stops on two Fastgraph externals, PMhugeincr (VBPASTE/ERASE.ASM) and mouse_y
+    (MOUSEMOV.ASM), which blob.py does not define: libmatch.fixups_of does not list how these asm
+    modules reference them (look at their FIXUPP records/threads, or a non-code segment). Not done
+    yet either: objects with data (37 library modules, every src/ object) - needs the original
+    segment order inside the data object.
+
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.

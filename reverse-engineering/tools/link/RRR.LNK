@@ -4,6 +4,6 @@ option stub=%WATCOM%\binw\wstub.exe
 option quiet, map, nodefaultlibs
 name RRR.EXE
 option modname=rrr
-file CODEBLOB.OBJ, DATABLOB.OBJ
+@FILES.LNK
 segment type code preload
 segment type data preload

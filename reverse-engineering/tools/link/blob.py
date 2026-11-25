@@ -1,31 +1,32 @@
 #!/usr/bin/env python3
-"""blob.py: carve an LE program back into OMF objects that WLINK can link into the same program.
+"""blob.py: carve an LE program back into OMF objects that WLINK links into the same program, with
+real objects (library modules, src/ objects) in place of the ranges they fill.
 
-usage: blob.py EXE OUTDIR [--keep-out START-END ...]
+usage: blob.py EXE OUTDIR [--obj FILE.OBJ@ADDR ...]
 
-Writes OUTDIR/CODEBLOB.OBJ and OUTDIR/DATABLOB.OBJ:
-  CODEBLOB  segment _TEXT (class CODE, byte-aligned, use32): the whole code object, every LE fixup
-            site written back as an OMF 32-bit offset fixup (frame FLAT, target the segment that
-            holds the target address, the target's offset in that segment kept in the data bytes,
-            the way Watcom's own objects carry the addend). MODEND names the LE entry point.
-  DATABLOB  group DGROUP: _DATA (class DATA) = the data object's initialised bytes (what the LE file
-            stores), _BSS (class BSS) = the rest up to the stack, STACK (class STACK) = the stack
-            (the LE ESP is the object's end). Fixups in data are written the same way.
+Without --obj it writes OUTDIR/CODEBLOB_0.OBJ (the code object) and OUTDIR/DATABLOB.OBJ (the data
+object): every LE fixup site written back as an OMF 32-bit offset fixup (frame FLAT, the target's
+offset kept in the data bytes, the way Watcom's own objects carry the addend), in the order the
+original objects gave them to the linker (input_order). DATABLOB is group DGROUP: _DATA (class DATA)
+= the initialised bytes, STACK (class STACK) = the rest (the LE ESP is the object's end).
 
-`--keep-out A-B` (hex, code addresses) leaves a range of the code object out: the blob is then cut
-into pieces (segment _TEXT in CODEBLOB_<n>.OBJ, each with a public `blob_<addr>` at its start) so
-that real objects can go in between, in link order. A fixup whose target falls in a left-out range
-must be resolved through a public of the object that fills it: not supported yet (the script stops).
-
-The stack's start inside the zero tail is not known from the LE file; --stack N sets its size
-(default: everything after the initialised data is STACK, which links to the same bytes).
+`--obj FILE.OBJ@ADDR` puts a real object's _TEXT at code address ADDR (hex). Its range is left out
+of the code blob, which is cut into CODEBLOB_<n>.OBJ pieces (public `blob_<addr>` at each start):
+  - each external the object needs is read back from the game's bytes at the object's own fixup
+    sites and defined as a public in the blob piece (or DATABLOB) that holds that address;
+  - a blob fixup into the object's range goes through the object's nearest public plus an addend.
+Only objects whose data segments are all empty are taken for now (data placement needs the original
+segment order inside the data object). OUTDIR/FILES.LNK gets the `file` directives in link order.
 """
 import os
 import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'wc'))
 import leparse  # noqa: E402
+import libmatch as L  # noqa: E402
+from libobj import info  # noqa: E402
 
 
 def rec(t, body):
@@ -175,102 +176,195 @@ def emit_ordered(o, seg, base, img, lo, hi, sites, target_of, flat, order):
         raise SystemExit('%d fixup sites not in the page order, first %#x' % (len(missing), missing[0]))
 
 
-def emit(o, seg, base, img, lo, hi, sites, target_of, flat):
-    """LEDATA/FIXUPP records for image bytes lo..hi (addresses), cut so no fixup straddles a record"""
-    a = lo
-    while a < hi:
-        e = min(hi, a + 1024)
-        for s in sites:                                          # do not cut through a fixup site
-            if a < s < e < s + 4:
-                e = s
-        chunk = bytearray(img[a - base:e - base])
-        fx = []
-        for s in sites:
-            if a <= s < e:
-                tseg, toff = target_of(s)
-                struct.pack_into('<I', chunk, s - a, toff)
-                fx.append((s - a, tseg))
-        o.ledata(seg, a - lo, bytes(chunk), fx, flat)
-        a = e
+
+
+class RealObj:
+    def __init__(self, path, addr):
+        self.path, self.addr = path, addr
+        segs, pubs, exts = info(path)
+        texts = [s for s in segs if s[1].upper() == 'CODE']
+        if len(texts) != 1:
+            raise SystemExit('%s: %d code segments, want 1' % (path, len(texts)))
+        for s in segs:
+            if s[1].upper() != 'CODE' and s[2]:
+                raise SystemExit('%s: data segment %s has %d bytes; data placement is not supported yet'
+                                 % (path, s[0], s[2]))
+        self.text, self.size = texts[0][0], texts[0][2]
+        self.pubs = sorted((self.addr + o, n) for s, o, n in pubs if s == self.text)
+        self.names = {n for s, o, n in pubs} | info.local     # locals resolve inside the object
+        (_, self.recs), = list(L.modules(open(path, 'rb').read()))
+
+    def needs(self, code, cbase):
+        """{external name: game address} from the game's bytes at this object's fixup sites"""
+        buf = L.code_of(self.recs)[self.text][0]
+        out = {}
+        for seg, at, loc, selfrel, kind, nm, disp in L.fixups_of(self.recs):
+            if kind != 'ext' or loc != 9 or nm in self.names:
+                continue
+            game_at = self.addr + at
+            v = struct.unpack_from('<I', code, game_at - cbase)[0]
+            if selfrel:
+                tgt = (game_at + 4 + v) & 0xFFFFFFFF
+            else:
+                tgt = (v - struct.unpack_from('<i', bytes(buf), at)[0]) & 0xFFFFFFFF
+            tgt = (tgt - disp) & 0xFFFFFFFF
+            if out.setdefault(nm, tgt) != tgt:
+                raise SystemExit('%s: %s is %#x and %#x' % (self.path, nm, out[nm], tgt))
+        return out
 
 
 def main():
     exe, out = sys.argv[1], sys.argv[2]
     os.makedirs(out, exist_ok=True)
+    objs = []
+    for i, a in enumerate(sys.argv):
+        if a == '--obj':
+            p, _, at = sys.argv[i + 1].rpartition('@')
+            objs.append(RealObj(p, int(at, 16)))
+    objs.sort(key=lambda o: o.addr)
     le = leparse.LE(open(exe, 'rb').read())
     imgs, _ = le.load()
     cobj, dobj = le.objects
     cbase, dbase = cobj['base'], dobj['base']
+    cend, dend = cbase + cobj['vsize'], dbase + dobj['vsize']
     code, data = bytes(imgs[1]), bytes(imgs[2])
-    # every fixup site, with its target address
     fix = {}
     for o in le.objects:
         for k in range(o['page_count']):
-            page = o['page_index'] + k
-            for stype, so, tobj, toff in le.fixups(page):
+            for stype, so, tobj, toff in le.fixups(o['page_index'] + k):
                 if stype != 0x07:
                     raise SystemExit('fixup type %#x not handled' % stype)
                 at = o['base'] + k * le.page_size + so
                 if o['base'] <= at < o['base'] + o['vsize']:
                     fix[at] = le.objects[tobj - 1]['base'] + toff
-    # initialised length of the data object = what the file stores
     dpages = dobj['page_count']
     last = le.last_page if dobj['page_index'] + dpages - 1 == le.num_pages else le.page_size
     dinit = (dpages - 1) * le.page_size + last
-    # WLINK does not store the zero bytes that end the last page, so the stored length can stop inside
-    # initialised data (a pointer at its end, say): reach past the last fixup site that lies there
-    for a in fix:
+    for a in fix:                                   # a pointer can end past the stored bytes
         if dbase + dinit - 4 < a < dbase + dinit:
             dinit = a - dbase + 4
-    stack = int(sys.argv[sys.argv.index('--stack') + 1], 0) if '--stack' in sys.argv else dobj['vsize'] - dinit
-    bss = dobj['vsize'] - dinit - stack
+    stack = dobj['vsize'] - dinit
 
-    corder = [a for p, l in sorted(input_order(le, cobj).items()) for a in l]
-    dorder = [a for p, l in sorted(input_order(le, dobj).items()) for a in l]
-    csites = sorted(a for a in fix if cbase <= a < cbase + cobj['vsize'])
-    dsites = sorted(a for a in fix if dbase <= a < dbase + dobj['vsize'])
+    # code pieces between the real objects
+    pieces, a = [], cbase
+    for o in objs:
+        if o.addr < a:
+            raise SystemExit('%s overlaps the previous object' % o.path)
+        if o.addr > a:
+            pieces.append((a, o.addr))
+        a = o.addr + o.size
+    if a < cend:
+        pieces.append((a, cend))
+    order = [('piece', p) for p in pieces] + [('obj', o) for o in objs]
+    order.sort(key=lambda t: t[1][0] if t[0] == 'piece' else t[1].addr)
 
-    # CODEBLOB
-    oc = Obj('codeblob')
-    flat_c = None
-    text = oc.segdef('_TEXT', 'CODE', cobj['vsize'])
-    flat_c = oc.grpdef('FLAT', [])
-    oc.extdef(['blob_data'])                                     # DATABLOB's _DATA start
-    def tcode(s):
-        t = fix[s]
-        if cbase <= t < cbase + cobj['vsize']:
-            return text, t - cbase
-        return ('ext', 1), t - dbase                             # data target: blob_data + offset
-    oc.pubdef(0, text, [('blob_text', 0)])
-    emit_ordered(oc, text, cbase, code, cbase, cbase + cobj['vsize'], set(csites), tcode, flat_c, corder)
-    oc.modend((flat_c, text, le.eip))
-    oc.write(os.path.join(out, 'CODEBLOB.OBJ'))
+    def owner(t):
+        """('piece', (lo, hi)) / ('obj', RealObj) / ('data', None) for a target address"""
+        for p in pieces:
+            if p[0] <= t < p[1]:
+                return 'piece', p
+        for o in objs:
+            if o.addr <= t < o.addr + o.size:
+                return 'obj', o
+        if dbase <= t <= dend:
+            return 'data', None
+        if t == cend:
+            return 'piece', pieces[-1]
+        raise SystemExit('target %#x is in no object' % t)
 
-    # DATABLOB
+    # publics the blobs must define for the real objects
+    need = {}
+    for o in objs:
+        for nm, t in o.needs(code, cbase).items():
+            if any(nm in x.names for x in objs):
+                continue
+            if need.setdefault(nm, t) != t:
+                raise SystemExit('%s needed at %#x and %#x' % (nm, need[nm], t))
+    corder = [s for p, l in sorted(input_order(le, cobj).items()) for s in l]
+    dorder = [s for p, l in sorted(input_order(le, dobj).items()) for s in l]
+
+    def resolver(ob, own, flat, extmap):
+        """target address -> (target index or ('ext', n), offset to keep in the bytes)"""
+        def ext(nm):
+            if nm not in extmap:
+                extmap[nm] = len(extmap) + 1
+            return ('ext', extmap[nm])
+
+        def go(s):
+            t = fix[s]
+            kind, x = owner(t)
+            if kind == 'data':
+                if own == 'data':
+                    return ('seg', t)
+                return ext('blob_data'), t - dbase
+            if kind == 'piece':
+                if own == x:
+                    return ('seg', t)
+                return ext('blob_%x' % x[0]), t - x[0]
+            pa, pn = min(x.pubs, key=lambda q: (abs(t - q[0]), q[0] > t))
+            return ext(pn), t - pa
+        return go
+
+    files = []
+    for kind, x in order:
+        if kind == 'obj':                          # copied next to the blobs: WLINK runs there under Wine
+            fn = 'O_%x.OBJ' % x.addr
+            open(os.path.join(out, fn), 'wb').write(open(x.path, 'rb').read())
+            files.append(fn)
+            continue
+        lo, hi = x
+        ob = Obj('codeblob_%x' % lo)
+        text = ob.segdef('_TEXT', 'CODE', hi - lo)
+        flat = ob.grpdef('FLAT', [])
+        extmap = {}
+        go = resolver(ob, x, flat, extmap)
+        sites = {s for s in fix if lo <= s < hi}
+        targets = {s: go(s) for s in sorted(sites)}
+        if extmap:
+            ob.extdef([n for n, i in sorted(extmap.items(), key=lambda q: q[1])])
+        pubs = [('blob_%x' % lo, 0)] + sorted((n, t - lo) for n, t in need.items() if lo <= t < hi)
+        ob.pubdef(0, text, pubs)
+
+        def tgt(s, text=text):
+            r = targets[s]
+            if r[0] == 'seg':
+                return text, r[1] - lo
+            return r
+        emit_ordered(ob, text, cbase, code, lo, hi, sites, tgt, flat, corder)
+        ob.modend((flat, text, le.eip - (lo - cbase)) if lo <= cbase + le.eip < hi else None)
+        fn = 'CODEBLOB_%x.OBJ' % lo
+        ob.write(os.path.join(out, fn))
+        files.append(fn)
+
     od = Obj('datablob')
     dseg = od.segdef('_DATA', 'DATA', dinit)
-    bseg = od.segdef('_BSS', 'BSS', bss) if bss else None
     sseg = od.segdef('STACK', 'STACK', stack, combine=5)
-    od.grpdef('DGROUP', [s for s in (dseg, bseg, sseg) if s])
-    flat_d = od.grpdef('FLAT', [])
-    od.extdef(['blob_text'])
-    def tdata(s):
-        t = fix[s]
-        if dbase <= t < dbase + dinit:
-            return dseg, t - dbase
-        if bseg and dbase + dinit <= t < dbase + dinit + bss:
-            return bseg, t - dbase - dinit
-        if dbase + dinit + bss <= t <= dbase + dobj['vsize']:
-            return sseg, t - dbase - dinit - bss
-        if cbase <= t < cbase + cobj['vsize']:
-            return ('ext', 1), t - cbase
-        raise SystemExit('data fixup at %#x targets %#x, outside both objects' % (s, t))
-    od.pubdef(0, dseg, [('blob_data', 0)])
-    emit_ordered(od, dseg, dbase, data, dbase, dbase + dinit, set(dsites), tdata, flat_d, dorder)
+    od.grpdef('DGROUP', [dseg, sseg])
+    flat = od.grpdef('FLAT', [])
+    extmap = {}
+    go = resolver(od, 'data', flat, extmap)
+    dsites = {s for s in fix if dbase <= s < dend}
+    targets = {s: go(s) for s in sorted(dsites)}
+    if extmap:
+        od.extdef([n for n, i in sorted(extmap.items(), key=lambda q: q[1])])
+    od.pubdef(0, dseg, [('blob_data', 0)] + sorted((n, t - dbase) for n, t in need.items() if dbase <= t < dbase + dinit))
+    tail = sorted((n, t - dbase - dinit) for n, t in need.items() if dbase + dinit <= t <= dend)
+    if tail:                                        # uninitialised data: publics in the tail segment
+        od.pubdef(0, sseg, tail)
+
+    def dtgt(s):
+        r = targets[s]
+        if r[0] == 'seg':
+            t = r[1]
+            return (dseg, t - dbase) if t < dbase + dinit else (sseg, t - dbase - dinit)
+        return r
+    emit_ordered(od, dseg, dbase, data, dbase, dbase + dinit, dsites, dtgt, flat, dorder)
     od.modend()
     od.write(os.path.join(out, 'DATABLOB.OBJ'))
-    print('code %#x bytes, %d fixups; data %#x initialised + %#x bss + %#x stack, %d fixups; entry %#x'
-          % (cobj['vsize'], len(csites), dinit, bss, stack, len(dsites), le.eip))
+    files.append('DATABLOB.OBJ')
+    open(os.path.join(out, 'FILES.LNK'), 'w').write(''.join('file %s\n' % f for f in files))
+    print('%d code pieces, %d real objects (%d bytes), %d publics defined for them; data %#x + stack %#x'
+          % (len(pieces), len(objs), sum(o.size for o in objs), len(need), dinit, stack))
 
 
 if __name__ == '__main__':
