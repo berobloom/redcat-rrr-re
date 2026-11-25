@@ -219,6 +219,14 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   - CONFIRMED: inside a page the fixup records follow the modules' feed order across segment
     names. One blob module bringing both XI and YI entries (three of them ahead of clib isdbcs on
     page 0x6c000) must be one object, or that page's record order breaks.
+  - CONFIRMED: WLINK lays out the data runs in the order it first hears their names, not in a
+    fixed order. A first data object naming CONST and _DATA but not CONST2 puts _DATA ahead of
+    CONST2 (322770 of 419179). blob.py's first code blob names CONST, CONST2 and _DATA.
+  - CONFIRMED: four of the game's own modules rebuilt from src/ (ORDER, SHADE, RACEANIM, HUD) link
+    in place, with their CONST placed by self-reference: 147 real objects, `LINK: 419179 of 419179`.
+    The page fixup lists split into blocks in strictly ascending address order there (page
+    0x11000). Page 0x3d000 has no ascending split: the Smacker code's fixups (0x3d50b-0x3dff2) were
+    fed before those of the clib/math modules below it (fpeinth 0x3cf88, _matherr 0x3d1e8).
   - LIKELY: clib nomem is not in RRR. Its 18-byte _TEXT is identical to noefgfmt's (both "found"
     at 0x33abf), and noefgfmt's 36-byte CONST is what sits at 0x54e0c, where nomem's CONST would
     have to be.

@@ -326,7 +326,25 @@ Rules for the agent:
     bytes long); `BLOB_NOHEAD=1` on the dosret+SETMODE pilot -> 406055; fpeinth back in -> 418571;
     without the `_BSS` block blob.py refuses; rand's `_DATA` moved -> refused (a blob fixup at
     0x6007a lands inside it with no public to reach it). Regression: args5 alone still 419179.
-    Next: the src/ objects (their data addresses the same way), then the 0x29000/0x3d000 pages.
+
+  - 2026-11-26 (later): **the first src/ objects link as themselves: 147 real objects**, `link.sh
+    OUT $(cat .work/link/libobjs.args7)` -> `LINK: 419179 of 419179`. args7 = args6 + `dataplace.py
+    .work/link/srcobj/{ORDER@1195f,SHADE@11c11,RACEANIM@15c02,HUD@1918d}.OBJ` (copies of check.sh's
+    .work/src objects: the four whose whole _TEXT is the game's, CONST placed by self-reference at
+    0x50cac/0x50d1c/0x51258; HISCORE's code also matches, at 0x1b469, but it reaches its CONST at
+    two bases, and check.sh has 72 of 130 CONST bytes agreeing). Two blob.py fixes it needed:
+    (1) **WLINK lays out the data runs in the order it first hears their names**, not in a fixed
+    order: the first data object fed (a CONST piece grouped with a _DATA piece) put _DATA ahead of
+    CONST2 (`322770 of 419179`). The first code blob now names CONST, CONST2 and _DATA, empty and
+    byte-aligned, in the game's order.
+    (2) input_order's block split was one valid partition of several. With one blob feeding a page,
+    any of them rebuilds it; a real object in between needs the true one (`418388`, page 0x11000:
+    0x11f0f and 0x11ffe moved). It now takes the partition with the fewest address descents. On
+    0x11000 that is strictly ascending.
+    With the new split, fpeinth/_matherr still break page 0x3d000 (417547, with `--dseg
+    _DATA@553ac` for _matherr's CONST2): no valid split puts Smacker's sites (0x3d50b-0x3dff2) after
+    theirs, so that exception is real.
+    Next: the other src/ modules as they reach a whole-module match, then the 0x3d000 page.
 
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per

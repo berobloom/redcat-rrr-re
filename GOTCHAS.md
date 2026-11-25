@@ -66,6 +66,14 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   CONST/CONST2/_DATA with dword alignment, and WLINK pads the run for them. A blob piece that starts
   off a 4-byte boundary, fed late past such modules, lands 2 bytes late (dosret + SETMODE pilot).
   blob.py feeds the piece's head up to the boundary right after the placed segment.
+- **WLINK's data run order is first-heard order** (2026-11-26): whichever object first names a
+  segment decides where its run goes. Grouping a CONST piece with a _DATA piece in the first data
+  object put _DATA ahead of CONST2, and the whole data object moved (322770). The first code blob
+  names the leading runs.
+- **input_order's block split is ambiguous** (2026-11-26): several partitions of a page's fixup list
+  into 512-byte blocks can be valid, and with a single blob any of them rebuilds the page. A real
+  object in the middle only lines up with the true one. blob.py takes the split with the fewest
+  address descents.
 - **a real `_BSS` needs an address too** (2026-11-26): only giving it a length (appending it to the
   _BSS run) moves every game BSS variable after it, and the data pages still look identical. Only
   the code's fixups show it (6426 of 9909). `dataplace.py` gives `_BSS=ADDR`, and blob.py needs

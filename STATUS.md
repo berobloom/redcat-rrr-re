@@ -24,7 +24,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    `--obj .../clib3r_inirt386.OBJ@32d22 --dseg XI@6c668 --dseg YI@6c6a4-12 --dseg DATA32@6c6b8`;
    74 clib + 10 math387 + 20 Fastgraph ASM; dead Fastgraph EXTDEFs resolved through DATA.ASM anchored at
    0x60a56). **The data-object segment order is settled** (discoveries "the data object's segment
-   order", `tools/link/dataobj.py`): one merged run per segment name in WLINK's fixed order CONST,
+   order", `tools/link/dataobj.py`): one merged run per segment name in the order WLINK first heard the names, CONST,
    CONST2, _DATA, XIB, XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK, runs 4-byte aligned, and inside a
    run the modules in feed order = code-object order (23 content-pinned segments, 0 out of order);
    XIB/XIE/YIB/YIE are WLINK's own bounds-of-XI/YI symbols, which is what blocked inirt386. blob.py
@@ -37,8 +37,10 @@ Short: where the project stands, and what is next. History is in git; no diary.
    `_BSS` included (STACK comes out at 25,000 bytes). blob.py feeds a gap's head right after the
    placed segment (empty dword-aligned segments pad the run), and pieces whose feed windows overlap
    share one object (discoveries "real data segments link byte-identically"). Left out: nomem (not in
-   the game, LIKELY), 386inite, and _matherr/fpeinth on code page 0x3d000. Next: the src/ objects,
-   whose data addresses can be found the same way. Code pages 0x29000/0x3d000 stay blobs (the
+   the game, LIKELY), 386inite, and _matherr/fpeinth on code page 0x3d000. **Four src/ modules
+   (ORDER, SHADE, RACEANIM, HUD) link as themselves too: 147 real objects**, `$(cat
+   .work/link/libobjs.args7)`, `LINK: 419179 of 419179`. More src/ modules can join as their
+   whole module matches. Code pages 0x29000/0x3d000 stay blobs (the
    original feed order there is not placement order, QUEUE Q4 note).
    QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
    data-segment bytes identical in place` = `src/data.baseline`; mutation: one character of order.c's

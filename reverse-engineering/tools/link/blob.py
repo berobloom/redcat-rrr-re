@@ -126,7 +126,8 @@ def input_order(le, obj):
     """{page: [source address, ...]} in the order the linker received the fixups. WLINK keeps each
     page's fixups in blocks of up to 512 bytes, filled in input order, and writes the blocks newest
     first; so the file's list is B_k ... B_1 with every block but the newest full (the next record
-    would not have fitted). Split the list that way (a small search) and read the blocks backwards."""
+    would not have fitted). Split the list that way (a small search; of the valid splits the one
+    nearest address order) and read the blocks backwards."""
     out = {}
     for k in range(obj['page_count']):
         page = obj['page_index'] + k
@@ -138,37 +139,46 @@ def input_order(le, obj):
         for _, z in recs:
             pre.append(pre[-1] + z)
         size = lambda i, j: pre[j] - pre[i]
+        dn = [0, 0]                                # descents in file order up to each index
+        for x in range(1, n):
+            dn.append(dn[-1] + (recs[x][0] < recs[x - 1][0]))
+        inner = lambda i, j: dn[j] - dn[i + 1]      # descents inside the block i..j
         memo = {}
 
-        def split(i, first_of_newer):
-            """partitions of recs[i:] into full blocks; first_of_newer: size of the first record of
-            the block before (newer in time, earlier in the file) - the one that did not fit"""
+        def split(i, p):
+            """the best partition of recs[i:] into full blocks, as (descents, [(i, j), ...]); p: file
+            index of the block before (newer in time), whose first record is the one that did not fit.
+            Several partitions can be valid; any of them rebuilds the page when one blob feeds it, but
+            real objects in between only line up with the true one. Take the one whose time order is
+            nearest address order: fewest descents, inside the blocks and where a block's last record
+            (in time) is above the next newer block's first."""
             if i == n:
-                return []
-            key = (i, first_of_newer)
+                return (0, [])
+            key = (i, p)
             if key in memo:
                 return memo[key]
             res = None
             for j in range(i + 1, n + 1):
                 if size(i, j) > 512:
                     break
-                if size(i, j) + first_of_newer > 512:
-                    rest = split(j, recs[i][1])
+                if size(i, j) + recs[p][1] > 512:
+                    rest = split(j, i)
                     if rest is not None:
-                        res = [(i, j)] + rest
-                        break
+                        c = rest[0] + inner(i, j) + (recs[j - 1][0] > recs[p][0])
+                        if res is None or c < res[0]:
+                            res = (c, [(i, j)] + rest[1])
             memo[key] = res
             return res
         best = None
         for j in range(1, n + 1):                  # the newest block: any size up to 512
             if size(0, j) > 512:
                 break
-            rest = split(j, recs[0][1]) if j < n else []
-            if rest is not None:
-                best = [(0, j)] + rest
-                break
+            rest = split(j, 0) if j < n else (0, [])
+            if rest is not None and (best is None or rest[0] + inner(0, j) < best[0]):
+                best = (rest[0] + inner(0, j), [(0, j)] + rest[1])
         if best is None:
             raise SystemExit('page %d: fixup list does not split into 512-byte blocks' % page)
+        best = best[1]
         out[page] = [recs[x][0] for i, j in reversed(best) for x in range(i, j)]
     return out
 
@@ -327,7 +337,8 @@ def main():
     # the data object as one SEGDEF per segment-name block (--dseg NAME@ADDR[-LEN][:CLASS]; the block
     # runs to the next block's address unless a length ends it there and leaves the rest to WLINK's
     # 4-byte run alignment). WLINK merges every segment of one name into one run of the data object,
-    # in its fixed DGROUP order CONST, CONST2, _DATA, XIB, XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK
+    # in DGROUP order CONST, CONST2, _DATA, XIB, XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK (the order
+    # it first hears the names in: the first code blob names the leading ones)
     # (its own map lists those runs), and defines XIB/XIE/YIB/YIE as the bounds of the XI and YI runs:
     # with no XI/YI run of the game's length in the link, inirt386's four fixups aim at the end of
     # DGROUP. Inside a run the segments come in FILES order, so every gap between two placed data
@@ -612,6 +623,20 @@ def main():
             lo, hi = x
             ob = Obj('codeblob_%x' % lo)
             text = ob.segdef('_TEXT', 'CODE', hi - lo)
+            if not n:
+                # WLINK lays the data runs out in the order it first hears their names, so the first
+                # object names the runs ahead of XI in the game's order, empty and byte-aligned (no
+                # pad). Without it the first data object fed decides: a blob object holding a CONST
+                # and a _DATA piece, ahead of any CONST2, put _DATA before CONST2. XI and later stay
+                # unnamed here: XIB/XIE only wrap XI when inirt386 named them first.
+                lead = []
+                for nm, cls, a0, a1 in regs:
+                    if nm == 'XI':
+                        break
+                    if (nm, cls) not in lead:
+                        lead.append((nm, cls))
+                if lead:
+                    ob.grpdef('DGROUP', [ob.segdef(nm, cls, 0) for nm, cls in lead])
             flat = ob.grpdef('FLAT', [])
             extmap = {}
             go = resolver(ob, x, flat, extmap)

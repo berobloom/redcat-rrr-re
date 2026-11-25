@@ -15,7 +15,8 @@ LEDATA extent that was matched, module, its code address. -v lists the pinned se
 What it showed on 2026-11-25: the 23 segments it pins land in code-address order inside each segment
 name (CONST 10, CONST2 2, _DATA 9, DATA32 2, none out of order), so WLINK's data object is one run
 per segment name and inside a run the modules come in the order they were fed - the same order as
-the code object. WLINK's own map (RRR.map) names the runs and their fixed order:
+the code object. WLINK's own map (RRR.map) names the runs and their order (the order WLINK first
+heard each name in, 2026-11-26; blob.py's first object names them):
 
     CONST CONST2 _DATA XIB XI XIE YIB YI YIE DATA32 _BSS STACK
 
