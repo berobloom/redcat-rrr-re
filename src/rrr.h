@@ -421,7 +421,9 @@ extern int            crash0, crash2, crash4;   /* 0x56078, 0x56080, 0x5607c: se
 extern int            joy_on;               /* 0x5fdf0 */
 extern int            key_right;            /* 0x55fd8: right key held this frame */
 extern int            key_left;             /* 0x55fdc: left key held this frame */
-extern int            keymap[7];            /* 0x7144c: [0] rocket, [1] boost, [3] left, [4] back, [5] forward, [6] right */
+extern int            keymap[7];            /* 0x7144c: [0] rocket, [1] boost, [3] left, [4] back, [5] forward, [6] right;
+                                            [2] is read by no keyboard action and player_tick 0x1229e
+                                            uses it as the player's puff counter */
 extern int            waypoint_index0;      /* 0x71444: racer 0/2/4's waypoint reached so far */
 extern int            waypoint_index2;      /* 0x71920 */
 extern int            waypoint_index4;      /* 0x71dd8 */

@@ -223,6 +223,8 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   frame (0x17e87). Above the top speed nothing is added, and above it by
   more than 4 px/frame 0x180d3 leaves an after-image (see "exhaust"). Otherwise
   speed ×= 0xf851/0x10000 (≈0.970) per frame, and snaps to 0 below 0x3333.
+- CONFIRMED (0x1229e, 0x122ae): player_tick counts its driven frames in keymap[2] (0x71454), the
+  one keymap slot no keyboard action reads, and spawns an exhaust puff every fourth frame.
 - CONFIRMED: the boost key (binding at 0x71450) adds 16× the acceleration to
   speed and 64× to vz, using one boost, when height < 40; the rocket key
   (0x7144c) fires 0x185d4 and uses one rocket.

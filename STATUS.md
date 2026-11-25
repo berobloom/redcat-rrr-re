@@ -35,10 +35,13 @@ Short: where the project stands, and what is next. History is in git; no diary.
    pad bytes at 0x1556c needed something 3 mod 4 bytes in front of find_waypoints in init.o, and
    init_objects (1635 B) is it (open question 30, resolved).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
-   first (functions whose callees are matched or are library calls). One C function is left,
-   player_tick 0x11eb5, plus the assembly blit_sprite 0x11bb4 (it has an `enter` frame, as does
-   blit_sprite_trans 0x17d94; both are SKIP). 2026-11-27 then wrote the three normal ticks into the
-   same `src/tick.c`: muis_tick 0x130f8 (91 rows) and bull_tick 0x12826 (208). muis_tick is
+   first (functions whose callees are matched or are library calls). Only the assembly
+   blit_sprite 0x11bb4 is unwritten now (it has an `enter` frame, as does blit_sprite_trans 0x17d94;
+   both are SKIP). 2026-11-27 then wrote the three normal ticks, player_tick 0x11eb5 (193 rows),
+   bull_tick 0x12826 (208) and muis_tick 0x130f8 (87), into a second new module `src/drive.c`: the
+   game lays those three back to back and the three crash ticks back to back with other modules in
+   between, and the split is worth 7 rows on player_tick and 4 on muis_tick, because it removes the
+   tail merge between the two groups. muis_tick is
    muis_crash_tick's AI plus the damage/fuel test that sets crash4, play_fx(7, distance to RedCat)
    and an anim offset chosen by vz; the two levers that took 112 -> 91 are the separate `if`s for
    damage and fuel (the second `jl` then jumps back into the first crash store) and writing the vz
