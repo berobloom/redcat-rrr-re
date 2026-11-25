@@ -541,5 +541,12 @@
 0x7191c waypoint_count2      # CONFIRMED: Brutus's (discoveries.md: count [0x7191c])
 0x71dd4 waypoint_count4      # CONFIRMED: Snitch's (discoveries.md: count [0x71dd4])
 0x55fec wait2                # LIKELY: script action 4 (wait) sets it for Brutus, bull_tick 0x12c9d only calls ai_waypoint_action with it set; cleared when the player is past script2[].f14
+0x56018 v56018               # LIKELY: racer 4 drives (set by muis_crash_tick 0x1a5b9 when lights are done and he has not finished)
+0x5601c v5601c               # LIKELY: racer 4 brakes (muis_tick 0x132c8, muis_crash_tick 0x1a77c)
+0x56020 v56020               # LIKELY: racer 4 turns right, heading + 0x1f (muis_crash_tick 0x1a7d9)
+0x56024 v56024               # LIKELY: racer 4 turns left, heading + 1 (muis_crash_tick 0x1a7a4)
+0x56028 v56028               # LIKELY: racer 4's speed limiter is off (set 0x1a5f4, read 0x1a82b)
+0x5602c v5602c               # LIKELY: racer 4 may drop/boost (read by muis_tick, muis_crash_tick 0x1a646)
+0x71ddc v71ddc               # LIKELY: racer 4's puff counter; counts to 3 and spawn_puffs(1,4,100) resets it
 0x56010 wait4                # LIKELY: the same for Snitch (muis_tick 0x1355f, script4[].f14)
 0x57c94 script2_action       # CONFIRMED: script2 entry +4 = action (ai_waypoint_action 0x1af83 switches on it: -1/0 nothing, 1 rocket, 2 drop, 3 boost, 4 wait)

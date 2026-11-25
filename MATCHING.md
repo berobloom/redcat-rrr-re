@@ -177,6 +177,11 @@ Levers seen so far (add to this list when one produces a MATCH):
   then not the last one) makes WCC386 emit the game's `cmp dword [stats+0x28],0` reload in the
   crash0 test instead of `test edx,edx`, and with it the game's exact 1635-byte length: 16 rows ->
   7, and the two following racers' heading stores came right with it (one of the two).
+- **The comparison's sign is C-level, and it shows in the opcode.** An `unsigned` local makes WCC386
+  emit `test edx,edx` + `jbe`/`ja` where an `int` of the same value gives `jle`/`jg` (0x76/0x7F vs
+  0x7E/0x7F): `muis_crash_tick` 0x1a42a's f24 and `want` tests go from four rows of wrong jump
+  opcodes to identical when the two locals are declared `unsigned`. So a `jbe`/`ja` after a `test`
+  in the game is evidence that the original variable was unsigned, and `stats[].f24` is LIKELY too.
 - **A jump table's pad belongs to the object, not the function.** Watcom 4-aligns a switch's jump
   table inside its own object, so the pad before it (a 2-byte `mov eax,eax` or a 3-byte
   `lea eax,[eax]`) depends on the size mod 4 of everything the object holds before it. That is the

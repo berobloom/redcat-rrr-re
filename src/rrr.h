@@ -265,11 +265,15 @@ struct stats {                              /* 48 bytes per racer (discoveries.m
     int     fuel, boosts;
     int     f10, f14, f18;
     int     rockets;                            /* +0x1c */
-    int     drops, f24;                         /* +0x20: objects left to drop (ai_waypoint_action) */
+    int     drops, f24;                         /* +0x20: objects left to drop; LIKELY unsigned, the game's tests on it are jbe/ja (muis_crash_tick 0x1a63d) */
     int     damage;                             /* +0x28 */
     int     top_speed;                          /* +0x2c */
 };
 extern struct stats   stats[];              /* 0x6fbc0 */
+extern int            v56018, v5601c, v56020, v56024, v56028, v5602c;
+                                        /* 0x56018-0x5602c: racer 4's tick state, read only by
+                                           muis_tick 0x130f8 and muis_crash_tick 0x1a42a */
+extern int            v71ddc;           /* 0x71ddc: racer 4's puff counter (spawn_puffs) */
 extern int            stuck2, stuck4;       /* 0x56070, 0x56074 */
 extern int            stage_table[][5];     /* 0x57b8c: map per [world][stage], 0 = no race */
 extern int            wav_handles[34];      /* 0x6c980 */
