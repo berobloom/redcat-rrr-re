@@ -378,7 +378,15 @@ int rocket_tick(short n)
    spellings (`*(int *)((char *)stats + s*48 + 40) -= 10`) fold to the same tree and flip it
    back; `register` locals, bare-reference statements and paren variants change nothing. Look
    for a block-2 statement shape that is structurally distinct for the allocator yet still
-   codegens to immediate-RMW `sub mem, imm`; nothing tried does. */
+   codegens to immediate-RMW `sub mem, imm`; nothing tried does.
+   2026-11-27, 34 more spellings (.work/probe/d2, inplace.py), all still 16 rows: (short)10 /
+   10-0 / 0x0a / (10) / + -10 on either side, bodies[(short)2] and bodies[2+0], hit_test's `!= 0`,
+   `if (1)` around either damage statement, `{ }` braces, the period test as == 0xffff, `(short)n
+   < 0`, 131072, 0x0000, `f24 = f24 - 1`, local racer index `r = 2;`/`r = 4;` (either block or
+   both), and the local-index holder `s = bodies[X].stats; stats[s].damage -= 10;` - the last two
+   do move the shape (580/574 bytes, 9/10 rows) but lose the game's 629-byte length and put the
+   shared epilogue in the wrong place, which is what the five 0-row callbacks jump to.
+   Declaration order and an extra dead short/int local move nothing at all. */
 int dropped2_tick(short n)
 {
     int h;
