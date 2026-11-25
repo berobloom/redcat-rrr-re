@@ -192,7 +192,10 @@
     spellings all stay at 15. Same family as open questions 25, 26 and 28
     (dropped2_tick's load register, sound_init's reloaded arguments,
     follower_tick's sign extension): one register choice, the rest of the
-    function byte-identical.
+    function byte-identical. 2026-11-27: raising the pressure is not the lever - eight hoisted locals
+    in place (row, column, `x0 = bodies[n].x >> 16`, `z = bodies[n].z`, every combination,
+    .work/gc/v1-v8 with inplace.py) go to 46-158 rows, all worse; nmclass.py counts ground_check's 15 as
+    2 register homes + 3 shape rows + 8 only-ours instructions against 2 only-game ones.
 30. **RESOLVED 2026-11-27: init_objects 0x148db is in the init.o object, in front of
     find_waypoints.** Writing it in src/init.c put find_waypoints' three-byte jump-table pad at
     0x1556c exactly like the game and it went to MATCH (src/check.sh, 116 -> 117); with the same

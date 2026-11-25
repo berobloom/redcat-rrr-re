@@ -75,10 +75,15 @@ Short: where the project stands, and what is next. History is in git; no diary.
    (70 + 87 + 185 + 193 + 208 + 282 rows, more than every other near miss combined) are first-pass C
    with zero probe cycles spent: the levers that worked on 2026-11-27 (unsigned fields, `if (f <= 0)
    A else if (f == 3) B` block order, one module per function group) have not been swept there. The
-   cheap length check (`tools/wc/nmlen.py`: our bytes vs the game's next name) separates the near misses
-   where we emit *extra* instructions (sound_init +15, player_crash_tick +10, droppedN +8..10 - the
-   game keeps a value live that we rematerialise) from those where we have too *few* (bull_crash_tick
-   -13, muis_crash_tick -10, camera_follow -8 - missing statements). cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
+   A new instrument sorts that work: `tools/wc/nmclass.py` splits every near miss's rows into register
+   `home` rows (the C is right, Watcom picked other registers/slots) and `shape` / one-sided rows (an
+   instruction the game has and we lack, or the reverse). It says the small SKIPped misses really are
+   homes (ground_check 15 = 2 homes + 3 shape; dropped2_tick 16 = 1 home + 0 shape + 6/9 one-sided),
+   while the six ticks are full of one-sided code: muis_crash_tick 22 only-ours (58 B) against 22
+   only-game (27 B), bull_crash_tick 53 homes but 49/47 one-sided, player_crash_tick 85 homes with
+   74/83 one-sided, player_tick 71 homes with 34/44, bull_tick 58 homes with 66/65, muis_tick 26 homes
+   with 22/24. So the ticks are where statements and expression shapes are still wrong, and they are
+   the only near misses with real C left in them. cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
    question 27 lists the six, which name the function groups that must share a module). The first
