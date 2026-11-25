@@ -31,6 +31,26 @@ Rules for the agent:
     fn_13a78 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
     0x11bb4 and blit_sprite_trans 0x17d94 are assembly, so 110 of 147, 23 near misses, 14 unwritten
     (13 C). `src/check.sh` still shows 110 MATCH and no WRONG fixups.
+  - 2026-11-28: still READY FOR REVIEW. `src/check.sh 2>&1 | grep -c ' MATCH at'` = 124 of 147
+    (84.4%), 21 near misses, 0 C functions unwritten; no function went to MATCH today, but the two
+    biggest near misses moved on content rather than spelling. `ai_waypoint_action` 0x1af83 145 -> 64
+    rows: the game has a **sixth** waypoint action, `f4 == 4` "wait" (both jump tables 0x1af53/0x1af6b
+    hold six entries; action 4 is a fallthrough, action 3 is written in both switches but WCC emits its
+    body once at 0x1b25e for both), racer 4's rocket arm reads **script2**'s argument not script4's
+    (0x1b3bf `mov edx,[eax+0x57c98]`, a game bug, copied), and the fallback's drop kind rides in the
+    argument (`spawn_dropped_object(n, 4)`). The shared body is real: the table at 0x1af53 (the `jmp
+    [edx*4+0x1af53]` at 0x1b14f) is 0x1b465, 0x1b465, 0x1b196, 0x1b157, 0x1b25e, 0x1b2c7 and the one at
+    0x1af6b (the `jmp [edx*4+0x1af6b]` at 0x1b342) is 0x1b465, 0x1b465, 0x1b389, 0x1b34a, 0x1b25e,
+    0x1b407 - six entries for f4 + 1 = 0..5, entry 4 the shared boost body, entry 5 the wait body
+    (0x1b2c7, which zeroes bodies[r].speed at 0x1b2f0 and calls aim_at_player at 0x1b2fa). Mutations
+    that fail it: dropping the wait arm, or two literal `spawn_dropped_object(racer, 0)` calls instead
+    of the kind in the argument (0x1b064 `mov edx,4` + `mov eax,ebx` into the one call at 0x1b06b, which
+    the `xor edx,edx` arm at 0x1b012 jmps to: 75 rows). `bodies[r].speed` is at
+    +0x18, not the +0x1c a research note claimed - a fixup on a named array hides the displacement from
+    objmatch, fndiff and nmrefs alike, so `bodies[r].f1c = 0` and `bodies[r].speed = 0` score the same
+    rows (GOTCHAS.md, Matching). `player_tick` 0x11eb5 193 -> 189 on the `abs()` operand mirror alone;
+    its rest is 71 register homes, and chained zero stores, both `want`-chain spellings and four
+    spellings of its friction test score 193 or worse. `dropped2_tick` 0x178f6 stays at 2 rows.
   - 2026-11-27: still READY FOR REVIEW, counts moved: `src/check.sh 2>&1 | grep -c ' MATCH at'` =
     124 of 147 (84.4%), 21 near misses, 2 unwritten. The lever is a shared index holder:
     `dropped2_tick` 0x178f6's FIRST damage block reads its stats index through the `int h` its aim

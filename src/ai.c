@@ -26,16 +26,16 @@
  * 2. Racer 4's rocket arm reads BRUTUS's script: 0x1b3bf is `mov edx, [eax + 0x57c98]` =
  *    script2[world][i].f8; script4's f8 (0x5bd48) is only used in that switch's drop arm
  *    (0x1b37e). CONFIRMED - writing script2 there is what makes check.sh's fixup agree.
- * 3. The fallback's drop kind is an immediate in the call's second register (`xor edx,edx`
- *    at 0x1b012, `mov edx,4` at 0x1b064), and the mine arm carries its own copy of
- *    spawn+play_fx(20,0)+return while the bomb arm falls into the shared one. Writing the
- *    kind into the parameter `n` and one shared call after the if/else costs 4 rows; two
- *    symmetric `spawn_dropped_object()` calls cost 11.
- * What is left is allocation, again: the game re-derives bodies[racer].stats * 48 at every
- * check inside the case bodies (nmrefs: 3 more bodies reads, 1 more stats read, 1 more
- * [rrrio.world] read and one more aim_at_player call site) where we keep the value or the
- * base offset in a register, and it keeps ECX = i and ESI = i * 24 where we keep i * 24 in
- * ECX. Guard-clause vs `&&` conditions in the arms (all three), an `int h` for the aim
+ * 3. The fallback's drop kind is an immediate in the call's second register: the mine arm does
+ *    `mov eax,ebx; xor edx,edx` (0x1b010) and jmps to the one `call spawn_dropped_object` at
+ *    0x1b06b, which the bomb arm reaches through `mov edx,4` (0x1b064); both then jmp to the
+ *    shared `play_fx(20, 0); return` tail at 0x1b2be. Two literal calls with their own
+ *    spawn+play_fx+return are what scores best (64): writing the kind into the parameter `n`
+ *    and sharing the call, the shape the game's code suggests, gives 68.
+ * What is left is allocation, again: the game re-derives the bodies[]/stats[] index inside every
+ * check in the case bodies (nmrefs: it reads bodies 3x, stats 1x and the script block 0x751a4 1x
+ * more, and calls aim_at_player once more, where we call fire_rocket once more) and holds the
+ * script byte offset i*24 in ESI (0x1b11a `imul esi,eax,0x18`) where we hold it in ECX. Guard-clause vs `&&` conditions in the arms (all three), an `int h` for the aim
  * argument, the switch expression in an `int act` local: all exactly 64. `default: break;`
  * instead of `case -1: case 0:` costs 4, and writing case 4's `else` arm first costs 13.
  */
