@@ -125,6 +125,13 @@
     too, so WCC386 10.5 -ox rematerialises these immediates unless something
     else in the function makes them live. A new idea is worth more than more
     spellings - the prize is one MATCH.
+    2026-11-27, the clobber-assumption idea is dead: `#pragma aux` `modify []`, `modify [eax]` on
+    fn_1d2a6, on easy_init, on both, `parm [eax][edx][ebx][ecx] value [eax]`, and shared arguments
+    as locals plus `modify [eax]` all stay at 10 rows / 809 bytes (.work/probe/si). The pragmas are
+    not inert (the same form on free_object/explode_objects moves dropped2_tick between 16, 32, 56
+    and 87 rows), so WCC386 materialises register-passed call arguments at each call site whatever
+    it knows about the callee - which also removes that candidate explanation from open questions
+    25, 28, 29 and 31.
 27. **Open: where the original modules start and end inside
     0x10010-0x1B915.** New lever (2026-11-23): Watcom shares an epilogue
     between two functions only inside one object, and the game shares one

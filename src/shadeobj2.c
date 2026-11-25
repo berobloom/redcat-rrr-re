@@ -386,7 +386,12 @@ int rocket_tick(short n)
    both), and the local-index holder `s = bodies[X].stats; stats[s].damage -= 10;` - the last two
    do move the shape (580/574 bytes, 9/10 rows) but lose the game's 629-byte length and put the
    shared epilogue in the wrong place, which is what the five 0-row callbacks jump to.
-   Declaration order and an extra dead short/int local move nothing at all. */
+   Declaration order and an extra dead short/int local move nothing at all. 2026-11-27: nor does
+   the callee clobber set - `#pragma aux free_object/explode_objects/hit_test modify [...]` in
+   eleven lists does move code (modify [eax ecx edx ebx esi edi] -> 87 rows, [eax edx] -> 56,
+   [eax ecx] -> 32) but every list that preserves registers stays at 16. So WCC's per-call argument
+   materialisation, not what it believes about the callee, is what reloads here too (open
+   question 26). */
 int dropped2_tick(short n)
 {
     int h;

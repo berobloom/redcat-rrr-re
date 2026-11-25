@@ -198,7 +198,13 @@ int play_fx(int sample, int dist)
    parm [eax][edx][ebx][ecx], wav_names as a 2-D array, the shared arguments factored into locals
    (worse: 23 rows) - none of them keeps the registers; ? 1 : 0 (13), a local for the test (24),
    !x and the reversed if/else (14), fn_1c85b(0) then a separate if (16). Watcom's scheduling, not
-   the spelling - open question 26. Matched on the way: the two early returns as separate ifs, the
+   the spelling - open question 26. 2026-11-27: the clobber assumption is ruled out too.
+   `#pragma aux fn_1d2a6 modify []` / `modify [eax]`, the same for easy_init, `parm
+   [eax][edx][ebx][ecx]` on either, and the shared arguments as locals *with* `modify [eax]` all
+   stay at 10 rows (809 bytes). The pragmas are not inert - narrowing/widening the modify list of
+   free_object/explode_objects does change another function's code (.work/probe/d2/p06,p08,p09) -
+   so WCC386 10.5 materialises register-passed arguments at every call site whatever it knows
+   about the callee. Matched on the way: the two early returns as separate ifs, the
    tracks fill as a loop (memset gives other registers), declaration order dma, port, irq. */
 int sound_init(short argc, char **argv)
 {
