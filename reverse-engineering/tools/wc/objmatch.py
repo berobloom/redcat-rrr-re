@@ -20,6 +20,11 @@ resolves it), so its 4 bytes depend on where our build places the target. Such a
 differing rel32 branch lands on the same function + offset in both builds: ours resolved through the
 object's publics, the game's through the address that function is compared at (iter 74, reccmp's rule;
 demo_rec, pic_show and fade_out had only these bytes differing, iter 65 checked their targets by hand).
+
+Last, the data segments (CONST, CONST2, _DATA, ...): each is compared with the game's data object at
+the base its references give (the segment bases the fixup check derives, or a _DATA public's address
+from the names file), fixup bytes masked; a segment counts only when every byte agrees, and the last
+line is `data: N of M bytes identical in place` (src/check.sh sums it; src/data.baseline holds it).
 """
 import json
 import os
@@ -127,6 +132,63 @@ def check_fixups(recs, pubs, placed, code, cbase, known):
             print('  segment %-8s DISAGREES: %s' % (seg, ', '.join('0x%x (%s)' % (b, ' '.join(v[:3])) for b, v in bs.items())))
     for nm, addrs in sorted(new.items()):
         print('  unnamed %-16s %s' % (nm, ' '.join('0x%06x' % a for a in sorted(addrs))))
+    return bases
+
+
+def compare_data(recs, bases, prog, known):
+    """Each data segment (CONST, CONST2, _DATA, ...) against the game's data object at the base its
+    references give (bases from check_fixups; a _DATA public named in the names file gives one too).
+    Fixup bytes are masked. One line per segment: MATCH, or how many bytes agree at the best base and
+    the first difference; a segment nobody references is searched for. Returns (identical, total)."""
+    le = os.path.join(L.ROOT, '.work', 'le')
+    meta = json.load(open(os.path.join(le, prog + '.json')))
+    data = open(os.path.join(le, prog + '.obj2.bin'), 'rb').read()
+    dbase = meta['objects'][1]['base']
+    segs = L.code_of(recs, only_code=False)
+    code = L.code_of(recs)
+    pubs = publics(recs)
+    same = tot = 0
+    for seg in sorted(segs):
+        if seg in code:
+            continue
+        buf, mask = segs[seg]
+        cand = dict((b, len(v)) for b, v in bases.get(seg, {}).items())
+        for sg, off, name in pubs:
+            a = known.get(plain(name))
+            if sg == seg and a is not None:
+                cand[a - off] = cand.get(a - off, 0) + 1
+        n = len(buf)
+        tot += n
+
+        def score(b):
+            o = b - dbase
+            if o < 0 or o + n > len(data):
+                return -1, None
+            eq = [mask[k] or buf[k] == data[o + k] for k in range(n)]
+            return sum(eq), next((k for k in range(n) if not eq[k]), None)
+        if not cand:
+            hits = L.find(data, buf, mask)
+            if len(hits) == 1:
+                cand[hits[0] + dbase] = 0
+        if not cand:
+            print('  data %-8s %5d bytes  no reference, not found' % (seg, n))
+            continue
+        best = max(cand, key=lambda b: (score(b)[0], cand[b]))
+        k, first = score(best)
+        k = max(k, 0)
+        same += k if first is None else 0
+        extra = '' if len(cand) == 1 else ' (%d bases referenced)' % len(cand)
+        if first is None:
+            print('  data %-8s %5d bytes  IDENTICAL at 0x%06x%s' % (seg, n, best, extra))
+        else:
+            o = best - dbase
+            print('  data %-8s %5d bytes  differs at 0x%06x: %d of %d agree, first at +%d%s\n'
+                  '      ours  %s\n      game  %s' % (
+                      seg, n, best, k, n, first, extra,
+                      ' '.join('..' if mask[j] else '%02x' % buf[j] for j in range(max(0, first - 4), min(n, first + 12))),
+                      ' '.join('%02x' % data[o + j] for j in range(max(0, first - 4), min(n, first + 12)))
+                      if 0 <= o else '-'))
+    return same, tot
 
 
 def rel32_by_target(b, m, code, a, cbase, seg, off, pubs, addr_of):
@@ -210,8 +272,9 @@ def main():
                 ' '.join('..' if m[k] else '%02x' % b[k] for k in range(max(0, d - 4), min(len(b), d + 12))),
                 ' '.join('%02x' % code[a + k] for k in range(max(0, d - 4), min(len(b), d + 12)))))
         fi += 1
-    if placed:
-        check_fixups(recs, pubs, placed, code, cbase, known)
+    bases = check_fixups(recs, pubs, placed, code, cbase, known) if placed else {}
+    same, tot = compare_data(recs, bases, prog, known)
+    print('data: %d of %d bytes identical in place' % (same, tot))
     return 0
 
 

@@ -18,7 +18,11 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
-0. QUEUE Q2 (library map) is READY FOR REVIEW; next is Q3 (compare the data object). The library
+0. QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
+   data-segment bytes identical in place` = `src/data.baseline`; mutation: one character of order.c's
+   rc_error string -> 1834. Next is Q4 (first WLINK). Smacker hunt (2026-11-25): RRR's Smacker is
+   2.1e-2.1j, its decompressor identical to the 2.1g SMACKW32.DLL; no DOS SDK found (discoveries).
+   QUEUE Q2 (library map) is READY FOR REVIEW too. The library
    range 0x1B916-0x4142F is mapped in `reverse-engineering/analysis/rrr_libmap.tsv` (tools/libmap.py,
    from REKEN's decoded debug block, tools/wdbg.py + tools/modmatch.py): Smacker 28.8 KB, clib
    26.3 KB, Fastgraph 24.1 KB, SOUNDLIB 16.9 KB, Davilex functions that differ from REKEN's copy

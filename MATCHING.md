@@ -102,6 +102,15 @@ matched ones are missing: the bases agree only once the module is complete in ad
 There is no link yet: each object is compared function by function; `_TEXT DISAGREES` within one
 object means its functions are not yet one contiguous run of the game's code.
 
+**Data.** After the functions, each object's data segments (today only `CONST`: every global is
+`extern` in `src/rrr.h`, so no `_DATA` is defined yet) are compared with the game's data object at
+the base their references give, fixup bytes masked: `data CONST ... IDENTICAL at 0x...` or `differs
+at ...: K of N agree, first at +D` with both sides shown. A segment counts only when all of it is
+identical; `check.sh`'s last line is `DATA: N of M data-segment bytes identical in place`, and
+`src/data.baseline` holds N. Like the MATCH count it only goes up, raised in the commit that raises
+it. A string block that differs at +0 usually means a missing or extra literal (hiscore.c's block
+starts with `" error\n"` in the game; init.c's has two bytes `"@"` ahead of ours).
+
 **The rule:** the MATCH count only goes up. `src/matched.baseline` holds it; raise it in the same
 commit as the code that adds a MATCH, and only after `src/check.sh` shows the count one higher.
 

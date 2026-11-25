@@ -198,6 +198,16 @@ Rules for the agent:
   game's data object (by address from the names file) and prints a count; the count is recorded
   in a baseline like `matched.baseline`.
 
+  - 2026-11-25: READY FOR REVIEW. `objmatch.py` compares every data segment of an object with the game's
+    data object at the base the object's references give (fixup bytes masked; a segment nothing
+    references is searched for), and `src/check.sh` ends with `DATA: N of M data-segment bytes identical
+    in place`; `src/data.baseline` = 1946 (of 5,861: heap, map, new2io, order, raceanim, shade, shadeobj,
+    shadeobj2 CONST identical; hiscore, init and rrr.c differ). Check: `src/check.sh | tail -1` equals
+    the baseline. Mutation that fails it: `illegal free` -> `illegal frEe` in src/order.c line 63 gives
+    1834 (order.c's CONST: 111 of 112). `grep -c ' MATCH at'` still counts functions only (126); data
+    lines say IDENTICAL. Only CONST exists today: the game's initialised globals and BSS are not
+    defined in src/ yet, so the measure covers 5.9 KB of a 0x3b478-byte data object.
+
 - [ ] **Q4 First WLINK of RRR.EXE**
   Report: same question; there is no link step, so a whole-file match cannot be measured.
   Accept: a script links `src/` objects + the Watcom 10.6 start-up and libraries (plus the game's
