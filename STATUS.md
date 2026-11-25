@@ -31,12 +31,15 @@ Short: where the project stands, and what is next. History is in git; no diary.
    now places a real object's data segment too (`--obj F.OBJ@code,NAME=data`: the data blob is cut
    into one object per gap, FILES order = merge order, pieces fed as late as their run allows, and
    the XI/YI blocks after inirt386 so WLINK invents XIB/XIE/YIB/YIE around the run) and the link is
-   still `LINK: 419179 of 419179`. First pilot (clib3r/dosret _DATA@60370 + fg32 SETMODE.ASM
-   _DATA@60384) links as itself and lands where measured but costs 2 bytes of run padding
-   (`405807 of 419179`, discoveries "a placed real data segment"): next is the blob pieces' SEGDEF
-   alignment, then the 43 data-carrying library modules and every src/ object (QUEUE Q4 note). Code
-   pages 0x29000/0x3d000 stay blobs (the original feed order there is not placement order, QUEUE Q4
-   note).
+   still `LINK: 419179 of 419179`. Since 2026-11-26 **143 real objects link as themselves,
+   39 of them with data, BSS or XI/YI entries** (`$(cat .work/link/libobjs.args6)`, `LINK: 419179
+   of 419179`). `tools/link/dataplace.py` places their data segments from their own fixups,
+   `_BSS` included (STACK comes out at 25,000 bytes). blob.py feeds a gap's head right after the
+   placed segment (empty dword-aligned segments pad the run), and pieces whose feed windows overlap
+   share one object (discoveries "real data segments link byte-identically"). Left out: nomem (not in
+   the game, LIKELY), 386inite, and _matherr/fpeinth on code page 0x3d000. Next: the src/ objects,
+   whose data addresses can be found the same way. Code pages 0x29000/0x3d000 stay blobs (the
+   original feed order there is not placement order, QUEUE Q4 note).
    QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
    data-segment bytes identical in place` = `src/data.baseline`; mutation: one character of order.c's
    rc_error string -> 1834. Next is Q4 (first WLINK). Smacker hunt (2026-11-25): RRR's Smacker is

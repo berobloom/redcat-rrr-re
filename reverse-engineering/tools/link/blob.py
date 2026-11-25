@@ -26,8 +26,10 @@ of the code blob, which is cut into CODEBLOB_<n>.OBJ pieces (public `blob_<addr>
   - each external the object needs is read back from the game's bytes at the object's own fixup
     sites and defined as a public in the blob piece (or DATABLOB) that holds that address;
   - a blob fixup into the object's range goes through the object's nearest public plus an addend.
-Only objects whose data segments are all empty are taken for now (data placement needs the original
-segment order inside the data object). OUTDIR/FILES.LNK gets the `file` directives in link order.
+`--obj FILE.OBJ@ADDR,SEG=DADDR,...` also places the object's data segments (tools/link/dataplace.py
+measures DADDR); a _BSS given an address needs a `--dseg _BSS@ADDR:BSS` block, which then runs to the
+first 4-byte boundary after the last placed _BSS, where STACK starts. OUTDIR/FILES.LNK gets the
+`file` directives in link order.
 
 `--lib LIB` lets WLINK's undefined externals be resolved: an OMF module lists every external it
 *MIGHT* use, and WLINK demands a definition even for the dead entries (Fastgraph 4.03's ASM modules
@@ -223,7 +225,7 @@ class RealObj:
         for nm, cls, size in segs:
             if cls.upper() == 'CODE' or not size:
                 continue
-            if cls.upper() == 'BSS':
+            if cls.upper() == 'BSS' and nm not in dat:
                 self.bss += size
                 continue
             if nm not in dat:
@@ -270,7 +272,9 @@ def main():
             libs.append(sys.argv[i + 1])
         elif a == '--dseg':
             nm, _, at = sys.argv[i + 1].rpartition('@')
+            at, _, cls2 = at.partition(':')          # NAME@ADDR[-LEN][:CLASS], or NAME:CLASS@ADDR
             nm, _, cls = nm.partition(':')
+            cls = cls or cls2
             at, _, ln = at.partition('-')
             dsegs.append((nm, cls or 'DATA', int(at, 16), int(ln, 16) if ln else None))
     objs.sort(key=lambda o: o.addr)
@@ -295,7 +299,17 @@ def main():
     for a in fix:                                   # a pointer can end past the stored bytes
         if dbase + dinit - 4 < a < dbase + dinit:
             dinit = a - dbase + 4
-    stack = dobj['vsize'] - dinit - sum(o.bss for o in objs)   # a real _BSS eats STACK space
+    # uninitialised data: with a --dseg _BSS@ADDR:BSS block, placed real _BSS segments sit at their
+    # addresses inside it, blob BSS pieces (a length, no bytes) fill the gaps, and STACK starts at the
+    # first 4-byte boundary after the last placed one. Without it every real _BSS is appended and eats
+    # STACK space - the game's own BSS then moves.
+    bssplaced = [at + size for o in objs for nm, cls, size, at in o.datas if cls.upper() == 'BSS']
+    sbase = dbase + dinit
+    if any(c.upper() == 'BSS' for n, c, a, l in dsegs):
+        sbase = (max(bssplaced + [dbase + dinit]) + 3) & ~3
+    elif bssplaced:
+        raise SystemExit('a real _BSS placed without a --dseg _BSS@ADDR:BSS block')
+    stack = dend - sbase - sum(o.bss for o in objs)
 
     # code pieces between the real objects
     pieces, a = [], cbase
@@ -324,8 +338,9 @@ def main():
         raise SystemExit('--dseg addresses must be distinct')
     regs, prev = [], dbase
     for i, (nm, cls, at, ln) in enumerate(dsegs):
-        end = at + ln if ln else (dsegs[i + 1][2] if i + 1 < len(dsegs) else dbase + dinit)
-        if at > prev and any(data[prev - dbase:at - dbase]):
+        end = at + ln if ln else (dsegs[i + 1][2] if i + 1 < len(dsegs) else
+                                  sbase if cls.upper() == 'BSS' else dbase + dinit)
+        if at > prev and any(data[prev - dbase:min(at, dbase + dinit) - dbase]):
             regs.append(('_DATA', 'DATA', prev, at))   # an unnamed block; a hole of zeros is padding
         if end > at:
             regs.append((nm, cls, at, end))
@@ -333,7 +348,10 @@ def main():
     if prev < dbase + dinit:
         regs.append(('_DATA', 'DATA', prev, dbase + dinit))
     for nm, cls, lo, hi in regs:
-        if hi <= dbase or lo >= dbase + dinit:
+        if cls.upper() == 'BSS':
+            if lo < dbase + dinit or hi > sbase:
+                raise SystemExit('--dseg block %s@%x:BSS outside the uninitialised bytes' % (nm, lo))
+        elif hi <= dbase or lo >= dbase + dinit:
             raise SystemExit('--dseg block %s@%x outside the initialised data bytes' % (nm, lo))
 
     dsup = sorted((at, at + size, o, nm) for o in objs for nm, cls, size, at in o.datas)
@@ -346,22 +364,41 @@ def main():
     # block no real object touches stays whole in one blob object
     dblobs = []                                    # (lo, hi, name, class) gaps, in address order
     whole = []                                     # blocks nothing is placed inside
+    heads = {}                                     # gap head -> the real object it must follow
+
+    def head(a, b, n, c, after):
+        """A gap that starts off a 4-byte boundary, right after a placed segment: its bytes up to the
+        boundary are fed straight after that object. The gap's body goes late (below), and every
+        module fed in between declares its empty CONST/_DATA/... with dword alignment, which WLINK
+        honours: the run would be padded up to the boundary before the body (dosret + SETMODE.ASM:
+        2 bytes). With the head in place the body starts on the boundary and nothing pads."""
+        e = min(b, (a + 3) & ~3)
+        if after is None or e == a or os.environ.get('BLOB_NOHEAD'):    # the mutation switch
+            return a
+        g = (a, e, n, c)
+        dblobs.append(g)
+        heads[g] = after
+        return e
     for n, c, lo, hi in regs:
         inside = [(at, end, o, nm) for at, end, o, nm in dsup if lo <= at < hi]
         if not inside:
             whole.append((lo, hi, n, c))
             dblobs.append((lo, hi, n, c))
             continue
-        a = lo
+        a, last = lo, None
         for at, end, o, nm in inside:
             if nm != n:
                 raise SystemExit('--dseg block %s@%x..%x would hold %s of %s' % (n, lo, hi, nm, o.path))
             if at > a:
-                dblobs.append((a, at, n, c))
-            a = max(a, end)
+                a = head(a, at, n, c, last)
+                if at > a:
+                    dblobs.append((a, at, n, c))
+            a, last = max(a, end), o
         if a < hi:
-            dblobs.append((a, hi, n, c))
-    split = [g for g in dblobs if g not in whole]
+            a = head(a, hi, n, c, last)
+            if a < hi:
+                dblobs.append((a, hi, n, c))
+    split = [g for g in dblobs if g not in whole and g not in heads]
 
     def owner(t):
         """('piece', p) / ('dpiece', g) / ('obj', o) / ('dat', (o, seg)) / ('data', None)"""
@@ -377,7 +414,7 @@ def main():
             for nm, cls, size, at in o.datas:
                 if at <= t < at + size:
                     return 'dat', (o, nm)
-        if dbase + dinit <= t <= dend:               # uninitialised: the STACK segment's run
+        if sbase <= t <= dend:                       # uninitialised: the STACK segment's run
             return 'data', None
         if t == cend:
             return 'piece', pieces[-1]
@@ -450,7 +487,7 @@ def main():
                     return ('seg', t)
                 return ext('blob_%x' % x[0]), t - x[0]
             if kind == 'data':                       # uninitialised data, in the STACK run
-                return ext('blob_tail'), t - dbase - dinit
+                return ext('blob_tail'), t - sbase
             if kind == 'piece':
                 if own == x:
                     return ('seg', t)
@@ -472,7 +509,8 @@ def main():
                 segrefs.setdefault(nm, set()).add(id(o))
     oidx = {id(o): i for i, (k, o) in enumerate(order) if k == 'obj'}
 
-    def slot(parts):
+    def window(parts):
+        """(after, before): the FILES positions the parts may be fed between"""
         n, after, before = len(order), -1, len(order)
         for lo, hi, name, cls in parts:
             for at, end, o, nm in dsup:
@@ -488,7 +526,10 @@ def main():
         if after >= before:
             raise SystemExit('--dseg %s@%x cannot reach the link order: it must follow %s but precede %s'
                              % (parts[0][2], parts[0][0], after, before))
-        return before                               # as late as the run allows
+        return after, before
+
+    def slot(parts):
+        return window(parts)[1]                     # as late as the run allows
 
     blobs = {}                                     # FILES position -> data blob objects fed there
     wg = {}
@@ -496,8 +537,24 @@ def main():
         wg.setdefault(slot([g]), []).append(g)
     for a in wg:
         blobs.setdefault(a, []).append(sorted(wg[a], key=lambda g: g[0]))
-    for g in split:
-        blobs.setdefault(slot([g]), []).append([g])
+    # Pieces of different segment names share one object wherever their windows overlap, fed as late
+    # as the narrowest allows: emit_ordered then interleaves their fixups the way the game's page
+    # lists do, where one blob module brought XI and YI entries together (page 0x6c000: three such
+    # modules ahead of isdbcs; and the _DATA tail's fixups with XI/YI/DATA32's).
+    groups = []                                    # [after, before, parts]
+    for g in sorted(split, key=lambda g: window([g])[1]):
+        a, b = window([g])
+        for gr in groups:
+            if all(q[2] != g[2] for q in gr[2]) and max(a, gr[0]) < min(b, gr[1]):
+                gr[0], gr[1] = max(a, gr[0]), min(b, gr[1])
+                gr[2].append(g)
+                break
+        else:
+            groups.append([a, b, [g]])
+    for a, b, ps in groups:
+        blobs.setdefault(b, []).append(sorted(ps, key=lambda q: q[0]))
+    for g, o in heads.items():                     # straight after the segment the head continues
+        blobs.setdefault(oidx[id(o)] + 1, []).insert(0, [g])
     main = max((ps for ps in sum(blobs.values(), [])), key=lambda ps: ps[-1][0])   # STACK travels here
 
     def write_dblob(parts, main=False):
@@ -518,17 +575,19 @@ def main():
             if pub:
                 ob.pubdef(0, segidx[i], pub)
         if sseg:                                   # uninitialised data: publics in the tail segment
-            tail = sorted((nm, t - dbase - dinit) for nm, t in need.items() if dbase + dinit <= t <= dend)
+            tail = sorted((nm, t - sbase) for nm, t in need.items() if sbase <= t <= dend)
             ob.pubdef(0, sseg, [('blob_tail', 0)] + tail)
 
         def segof(t):
             for i, (lo, hi, n, c) in enumerate(parts):
                 if lo <= t < hi:
+                    if c.upper() == 'BSS':          # a length only: no LEDATA
+                        return None, hi
                     return segidx[i], lo
             for lo, hi, n, c in parts:             # a hole between blocks: nothing to emit up to lo
                 if t < lo:
                     return None, lo
-            return (sseg, dbase + dinit) if sseg else (segidx[-1], hi_last)
+            return (sseg, sbase) if sseg else (segidx[-1], hi_last)
 
         def tgt(s):
             r = targets[s]

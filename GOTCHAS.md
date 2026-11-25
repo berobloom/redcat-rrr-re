@@ -62,6 +62,14 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   to be split into several objects, and their FILES position fixes both objects' contents. Feed each
   piece as late as its run allows: the fixup records follow, and a data blob fed early costs thousands
   of bytes of them.
+- **an empty segment still aligns its run** (2026-11-26): almost every clib module declares empty
+  CONST/CONST2/_DATA with dword alignment, and WLINK pads the run for them. A blob piece that starts
+  off a 4-byte boundary, fed late past such modules, lands 2 bytes late (dosret + SETMODE pilot).
+  blob.py feeds the piece's head up to the boundary right after the placed segment.
+- **a real `_BSS` needs an address too** (2026-11-26): only giving it a length (appending it to the
+  _BSS run) moves every game BSS variable after it, and the data pages still look identical. Only
+  the code's fixups show it (6426 of 9909). `dataplace.py` gives `_BSS=ADDR`, and blob.py needs
+  `--dseg _BSS@6c96c:BSS`.
 - **archive.org ISOs need a UA and ranged GETs:** a plain `curl` through the download redirect dies at
   0 bytes; `-A "Mozilla/5.0"` plus `-r start-end` chunks work (watcom.md, 10.6). Background downloads
   started inside a tool call are killed when it returns - keep them foreground and resumable.

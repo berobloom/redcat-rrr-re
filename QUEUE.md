@@ -291,6 +291,43 @@ Rules for the agent:
     alignment (real objects use 0x99 align 5 / 0x98 align 1, blobs use 1). Then repeat over the 43
     modules in `.work/exp/dmods.skip`, data addresses from `tools/link/dataobj.py`.
 
+  - 2026-11-26: **143 real objects link as themselves, 39 of them carrying data, BSS or XI/YI
+    entries** - `link.sh OUT $(cat .work/link/libobjs.args6)` -> `LINK: 419179 of 419179`, `fixups:
+    9909 identical`, every region IDENTICAL. args6 = args5 (the 104) + `dataplace.py`'s output for the
+    data modules, minus three, + `--dseg CONST@50000 --dseg CONST2@552e4 --dseg _DATA@55338 --dseg
+    _BSS@6c96c:BSS`. What it took:
+    (1) the 2 bytes were not the blob's alignment: the clib modules fed between SETMODE and the next
+    blob piece declare *empty* CONST/_DATA/... with dword alignment, and WLINK pads the run for them
+    (0x6040a -> 0x6040c). blob.py now feeds a gap's head up to the next 4-byte boundary straight after
+    the placed segment it continues, the body still goes late.
+    (2) pieces of different segment names whose feed windows overlap share one object (fed at the
+    narrowest window's end), so emit_ordered interleaves their fixups as the game's page lists do
+    (page 0x6c000: the _DATA tail with XI/YI/DATA32; three blob modules each bringing XI and YI
+    entries ahead of isdbcs).
+    (3) new `tools/link/dataplace.py` places every data segment from the module's own fixups: the
+    game's LE fixup target at each site of the module that reaches the segment (or one of its own
+    publics, reached as an EXTDEF), minus the addend; and backwards for XI/YI entries and pointer
+    tables (the LE sites aiming at the module's placed targets, intersected over the segment). 56
+    segments of 41 modules, 51 by self-reference, 5 by pointers, none by content alone; every run
+    comes out in code order, and no segments overlap.
+    (4) `_BSS` placed too (`--dseg _BSS@6c96c:BSS`, blob BSS pieces are lengths without LEDATA);
+    appending the real _BSS at the start of the run moved all of the game's own BSS (6426 of 9909
+    fixups right). STACK then starts at the 4-byte boundary after sigsy's _BSS (0x852d0) and comes
+    out 0x61a8 = 25,000 bytes, a round number.
+    Left out: clib nomem (its 18-byte _TEXT is noefgfmt's twin at 0x33abf, and 0x54e0c holds
+    noefgfmt's 36-byte CONST, so nomem is LIKELY not in the game); emu387 386inite (no code hit in
+    RRR); math387 _matherr and clib fpeinth (code on page 0x3d000, where Smacker's fixups come first
+    in the game's input order: with fpeinth in, fixup records 83938 of 84546).
+    The CONST2/_DATA boundary (0x55338) and the CONST start (0x50000) are SPECULATIVE: blob bytes
+    only, any 4-aligned choice between the placed segments links the same bytes; 0x55338 is the
+    one that also gives the fixup order (0x5ff7c put the game's _DATA fixups at 0x5fdf4 in the
+    CONST2 piece).
+    Mutations that fail the check: iomode `_DATA=6a00c` instead of 6a008 -> 405865 (data object 4
+    bytes long); `BLOB_NOHEAD=1` on the dosret+SETMODE pilot -> 406055; fpeinth back in -> 418571;
+    without the `_BSS` block blob.py refuses; rand's `_DATA` moved -> refused (a blob fixup at
+    0x6007a lands inside it with no public to reach it). Regression: args5 alone still 419179.
+    Next: the src/ objects (their data addresses the same way), then the 0x29000/0x3d000 pages.
+
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.

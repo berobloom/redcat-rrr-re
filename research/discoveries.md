@@ -193,13 +193,35 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   DGROUP and inirt386's fixups follow them, silently, as before). With all of that the link is
   byte-identical again: `link.sh OUT $(cat .work/link/libobjs.args5)` -> `LINK: 419179 of 419179`,
   9909/9909 fixup pairs.
-- OPEN (2026-11-26): a placed real data segment is not byte-identical yet. clib dosret (code 0x28a0c,
-  _DATA 20 B at 0x60370) and fg32 SETMODE.ASM (code 0x28ac1, _DATA 134 B at 0x60384) link as
-  themselves and both land at their measured address, but the _DATA run ends 2 bytes long (0x1c66a
-  against 0x1c668) and the data object first differs at 0x10418, just after SETMODE's 134 bytes:
-  WLINK re-aligns the piece that follows a real segment. dosret declares its data segments with the
-  0x99 align nibble 5, SETMODE with 0x98 align 1, the blob pieces with 1 - the blob pieces'
-  SEGDEF alignment is the next thing to try (405807 of 419179 today).
+- CONFIRMED (2026-11-26): real data segments link byte-identically: 143 real objects (39 with data,
+  BSS or XI/YI) give `LINK: 419179 of 419179` (`link.sh OUT $(cat .work/link/libobjs.args6)`, QUEUE
+  Q4). Facts about WLINK 10.6 this rests on, each shown by a link that fails without it:
+  - CONFIRMED: an *empty* segment still aligns its run. clib modules declare empty CONST, CONST2 and
+    _DATA with dword alignment (0x99 align 5). Fed between SETMODE.ASM (whose _DATA ends at
+    0x6040a) and the next data, they pad the _DATA run to 0x6040c: the 2 bytes of the first pilot
+    (405807 of 419179). The game's data has no such pad there, so in the original link the module
+    after SETMODE's _DATA came before any dword-aligned module.
+  - CONFIRMED: a real object's data segment sits where its own code's fixups say: the LE fixup
+    target at each site the module uses to reach the segment (or one of its own data publics, which
+    Watcom C reaches through an EXTDEF of the same name), minus the addend (in the object's bytes;
+    in the fixup record's displacement for the Fastgraph ASM modules). `tools/link/dataplace.py`
+    places 56 segments of 41 modules that way, up to 82 sites agreeing for one segment. XI/YI
+    entries and pointer tables are placed the other way round: the LE fixups aiming at the
+    module's code, intersected over the segment.
+  - STRONGLY SUPPORTED: the module order inside every run is code order, now for _DATA (26
+    segments, exit 0x5ff7c ... _matherr 0x6c65c), CONST, CONST2, XI, YI, DATA32 and _BSS (nfree
+    0x80d04 ... sigsy 0x84ed0); none out of order.
+  - CONFIRMED: the real modules' _BSS sit among the game's own BSS, in feed order. Appending them
+    at the start of the _BSS run moves the game's BSS (6426 of 9909 fixups right). Placed at
+    their addresses, STACK starts at 0x852d0, the 4-byte boundary after sigsy's 1024-byte _BSS,
+    and is 0x61a8 = 25,000 bytes. LIKELY: the round number is the link's stack size, so _BSS ends
+    with clib sigsy.
+  - CONFIRMED: inside a page the fixup records follow the modules' feed order across segment
+    names. One blob module bringing both XI and YI entries (three of them ahead of clib isdbcs on
+    page 0x6c000) must be one object, or that page's record order breaks.
+  - LIKELY: clib nomem is not in RRR. Its 18-byte _TEXT is identical to noefgfmt's (both "found"
+    at 0x33abf), and noefgfmt's 36-byte CONST is what sits at 0x54e0c, where nomem's CONST would
+    have to be.
 - Ownership of every byte of 0x1B916-0x4142F: `reverse-engineering/analysis/
   rrr_libmap.tsv` (`tools/libmap.py`, evidence column per range); the totals are
   in `PROGRESS.md`. 8,413 bytes are still unknown.

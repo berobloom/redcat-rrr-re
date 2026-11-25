@@ -3,7 +3,8 @@
 
 usage: libobj.py LIB MODULE OUT.OBJ     write the module's records unchanged (WLIB's `*` extract)
        libobj.py --info FILE.OBJ ...    segments (name, class, size), publics, externals
-info() also leaves the module-local publics (LPUBDEF) in info.local.
+info() also leaves the module-local publics (LPUBDEF) in info.local, with their segments and
+offsets in info.local_items.
 
 The module's records are copied byte for byte from THEADR to MODEND, so the object is the one the
 original link pulled from the library.
@@ -47,7 +48,7 @@ def info(path):
 
 def info_bytes(data):
     (_, recs), = list(L.modules(data))
-    lnames, segs, exts, pubs, local = [None], [None], [None], [], set()
+    lnames, segs, exts, pubs, local, local_items = [None], [None], [None], [], set(), []
     for t, b in recs:
         if t == 0x96:
             p = 0
@@ -93,9 +94,11 @@ def info_bytes(data):
                     break
             if t in (0xB6, 0xB7):                    # LPUBDEF: module-local, not visible outside
                 local.update(nm for _, _, nm in items)
+                local_items.extend(items)
             else:
                 pubs.extend(items)
     info.local = local
+    info.local_items = local_items                  # (segment, offset, name) of each local
     return segs[1:], pubs, exts[1:]
 
 

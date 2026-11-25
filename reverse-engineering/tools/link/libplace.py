@@ -5,8 +5,8 @@ usage: libplace.py OUTDIR LIB ...      prints `--obj OUTDIR/<lib>_<module>.OBJ@<
 
 For every LIB, tools/wc/libmatch.py -l says where each of its modules sits in RRR's code. A module
 is taken when it is found exactly once, in the library range (>= 0x1B916: chance hits of tiny
-modules inside the game's C are not), and all its data segments are empty (data placement inside
-the data object is not done yet - blob.py refuses such objects). Each module taken is copied out of
+modules inside the game's C are not), and all its data segments are empty (a module with data
+needs its segment addresses: tools/link/dataplace.py). Each module taken is copied out of
 its LIB (libobj.py) into OUTDIR. The reason for every module left out goes to stderr.
 """
 import os
