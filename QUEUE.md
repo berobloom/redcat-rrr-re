@@ -31,6 +31,15 @@ Rules for the agent:
     fn_13a78 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
     0x11bb4 and blit_sprite_trans 0x17d94 are assembly, so 110 of 147, 23 near misses, 14 unwritten
     (13 C). `src/check.sh` still shows 110 MATCH and no WRONG fixups.
+  - 2026-11-27: still READY FOR REVIEW, and every C function of the range now has a spelling:
+    `src/check.sh 2>&1 | grep -c ' MATCH at'` = 117 of 146 (80.1%), 28 near misses, 1 unwritten
+    (blit_sprite 0x11bb4, assembly). The six ticks were written the same day: the crash ticks in
+    `src/tick.c` (muis_crash_tick 70 rows, bull_crash_tick 188, player_crash_tick 282) and the normal
+    ticks in a second module `src/drive.c` (player_tick 193, bull_tick 208, muis_tick 87). The check
+    that proves the module split: with the six in one `src/tick.c`, muis_tick goes 87 -> 91 and
+    player_tick 193 -> 200, because WCC then merges the tail of a normal tick into a crash tick's
+    epilogue, which the game never does (the three ticks and the three crash ticks are each laid out
+    back to back, with other modules between).
   - 2026-11-23: podium 0x15a9f byte-identical: `src/check.sh 2>&1 | grep -c ' MATCH at'` says 111 and
     `grep podium` shows `podium_ 355 bytes MATCH at 0x015a9f` with no WRONG fixup (the world_names
     0x57c18 and rcascii_printf 0x200b0 targets agree); deleting either switch level or one vararg of
