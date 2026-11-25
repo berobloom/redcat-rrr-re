@@ -18,6 +18,12 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
+0. QUEUE Q2 (library map) is READY FOR REVIEW; next is Q3 (compare the data object). The library
+   range 0x1B916-0x4142F is mapped in `reverse-engineering/analysis/rrr_libmap.tsv` (tools/libmap.py,
+   from REKEN's decoded debug block, tools/wdbg.py + tools/modmatch.py): Smacker 28.8 KB, clib
+   26.3 KB, Fastgraph 24.1 KB, SOUNDLIB 16.9 KB, Davilex functions that differ from REKEN's copy
+   15.0 KB, emu387 12.9 KB, WINLIB 12.3 KB, unknown 8.4 KB (discoveries "Executables"). Check: the
+   TSV is contiguous and sums to 154,394; mutation: a narrower `SMACKER_C` in libmap.py makes it stop.
 1. QUEUE.md's first open item. Q1's newest step is a shared index holder in `src/shadeobj2.c`:
    `dropped2_tick` 0x178f6's first damage block reads its stats index through the `int h` the aim
    block uses (`h = bodies[2].stats; stats[h].damage -= 10;`). That makes Watcom emit the `*3 << 4`

@@ -208,3 +208,14 @@ Rules for the agent:
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.
   Accept: each one is MATCH, or SKIP with nmclass showing home rows only.
+  - 2026-11-25: READY FOR REVIEW. `tools/wdbg.py` decodes REKEN's debug block (200 modules, 1,550
+    globals, 350 address ranges); `tools/modmatch.py` finds REKEN's modules/functions in RRR with
+    fixups masked; `tools/libmap.py` writes `reverse-engineering/analysis/rrr_libmap.tsv`, one owner
+    and one evidence source per range, and `tools/progress.py` reruns it for PROGRESS.md's table.
+    Split of the 154,394 bytes: Smacker 28,761, clib 26,254, Fastgraph 24,057, SOUNDLIB 16,918,
+    Davilex functions that differ from REKEN's copy 14,975, emu387 12,850, WINLIB 12,309, math
+    3,711, Davilex asm 3,154, start-up 2,992, unknown 8,413. Check: the TSV's ranges are contiguous
+    and sum to 154,394 (`awk -F'\t' 'NR>1{t+=$3} END{print t}'`). Mutation that fails it:
+    `SMACKER_C = (0x21c00, ...)` stops libmap with "Smacker range called from 0x21b58, outside
+    smacker.c". PROGRESS.md's headline now counts only libmatch-verified library bytes (58,990,
+    29.2%); emu387 and cstrt386 _TEXT match REKEN only, not 10.6's LIBs.

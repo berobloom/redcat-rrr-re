@@ -8,8 +8,9 @@ our compiled bytes equal the game's (fixup bytes masked, fixup targets checked).
 their remaining instruction rows from tools/wc/fndiff.py. Functions of the game's own C that src/rrr.c
 does not have yet come from tools/funcs.py's list (reverse-engineering/analysis/rrr_funcs.tsv) and the
 names file, named from reverse-engineering/analysis/rrr_names.txt. Subsystems come from
-reverse-engineering/analysis/rrr_subsystems.txt. The library rows come from tools/wc/libmatch.py
-against Watcom 10.5's CLIB3R.LIB and MATH387R.LIB.
+reverse-engineering/analysis/rrr_subsystems.txt. The library rows come from tools/libmap.py, which
+it reruns to regenerate reverse-engineering/analysis/rrr_libmap.tsv (Watcom 10.6's libraries via
+tools/wc/libmatch.py, REKEN's debug-info modules via tools/modmatch.py, the Smacker player).
 
 It also writes docs/RRRPROGRESS.HTML (every function, searchable and filterable, with its instruction
 diff against the game; the layout of wacky-re's report, template tools/progress.html) and
@@ -32,8 +33,6 @@ from lelib import Image      # noqa: E402
 from entries import sweep    # noqa: E402
 PY = os.path.join(ROOT, '.work', 'venv', 'bin', 'python')
 WLIB = os.path.join(ROOT, '.work', 'watcom', 'dos', 'C', 'WATCOM', 'LIB386')
-CLIB = os.path.join(WLIB, 'DOS', 'CLIB3R.LIB')
-MATHLIB = os.path.join(WLIB, 'MATH387R.LIB')
 
 # RRR.EXE's code object (MATCHING.md, "The target"): BEGTEXT, the game's own modules, then the
 # library modules in the order WLINK pulled them in
@@ -183,11 +182,6 @@ def write_svg(path, done, total):
     open(path, 'w').write(svg)
 
 
-def libcount(lib):
-    out = run([PY, os.path.join(TOOLS, 'wc', 'libmatch.py'), 'rrr', lib], timeout=1200)
-    m = re.search(r'found\s+(\d+) \((\d+) bytes\)', out)
-    return (int(m.group(1)), int(m.group(2))) if m else (0, 0)
-
 
 def main():
     out = os.path.join(ROOT, 'PROGRESS.md')
@@ -234,8 +228,15 @@ def main():
     al = align_all({a: n for a, (n, _, ok) in funcs.items() if not ok})
     rows = {a: v['d'] for a, v in al.items()}
 
-    clib_mods, clib_bytes = libcount(CLIB)
-    math_mods, math_bytes = libcount(MATHLIB)
+    libmap = os.path.join(ANALYSIS, 'rrr_libmap.tsv')
+    run([PY, os.path.join(TOOLS, 'libmap.py'), '--tsv', libmap], timeout=1200)
+    owners, watcom_bytes = {}, 0
+    for line in open(libmap):
+        if line.startswith('0x'):
+            f = line.rstrip('\n').split('\t')
+            owners[f[3]] = owners.get(f[3], 0) + int(f[2])
+            if f[4] == 'libmatch':
+                watcom_bytes += int(f[2])
 
     order, sub_of = subsystems()
     allf = [(a, n, 'match' if ok else 'near') for a, (n, _, ok) in funcs.items()]
@@ -257,8 +258,7 @@ def main():
 
     c_bytes = sum(sz for _, (_, sz, ok) in funcs.items() if ok)
     whole = CODE_END - C_START
-    rest = CODE_END - LIB_START - clib_bytes - math_bytes
-    overall = c_bytes + clib_bytes + math_bytes
+    overall = c_bytes + watcom_bytes
 
     L = []
     w = L.append
@@ -291,13 +291,24 @@ def main():
       '%d not written yet, %d assembly |'
       % (C_START, LIB_START - 1, num(LIB_START - C_START), done, total, pct(done, total), near,
          unwritten, asm))
-    w('| Watcom C library (`CLIB3R.LIB` 10.5) | inside 0x%05X-0x%05X | %d modules, %s bytes, identified byte for byte; '
-      'linked from the library, nothing to rewrite |' % (LIB_START, CODE_END - 1, clib_mods, num(clib_bytes)))
-    w('| Watcom math library (`MATH387R.LIB` 10.5) | inside 0x%05X-0x%05X | %d modules, %s bytes, identified byte for byte |'
-      % (LIB_START, CODE_END - 1, math_mods, num(math_bytes)))
-    w('| Not identified yet: Davilex\'s libraries (`C:\\PROTMOD\\WINLIB`, `C:\\PROTMOD\\SOUNDLIB`: rctools.c, fileio.c, '
-      'audio.c, ...), Fastgraph V4.03, the Smacker player, padding | inside 0x%05X-0x%05X | %s bytes |'
-      % (LIB_START, CODE_END - 1, num(rest)))
+    LIBROWS = [
+        ('clib', 'Watcom C library (`CLIB3R.LIB` 10.6)', 'byte for byte against the LIB (a few small modules only via REKEN\'s copy); linked from the library, nothing to rewrite'),
+        ('startup', 'Watcom start-up (cstrt386, cmain386, ...)', 'byte for byte against the LIB except cstrt386\'s _TEXT (725 B), which only matches REKEN\'s copy'),
+        ('math', 'Watcom math library (`MATH387R.LIB`, `MATH3R.LIB` 10.6)', 'byte for byte'),
+        ('emu', 'Watcom 387 emulator (emu387)', 'the same bytes as REKEN\'s emu387 module; 10.6\'s `EMU387.LIB` does not match it, so not counted above'),
+        ('soundlib', 'Davilex SOUNDLIB (`C:\\PROTMOD\\SOUNDLIB\\wc32\\mod`: dma6.c, sndbuf.c, audio.c, read.c, ...)',
+         'byte for byte the same as REKEN\'s copy, named by REKEN\'s debug info; C to rebuild'),
+        ('winlib', 'Davilex WINLIB (`C:\\PROTMOD\\WINLIB\\mgl2\\fg2`: rctools.c, rcascii.c, mouse.c, ...)',
+         'byte for byte the same as REKEN\'s copy, named by REKEN\'s debug info; C to rebuild'),
+        ('davilex-diff', 'Davilex WINLIB/SOUNDLIB functions that differ from REKEN\'s copy',
+         'owned by their source-file strings, not byte-matched; C to rebuild'),
+        ('davilex-asm', 'Davilex assembly (doscalls.asm, cpy.asm)', 'byte for byte the same as REKEN\'s copy'),
+        ('fastgraph', 'Fastgraph V4.03 (the upper-case *.ASM modules)', 'byte for byte the same as REKEN\'s copy; commercial, wanted as its LIB'),
+        ('smacker', 'Smacker player (RAD)', 'shared byte for byte with INTRO, RRRMENU and install, called only from smacker.c; commercial, wanted as its LIB'),
+        ('unknown', 'Not identified yet', 'nothing matched'),
+    ]
+    for k, what, how in LIBROWS:
+        w('| %s | inside 0x%05X-0x%05X | %s bytes, %s |' % (what, LIB_START, CODE_END - 1, num(owners.get(k, 0)), how))
     w('')
     w('## The game\'s own C by subsystem')
     w('')

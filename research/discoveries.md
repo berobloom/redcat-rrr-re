@@ -67,6 +67,36 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   plus the PROTMOD library modules and the C library functions linked in.
   RRR, RRRMENU and INTRO have no such trailer. Whether the block also holds
   locals, types and line numbers has not been checked.
+- CONFIRMED (2026-11-25): the block decodes with Open Watcom's format-3 layout
+  (`reverse-engineering/tools/wdbg.py`): the language and segment tables sit at
+  the block's start (the 14-byte master header is only at the end), then one
+  section with 200 modules, 1,550 globals and 350 address ranges (184 in the
+  code object). Besides the C modules it names Fastgraph's assembly modules in
+  upper case (`INITPM.ASM`, `SVGAINIT.ASM`, `VBPASTE.ASM`, `MOUSEINI.ASM`,
+  `SETDACS.ASM`, `MAKEPCX.ASM`, ...), Davilex's own `doscalls.asm` and `cpy.asm`,
+  and the SOUNDLIB modules `dma6.c support.c player.c commands.c notes.c
+  automato.c tracker.c read.c` that the strings never showed. No Smacker module:
+  REKEN plays no video.
+- CONFIRMED: REKEN's modules occur in RRR.EXE byte for byte, fixups masked and
+  fixup sites required to coincide (`tools/modmatch.py REKEN.EXE RRR.EXE
+  [--funcs]`): whole modules for clib, SOUNDLIB dma6/sndbuf/audio/support/player/
+  read, doscalls.asm, every Fastgraph `.ASM` module but VBINIT, and emu387;
+  WINLIB's C modules (rctools, rcascii, rcobj, rcpcx, mouse, fileio, ...) only in
+  part - at function level 96 KB of REKEN's code is found in RRR. The WINLIB
+  functions that do not match are a different build of the same source (same
+  `%s(%d)` strings, other bytes).
+- CONFIRMED: `emu387` and `cstrt386`'s `_TEXT` in RRR equal REKEN's copies but
+  not 10.6's `EMU387.LIB`/`CLIB3R.LIB` modules (libmatch finds only `386inite`
+  in EMU387.LIB). Which emulator/start-up build they are is open.
+- STRONGLY SUPPORTED: RRR's 0x2ecb0-0x31dd9 and 0x3d500-0x4142f (28,761 bytes)
+  are the Smacker player library. Both are in INTRO, RRRMENU and install.exe byte
+  for byte and absent from REKEN; every call into the first comes from Davilex's
+  `smacker.c` wrapper 0x21a67-0x22ab5 (56 call sites), every call into the second
+  from the first; the pieces start on 16-byte boundaries, which Watcom C does not
+  emit. No RAD string names it.
+- Ownership of every byte of 0x1B916-0x4142F: `reverse-engineering/analysis/
+  rrr_libmap.tsv` (`tools/libmap.py`, evidence column per range); the totals are
+  in `PROGRESS.md`. 8,413 bytes are still unknown.
 
 - CONFIRMED: `MOTOR.EXE` (16-bit Watcom C, 19,194 bytes) is the program the
   start batch file runs (`MOTOR /DAVILEX %1..%5`, rcreken.tmp → RCREKEN.BAT).

@@ -24,7 +24,7 @@ stub with DOS/4GW bound in front of an LE program. Addresses are the LE image's 
 |---|---|---|
 | 0x10000-0x1000F | `BEGTEXT` (`int3`, `jmp $-1`, padding) | the Watcom start-up |
 | 0x10010-0x1B915 | **the game's own C**: sndman.c, main.c, new2io.c, order.c, shade.c, init.c, raceanim.c, heap.c, map.c, ... | `src/*.c` with `src/rrr.h` (this file's subject) |
-| 0x1B916-0x4142F | library modules in the order WLINK pulled them in: Watcom's clib and math library mixed with Davilex's own libraries (`C:\PROTMOD\WINLIB\mgl2\fg2`, `C:\PROTMOD\SOUNDLIB\wc32\mod`), Fastgraph V4.03 and the Smacker player | Watcom's libraries as they are; the rest not identified yet |
+| 0x1B916-0x4142F | library modules in the order WLINK pulled them in: Watcom's clib and math library mixed with Davilex's own libraries (`C:\PROTMOD\WINLIB\mgl2\fg2`, `C:\PROTMOD\SOUNDLIB\wc32\mod`), Fastgraph V4.03 and the Smacker player; owner of every range in `reverse-engineering/analysis/rrr_libmap.tsv` (`tools/libmap.py`) | Watcom's libraries as they are; Davilex's C to rebuild; Fastgraph and Smacker from their LIBs (not in hand) |
 
 The game's own C ends where the first library module starts (clib `sprintf` at 0x1B916, then
 `fopen` at 0x1B959): the functions before it carry RRR's own source files' names, the ones after it
