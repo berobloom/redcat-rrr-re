@@ -35,12 +35,16 @@ Short: where the project stands, and what is next. History is in git; no diary.
    pad bytes at 0x1556c needed something 3 mod 4 bytes in front of find_waypoints in init.o, and
    init_objects (1635 B) is it (open question 30, resolved).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
-   first (functions whose callees are matched or are library calls). Six are left: the assembly
-   blit_sprite 0x11bb4 and blit_sprite_trans 0x17d94, and four C ticks, bull_tick 0x12826,
-   muis_tick 0x130f8, player_tick 0x11eb5, player_crash_tick 0x19497. 2026-11-27 wrote the first
-   two crash ticks into a new `src/tick.c`, muis_crash_tick 0x1a42a (70 rows) and bull_crash_tick
-   0x19c8c (188 rows); the three crash ticks are per-racer C, not copies - under half their
-   instruction streams agree, and only bull's has the racer_contact/racer_bounce block. `stats[].f24`
+   first (functions whose callees are matched or are library calls). Four are left: the assembly
+   blit_sprite 0x11bb4 and the three C ticks bull_tick 0x12826, muis_tick 0x130f8 and player_tick
+   0x11eb5. 2026-11-27 wrote the three crash ticks into a new `src/tick.c`, muis_crash_tick
+   0x1a42a (70 rows), bull_crash_tick 0x19c8c (185) and player_crash_tick 0x19497 (282); the three
+   crash ticks are per-racer C, not copies - under half their
+   instruction streams agree, and only bull's has the racer_contact/racer_bounce block.
+   player_crash_tick is the one that reads the keyboard: it names the player's input flags
+   key_forward/key_back 0x55fd0/0x55fd4 and the 3x3 steering matrix steer_tbl 0x56030, and writing
+   it collapsed the phantom fn_1963e (0x1963e is a basic block inside it), so PROGRESS.md now reads
+   146 functions, 80.1%. `stats[].f24`
    is unsigned (the game's tests on it are `test` + `jbe`/`ja`), which is worth four rows on its own,
    and `if (f <= 0) {...} else if (f == 3) {...}` lands the game's block order where
    `if (f > 0) { if (f == 3) ... } else {...}` puts the same bodies the other way round (78 -> 70).

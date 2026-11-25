@@ -35,7 +35,7 @@
    z < 0. Its go/want pair is never set, so the `if (go)` arm at 0x19672 is dead code the game
    carries; want is unsigned (jbe at 0x19681). Diff rows are register homes again: m in a stack
    slot at [esp+8] and vv at [esp+0xc], we keep m in EBP.
-188 0x19c8c bull_crash_tick  written 2026-11-27, src/tick.c; 1937 of 1877+73=1950 B, first pass
+185 0x19c8c bull_crash_tick  written 2026-11-27, src/tick.c; 1937 of 1877+73=1950 B, first pass
    transplanted from muis_crash_tick with racer 2's globals (v55ff8-v5600c, v55ff4, v71918) and the
    extra racer_contact/racer_bounce block the other crash ticks do without; register allocation and
    the go/want body layout are what is off, the logic reads complete
