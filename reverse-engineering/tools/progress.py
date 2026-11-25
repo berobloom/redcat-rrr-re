@@ -303,7 +303,7 @@ def main():
         ('davilex-diff', 'Davilex WINLIB/SOUNDLIB functions that differ from REKEN\'s copy',
          'owned by their source-file strings, not byte-matched; C to rebuild'),
         ('davilex-asm', 'Davilex assembly (doscalls.asm, cpy.asm)', 'byte for byte the same as REKEN\'s copy'),
-        ('fastgraph', 'Fastgraph V4.03 (the upper-case *.ASM modules)', 'byte for byte the same as REKEN\'s copy; 13 modules also against Fastgraph 4.00\'s FG32.LIB (unchanged up to 4.03)'),
+        ('fastgraph', 'Fastgraph V4.03 (the upper-case *.ASM modules)', 'byte for byte against Fastgraph 4.03\'s FG32.LIB and FG32DPMI.LIB (29 modules); commercial, linked from the LIB'),
         ('smacker', 'Smacker player (RAD)', 'shared byte for byte with INTRO, RRRMENU and install, called only from smacker.c; commercial, wanted as its LIB'),
         ('unknown', 'Not identified yet', 'nothing matched'),
     ]

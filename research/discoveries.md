@@ -102,7 +102,15 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   The rest differ: RRR links 4.03 (Fastgraph's own 4.01-4.03 READ.MEs list changed 32-bit routines).
   A Watcom + DOS/4GW program links `FG32.LIB` + `FG32DPMI.LIB` (+ `FG32WC.LIB`), per updat403's
   READ.ME. Fastgraph's official patches updat401/402/403.zip (www.fastgraph.com/fg/) are RTPatch
-  deltas; applied in order to the 4.00 files they should give 4.03's libraries exactly - not run yet.
+  deltas. Applied in order to the three 4.00 files with their own PATCH.EXE under DOSBox (run by
+  the human, 2026-11-25; every step "Files Modified 3, Old Files Invalid 0", so the 4.00 copy is the
+  genuine release) they give 4.03's libraries, kept in `.work/dl/fgchain/W/`: FG32.LIB 254,464 B
+  md5 8aae3750f92398ca68d343f66c4e0162, FG32DPMI.LIB md5 887a1bdcd95064502ccebe3efb804cc7,
+  FG32WC.LIB md5 a5313d79ae75a004f002f5f5870cdc98.
+- CONFIRMED (2026-11-25): RRR links **Fastgraph 4.03**: libmatch finds 28 modules of 4.03's FG32.LIB
+  (SVGAINIT 8,135 B, MOUSEINI 3,576, MAKEPCX 2,680, MAKEGIF 2,491, SETMODE 2,206, VBPASTE 1,880, ...)
+  and FG32DPMI.LIB's INITPM.ASM (781) byte for byte - every Fastgraph module the debug-info route
+  found, plus the joystick four. FG32WC.LIB (the Watcom auxiliary C library) is not linked.
 - CONFIRMED: Smacker 2.0's DOS `SMACK.LIB` (`C:\DEVEL\PROJECTS\SMACK\20\`, two builds found on
   game CDs) matches none of RRR's Smacker code. RAD's history says the later SDK was built with
   Watcom 10.6 and shipped as SmackW32.LIB; RRR's version is still unknown.
