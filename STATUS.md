@@ -35,7 +35,15 @@ Short: where the project stands, and what is next. History is in git; no diary.
    pad bytes at 0x1556c needed something 3 mod 4 bytes in front of find_waypoints in init.o, and
    init_objects (1635 B) is it (open question 30, resolved).
 2. Otherwise: the next unwritten function of RRR's own C in `PROGRESS.md`, smallest and leaf-most
-   first (functions whose callees are matched or are library calls).
+   first (functions whose callees are matched or are library calls). Six are left: the assembly
+   blit_sprite 0x11bb4 and blit_sprite_trans 0x17d94, and four C ticks, bull_tick 0x12826,
+   muis_tick 0x130f8, player_tick 0x11eb5, player_crash_tick 0x19497. 2026-11-27 wrote the first
+   two crash ticks into a new `src/tick.c`, muis_crash_tick 0x1a42a (70 rows) and bull_crash_tick
+   0x19c8c (188 rows); the three crash ticks are per-racer C, not copies - under half their
+   instruction streams agree, and only bull's has the racer_contact/racer_bounce block. `stats[].f24`
+   is unsigned (the game's tests on it are `test` + `jbe`/`ja`), which is worth four rows on its own,
+   and `if (f <= 0) {...} else if (f == 3) {...}` lands the game's block order where
+   `if (f > 0) { if (f == 3) ... } else {...}` puts the same bodies the other way round (78 -> 70).
 3. Near misses: `src/nearmiss.txt`, first line with an empty status. cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
