@@ -44,6 +44,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **Two .OBJ files of the same C never compare equal** (`md5`, `cmp`): the OMF records and the
   fixup bytes differ even when the code is identical. Compare segments masked with
   `tools/wc/segcmp.py A.OBJ B.OBJ` (used to prove 10.5 and 10.6 generate the same code).
+- **WLINK wants a definition for every EXTDEF a linked module lists, even dead ones**: Fastgraph
+  4.03's ASM modules list DATA.ASM globals their code never touches, and the link fails on them with
+  no fixup site anywhere to read an address from.
+- **clib startup modules fixup to zero-size bookkeeping segments** (XIB/XI/XIE/YIB/YI/YIE): their
+  bytes merge from other modules' data segments at link time; place such a module without those and
+  WLINK resolves them silently to the end of DGROUP (wrong, no error).
 - **archive.org ISOs need a UA and ranged GETs:** a plain `curl` through the download redirect dies at
   0 bytes; `-A "Mozilla/5.0"` plus `-r start-end` chunks work (watcom.md, 10.6). Background downloads
   started inside a tool call are killed when it returns - keep them foreground and resumable.

@@ -18,8 +18,13 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
-0. QUEUE Q4: an all-blob WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
-   link/link.sh`, `LINK: 419179 of 419179`). Next: swap blob ranges for src/ objects and the LIBs.
+0. QUEUE Q4: a WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
+   link/link.sh`, `LINK: 419179 of 419179`), and since 2026-11-25 **103 library modules link as
+   themselves** in place of their blob ranges (`$(cat .work/link/libobjs.args4)`: 91 clib/math/emu +
+   27 Fastgraph ASM; dead Fastgraph EXTDEFs resolved through DATA.ASM anchored at 0x60a56). Next:
+   the original segment order inside the data object - it blocks the 37 data-carrying library modules,
+   inirt386's XIB/XIE/YIB/YIE bookkeeping fixups, and every src/ object. Code pages 0x29000/0x3d000
+   stay blobs (the original feed order there is not placement order, QUEUE Q4 note).
    QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
    data-segment bytes identical in place` = `src/data.baseline`; mutation: one character of order.c's
    rc_error string -> 1834. Next is Q4 (first WLINK). Smacker hunt (2026-11-25): RRR's Smacker is

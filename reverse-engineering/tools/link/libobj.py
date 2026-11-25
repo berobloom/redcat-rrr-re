@@ -42,7 +42,11 @@ def raw_modules(data):
 
 
 def info(path):
-    (_, recs), = list(L.modules(open(path, 'rb').read()))
+    return info_bytes(open(path, 'rb').read())
+
+
+def info_bytes(data):
+    (_, recs), = list(L.modules(data))
     lnames, segs, exts, pubs, local = [None], [None], [None], [], set()
     for t, b in recs:
         if t == 0x96:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """libplace.py: the library modules that can be linked as themselves in place of their blob range.
 
-usage: libplace.py OUTDIR LIB ...      prints `--obj OUTDIR/<lib>_<module>.OBJ@<addr>` arguments
+usage: libplace.py OUTDIR LIB ...      prints `--obj OUTDIR/<lib>_<module>.OBJ@<addr> ... --lib LIB ...`
 
 For every LIB, tools/wc/libmatch.py -l says where each of its modules sits in RRR's code. A module
 is taken when it is found exactly once, in the library range (>= 0x1B916: chance hits of tiny
@@ -53,6 +53,8 @@ def main():
                 continue
             taken.add(addrs[0])
             args.append('--obj %s@%x' % (fn, addrs[0]))
+    for lib in libs:
+        args.append('--lib %s' % lib)
     print(' '.join(args))
 
 

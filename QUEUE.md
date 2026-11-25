@@ -233,6 +233,29 @@ Rules for the agent:
     yet either: objects with data (37 library modules, every src/ object) - needs the original
     segment order inside the data object.
 
+  - 2026-11-25 (later still): the two Fastgraph externals are solved and **103 of the 117 modules now
+    link as themselves with the result still byte-identical**: `link.sh OUTDIR $(cat
+    .work/link/libobjs.args4)` -> `LINK: 419179 of 419179 file bytes identical`. Report:
+    - PMhugeincr/mouse_y are **dead EXTDEF entries**: the 4.03 ASM modules list them, their code never
+      references them (each placed module's fixup sites equal RRR's LE sites exactly, nothing hidden
+      in FIXUPP threads - the 0x88 records every FG ASM module carries are boilerplate `00a201`).
+      WLINK still requires a definition for every listed EXTDEF. Both come from FG32.LIB **DATA.ASM**,
+      one 0x44e0 `_DATA` at game **0x60a56** holding Fastgraph's globals plus the PM* helpers as code
+      in that segment (PMhugeincr +0x71a, mouse_y +0x8c). `blob.py --lib LIB` now defines such names
+      at defining module's segment + PUBDEF offset, the segment anchored by `needs()` addresses of
+      sibling names (mouse_drv/vis/x and PMzseg all give 0x60a56).
+    - 14 modules stay in blobs. inirt386: its 4 fixups target XIB/XIE/YIB/YIE, zero-size in itself;
+      their bytes merge from 13 unplaced data-carrying clib modules (clockxib, stinit, argcv386,
+      _8087386, fltused, stk386, delay386, environ, inirmsel, p5prof, ...) at game 0x6c668/0x6c6a4/
+      0x6c6b6 - the data-segment-order problem, and WLINK resolves it silently wrong (no error).
+      The 13 at 0x29c82-0x29fd6 and 0x3d266-0x3d472: on code pages 0x29000 and 0x3d000 the original
+      feed order is not placement order (Smacker-region sites fed before the fpe*/fputs sites below
+      them, mouse.c's sites after the clib modules above it), and FILES order controls placement too
+      (swapping two objects in FILES.LNK moves their code), so no real-object placement reproduces
+      those two pages; they link exactly as blobs. Mutation that fails the check: put
+      clib3r_fpeintel.OBJ@3d3f4 back -> fixup records drop to 81862 of 84546 (pages stay identical,
+      all 9909 fixups semantically right).
+
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.

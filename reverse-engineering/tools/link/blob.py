@@ -2,7 +2,7 @@
 """blob.py: carve an LE program back into OMF objects that WLINK links into the same program, with
 real objects (library modules, src/ objects) in place of the ranges they fill.
 
-usage: blob.py EXE OUTDIR [--obj FILE.OBJ@ADDR ...]
+usage: blob.py EXE OUTDIR [--obj FILE.OBJ@ADDR ...] [--lib LIB ...]
 
 Without --obj it writes OUTDIR/CODEBLOB_0.OBJ (the code object) and OUTDIR/DATABLOB.OBJ (the data
 object): every LE fixup site written back as an OMF 32-bit offset fixup (frame FLAT, the target's
@@ -17,6 +17,12 @@ of the code blob, which is cut into CODEBLOB_<n>.OBJ pieces (public `blob_<addr>
   - a blob fixup into the object's range goes through the object's nearest public plus an addend.
 Only objects whose data segments are all empty are taken for now (data placement needs the original
 segment order inside the data object). OUTDIR/FILES.LNK gets the `file` directives in link order.
+
+`--lib LIB` lets WLINK's undefined externals be resolved: an OMF module lists every external it
+*MIGHT* use, and WLINK demands a definition even for the dead entries (Fastgraph 4.03's ASM modules
+list DATA.ASM globals they never call). Such a name gets a public at the address of its defining
+module's segment, anchored by the game addresses already read back for sibling names in that segment
+from real fixup sites (`--obj` objects' `needs`).
 """
 import os
 import struct
@@ -26,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'wc'))
 import leparse  # noqa: E402
 import libmatch as L  # noqa: E402
-from libobj import info  # noqa: E402
+from libobj import info, info_bytes, raw_modules  # noqa: E402
 
 
 def rec(t, body):
@@ -182,6 +188,7 @@ class RealObj:
     def __init__(self, path, addr):
         self.path, self.addr = path, addr
         segs, pubs, exts = info(path)
+        self.exts = set(exts)
         texts = [s for s in segs if s[1].upper() == 'CODE']
         if len(texts) != 1:
             raise SystemExit('%s: %d code segments, want 1' % (path, len(texts)))
@@ -216,11 +223,13 @@ class RealObj:
 def main():
     exe, out = sys.argv[1], sys.argv[2]
     os.makedirs(out, exist_ok=True)
-    objs = []
+    objs, libs = [], []
     for i, a in enumerate(sys.argv):
         if a == '--obj':
             p, _, at = sys.argv[i + 1].rpartition('@')
             objs.append(RealObj(p, int(at, 16)))
+        elif a == '--lib':
+            libs.append(sys.argv[i + 1])
     objs.sort(key=lambda o: o.addr)
     le = leparse.LE(open(exe, 'rb').read())
     imgs, _ = le.load()
@@ -280,6 +289,39 @@ def main():
                 continue
             if need.setdefault(nm, t) != t:
                 raise SystemExit('%s needed at %#x and %#x' % (nm, need[nm], t))
+
+    # externals the real objects LIST but no fixup references: WLINK still wants them defined.
+    # Take the address from the LIB module that defines the name, anchoring that module's segment
+    # with the game addresses already read back for its sibling names in the same segment.
+    listed = set().union(*(o.exts for o in objs)) if objs else set()
+    dead = sorted(nm for nm in listed if nm not in need and not any(nm in x.names for x in objs))
+    if dead:
+        byname, bymod = {}, {}
+        for lib in libs:
+            for mod, raw in raw_modules(open(lib, 'rb').read()):
+                if not mod:
+                    continue
+                try:
+                    segs, pubs, _ = info_bytes(raw)
+                except Exception:
+                    continue
+                for sn, off, nm in pubs:
+                    byname.setdefault(nm, []).append(((os.path.basename(lib), mod), sn, off))
+                    bymod.setdefault((os.path.basename(lib), mod), []).append((nm, sn, off))
+        for nm in dead:
+            cands = byname.get(nm, [])
+            if len(cands) != 1:
+                raise SystemExit('%s: no fixup references it and %d LIB modules define it' % (nm, len(cands)))
+            key, sn, off = cands[0]
+            bases = {need[n2] - o2 for n2, s2, o2 in bymod[key] if s2 == sn and n2 in need}
+            if not bases:
+                raise SystemExit('%s: %s of %s is not anchored by any sibling the link reads back'
+                                 % (nm, key[1], sn))
+            if len(bases) != 1:
+                raise SystemExit('%s: %s/%s anchored at %d bases: %s'
+                                 % (nm, key[0], key[1], len(bases), sorted(hex(b) for b in bases)))
+            need[nm] = bases.pop() + off
+            print('dead EXTDEF %s: %s/%s %s+%#x -> %#x' % (nm, key[0], key[1], sn, off, need[nm]))
     corder = [s for p, l in sorted(input_order(le, cobj).items()) for s in l]
     dorder = [s for p, l in sorted(input_order(le, dobj).items()) for s in l]
 

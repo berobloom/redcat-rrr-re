@@ -111,6 +111,21 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (SVGAINIT 8,135 B, MOUSEINI 3,576, MAKEPCX 2,680, MAKEGIF 2,491, SETMODE 2,206, VBPASTE 1,880, ...)
   and FG32DPMI.LIB's INITPM.ASM (781) byte for byte - every Fastgraph module the debug-info route
   found, plus the joystick four. FG32WC.LIB (the Watcom auxiliary C library) is not linked.
+- CONFIRMED (2026-11-25): Fastgraph's globals live in one FG32.LIB module, **DATA.ASM**: a single
+  `_DATA` of 0x44e0 B holding every Fastgraph variable **and** the small PM* helpers as code inside
+  that data segment (`PMhugeincr` at +0x71a, `PMzseg` +0x71c, `mouse_y` +0x8c, `pat2/4/16` +0x60a/60e/616).
+  Its game base is **0x60a56**: four fixup-anchored siblings agree (mouse_drv 0x60adc, mouse_vis
+  0x60add, mouse_x 0x60ade, PMzseg 0x61172). VBPASTE.ASM, ERASE.ASM, MAKEPCX/GIF.ASM and MOUSEMOV.ASM
+  list PMhugeincr/mouse_y in their EXTDEF tables but their code never references them (every placed
+  module's fixup sites equal RRR's LE fixup sites exactly, nothing missing) - **dead OMF entries**;
+  WLINK still fails the link unless every listed EXTDEF has a definition.
+- CONFIRMED (2026-11-25): in the original link the per-page fixup feed order is not always placement
+  order. On the page at 0x3d000 the input order (blob.py `input_order`) feeds the 0x3d50b-0x3dff2
+  Smacker-region sites **before** 0x3d04d-0x3d46c (fpe*/fputs/iobaddr), though that code sits below
+  the Smacker code; on the page at 0x29000 the sites in the mouse.c range (0x29a08, davilex-diff)
+  are fed after the clib modules at 0x29c82+. No FILES order of real objects reproduces both (swapping
+  two objects in FILES.LNK moves their code: layout follows FILES order). Those two pages only link
+  byte-exactly as blobs.
 - CONFIRMED (2026-11-25): RRR's Smacker is version **2.1e-2.1j** (mid-1996), most likely ~2.1g.
   Measured as the share of RRR's Smacker code (24-byte runs clear of fixups) found in RAD's
   SMACKW32.DLL per version (github.com/vogonsorg/radgametools, labelled builds; `.work/dl/`, not
