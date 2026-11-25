@@ -627,6 +627,19 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   game's `cmp damage,0 / jle -> fall-through 32 store / cmp fuel,0 / jg -> forward heading store`; the
   equivalent `damage <= 0 || fuel <= 0` costs 30 rows more and putting the heading arm in the `if` 20
   (follower_tick 0x167aa, 41 -> 13 rows, .work/probe/ft2).
+- CONFIRMED (compile, 2026-11-25, .work/probe/sl2): which register holds a `frames[i]` product follows
+  the order in which the address addition's two operands are built. `f = &frames[i]` builds the index
+  chain first: `movsx eax,[..]; imul eax,eax,0xc; mov edx,[frames]; add eax,edx`. `f = frames;
+  f += i` builds the `frames` base first, and the whole steps chain moves to EDX: `mov edx,[animset];
+  mov edx,[edx+0x2b4]; movsx edx,[edx+0xe]; imul edx,edx,0xc` - the first load is deleted as dead but
+  its register choice survives. start_lights' fourth lamp (the game's `imul edx,eax,0xc; mov
+  eax,[frames]; add eax,edx`) is the mirror of that, and no spelling found sits there (5 rows at best).
+- CONFIRMED (capstone scan of 0x10010-0x1B915): the game's own C multiplies a loaded short by 0xc in
+  only two places, 0x11144 (start_lights' fourth lamp) and 0x19276 (hud_update). At 0x19276 the product
+  cannot fold into the index register, because the index register holds hud_update's live register
+  local `v` (`movsx eax, word ptr [edx + eax*4 + 2]`); at 0x11144 the index is a plain
+  `movsx eax, word ptr [eax + 0xe]` - the same shape as the four lamps around it, whose products DO
+  fold into EAX, so the game's C there differs from the text that matches the other four.
 
 ## The race: drawing (draw_view 0x11526, new2io.c)
 

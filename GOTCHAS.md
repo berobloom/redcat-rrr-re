@@ -213,6 +213,10 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   only one source file per run (`E1139`), so a sweep is one Wine start per variant - ~10 s each
   (.work/probe/gc3/one.py, sweep1.py). Static barrier functions between the variants do not stop it.
 
+- **Do not run several WCC386 passes in parallel in a sweep:** with six Wine starts sharing a driver,
+  objects come out missing or truncated and the scorer reports phantom scores (a 2400-variant sweep
+  and a 1000-pragma sweep both read rows `-2`/wrong in parallel and read 3/5/8 when the same variants
+  were compiled one at a time). Rank with one compile at a time, and re-check any hit serially.
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
 - **`objects[n]` store encoding (spawn_dropped_object 0x18759, 8 rows):** the game keeps `n << 4`

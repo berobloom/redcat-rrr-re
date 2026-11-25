@@ -524,7 +524,9 @@ int finish_check(void)
 /* differs: 3 rows, the fourth lamp (lamp[7], 0x11144): the game computes frames + i*12 as
    imul edx; mov eax,[frames]; add eax,edx, ours with the registers swapped. The other four lamps
    match from the same text. Tried: a frame pointer local, direct frames[..] expressions, frames + i,
-   an int index local, byte arithmetic, f += i, (int) cast, *(frames + i), mixes of these for lamp 7. */
+   an int index local, byte arithmetic, f += i, (int) cast, *(frames + i), mixes of these for lamp 7.
+   2026-11-25: ~2400 further spellings (.work/probe/sl2) change nothing; the lead and the list are on
+   the src/nearmiss.txt line and in research/open-questions.md 33. */
 void start_lights(void)
 {
     struct frame *f;

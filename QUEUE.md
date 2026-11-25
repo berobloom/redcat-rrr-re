@@ -152,3 +152,13 @@ Rules for the agent:
     124 (no C changed, `src/matched.baseline` untouched). The mutation that makes it fail: delete the
     `ASM:` line for blit_sprite - that row goes back to "not in src/ yet" and PROGRESS.md counts 1 not
     written. Every function of the range is now MATCH, a near miss with a SKIP/LAYOUT status, or ASM.
+
+  - 2026-11-25: bookkeeping - `src/matched.baseline` 124 -> 125. The sound_init commit raised the count
+    in its message and in `PROGRESS.md` but left the baseline at 124; no code changed here. Check:
+    `src/check.sh 2>&1 | grep -c ' MATCH at'` equals `src/matched.baseline` (125 MATCH, 20 near misses,
+    2 ASM = 147). Mutation that fails it: delete `#pragma aux fn_1d2a6 parm [edx][ebx][ecx][eax]
+    modify exact [eax];` from `src/rrr.h` and the count drops to 124.
+    start_lights 0x1103e stays a 3-row near miss after ~2400 spellings (.work/probe/sl2); the tie now
+    has a measured mechanism and a lead - open question 33, discoveries "Toolchain: switch bodies and
+    `lea` operands". Same sweep also found parallel WCC386 runs score wrong (GOTCHAS "Probes"), so the
+    numbers quoted there are all from one-compile-at-a-time runs.
