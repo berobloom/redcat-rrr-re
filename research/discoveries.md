@@ -181,6 +181,25 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   modules, and the run order is what makes the targets right.
   One trap in reproducing a split data object from blobs: the fixups must still be emitted in the
   page input order across all runs, not run by run (that costs 1300 bytes of fixup records).
+- CONFIRMED (2026-11-26): inside a merged run the segments arrive in **FILES order**, and two SEGDEFs
+  of one name inside one object always merge - so a blob has to be cut into one object per gap
+  between placed data segments. `blob.py` does this: `--obj F.OBJ@code,NAME=data` places a real
+  object's data segment at a measured address, the data blob is cut around every placed segment, and
+  each piece is fed between the objects it sits between. Two more rules came out of the same work:
+  feed the data pieces **as late as their run allows** (the byte-identical link has one data blob fed
+  last; feeding it early costs thousands of fixup-record bytes), and WLINK only lets XIB/XIE/YIB/YIE
+  wrap the XI/YI runs when it heard those names *before* the run was laid out - inirt386 names them,
+  so the XI/YI blocks must follow inirt386 in FILES (fed earlier, the four symbols land at the end of
+  DGROUP and inirt386's fixups follow them, silently, as before). With all of that the link is
+  byte-identical again: `link.sh OUT $(cat .work/link/libobjs.args5)` -> `LINK: 419179 of 419179`,
+  9909/9909 fixup pairs.
+- OPEN (2026-11-26): a placed real data segment is not byte-identical yet. clib dosret (code 0x28a0c,
+  _DATA 20 B at 0x60370) and fg32 SETMODE.ASM (code 0x28ac1, _DATA 134 B at 0x60384) link as
+  themselves and both land at their measured address, but the _DATA run ends 2 bytes long (0x1c66a
+  against 0x1c668) and the data object first differs at 0x10418, just after SETMODE's 134 bytes:
+  WLINK re-aligns the piece that follows a real segment. dosret declares its data segments with the
+  0x99 align nibble 5, SETMODE with 0x98 align 1, the blob pieces with 1 - the blob pieces'
+  SEGDEF alignment is the next thing to try (405807 of 419179 today).
 - Ownership of every byte of 0x1B916-0x4142F: `reverse-engineering/analysis/
   rrr_libmap.tsv` (`tools/libmap.py`, evidence column per range); the totals are
   in `PROGRESS.md`. 8,413 bytes are still unknown.

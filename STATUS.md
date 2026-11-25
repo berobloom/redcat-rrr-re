@@ -27,11 +27,16 @@ Short: where the project stands, and what is next. History is in git; no diary.
    order", `tools/link/dataobj.py`): one merged run per segment name in WLINK's fixed order CONST,
    CONST2, _DATA, XIB, XI, XIE, YIB, YI, YIE, DATA32, _BSS, STACK, runs 4-byte aligned, and inside a
    run the modules in feed order = code-object order (23 content-pinned segments, 0 out of order);
-   XIB/XIE/YIB/YIE are WLINK's own bounds-of-XI/YI symbols, which is what blocked inirt386. Next:
-   let blob.py place real objects' `_DATA`/`CONST` at their measured addresses (43 data-carrying
-   library modules, then every src/ object) - the pieces are listed in the QUEUE Q4 note, pilot
-   clib3r/dosret (code 0x28a0c, _DATA 20 B at 0x60370). Code pages 0x29000/0x3d000
-   stay blobs (the original feed order there is not placement order, QUEUE Q4 note).
+   XIB/XIE/YIB/YIE are WLINK's own bounds-of-XI/YI symbols, which is what blocked inirt386. blob.py
+   now places a real object's data segment too (`--obj F.OBJ@code,NAME=data`: the data blob is cut
+   into one object per gap, FILES order = merge order, pieces fed as late as their run allows, and
+   the XI/YI blocks after inirt386 so WLINK invents XIB/XIE/YIB/YIE around the run) and the link is
+   still `LINK: 419179 of 419179`. First pilot (clib3r/dosret _DATA@60370 + fg32 SETMODE.ASM
+   _DATA@60384) links as itself and lands where measured but costs 2 bytes of run padding
+   (`405807 of 419179`, discoveries "a placed real data segment"): next is the blob pieces' SEGDEF
+   alignment, then the 43 data-carrying library modules and every src/ object (QUEUE Q4 note). Code
+   pages 0x29000/0x3d000 stay blobs (the original feed order there is not placement order, QUEUE Q4
+   note).
    QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861
    data-segment bytes identical in place` = `src/data.baseline`; mutation: one character of order.c's
    rc_error string -> 1834. Next is Q4 (first WLINK). Smacker hunt (2026-11-25): RRR's Smacker is

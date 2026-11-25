@@ -277,13 +277,19 @@ Rules for the agent:
     sites, so the blob supplies them. Mutations that fail the check: drop the XI block -> 419177,
     drop the YI block -> 419173, move the XI block to 0x6c600 -> 419177; and emitting the data-blob
     fixups run by run instead of in page input order -> fixup records 83227 of 84546.
-    Still open for the 43 data-carrying modules and every src/ object: blob.py places only code
-    segments, so a real object's own `_DATA`/`CONST` cannot go in yet. What it needs: data addresses
-    per object (dataobj.py pins 23; the rest follow from the run order and their neighbours), the
-    data blob cut into one object per gap so FILES order fixes the merge order (one merged run per
-    name does not interleave with real objects), blob fixups into a placed range routed through that
-    object's data publics, and the STACK segment shrunk by the placed `_BSS` lengths. Pilot to start
-    with: clib3r/dosret (code 0x28a0c, _DATA 20 B at 0x60370, next to fg32/SETMODE.ASM at 0x60384).
+    Still open for the 43 data-carrying modules and every src/ object: placing a real data segment
+    byte-exactly. What is done (2026-11-26): `blob.py --obj F.OBJ@code,NAME=data` places a real
+    object's data segment, cuts the data blob into one object per gap (FILES order = merge order),
+    routes blob fixups that aim inside a placed segment through that object's data publics, shrinks
+    STACK by the placed `_BSS` lengths, reads a module's data fixups too (`libmatch.fixups_of(
+    only_code=False)`), and feeds every piece as late as its run allows - with the XI/YI blocks after
+    inirt386, which is what lets WLINK create XIB/XIE/YIB/YIE around the run. The 104-object link is
+    still `LINK: 419179 of 419179` with this machinery (`$(cat .work/link/libobjs.args5)`).
+    What is left: the piece after a placed segment starts 2 bytes late (dosret 0x28a0c/_DATA@60370 +
+    SETMODE 0x28ac1/_DATA@60384 give `LINK: 405807 of 419179`, first data difference 0x10418, _DATA
+    run 0x1c66a vs 0x1c668) - WLINK re-aligns after a real segment, so try the blob pieces' SEGDEF
+    alignment (real objects use 0x99 align 5 / 0x98 align 1, blobs use 1). Then repeat over the 43
+    modules in `.work/exp/dmods.skip`, data addresses from `tools/link/dataobj.py`.
 
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per

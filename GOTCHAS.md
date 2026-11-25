@@ -53,6 +53,15 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   the right length. Fix: give the data blob segments those names (`blob.py --dseg XI@6c668
   --dseg YI@6c6a4-12`). WLINK's run order and the 4-byte run alignment are in discoveries "the data
   object's segment order".
+- **FILES order also picks the *symbols* WLINK invents** (2026-11-26): XIB/XIE/YIB/YIE wrap the XI/YI
+  runs only if a module named them before the run was laid out, so a data blob carrying those runs has
+  to be fed after inirt386; fed earlier the four symbols sit at the end of DGROUP and inirt386's
+  fixups aim there with no error. Same class of trap as the entry above.
+- **one merged run per segment name means one object per gap** (2026-11-26): two SEGDEFs of one name
+  in one object always merge, so placing a real object's `_DATA` inside a blob range forces the blob
+  to be split into several objects, and their FILES position fixes both objects' contents. Feed each
+  piece as late as its run allows: the fixup records follow, and a data blob fed early costs thousands
+  of bytes of them.
 - **archive.org ISOs need a UA and ranged GETs:** a plain `curl` through the download redirect dies at
   0 bytes; `-A "Mozilla/5.0"` plus `-r start-end` chunks work (watcom.md, 10.6). Background downloads
   started inside a tool call are killed when it returns - keep them foreground and resumable.

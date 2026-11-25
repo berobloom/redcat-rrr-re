@@ -125,8 +125,9 @@ def code_of(recs, only_code=True):
     return out
 
 
-def fixups_of(recs):
-    """the fixups of a module's code segments: [(seg, offset, loc, selfrel, kind, name, disp)];
+def fixups_of(recs, only_code=True):
+    """the fixups of a module's code segments (only_code=False: of every segment):
+    [(seg, offset, loc, selfrel, kind, name, disp)];
     kind 'seg' (name = segment), 'grp' (name = group) or 'ext' (name = external symbol)"""
     lnames, segs, grps, exts, out = [None], [None], [None], [None], []
     threads = {}
@@ -171,7 +172,7 @@ def fixups_of(recs):
         elif t in (0xA0, 0xA1):
             si, p = index(b, 0)
             off = struct.unpack_from('<I' if t == 0xA1 else '<H', b, p)[0]
-            last = (segs[si][0], off) if (segs[si][1] or '').upper() == 'CODE' else None
+            last = (segs[si][0], off) if not only_code or (segs[si][1] or '').upper() == 'CODE' else None
         elif t in (0x9C, 0x9D):
             p = 0
             while p < len(b):
