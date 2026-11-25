@@ -27,7 +27,7 @@
 15 0x17c74 dropped4_tick  the same one register choice as dropped2_tick
 15 0x1889d ground_check  41 -> 15: no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c
 15 0x13a78 fn_13a78  SKIP: three register mirrors (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
-208 0x12826 bull_tick  written 2026-11-27, src/tick.c; 2144 of 2258 B. Transplanted from muis_tick
+208 0x12826 bull_tick  written 2026-11-27, src/drive.c; 2144 of 2258 B. Transplanted from muis_tick
    (which is itself muis_crash_tick's AI): the two damage/fuel tests that set crash2, the waypoint2
    block on v55ff8-v5600c, boost limit 0x1c0000, play_fx(6, |x-x0|+|y-y0|) as the engine sound, and
    the one thing only the living Brutus has here: `if (!racer_contact(n, 4)) v55ff4 = 0; else if
