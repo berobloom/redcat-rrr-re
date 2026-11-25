@@ -18,7 +18,7 @@ Rules for the agent:
 
 ## Items
 
-- [ ] **Q1 Matching: RRR.EXE's own C**
+- [x] **Q1 Matching: RRR.EXE's own C**
   Report: the human asked for a matching decompilation in wacky-re's structure (2026-11-22).
   Accept: every function in 0x10010-0x1B915 is in `src/` (its module's file or `src/rrr.c`), in address order, and `src/check.sh`
   shows it as MATCH or it has a `src/nearmiss.txt` line with a SKIP/LAYOUT status and a
