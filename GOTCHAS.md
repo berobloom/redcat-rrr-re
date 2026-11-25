@@ -41,6 +41,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   (`wcc.sh` does); an absolute Unix path fails without a clear message. [generic]
 - **The BINNT tools are stubs for the BINW programs:** a stub copied away from `BINW` fails.
   `WDISASM` hangs under Wine: use `fndiff.py` / `objdiff.py`.
+- **Two .OBJ files of the same C never compare equal** (`md5`, `cmp`): the OMF records and the
+  fixup bytes differ even when the code is identical. Compare segments masked with
+  `tools/wc/segcmp.py A.OBJ B.OBJ` (used to prove 10.5 and 10.6 generate the same code).
+- **archive.org ISOs need a UA and ranged GETs:** a plain `curl` through the download redirect dies at
+  0 bytes; `-A "Mozilla/5.0"` plus `-r start-end` chunks work (watcom.md, 10.6). Background downloads
+  started inside a tool call are killed when it returns - keep them foreground and resumable.
 - **`pkill -f NAME` kills the shell that runs it** when NAME is in its own command line (exit 144).
   Use `pkill -x` or a pid. [generic]
 

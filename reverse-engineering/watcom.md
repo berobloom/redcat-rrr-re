@@ -1,8 +1,9 @@
-# Watcom C/C++ 10.5
+# Watcom C/C++ 10.6 (and 10.5)
 
-The game was built with Watcom C/C++ 10.5 (evidence in
-`research/discoveries.md`, "Executables"). For byte-matching work the same
-compiler runs under Wine.
+The game was built with Watcom C/C++ **10.6** - the library fingerprint, evidence in
+`research/discoveries.md`, "Executables". For byte-matching work either one runs under Wine:
+10.5 and 10.6 emit identical segments for every module of `src/` (`tools/wc/segcmp.py`), so
+`src/check.sh` counts the same with both installs.
 
 ## Install
 
@@ -33,6 +34,26 @@ Steps used (2026-11-22):
 Result: `.work/watcom/dos/C/WATCOM` (28 MB): BINW, H, LIB386 (CLIB3R/3S,
 MATH387R/S, ...). Its `LIB386\DOS\CLIB3R.LIB` is byte-identical to the ISO's.
 
+## 10.6 (the game's version) - no installer needed
+
+`archive.org` item `Watcom_C_10.6`, file `Watcom_C++_10.6.iso` (664,373,248 bytes,
+md5 `5a252e04e3a9fd5c802d1d3fd33f458e`). Unlike the 10.5 CD, its loose tree is complete:
+`BINW\WCC386.EXE` is the full 567,698-byte compiler, so there is no DOSSETUP/PCK step.
+
+```sh
+# one request through the archive.org redirect stalls at 0 bytes; a UA and ranged GETs do not
+for i in 0 1 2 3 4 5; do off=$((i*120000000)); end=$((off+119999999));
+  curl -sS -A "Mozilla/5.0" -r $off-$end --max-time 200 -o part$i \
+    "https://ia803105.us.archive.org/6/items/Watcom_C_10.6/Watcom_C%2B%2B_10.6.iso"; done
+cat part? > .work/watcom/Watcom_C++_10.6.iso && rm -f part? && md5sum $_
+7z x -y -o.work/watcom/iso106 .work/watcom/Watcom_C++_10.6.iso "BINW/*" "BINNT/*" "H/*" "LIB386/*"
+mkdir -p .work/watcom/dos/C106 && cp -al .work/watcom/iso106 .work/watcom/dos/C106/WATCOM
+WC=$PWD/.work/watcom/dos/C106/WATCOM src/check.sh      # 10.6; default is the 10.5 install
+```
+
+10.6's `LIB386\DOS\CLIB3R.LIB` (1996-02-29) is the one RRR, REKEN and INTRO link - compare libraries,
+not objects, with `tools/wc/libmatch.py` (118/113/98 modules vs 10.5's 108/104/89).
+
 ## Use
 
 ```sh
@@ -40,8 +61,8 @@ reverse-engineering/tools/watcom.sh wcc386 -3r -s -ox foo.c     # any 10.5 tool,
 reverse-engineering/tools/wc/wcc.sh DIR FOO.C -3r -s -ox        # compile DIR/FOO.C, messages in DIR/WCC.OUT
 ```
 
-Both print `WATCOM C32 Optimizing Compiler Version 10.5`. Give `-fo=` a relative name (Wine wants
-DOS paths). `WDISASM` hangs under Wine; `reverse-engineering/tools/wc/fndiff.py` and `objdiff.py`
+Both print `WATCOM C32 Optimizing Compiler Version 10.5` (or `10.6` with `WC=` pointing at
+`.work/watcom/dos/C106/WATCOM`). Give `-fo=` a relative name (Wine wants DOS paths). `WDISASM` hangs under Wine; `reverse-engineering/tools/wc/fndiff.py` and `objdiff.py`
 disassemble objects with capstone instead.
 
 The compare tools are in `reverse-engineering/tools/wc/` (from wacky-re): `libmatch.py` finds an

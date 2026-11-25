@@ -40,6 +40,13 @@ Rules for the agent:
     player_tick 193 -> 200, because WCC then merges the tail of a normal tick into a crash tick's
     epilogue, which the game never does (the three ticks and the three crash ticks are each laid out
     back to back, with other modules between).
+  - 2026-11-27: the compiler version is settled and removes one candidate explanation for the near
+    misses: RRR/REKEN/INTRO link **10.6**'s clib (118/113/98 byte-identical CLIB3R modules vs 10.5's
+    108/104/89, `prtf` 3038 B and `grownear` 1466 B among the ten only 10.6 has), but `src/check.sh`
+    reads the same 117 MATCH and 28 near misses with 10.5 and with 10.6
+    (`WC=$PWD/.work/watcom/dos/C106/WATCOM src/check.sh`), and `tools/wc/segcmp.py` finds 0 non-fixup
+    byte differences between the two objects of every module - so the register-choice near misses are
+    C questions after all. Install recipe in `reverse-engineering/watcom.md`.
   - 2026-11-23: podium 0x15a9f byte-identical: `src/check.sh 2>&1 | grep -c ' MATCH at'` says 111 and
     `grep podium` shows `podium_ 355 bytes MATCH at 0x015a9f` with no WRONG fixup (the world_names
     0x57c18 and rcascii_printf 0x200b0 targets agree); deleting either switch level or one vararg of

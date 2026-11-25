@@ -28,17 +28,20 @@ stub with DOS/4GW bound in front of an LE program. Addresses are the LE image's 
 
 The game's own C ends where the first library module starts (clib `sprintf` at 0x1B916, then
 `fopen` at 0x1B959): the functions before it carry RRR's own source files' names, the ones after it
-the libraries' (`rrr_funcs.tsv`). STRONGLY SUPPORTED. The `sprintf` module differs from 10.5's
-CLIB3R.LIB in one byte (`89 d3` mov ebx,edx where the LIB has `88 d3` mov bl,dl), so the game's C
-library may be a patched 10.5 or 10.6 (open question 24).
+the libraries' (`rrr_funcs.tsv`). STRONGLY SUPPORTED. Its `sprintf` module is byte-identical to
+**10.6**'s CLIB3R and one byte off 10.5's (`89 d3` mov ebx,edx where 10.5 has `88 d3` mov bl,dl) -
+the fingerprint that names the compiler version (open question 24, discoveries "Executables").
 
 REKEN, RRRMENU and INTRO have the same structure and come later (REKEN's appended debug info names
 its modules, `research/discoveries.md`).
 
 ## 1. The toolchain
 
-- **Compiler: Watcom C/C++ 10.5.** STRONGLY SUPPORTED: 10.5's CLIB3R.LIB matches RRR in 87 modules
-  byte for byte, 10.0a's in 27 (`research/discoveries.md`, "Executables").
+- **Compiler: Watcom C/C++ 10.6** (was recorded as 10.5). CONFIRMED by the library fingerprint: 10.6's
+  CLIB3R.LIB matches RRR in 118 modules byte for byte, 10.5's in 108, 10.0a's in 42 (`libmatch.py`,
+  discoveries "Executables"). It makes no difference to `src/`: 10.5 and 10.6 emit identical segments
+  for every module, so `src/check.sh` counts the same either way. `reverse-engineering/watcom.md`
+  installs both; `WC=.work/watcom/dos/C106/WATCOM src/check.sh` picks 10.6.
 - **Options: `-3r -s -ox`**, plus `-bt=dos` under Wine (GOTCHAS). CONFIRMED on four functions; `-4r`, `-5r`, `-oneatx`, `-os`, `-ot`
   each change at least two of them.
 - **Install and Wine:** `reverse-engineering/watcom.md`.

@@ -90,10 +90,12 @@
     fistp) byte for byte, and cos_sin_init 0x13c34 (inline fsin/fcos) to the same code apart from
     one stack slot (all 120 declaration orders of i, a, y, x, t and 36 statement/declaration
     combinations stop at 2 rows - our `x` lands in [esp+0x10], the game's in [esp+8]; that is Watcom's
-    FP local layout, not the C). Open: 10.5 or 10.6: RRR's `sprintf` (0x1b916) differs from 10.5's CLIB3R
-    module in one byte (`89 d3` for `88 d3`), so a 10.5 patch or 10.6 is likely (compare their CLIB3R with
-    `tools/wc/libmatch.py`); what else REKEN's debug block holds (locals,
-    types, line numbers).
+    FP local layout, not the C). RESOLVED 2026-11-27 (the version half): it is **10.6** - RRR links
+    10.6's CLIB3R modules (118 byte-identical, including `sprintf` 0x1b916, which is the one byte off
+    in 10.5's), 10.5's in only 108; see discoveries "Executables". The version does *not* explain the
+    near misses: 10.5 and 10.6 agree byte for byte on every module of `src/` (tools/wc/segcmp.py), so
+    the one-register-choice questions (25, 26, 28, 29, 31) are still C questions. Still open: what
+    else REKEN's debug block holds (locals, types, line numbers).
 
 25. **Open: the droppedN_tick damage-block register choice.** In
     dropped2_tick 0x178f6 (and dropped0_tick 0x17b61, dropped4_tick 0x17c74)

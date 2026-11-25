@@ -24,15 +24,31 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
 - CONFIRMED: every LE program carries the strings "WATCOM C/C++32 Run-Time
   system ... 1988-1995" (and the C/C++16 one from the stub), so the compiler is
   Watcom C/C++ 10.x. INTRO, RRR and RRRMENU also link Fastgraph V4.03.
-- STRONGLY SUPPORTED: the compiler is Watcom C/C++ 10.5. 10.5's
-  `LIB386\DOS\CLIB3R.LIB` (register convention, 1988-1995 copyright) matches
-  RRR byte for byte, fixups masked, in 87 modules (22,096 bytes: `cstrt386`
-  at the entry 0x26c1c, `fopen` 0x1b959, `fread` 0x1c0d1, `fwrite`, `tzset`,
-  ...); REKEN 84. 10.0a's CLIB3R (copyright 1988-1994) matches only 27 small
-  modules, the stack-convention CLIB3S 15. 10.6 is not ruled out (no 10.6
-  library compared). Tool: `reverse-engineering/tools/wc/libmatch.py`; compiler
-  set-up in `reverse-engineering/watcom.md`.
-- CONFIRMED: RRR was compiled with `wcc386 -3r -s -ox` (10.5). Four functions
+- CONFIRMED: the compiler is Watcom C/C++ **10.6** (2026-11-27, the library
+  fingerprint). `libmatch.py` over the three installed CLIB3R.LIBs (register
+  convention) in one run: RRR matches 10.6's in **118 modules (28,706 bytes)**,
+  10.5's in 108 (22,554 B), 10.0a's in 42 (4,586 B); REKEN 113 vs 104, INTRO 98
+  vs 89. 10.6's set is a strict superset of 10.5's: the ten modules only 10.6
+  has are `chk8087` 0x339a7, `cinit` 0x3699c, `efgfmt` 0x36e00, `ftell` 0x29fd6,
+  `grownear` 0x3313f, `initargv` 0x32dbc, `memalloc` 0x32f8c, `prtf` 0x278fa,
+  `sprintf` 0x1b916 and `vsprintf` 0x29c82 (`sprintf` is the one byte off in
+  10.5, the note that opened this). Not short hits: those ten modules really do
+  differ between the two libraries, and the game carries 10.6's long ones -
+  `prtf` 3038 B and `grownear` 1466 B byte for byte, where 10.5's are 2841 and
+  1448 bytes of different code. So the game's clib is 10.6's, and it is the
+  compiler version that matters for library work, not for `src/`: 10.5 and 10.6
+  emit identical segments for every module of `src/` (see below).
+  Tool: `reverse-engineering/tools/wc/libmatch.py`; both installs in
+  `reverse-engineering/watcom.md`.
+- CONFIRMED: 10.5 and 10.6 generate the same code for the C we have (2026-11-27):
+  `WC=.work/watcom/dos/C106/WATCOM src/check.sh` gives the same 117 MATCH, the
+  same 28 near misses, the same first-diff offsets and the same `nearmiss.sh`
+  row counts, and `tools/wc/segcmp.py` finds 0 non-fixup byte differences
+  between the two objects of every module. So the "one register choice" near
+  misses are not a compiler-version artifact. The .OBJ files themselves do not
+  compare equal (different length, ~4k bytes differ in MAP.OBJ) - compare
+  segments with `segcmp.py`, not `cmp`/`md5`.
+- CONFIRMED: RRR was compiled with `wcc386 -3r -s -ox` (10.5/10.6 - identical output). Four functions
   rewritten in C compile to the game's bytes exactly (fixup bytes excepted):
   `stage_map_index` 0x1ae44 (35 bytes), `stage_is_last` 0x1ae67 (62),
   `rrrio_save` 0x1ab7f (55), `clear_objects` 0x14861 (122). `-4r`/`-5r`,

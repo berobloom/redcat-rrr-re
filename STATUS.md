@@ -10,7 +10,10 @@ Short: where the project stands, and what is next. History is in git; no diary.
 - **Matching decompilation of RRR.EXE:** `src/` (`rrr.h`, `new2io.c`, `order.c`, `rrr.c` for the modules not split yet), checked by `src/check.sh`; the count is in
   `src/matched.baseline`, the numbers in `PROGRESS.md` / `docs/RRRPROGRESS.HTML`. The game's own C is
   0x10010-0x1B915; the libraries after it are not identified beyond Watcom's clib and math library.
-- Toolchain: `.work/watcom/dos/C/WATCOM` (reverse-engineering/watcom.md), Wine.
+- Toolchain: the game's compiler is Watcom C/C++ **10.6** (clib fingerprint, discoveries
+  "Executables"): `.work/watcom/dos/C106/WATCOM` (`WC=... src/check.sh`); `.work/watcom/dos/C/WATCOM`
+  holds 10.5 and generates identical segments for `src/` (`tools/wc/segcmp.py`). Wine
+  (reverse-engineering/watcom.md).
 - The port (`port/`) plays the whole round; it is a new engine, not built from `src/`.
 
 ## Next
@@ -60,7 +63,22 @@ Short: where the project stands, and what is next. History is in git; no diary.
    is unsigned (the game's tests on it are `test` + `jbe`/`ja`), which is worth four rows on its own,
    and `if (f <= 0) {...} else if (f == 3) {...}` lands the game's block order where
    `if (f > 0) { if (f == 3) ... } else {...}` puts the same bodies the other way round (78 -> 70).
-3. Near misses: `src/nearmiss.txt`, first line with an empty status. cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
+3. Near misses: `src/nearmiss.txt`, first line with an empty status. **The compiler-version
+   explanation is dead** (2026-11-27): the game does link 10.6, but 10.5 and 10.6 produce identical
+   segments for all 16 modules, so `src/check.sh` reads 117 MATCH and the same 28 near misses with
+   both - the one-register-choice family (open questions 25, 26, 28, 29, 31) is still a C question.
+   Two places to spend the next cycles, by prize rather than by row count: `dropped2_tick` 0x178f6
+   (mine/sign/bomb/fn_16e46/cactus_tick are already at 0 rows and only wait for its epilogue to land
+   at 0x17b59, so score the epilogue address, not the rows: the `s = bodies[X].stats;` holder spelling
+   reaches the game's load-EAX shape at 9 rows but 580 of 619 bytes, and the missing ~49 bytes of a
+   619-byte function are small enough to read off the disassembly), and the six tick functions
+   (70 + 87 + 185 + 193 + 208 + 282 rows, more than every other near miss combined) are first-pass C
+   with zero probe cycles spent: the levers that worked on 2026-11-27 (unsigned fields, `if (f <= 0)
+   A else if (f == 3) B` block order, one module per function group) have not been swept there. The
+   cheap length check (`tools/wc/nmlen.py`: our bytes vs the game's next name) separates the near misses
+   where we emit *extra* instructions (sound_init +15, player_crash_tick +10, droppedN +8..10 - the
+   game keeps a value live that we rematerialise) from those where we have too *few* (bull_crash_tick
+   -13, muis_crash_tick -10, camera_follow -8 - missing statements). cell_effect 0x18b8d matched on 2026-11-23, and so did racer_contact 0x1404a and
    racer_bounce 0x14534 once the four functions 0x1404a-0x1467b moved to `src/racer.c` (MATCHING.md:
    epilogue sharing is per object, and the game shares one only 6 times in the C range - open
    question 27 lists the six, which name the function groups that must share a module). The first
