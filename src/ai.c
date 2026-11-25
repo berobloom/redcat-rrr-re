@@ -32,12 +32,26 @@
  *    shared `play_fx(20, 0); return` tail at 0x1b2be. Two literal calls with their own
  *    spawn+play_fx+return are what scores best (64): writing the kind into the parameter `n`
  *    and sharing the call, the shape the game's code suggests, gives 68.
- * What is left is allocation, again: the game re-derives the bodies[]/stats[] index inside every
- * check in the case bodies (nmrefs: it reads bodies 3x, stats 1x and the script block 0x751a4 1x
- * more, and calls aim_at_player once more, where we call fire_rocket once more) and holds the
- * script byte offset i*24 in ESI (0x1b11a `imul esi,eax,0x18`) where we hold it in ECX. Guard-clause vs `&&` conditions in the arms (all three), an `int h` for the aim
- * argument, the switch expression in an `int act` local: all exactly 64. `default: break;`
- * instead of `case -1: case 0:` costs 4, and writing case 4's `else` arm first costs 13.
+ * What is left is one allocation choice: the game gives the script index i a home register, ECX
+ * (0x1af8d `mov ecx,eax`, straight after the call), and keeps no register for the byte offset
+ * i*24, re-deriving it wherever an arm needs it (0x1b11a `imul esi,eax,0x18` for the switch, again
+ * `imul eax,ecx,0x18` at 0x1b1fd inside racer 2's rocket arm). That is why its arms each re-read
+ * bodies[]/stats[]/0x751a4 and call aim_at_player once more (nmrefs), why its two wait bodies are
+ * two copies (0x1b2c7, 0x1b407) and why one fire_rocket call serves both rocket arms (0x1b24e).
+ * We give i no home and keep the offset live instead, so our arms share it and our bodies merge.
+ * Guard-clause vs `&&` conditions in the arms (all three), an `int h` for the aim argument, the
+ * switch expression in an `int act` local: all exactly 64. `default: break;` instead of
+ * `case -1: case 0:` costs 4, and writing case 4's `else` arm first costs 13.
+ *
+ * 2026-11-25 (.work/probe/awa3, ~45 more spellings): both effects appear at once if the racer test
+ * is `switch (racer)` instead of the if/else-if chain - s1.c 1184 B / 43 rows, and with an `int h`
+ * for the aim argument (w4.c) 1197 B / 39, the closest this function has been. It is not the
+ * original text: WCC then lowers the racer test as a range tree (`cmp ebx,2`/`jb`, `cmp ebx,2`/`jbe`,
+ * `cmp ebx,4`/`je` plus a second epilogue copy at 0x1b14d) where the game has the two `cmp`/`jne` of
+ * an if/else-if chain, and no spelling of that chain (nested, else-if, separate ifs - 385 rows) ever
+ * gives i a home. In that switch context, `i = j = ai_script_find(...)` and a second index local
+ * (m1/m2 - WCC copy-propagates them into one), `h2`/`h4` per arm, guard clauses, `default: break;`,
+ * `int act`, `int s`: 39-73. Kept here: the if/else-if chain, the shape the game's dispatch has.
  */
 
 void ai_waypoint_action(int racer, int n)

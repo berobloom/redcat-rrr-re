@@ -154,3 +154,16 @@
    more and calls aim_at_player once more, where we call fire_rocket once more) and builds its index
    with `shl 2/add/shl 3` chains where we use `shl 4` chains; 1151 of the game's 1254 B. Guard vs `&&`
    arms, an `int h` local and an `int act` switch local all score exactly 64 - see its differs note.
+   2026-11-25 (.work/probe/awa3, ~45 more spellings): the thing the game has and the if/else-if chain
+   never gets is a home register for the script index, ECX (0x1af8d `mov ecx,eax` straight after the
+   call); the game keeps no register for the byte offset i*24 and re-derives it per arm (0x1b11a and
+   0x1b1fd `imul ...,eax,0x18`), which is why its two wait bodies are two copies, why its rocket arms
+   keep their own bodies/stats chains and aim_at_player call, and why one fire_rocket call (0x1b24e)
+   serves both. Writing the racer test as `switch (racer)` gives all of that at once: s1.c 1184 B/43,
+   plus an `int h` for the aim argument (w4.c) 1197 B/39, the closest so far - but it is not the
+   source, WCC lowers that switch as a range tree (cmp ebx,2/jb, cmp ebx,2/jbe, cmp ebx,4/je + a
+   second epilogue copy) where the game has the two cmp/jne of an if/else-if chain, and no spelling of
+   the chain (nested, else-if, separate ifs at 385) ever gives i a home. Also 39-73 in that context:
+   `i = j = ai_script_find(...)` and a second index local (copy-propagated into one), `h2`/`h4` per
+   arm, guard clauses, `default: break;`, `int act`, `int s`, unsigned index. Open: how the game homes
+   i in ECX while still dispatching with two cmp/jne.

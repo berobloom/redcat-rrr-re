@@ -165,6 +165,11 @@ Short: where the project stands, and what is next. History is in git; no diary.
    (open question 27). Tool fix: nmrefs filtered unnamed 0x40000-0x60000 addresses off the game's side
    only, so every MATCHed function that prints a string read `DIFFER`; both sides are filtered now and
    `nmrefs main` says refs 75/75 same with no one-sided jump-target block (GOTCHAS, Matching).
+   2026-11-25: `ai_waypoint_action` 0x1af83 stays at 64 rows, 1151 of 1254 B, with its if/else-if
+   dispatch. A probe whose racer test is `switch (racer)` gets the game's two missing behaviours (the
+   script index homed in a register so the arms re-derive the offset, and two wait bodies) at 39 rows,
+   but WCC's switch tree is not the game's two cmp/jne - no spelling of the chain gives the index a
+   home. See the differs note in `src/ai.c` and nearmiss.txt.
 4. Later: the rest of the module boundaries in 0x10010-0x1B915 (one source file per original
    module; `src/racer.c` 0x1404a-0x1467b found from epilogue sharing and `src/init.c`
    0x148db-0x1585d from its string block head ('player_direction : %d wp: %d' 0x50e04 runs into
