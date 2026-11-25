@@ -346,6 +346,18 @@ Rules for the agent:
     theirs, so that exception is real.
     Next: the other src/ modules as they reach a whole-module match, then the 0x3d000 page.
 
+  - 2026-11-26 (later): **149 real objects**, `$(cat .work/link/libobjs.args8)` -> `LINK: 419179 of
+    419179`. hiscore.c was two modules: new `src/guard.c` (set_keys, joystick_to_keys,
+    check_object_nr, check_waypoint_nr, 0x1b469-0x1b6bf, CONST 60 B at 0x51a5c) and hiscore.c
+    (high_score, high_load, and `high_names`, now defined there: CONST 91 B at 0x51a98, _DATA 12 B at
+    0x5fdf4). Both are now whole-module and data-identical (src/data.baseline 1946 -> 2109). The
+    evidence: Watcom emits an initialiser's literals before any function's, so in one object
+    high_names' strings came first, and the game has the guards' strings first; the guards' 60
+    bytes end on a 4-byte boundary, exactly where "RedCat" begins. Mutation that fails: one object
+    again (hiscore.c as before) -> its CONST 72 of 151 bytes in place, data 1958. The four joystick
+    calls are Fastgraph's (fg_initjoy/fg_button/fg_getxjoy/fg_getyjoy, CONFIRMED by the linked
+    FG32 modules; as fn_2779e etc. WLINK left them undefined).
+
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per
   `tools/wc/nmclass.py`.

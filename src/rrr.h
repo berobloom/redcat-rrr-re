@@ -446,7 +446,7 @@ extern int            waypoint_count4;      /* 0x71dd4 */
 extern int            wait2, wait4;         /* 0x55fec, 0x56010: racer 2/4 waits (script action 4) */
 void ai_waypoint_action(int racer, int n);
 extern int            joymap[4];            /* 0x753a0 */
-int __cdecl fn_2779e(int n);
+int __cdecl fg_initjoy(int n);
 void start_crash(int racer);
 int player_crash_tick(short n);
 int bull_crash_tick(short n);
@@ -459,9 +459,9 @@ void racer_bounce(int a, int b);
 int racer_contact(int a, int b);
 void set_keys(void);
 extern int            keystate[];           /* 0x804c0: 1 while a key (scancode) is down */
-int __cdecl fn_27837(int n);
-int __cdecl fn_2784e(int n);
-int __cdecl fn_278a4(int n);
+int __cdecl fg_button(int n);
+int __cdecl fg_getxjoy(int n);
+int __cdecl fg_getyjoy(int n);
 void joystick_to_keys(void);
 /* 16.16 fixed point, inline as the game's code has them (hud_update) */
 long fixmul(long a, long b);

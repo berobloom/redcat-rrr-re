@@ -38,8 +38,8 @@ Short: where the project stands, and what is next. History is in git; no diary.
    placed segment (empty dword-aligned segments pad the run), and pieces whose feed windows overlap
    share one object (discoveries "real data segments link byte-identically"). Left out: nomem (not in
    the game, LIKELY), 386inite, and _matherr/fpeinth on code page 0x3d000. **Four src/ modules
-   (ORDER, SHADE, RACEANIM, HUD) link as themselves too: 147 real objects**, `$(cat
-   .work/link/libobjs.args7)`, `LINK: 419179 of 419179`. More src/ modules can join as their
+   (ORDER, SHADE, RACEANIM, HUD) link as themselves too, and GUARD and HISCORE after the hiscore.c
+   split: 149 real objects**, `$(cat .work/link/libobjs.args8)`, `LINK: 419179 of 419179`. More src/ modules can join as their
    whole module matches. Code pages 0x29000/0x3d000 stay blobs (the
    original feed order there is not placement order, QUEUE Q4 note).
    QUEUE Q3 (data comparison) is READY FOR REVIEW: `src/check.sh`'s last line `DATA: 1946 of 5861

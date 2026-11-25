@@ -500,15 +500,15 @@
 0x56078 crash0               # CONFIRMED: set when the player's fuel/damage runs out (discoveries.md); switch_anims acts on it
 0x56080 crash2               # CONFIRMED: the same for Brutus (racer 2)
 0x5607c crash4               # CONFIRMED: the same for Snitch (racer 4)
-0x5fdf0 joy_on               # CONFIRMED (code): set_keys sets it when rrrio.joystick and fn_2779e(1) == 0
+0x5fdf0 joy_on               # CONFIRMED (code): set_keys sets it when rrrio.joystick and fg_initjoy(1) == 0
 0x7144c keymap               # CONFIRMED: key bindings in play, [0] rocket, [1] boost (discoveries.md); set_keys fills it
 0x753a0 joymap               # LIKELY: joystick calibration copied by set_keys from rrrio.joy
 0x1b469 set_keys             # CONFIRMED (code): copies RRRIO's keys (or fixed joystick codes) into keymap
-0x2779e fn_2779e             # SPECULATIVE: joystick probe (cdecl, argument 1), 0 = present
+0x2779e fg_initjoy           # CONFIRMED: Fastgraph 4.03 FG32.LIB INITJOY.ASM, links as itself here (link Q4)
 0x804c0 keystate             # CONFIRMED: key state per scancode (key_pressed, joystick_to_keys)
-0x27837 fn_27837             # LIKELY: joystick buttons (cdecl, 1), tested against rrrio +0x220/+0x224
-0x2784e fn_2784e             # LIKELY: joystick x axis
-0x278a4 fn_278a4             # LIKELY: joystick y axis
+0x27837 fg_button            # CONFIRMED: Fastgraph 4.03 FG32.LIB BUTTON.ASM, links as itself here (link Q4)
+0x2784e fg_getxjoy           # CONFIRMED: Fastgraph 4.03 FG32.LIB GETXJOY.ASM, links as itself here (link Q4)
+0x278a4 fg_getyjoy           # CONFIRMED: Fastgraph 4.03 FG32.LIB GETYJOY.ASM, links as itself here (link Q4)
 0x57b18 racer_top_speeds    # CONFIRMED (code): int[] read as [map_no] into stats[].top_speed (+0x2c,
                            #   0x6fbec BULL, 0x6fc4c MUIS) by init_objects 0x148db; nothing in
                            #   RRR.EXE writes it, so it is filled by another program or loader.

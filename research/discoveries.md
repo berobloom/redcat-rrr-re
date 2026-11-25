@@ -227,6 +227,11 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
     The page fixup lists split into blocks in strictly ascending address order there (page
     0x11000). Page 0x3d000 has no ascending split: the Smacker code's fixups (0x3d50b-0x3dff2) were
     fed before those of the clib/math modules below it (fpeinth 0x3cf88, _matherr 0x3d1e8).
+  - STRONGLY SUPPORTED: 0x1b469-0x1b915 is two modules, not one. check_object_nr's and
+    check_waypoint_nr's strings (0x51a5c, 60 B) come before high_names' ("RedCat" at 0x51a98, a
+    4-byte boundary), and Watcom always emits an initialiser's literals ahead of the functions'.
+    With the split (src/guard.c, src/hiscore.c) both objects' code and data are identical in place
+    and link as themselves. set_keys/joystick_to_keys may close the module before instead.
   - LIKELY: clib nomem is not in RRR. Its 18-byte _TEXT is identical to noefgfmt's (both "found"
     at 0x33abf), and noefgfmt's 36-byte CONST is what sits at 0x54e0c, where nomem's CONST would
     have to be.
