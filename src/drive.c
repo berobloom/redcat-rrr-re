@@ -20,10 +20,22 @@
    copied with it: the second bounce test compares rand() % 100 with 20 at 0x12696 and then jumps
    into racer 4's comparison with 10, so the 20 is dead.
 
-   differs: 193 rows, and 71 of them are register homes (nmclass.py): the game spills m, vv and t to
-   [esp+8]/[esp+0xc]/[esp+0x10] where we keep them in registers, and re-derives the bodies[] index per
+   differs: 193 -> 189 rows, and 71 of them are register homes (nmclass.py): the game's frame is 0x10
+   with go at [esp], vv [esp+4], m [esp+8], h [esp+0xc] and want in EBP, ours is 0x14 with go [esp+4],
+   want [esp+8], vv [esp+0xc], m [esp+0x10] and h in EDI, and the game re-derives the bodies[] index per
    block. No C spelling moves the homes (the drive.c/tick.c module split is already in). Rest: the
-   f24/want arm placement and the bounce-test chain. src/nearmiss.txt. */
+   f24/want arm placement (test + `jbe else`, `cmp 3` + `je body` at 0x120cd, the body out of line - the
+   same one decision that costs 22 rows in muis_crash_tick) and the bounce-test chain.
+   2026-11-28: the waypoint-distance abs() pair wants its operands mirrored like bull_crash_tick's -
+   `abs((bodies[0].x >> 16) - (waypoint0[waypoint_index0].x >> 16))` (0x1202f loads bodies[0].x first,
+   0x12035 waypoint0[] second, `sub edx,eax`): -4 rows, the same word mirrored costs +7 in
+   muis_crash_tick. Nothing else moved: chained zero stores for the six key flags, `bodies[n].f1c = 0`
+   in the game's place (0x11f02, after v55fe8), clearing all seven in one chain, both spellings of the
+   `want` chain (`want > 0 && want != 3` then `else if (want == 3)`, and `want == 3` first: 200 and 194),
+   and four spellings of the friction test - the game's `imul eax,edi,0x3e8` + `shl eax,0x10` against our
+   WCC shift/sub chain for the folded 65536000 (`shl 5; sub; shl 2; add; shl 0x13`, the only nmrefs
+   constant difference in the function); `q = g * 1000` as its own local costs 30+ because it adds a
+   stack slot to an already full frame. */
 int player_tick(short n)
 {
     int go, m, d, h, vv, t, g;
@@ -64,8 +76,8 @@ int player_tick(short n)
     }
     if (key_forward || key_back || key_left || key_right)
         v55fe0 = 1;
-    if (abs((waypoint0[waypoint_index0].x >> 16) - (bodies[0].x >> 16))
-            + abs((waypoint0[waypoint_index0].y >> 16) - (bodies[0].y >> 16)) < 0x78) {
+    if (abs((bodies[0].x >> 16) - (waypoint0[waypoint_index0].x >> 16))
+            + abs((bodies[0].y >> 16) - (waypoint0[waypoint_index0].y >> 16)) < 0x78) {
         if (!finished0 && waypoint_count0 - 1 > waypoint_index0)
             waypoint_index0++;
     }

@@ -52,6 +52,11 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Matching
 
+- **A wrong *field* of a right global is invisible to every check:** the fixup masks the whole
+  `[reg + disp]`, so `bodies[r].f1c = 0` and `bodies[r].speed = 0` score alike (check.sh, fndiff and
+  nmrefs all print it as `@`). Only the game's raw displacement says, and a second site pins the
+  base - 0x1b2f0's `mov [r*40+0x6cc08],0` is bodies+0x18 (speed) because the boost body's narrowed
+  `add word [r*40+0x6cc0a],8` in the same function is bodies+0x1a. [generic]
 - **`_TEXT DISAGREES` in check.sh is expected** while functions between the matched ones are
   missing; it means something only once `src/rrr.c` is complete in address order.
 - **RRR was several modules.** `src/rrr.c` is one file; where a function's code depends on what

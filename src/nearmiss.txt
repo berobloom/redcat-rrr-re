@@ -56,8 +56,12 @@
    not a missing statement: the shift grows 13 -> 29 -> 114 bytes across the function, i.e. the game
    reloads `n` and recomputes the bodies[] index where we keep it in a register, and that costs a
    few bytes per block.
-193 0x11eb5 player_tick  written 2026-11-27, src/drive.c; 2441 of 2417 B. The last C function of
-   RRR's own range: player_crash_tick 0x19497's keyboard half (six key_pressed(keymap[k]) calls, the
+189 0x11eb5 player_tick  written 2026-11-27, src/drive.c; 2441 of 2417 B. 2026-11-28: the
+   waypoint-distance abs() pair wants its operands mirrored (`abs((bodies[0].x >> 16) -
+   (waypoint0[waypoint_index0].x >> 16))`, -4); chained zero stores for the six key flags, the
+   `want` chain and four spellings of the friction test leave 189 - 71 homes, and the one block-
+   placement decision (the game's `cmp 3` + `je body` with the want==3 body at 0x120cd, out of line).
+   The last C function of RRR's own range: player_crash_tick 0x19497's keyboard half (six key_pressed(keymap[k]) calls, the
    rocket/boost edge flags v55fc8/v55fcc, steer_tbl[vv][h] applied twice through turn_tbl) plus what
    only the living player does - crash0 when damage or fuel runs out, a puff every fourth driven
    frame counted in keymap[2] 0x71454 (the keymap slot no keyboard action reads), spawn_trail(1, 0)

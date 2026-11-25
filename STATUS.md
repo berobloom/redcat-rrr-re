@@ -127,6 +127,24 @@ Short: where the project stands, and what is next. History is in git; no diary.
    lines wait on dropped2_tick. Another is likely from the module boundaries of item 4: a function
    whose epilogue the game keeps for itself must not share a file with the one ours merged into
    (`src/nearmiss.txt`, MATCHING.md).
+   2026-11-28, PROGRESS.md reads 124 identical (84.4%), 21 near misses, 0 C functions unwritten.
+   `player_crash_tick` 0x19497 and `dropped2_tick` 0x178f6 matched, and the 30 unaccounted bytes at
+   0x3850c-0x38529 turned out to be two C functions of ours, `fixdiv` (0x3850c, 15 B) and `fixmul`
+   (0x3851b, 14 B), which every `fixdiv(a,b)` / `fixmul(a,b)` inlines - `src/check.sh` matches both,
+   and `reverse-engineering/tools/wc/region.py` walks what the linker keeps of an object.
+   Content, not spelling, is what moves the big ones now: `ai_waypoint_action` 0x1af83 145 -> 64 rows
+   because the game has a sixth waypoint action, `f4 == 4` "wait" (both jump tables 0x1af53/0x1af6b
+   hold six entries, action 4 is a fallthrough), action 3 is written in both switches but WCC emits
+   its body once at 0x1b25e shared (and jumps into it at 0x1b25e with `mov [edx*24+0x6d450],eax` =
+   bodies[world*8+2].f24 = want, where ours wrote bodies[14]), racer 4's rocket arm reads **script2**'s
+   argument not script4's (0x1b3bf `mov edx,[eax+0x57c98]`, a game bug, copied), and the fallback's
+   drop kind rides in the argument (`spawn_dropped_object(n, 4)`, -11 rows). `bodies[r].speed` is at
+   +0x18, not the +0x1c a research note said: a fixup on a named array hides the displacement from
+   every check (GOTCHAS.md, Matching). `player_tick` 0x11eb5 193 -> 189 rows and that is the wall -
+   its waypoint-distance `abs()` pair wants its operands mirrored (-4) but 71 rows are register homes
+   (game frame 0x10: go/vv/m/h in slots, want in EBP; ours 0x14 with h in EDI), the `want == 3` body
+   is out of line at 0x120cd, and chained zero stores, both `want`-chain spellings and four spellings
+   of the friction test all score 193 or worse.
 4. Later: the rest of the module boundaries in 0x10010-0x1B915 (one source file per original
    module; `src/racer.c` 0x1404a-0x1467b found from epilogue sharing and `src/init.c`
    0x148db-0x1585d from its string block head ('player_direction : %d wp: %d' 0x50e04 runs into
