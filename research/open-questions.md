@@ -108,6 +108,9 @@
     -ox -oa, -ox -oi and -oe alone change nothing (session 13; the full list
     is in the note in src/shadeobj2.c). The function is byte-identical to the
     game up to 0x179bd, so the choice is made from the damage statement itself.
+    2026-11-27, the two new source-shape levers from the crash ticks (MATCHING.md: unsigned fields,
+    and `if (f <= 0) A else if (f == 3) B` block order) do not apply here: dropped2_tick has no such
+    multi-test chain on one field, and `f24 <= 0` at its head already matches byte for byte.
 
 26. **Open: Watcom keeps the sound_init 0x1043a argument registers, we
     don't.** The game sets fn_1d2a6's four register arguments (EAX = 11025,

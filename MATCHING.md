@@ -182,6 +182,12 @@ Levers seen so far (add to this list when one produces a MATCH):
   0x7E/0x7F): `muis_crash_tick` 0x1a42a's f24 and `want` tests go from four rows of wrong jump
   opcodes to identical when the two locals are declared `unsigned`. So a `jbe`/`ja` after a `test`
   in the game is evidence that the original variable was unsigned, and `stats[].f24` is LIKELY too.
+- **Which arm you write first picks which body Watcom puts after the test chain.** For three tests
+  of one field (`f == 0`, `f == 3`, anything else) `muis_crash_tick` 0x1a42a emits the `f == 0`
+  body inline right after `test edx,edx; jbe +7; cmp edx,3; je B; jmp END`. Written as
+  `if (f > 0) { if (f == 3) B } else A` WCC386 puts `B` inline and `A` at the end; written
+  `if (f <= 0) A; else if (f == 3) B` it puts `A` inline and `B` at the end, which is the game's
+  order: 78 rows -> 70. `f <= 0` and `!(f > 0)` score the same.
 - **A jump table's pad belongs to the object, not the function.** Watcom 4-aligns a switch's jump
   table inside its own object, so the pad before it (a 2-byte `mov eax,eax` or a 3-byte
   `lea eax,[eax]`) depends on the size mod 4 of everything the object holds before it. That is the
