@@ -71,6 +71,14 @@ Rules for the agent:
     rows (GOTCHAS.md, Matching). `player_tick` 0x11eb5 193 -> 189 on the `abs()` operand mirror alone;
     its rest is 71 register homes, and chained zero stores, both `want`-chain spellings and four
     spellings of its friction test score 193 or worse. `dropped2_tick` 0x178f6 stays at 2 rows.
+  - 2026-11-25: no count moved (126 of 147). `ai_waypoint_action` 0x1af83 stays at 64 rows, 1151 of
+    1254 B, because the C kept here has the game's two-cmp/jne dispatch. A probe that writes the racer
+    test as `switch (racer)` reproduces the two behaviours still missing (the script index homed in a
+    register, 0x1af8d `mov ecx,eax` in the game and `mov esi,eax` in the probe, so each arm re-derives the `i*24` offset; the two wait bodies are
+    two copies) at 1197 B / 39 rows (.work/probe/awa3 w4.c) - mutation that rules it out: WCC lowers
+    that switch as a cmp/jb + cmp/jbe + cmp/je tree with a second epilogue copy, and no spelling of the
+    if/else-if chain (nested, else-if, separate ifs at 385) ever homes the index. Open: how the game
+    gets both.
   - 2026-11-27: still READY FOR REVIEW, counts moved: `src/check.sh 2>&1 | grep -c ' MATCH at'` =
     124 of 147 (84.4%), 21 near misses, 2 unwritten. The lever is a shared index holder:
     `dropped2_tick` 0x178f6's FIRST damage block reads its stats index through the `int h` its aim
