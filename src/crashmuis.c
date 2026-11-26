@@ -17,7 +17,8 @@
    same behaviour: x >> 16 is clamped to 0x18e0 and both results are stored to short fields. One
    cast alone costs (61-68 rows); abs() written body - waypoint, as the game subtracts at
    0x1a4e8/0x1a50b, costs 5, and `h - heading` 35 (16 forms x 61 declaration orders,
-   .work/probe/mc9).
+   .work/probe/mc9). Re-tried under the new tail (all 288 declaration orders, .work/probe/mca): the
+   want chain as a switch 52, with `h - heading` 43; `h - heading` alone 67.
    Earlier: 46 -> 40. The f24 chain is a switch: the game's `test; jbe A; cmp 3; je B;
    jmp join` with both arms out of line (0x1a63b-0x1a644) is how WCC lowers `switch (f) { case 0:
    ... case 3: ... }` on an unsigned f, and that block now matches. The want chain is the same
