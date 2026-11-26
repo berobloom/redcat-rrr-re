@@ -83,6 +83,35 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   started inside a tool call are killed when it returns - keep them foreground and resumable.
 - **`pkill -f NAME` kills the shell that runs it** when NAME is in its own command line (exit 144).
   Use `pkill -x` or a pid. [generic]
+- **The same goes for `pgrep -f` waits:** background sweeps that waited for "the previous sweep" by
+  pattern matched their own command line and waited on themselves - three queued sweeps (player_tick,
+  bull_tick, player_crash_tick) sat over half an hour without one compile. Chain them in one job or
+  wait on a pid. [generic] (chat 2026-11-26)
+- **A variant generator that finds no anchor text must fail loudly:** a want-switch run expected an
+  old declaration order, wrote no variants and "ran" without error. Assert that each substitution
+  happened. [generic] (chat 2026-11-26)
+- **Ghidra refuses a project path with a dot-directory (`.work`):** decomp.sh makes its project with
+  `mktemp` under `$TMPDIR`, so a `TMPDIR` inside a dot-directory breaks it again. (chat 2026-10-29)
+- **Watcom's assembler does not run here:** WASM from the main install fails under Wine and the 10.5
+  CD's copy hung, so a MASM target or an `.asm` source (blit_sprite 0x11bb4, blit_sprite_trans
+  0x17d94) cannot be assembled locally; scratch.py checks a GNU twin instead. (chat 2026-11-26)
+- **The port's build can go stale against a header:** reken_sim printed empty sums after reken.h
+  changed until a clean rebuild. Rebuild clean before trusting a check that suddenly prints
+  nothing. (chat 2026-10-29)
+- **A Unicorn check must restart its emulator after the original crashes on a seed:** check_reken.py
+  went on in a half-finished machine and reported 4 bogus differences in 25,000 (open question 22's
+  "fault in the check"). Same for any new emu.py check. [generic] (chat 2026-10-29)
+- **The race ignores input until the start lights end (~5 s; main's first pass runs start_lights
+  0x1103e):** a key held during the lights proves nothing. RETRACTED 2026-10-29: "keys do not reach
+  the browser build" - they did; the arrow was held during the lights. LIKELY, not retested:
+  xdotool under a WM-less Xvfb does not deliver keys to an SDL window.
+- **GitHub's image proxy caches README media:** a replaced GIF kept showing the old clip; a new file
+  name (new URL) fixed it, and the old GIF stays in the history. [generic] LIKELY (chat 2026-10-30)
+- **Setup outside the repo:** Emscripten is a symlink `.work/emsdk -> ../../a2/.work/emsdk`; Ghidra is
+  expected at `~/Downloads/ghidra_12.1.4_PUBLIC` (`GHIDRA_INSTALL_DIR` overrides). If Ghidra is
+  missing, ask, and meanwhile use disasm.py/xref.py.
+- **`reverse-engineering/tools/vault.py` writes the Obsidian vault** (`~/Documents/Knowledge/redcat-rrr-re`)
+  from these files: rerun it after changing them, never edit its notes (they are overwritten).
 
 ### Matching
 
@@ -110,6 +139,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Levers that produced MATCHes on RRR (try these before SKIP)
 
+- **`imul ebx; shrd eax,edx,16` is Davilex's inline fixed-point pragma, not C arithmetic:**
+  `fixmul = "imul ebx" "shrd eax,edx,16" parm [eax] [ebx] value [eax] modify [edx]` and `fixdiv`
+  (`cdq; shld edx,eax,16; shl eax,16; idiv ebx`) in src/rrr.h. The argument order picks which value
+  goes into EAX and which into EBX (`fixmul(0x4000, abs(vz))` vs `fixmul(vx, 0x2666)`). The pattern
+  `f7 eb 0f ac d0 10` occurs 79 times in RRR's code (first at 0x123e6); hud_update 0x1918d and
+  fn_1733e 0x1733e MATCH with it. CONFIRMED (chat 2026-11-22).
 - **Same index variable, not the same value:** two sites that write `stats[bodies[2].stats]` and
   `stats[bodies[4].stats]` get two temporaries with different register pairs, so the `*3 << 4` chains
   never merge and the function grows. Reading one of them through a local the function uses again
@@ -255,13 +290,18 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   objects come out missing or truncated and the scorer reports phantom scores (a 2400-variant sweep
   and a 1000-pragma sweep both read rows `-2`/wrong in parallel and read 3/5/8 when the same variants
   were compiled one at a time). Rank with one compile at a time, and re-check any hit serially.
+  Private directories per compile do not make it safe: the muis_crash_tick sweeps ran eight in
+  parallel that way and only the two winners were re-checked, so their "nothing below 6" floors are
+  LIKELY until rerun serially (chat 2026-11-26).
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
-- **`objects[n]` store encoding (spawn_dropped_object 0x18759, 8 rows):** the game keeps `n << 4`
-  in EAX (the alloc_object result, shifted in place) and reloads the objects pointer into
-  ECX/EDX per store, so the pointer is the base and the index the displacement's index; ours
-  mirrors that. `switch` is the best shape found (8 rows); if/else-if, `!kind`, `(*(objects + n))`
-  give 11 rows, a `struct object *` local 19.
+- **`objects[n]` store encoding (spawn_dropped_object 0x18759, 8 rows):** the game is an if/else-if
+  chain (kind == 2, then kind == 0) keeping `n << 4` in EAX and the objects pointer in EDX per arm.
+  Our `switch` has the game's registers but two other things: Watcom lays out its own compare tree
+  (`test edx,edx; jbe` first), and the default arm recomputes `n << 4` (306 bytes, the game 301).
+  Every if shape gets the game's tree but mirrors the registers (11 rows, 299 bytes); `!kind`,
+  `(*(objects + n))` also 11, a `struct object *` local 19. (Corrected 2026-11-26 from chat; the old
+  text described an if/else build.)
 - **cos_sin_init 0x13c34's last 2 rows:** only `x`'s stack slot (ours [esp+0x10], the game [esp+8]);
   156 spellings (every declaration order of i, a, y, x, t; six statement orders with six declaration
   lists) stop at 2. It is Watcom's FP local layout - open question 24, not the C.
@@ -276,7 +316,8 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   better than `damage <= 0 || fuel <= 0`), and follower_tick alone in its own file so its epilogue
   stops merging into fn_16e46's (4 rows).
 - **hit_test 0x1430e's last 5 rows (71 -> 5):** only two swapped stack slots - the game has h at
-  [esp+0x14] and x1 at [esp+0x10], ours the other way; every other byte of the 550 matches. What
+  [esp+0x10] and x1 at [esp+0x14] (0x14371 `mov [esp+0x10],eax`, 0x1440b `mov [esp+0x14],ebx`), ours
+  the other way; every other byte of the 550 matches. What
   got it to 5 only works inside racer.o (a standalone probe of hit_test alone never beats ~24):
   `sin_tbl[h]` as the second product and `(h + 0x28) & 0x1f` for the third/fourth, test 5's
   y-check as `bodies[b].y > yl` (the game loads `bodies[b].y` into a register once and compares
@@ -284,13 +325,56 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   ~5000 in-module declaration orders (3600 with the winning shape, 1400 with `h` moved into the
   tail, .work/probe/ht) each move another slot or flip x1 to a register - the slot *numbers* are
   not steerable from C.
-- **sound_init 0x1043a's last 10 rows:** the game reuses fn_1d2a6's four register arguments as
-  easy_init's; WCC386 rematerialises them in every spelling and in a 3-statement probe (aux pragmas,
-  int returns, locals - nothing helps). Open question 26, not the C.
-- **ground_check 0x1889d's last 15 rows:** which temporary survives the inner branch. The game keeps
+- **ground_check 0x1889d's last 13 rows (41 -> 15 -> 13):** setting `cy` again to the current row
+  before the second lookup fixed the d == -1 arm (2026-11-26); what is left is the second lookup's
+  kept `cy * map_w` product (ours 1 byte longer, everything after it shifted). The analysis of the
+  15-row state: which temporary survives the inner branch. The game keeps
   `(bodies[n].y >> 16) / 40` in EAX, multiplies into a fresh register (`mov edx,[map_w]; imul
   edx,eax; add edx,ebp; imul edi,edx,6`) and recomputes `imul eax,[map_w]` at 0x18aab; 10.5 keeps the
   product instead and so is 9 bytes shorter. The same expression with one register less busy does
   come out the game's way (.work/probe/gc3/Q.C q0/q1), so it is register pressure, not the text:
   index operand orders, 720 declaration orders, ox/oy local or inline, the product as its own local,
-  an int map_w and the if/ternary/key spellings all stay at 15.
+  an int map_w and the if/ternary/key spellings all stayed at 15.
+
+## Working with agents
+
+Lessons from the chat history (2026-10-29..11-26) about how the user wants the work done, and what
+went wrong between sessions.
+
+- **Never delete in a command: write each attempt to a new directory.** The user stopped `rm -r` and
+  an `rm -f $L/*.OBJ` on a variable-built path and said to go on "without rm"; probes and link tries
+  go to fresh folders since. CONFIRMED (chat 2026-11-22, 2026-11-25)
+- **Loops in a short Python script, not shell loops with `$(( ))` and command substitution** (the
+  permission check flags those; the user: "Sure with python"). CONFIRMED (chat 2026-11-22)
+- **When the permission check blocks a step, hand the user one `!` command and stop;** do not route
+  around it (so far: `gh repo create`, running a downloaded PATCH.EXE in DOSBox, posting to outside
+  sites). The `!` command's output comes back into the session. CONFIRMED
+- **Uploading game code is the user's call** (a decomp.me scratch, a Discord post, a public repo):
+  prepare the files (`.work/scratch/<fn>/`), the user creates and shares, and pastes scores back
+  (decomp.me gives scripts 403). CONFIRMED (chat 2026-11-26)
+- **Push this repo only when asked.** CONFIRMED (chat 2026-11-26)
+- **Say so when you add a tracked file the user did not ask for.** LIKELY (chat 2026-11-26)
+- **Keep sweep generators as tracked tools with their inputs,** not inline Python in the chat: after
+  the muis_crash_tick work the saved generators read relative paths never copied, and the variants
+  the score tables name were in a temporary scratchpad. CONFIRMED (chat 2026-11-26)
+- **A brief for another model goes stale with the text:** BRIEF.md for muis_crash_tick called four
+  spellings ruled out and "all 288 declaration orders exhausted"; under the later text a `go, m` swap
+  gave 32 -> 24 and the four spellings together 23 -> 6. Date a brief, regenerate it after each
+  change, and check any outside result with check.sh and nmrefs (a model can improve a diff by
+  changing a condition or a constant: LIKELY, not seen yet). CONFIRMED (chat 2026-11-26)
+- **An unexpected diff can be a live session, not an interrupted run:** on 2026-11-25 ~230 lines in
+  blob.py and libmatch.py came from another session working at the same time. Check for a running
+  agent, or ask, before building on uncommitted work (trap 5). CONFIRMED
+- **A READY FOR REVIEW note can sit under the wrong QUEUE item** (Q5 carried Q2's library-map note,
+  so "first open item" pointed wrong): check the note answers that item's Accept line; move a
+  misfiled note, never delete it. CONFIRMED (chat 2026-11-25)
+- **Do not explain a tool output you only remember; rerun the command.** A local model built turns
+  of theory on a "114/114 checks passed" no command printed (`2>/dev/null` had hidden "No such
+  file"). [generic] CONFIRMED (chat 2026-10-31)
+- **Keep "located" apart from "understood":** finding where data lives is not knowing the logic that
+  uses it. [generic] CONFIRMED (user correction, chat 2026-10-31)
+- **Correct the user when there is a better option** ("Always correct me if needed"). CONFIRMED
+- **Search online yourself before asking the user for a file;** if the user stops a fetch, do not
+  retry it unless asked. CONFIRMED (chat 2026-11-22, 2026-11-25)
+- **Offer `[generic]` traps to DREA** (`~/projects/active/DREA`, the user's DOS RE template) for its
+  GOTCHAS/TRAPS. CONFIRMED (user instruction)

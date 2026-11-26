@@ -82,3 +82,25 @@ What works (session 6, RRRMENU's paw followed it; position read from
 
 Save states made under the default config don't carry the driver, so
 take the route from a fresh start.
+
+## From dave-re / DREA (same DOSBox-X and GDB stub)
+
+Learnt on Dave (real mode) with the same dos-re-suite emulator; all [generic]. From chat
+2026-10-31..11-01.
+
+- **The stub's `eip` is always a linear address,** whatever stopped the program: do not add CS × 16
+  (Dave: CS 0x824, eip 0xF87C is the vsync wait at 0824:763C). For RRR's flat DOS/4GW segments the
+  readings coincide. When a guide and the tool's code disagree, the code wins. CONFIRMED
+- **Resuming from a breakpoint does not step over it:** remove, single-step, re-insert, then
+  continue. DREA's dosrun.py has `resume_over`, this repo's does not. A killed tracer leaves its
+  breakpoint in place with the machine halted on it. CONFIRMED
+- **`dosrun.py start` stops at the DOS prompt;** a long breakpoint wait right after it just times out.
+  Take a screenshot before a long wait. CONFIRMED
+- **Do not wait for a random pick to land:** break right after it and overwrite it (12 runs never
+  picked Dave's demo 0 on their own). CONFIRMED
+- **A key sent to pass one wait stays in the BIOS buffer for the next reader;** flush it. CONFIRMED
+- **The BIOS clock does not advance while you step between breakpoints, and the stub cannot watch
+  memory writes:** measure speed running freely; find writers by polling or reading the code. LIKELY
+- **dos-re-suite's MCP server takes `DOS_RE_GDB_PORT` / `DOS_RE_QMP_PORT`** and checks only its own
+  ports, so two projects can each run an emulator; this repo's dosrun.py still hard-codes 4444/2159.
+  CONFIRMED (dosrun.py read 2026-11-26)

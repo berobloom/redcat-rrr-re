@@ -46,3 +46,17 @@ Confidence levels per AGENTS.md.
 - SUPERSEDED: "type 12 is a mine (putbom.wav)". It is a mine (discoveries
   "map cells", "Sound": it explodes with explo_m.wav); putbom.wav is never
   played.
+
+## Matching
+
+- LIKELY: bull_crash_tick 0x19c8c can go below its recorded 128 rows. Switching on the `f24` field
+  itself reached 98 rows on 700 sampled one-per-line declaration orders (the existing text alone 107
+  on 300). Not applied, not in nearmiss.txt; scored in parallel (GOTCHAS), so recheck serially.
+  (chat 2026-11-26)
+- SPECULATIVE: muis_crash_tick's set (field switch, `switch (want)`, body - waypoint, `h - heading`,
+  plus a one-per-line declaration sweep) carries over to muis_tick, bull_tick, player_tick and
+  player_crash_tick. The drive.c ticks share tails, so score them together. The bull_crash_tick
+  probe above is the only test. (chat 2026-11-26)
+- LIKELY: 6 rows is only the floor of what was tried on muis_crash_tick: the 5,040-order and
+  ~2,500-respelling sweeps ran eight compiles in parallel and only the two winners were checked
+  serially. (chat 2026-11-26)

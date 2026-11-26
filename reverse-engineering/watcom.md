@@ -87,6 +87,24 @@ and the game. Two traps:
 The site sits behind a Cloudflare check: scripts (curl, fetch tools) get 403, so scratches are
 read in a browser.
 
+More from the DKj58 session (chat 2026-11-26):
+
+- The option checkboxes cannot express `-ox` (no -ob, no -oe): type `-bt=dos -3r -s -ox` into the
+  arguments line, which reads "No arguments" until edited. CONFIRMED (the option list). That `-ox`
+  is `-obmiler -s` is from memory: LIKELY.
+- The source pane appears only after Create; use the Custom preset. objdiff's "Unknown file magic"
+  is expected (it does not read OMF: LIKELY): read the plain diff.
+- To see which compiler a scratch really uses, start it with `#ifdef __cplusplus` / `#error compiled
+  as C++` / `#endif`; the C++ entry prints `src.cpp(1): Error! E080: (col 2) compiled as C++`.
+  CONFIRMED
+- RETRACTED: "decomp.me has no Watcom 10.5 preset" - a search missed the `wcc10.5`/`wpp10.5` entries.
+- Permuters: decomp-permuter (simonlindholm) supports MIPS/PPC/ARM, not Watcom, but is driven by a
+  compile.sh and a .toml, so wcc.sh plus inplace.py as the scorer could drive it (not done;
+  SPECULATIVE that it works). The Daggerfall decomp (brotchie) is a byte-identical Watcom 10.0a
+  rebuild of unoptimised code (`-od -s -of+ -4r -d2`); its `w10_frame.py` predicts the frame layout
+  from the declarations and could replace declaration-order sweeps (not tried). Its
+  `docs/natural_c.md` was not read.
+
 `reverse-engineering/tools/wc/scratch.py PROG NAME 0xADDR OURS.OBJ OUTDIR` writes a function's
 target assembly in that form, with its addresses from the executable's fixup records as
 symbol+offset of our object's externals, and checks a GNU twin against the game's bytes.

@@ -244,7 +244,12 @@
     find_waypoints goes to MATCH if that is right, and a pad byte of the wrong
     candidate shows up immediately in src/check.sh.
 
-31. **Open: init_objects 0x148db's last 7 rows are two register ties.** The player's
+31. **Open: init_objects 0x148db's last 2 rows.** Update 2026-11-26: computing the player's fuel
+    into the dead `i` before the drops store puts the fuel<<16 product in EBX as in the game
+    (7 -> 2 rows, commit 877ee94). Left: the MUIS heading store's slot - a result holder floats
+    it but flips BULL's block (8 rows); result and index holders fix both but swap two
+    neighbouring instructions (2 rows); ~7,000 variants stop at 2 (src/nearmiss.txt). The
+    7-row analysis it started from: two register ties. The player's
     `rrrio.fuel << 16` product: the game keeps it in EBX and only then loads rrrio.boosts
     into EDX, we keep it in EDX (5 rows at +607); and the MUIS heading store, which floats
     past the racer_top_speeds[] load in the game (its result sits in EBX) and is forced

@@ -1801,3 +1801,14 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   - The functions around 0x18500 (after `module4_init`, calls 0x1859f..
     0x18a7d) and `m4_alt_screen_dead` play the same sounds for a scripted
     example; not traced further.
+
+## Outside code that does not help the match (dead ends)
+
+- **Fastgraph/Light 4.03 (FGL403A.ZIP) cannot match RRR:** it is the shareware edition, real mode
+  only, everything through the TSR `FGDRIVER.EXE`, its FGLS/M/L.LIB 16-bit stubs. Its `FASTGRAF.H`
+  still names all 277 `fg_*` routines (prototypes); unpacked in `.work/dl/fgl403a/`. (READ.ME and
+  LIB contents; chat 2026-11-25)
+- **libsmacker cannot help the byte match:** it is an independent decoder, not RAD's code. The port
+  uses a2's own `msmacker.c` (port/src/smacker.c), which decodes all five films (rrrintro,
+  wredcat/wbrutus/wsnitch, eindani2) frame-identical to ffmpeg. None of the films carries sound; the
+  intro's is rrrintro.wav. (Frame-by-frame comparison; chat 2026-10-29, 2026-11-25)
