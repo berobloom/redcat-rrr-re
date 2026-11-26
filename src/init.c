@@ -10,7 +10,11 @@
    'player_direction : %d wp: %d\n' (0x50e04, pushed at 0x14b15), sits at the head of the init.c
    string block: 0x50e04 + 29 + 1 = 0x50e22, where 'init.c' starts, and the four bytes before
    0x50e04 are zero (the end of the previous module's block, and the two doubles 0x50de3/0x50deb
-   that direction_to_waypoint 0x13d60 uses sit just before them). */
+   that direction_to_waypoint 0x13d60 uses sit just before them).
+   STRONGLY SUPPORTED, 2026-11-26: the module is 0x148db-0x15c02 - start_crash, switch_anims and
+   fn_15166 (0x14f3e-0x1517a) and race_end, winner_film, podium (0x1585e-0x15c02) moved here from
+   rrr.c, and the module's CONST (1106 bytes at 0x50e04) is then identical in place, once
+   find_waypoints' two "...SNITCH:%d" messages lose the "\n" they never had. */
 
 #include "rrr.h"
 
@@ -30,20 +34,21 @@
  * `cmp [stats+0x28],0` reload instead of reusing the value it just stored, and it lands our length
  * on the game's 1635 bytes with every address aligned (16 rows -> 7).
  *
- * differs (7 rows, 1635 = 1635 bytes, addresses aligned from +0 to the end):
- *   +607 the player's `rrrio.fuel << 16` product: the game keeps it in EBX and loads rrrio.boosts
- *        into EDX after it, we keep it in EDX (5 rows). Tried: * 0x10000/* 65536/< 16, moving the
- *        fuel, damage, boosts, rockets and the three bodies stores (192 statement permutations of
- *        the player, BULL and MUIS stats blocks through inplace.py, .work/probe/io/y*.c, best 7),
- *        `!(d > 0 && f > 0)` vs `<= 0 ||` vs `< 1` and an extra store: nothing moves it.
- *   +1169 the MUIS heading store: same tie, the game's result sits in EBX so the store floats
- *        past the racer_top_speeds[] load, ours is forced early. BULL, whose text is identical
- *        apart from the constants, matches - the game's two blocks are the mirror image of ours.
- *   Layout, not behaviour: find_waypoints' three __FILE__ strings and the rc_error texts land 1-2
- *        bytes off the game's (nmrefs: ours 0x50f4b/0x50f91/0x50fb9/0x50fdf, game
- *        0x50f4a/0x50f8f/0x50fb7/0x50fdd), because the strings of this module's other functions
- *        (clear_objects, start_crash, switch_anims, fn_15166) still sit in rrr.c's pool. It costs
- *        no match (objmatch compares those fixups by target); it goes away with the module split.
+ * The player's fuel is computed into `i` (the loop counter, dead by then) BEFORE the drops store:
+ * that puts the `rrrio.fuel << 16` product in EBX and the boosts load after it, as in the game
+ * (7 rows -> 2, .work/probe/io2, 2026-11-26). Computing it into a holder right before the fuel
+ * store, or inline, keeps the product in EDX.
+ *
+ * differs (2 rows, 1635 = 1635 bytes, addresses aligned from +0 to the end):
+ *   +1169 the MUIS heading store: the game floats it past the racer_top_speeds[] load (0x14dad),
+ *        ours stores right after the index (0x14d8c); registers are the game's. BULL, identical
+ *        text apart from the constants, matches. A holder for MUIS's result floats the store but
+ *        flips BULL's registers (8 rows); holders for both its result and its index give the
+ *        right slot and BULL right, but copy the call result before the index load (2 rows, the
+ *        `mov ebx,eax` / `mov edx,[bodies+..]` pair swapped). Swept 2026-11-26: 720 store orders
+ *        of each block, result/index holders over i/a/b/f in every combination (~700 files,
+ *        .work/probe/io4-io9), 5040 store orders with both holders (io7), holder types and
+ *        declaration orders (io8), chained and pointer forms (ioa): none below 2.
  * -------------------------------------------------------------------------------------------- */
 
 void init_objects(void)
@@ -120,10 +125,11 @@ void init_objects(void)
         waypoint0[waypoint_index0].x, waypoint0[waypoint_index0].y);
     debug_printf("player_direction : %d wp: %d\n", stats[bodies[0].stats].heading,
         waypoint_index0 + 1);
+    i = rrrio.fuel << 0x10;
     stats[bodies[0].stats].drops = 0;
     stats[bodies[0].stats].top_speed = 0x100000;
     stats[bodies[0].stats].f24 = 0;
-    stats[bodies[0].stats].fuel = rrrio.fuel << 0x10;
+    stats[bodies[0].stats].fuel = i;
     stats[bodies[0].stats].damage = rrrio.damage;
     stats[bodies[0].stats].boosts = rrrio.boosts;
     stats[bodies[0].stats].f10 = rrrio.f18;
@@ -212,6 +218,79 @@ void init_objects(void)
     }
 }
 
+/* ---- 0x14f3e -------------------------------------------------------------------------------- */
+
+void start_crash(int racer)
+{
+    switch (racer) {
+    case 0:
+        stats[bodies[racer].stats].top_speed -= 0x20000;
+        objects[racer].callback = (void (*)(void))player_crash_tick;
+        objects[racer].frame = 0;
+        objects[racer].anim = stats[bodies[racer].stats].heading + 22;
+        break;
+    case 2:
+        stats[bodies[racer].stats].top_speed -= 0x20000;
+        objects[racer].callback = (void (*)(void))bull_crash_tick;
+        objects[racer].frame = 0;
+        objects[racer].anim = (stats[bodies[racer].stats].heading >> 1) + 54;
+        break;
+    case 4:
+        stats[bodies[racer].stats].top_speed -= 0x20000;
+        objects[racer].callback = (void (*)(void))muis_crash_tick;
+        objects[racer].frame = 0;
+        objects[racer].anim = (stats[bodies[racer].stats].heading >> 1) + 70;
+        break;
+    }
+}
+
+
+/* ---- 0x15084 -------------------------------------------------------------------------------- */
+
+int switch_anims(void)
+{
+    if (!crash0 && !crash2 && !crash4)
+        return 0;
+    if (crash0) {
+        fn_15e8d();
+        if (fn_162d6())
+            return -1;
+        start_crash(0);
+        crash0 = 0;
+        fn_1bcb7();
+        return 0;
+    } else if (crash2) {
+        fn_16029();
+        if (fn_16472())
+            return -1;
+        start_crash(2);
+        crash2 = 0;
+        stats[bodies[2].stats].damage = 100;
+        fn_1bcb7();
+        return 0;
+    } else if (crash4) {
+        fn_161c5();
+        if (fn_1660e())
+            return -1;
+        start_crash(4);
+        crash4 = 0;
+        stats[bodies[4].stats].damage = 100;
+        fn_1bcb7();
+        return 0;
+    }
+    return 0;
+}
+
+
+/* ---- 0x15166 -------------------------------------------------------------------------------- */
+
+void fn_15166(void)
+{
+    hud_count(13);
+    hud_count(23);
+}
+
+
 /* ---- 0x1517a find_waypoints ---------------------------------------------------------------
  * The map's cells carry the computer racers' waypoint path: cell +2 = waypoint
  * number, +3 = which racer (1 RedCat, 2 Brutus, 4 Snitch; 3 = none). Each
@@ -286,10 +365,10 @@ int find_waypoints(void)
     debug_printf("%d waypoints found for BULL\n", waypoint_count2);
     debug_printf("%d waypoints found for MUIS\n", waypoint_count4);
     if (waypoint_count2 > 150 || waypoint_count4 > 150 || waypoint_count0 > 150)
-        rc_error("%s(%d): To many waypoints in map-file! RC:%d BULL:%d SNITCH:%d\n",
+        rc_error("%s(%d): To many waypoints in map-file! RC:%d BULL:%d SNITCH:%d",
                  "init.c", 425, waypoint_count0, waypoint_count2, waypoint_count4);
     if (waypoint_count2 <= 0 || waypoint_count4 <= 0 || waypoint_count0 <= 0)
-        rc_error("%s(%d): No waypoints in map-file for object: RC:%d BULL:%d SNITCH:%d\n",
+        rc_error("%s(%d): No waypoints in map-file for object: RC:%d BULL:%d SNITCH:%d",
                  "init.c", 429, waypoint_count0, waypoint_count2, waypoint_count4);
     for (i = 0; i < 149; i++) {
         if ((waypoint0[i].x == -1 || waypoint0[i].y == -1)
@@ -383,5 +462,129 @@ void find_bonus_objects(void)
         default:
             break;
         }
+    }
+}
+
+/* ---- 0x1585e race_end ---------------------------------------------------------------------
+ * Only after a finished race (quit 0, main 0x111e8): racer 0's stats back
+ * into the RRRIO block (fuel fixed point >> 16, negative damage and fuel to
+ * 0), the waypoints reached per racer to +0x208..+0x210, race_done +0x1f8 = 1,
+ * the finishing order to +0x1fc, then 3/2/1 points per place to
+ * rrrio.points[racer >> 1], and rrrio_save (discoveries.md "race end").
+ * -------------------------------------------------------------------------------------------- */
+
+void race_end(int quit)
+{
+    if (!quit) {
+        if (stats[bodies[0].stats].fuel < 0)
+            rrrio.fuel = 0;
+        else
+            rrrio.fuel = (short)(stats[bodies[0].stats].fuel >> 16);
+        rrrio.boosts = stats[bodies[0].stats].boosts;
+        rrrio.f18 = stats[bodies[0].stats].f10;
+        rrrio.f1c = stats[bodies[0].stats].f14;
+        rrrio.rockets = stats[bodies[0].stats].rockets;
+        if (stats[bodies[0].stats].damage < 0)
+            rrrio.damage = 0;
+        else
+            rrrio.damage = stats[bodies[0].stats].damage;
+        rrrio.f208[0] = waypoint_index0;
+        rrrio.f208[1] = waypoint_index2;
+        rrrio.f208[2] = waypoint_index4;
+        rrrio.race_done = 1;
+        rrrio.start_order[0] = finish_order[0];
+        rrrio.start_order[1] = finish_order[1];
+        rrrio.start_order[2] = finish_order[2];
+        if (finish_order[0] < 0 || finish_order[0] > 4) {
+            rc_error("%s(%d) : finishline not okay", "init.c", 603);
+        } else {
+            rrrio.points[finish_order[0] >> 1] += 3;
+        }
+        if (finish_order[1] < 0 || finish_order[1] > 4) {
+            rc_error("%s(%d) : finishline not okay", "init.c", 608);
+        } else {
+            rrrio.points[finish_order[1] >> 1] += 2;
+        }
+        if (finish_order[2] < 0 || finish_order[2] > 4) {
+            rc_error("%s(%d) : finishline not okay", "init.c", 613);
+        } else {
+            rrrio.points[finish_order[2] >> 1] += 1;
+        }
+        debug_printf("rc:%d b:%d m:%d\n", waypoint_index0, waypoint_index2, waypoint_index4);
+        rrrio_save();
+    }
+}
+
+
+/* ---- 0x15a14 -------------------------------------------------------------------------------- */
+
+void winner_film(int racer)
+{
+    mix_stop_track(0);
+    switch (racer) {
+    case 0:
+        smk_play(screen_buf, 0, 0, screen_w, screen_h, "wredcat.smk", 42, 0, 33);
+        break;
+    case 2:
+        smk_play(screen_buf, 0, 0, screen_w, screen_h, "wbrutus.smk", 42, 0, 33);
+        break;
+    case 4:
+        smk_play(screen_buf, 0, 0, screen_w, screen_h, "wsnitch.smk", 42, 0, 33);
+        break;
+    }
+}
+
+
+/* ---- 0x15a9f podium -------------------------------------------------------------------------
+ * The picture of the first two places (r RedCat, b Brutus, s Snitch) with
+ * flags 0xf (picture, palette, shown), then the points of the three racers
+ * in Ascii20, fg 0xd0 on background 0xff, kept 4 s (discoveries.md "podium").
+ * An order the two switches have no case for leaves the race's screen.
+ * -------------------------------------------------------------------------------------------- */
+
+void podium(int quit)
+{
+    if (!quit) {
+        switch (finish_order[0]) {
+        case 0:
+            switch (finish_order[1]) {
+            case 2:
+                fn_2369f("rbs.pcx", 15);
+                break;
+            case 4:
+                fn_2369f("rsb.pcx", 15);
+                break;
+            }
+            break;
+        case 2:
+            switch (finish_order[1]) {
+            case 0:
+                fn_2369f("brs.pcx", 15);
+                break;
+            case 4:
+                fn_2369f("bsr.pcx", 15);
+                break;
+            }
+            break;
+        case 4:
+            switch (finish_order[1]) {
+            case 0:
+                fn_2369f("srb.pcx", 15);
+                break;
+            case 2:
+                fn_2369f("sbr.pcx", 15);
+                break;
+            }
+            break;
+        }
+        fn_246b5(font20_name);
+        fn_24942(0xff);
+        fn_24879(0xd0);
+        debug_printf(" Naam:%s\n", rrrio.names[0]);
+        rcascii_printf(150, 20, "Punten Totaal voor %s", world_names[rrrio.world]);
+        rcascii_printf(200, 50, "%-15s    :    %3d", rrrio.names[0], rrrio.points[0]);
+        rcascii_printf(200, 70, "Brutus de Bulldog  :    %3d", rrrio.points[1]);
+        rcascii_printf(200, 90, "Max de Muis        :    %3d", rrrio.points[2]);
+        delay_ms(4000);
     }
 }

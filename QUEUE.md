@@ -387,6 +387,12 @@ Rules for the agent:
     names WLINK could not resolve once their modules are real: fn_1b469 is guard.c's set_keys and
     fn_20d1f Fastgraph's _fg_makepcx. blob.py writes a fixup's addend modulo 2^32 (a target below the
     nearest public of a real object).
+  - 2026-11-26 (init.c): src/init.c now holds the whole module 0x148db-0x15c02 (start_crash,
+    switch_anims, fn_15166, race_end, winner_film, podium out of rrr.c). Its CONST (1106 B at
+    0x50e04) is identical in place after find_waypoints' two "...SNITCH:%d" messages lost a "\n"
+    the game never had: `DATA: 9677 of 9677` (data.baseline 8476 -> 9677). init_objects 7 -> 2 rows
+    (fuel into `i` before the drops store); its last 2 rows (MUIS heading store slot) keep init.c
+    from linking as itself.
 
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per

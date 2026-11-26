@@ -238,6 +238,11 @@ Levers seen so far (add to this list when one produces a MATCH):
   uses, but each C variable is its own allocation candidate in WCC386, so reusing one for unrelated
   values changes the register ties. Sweep the set partitions of a function's reused local.
 
+- **... and where a holder is assigned.** `init_objects` 0x148db's `rrrio.fuel << 16` landed in EDX
+  whether written inline or through a local assigned just before the fuel store. Assigning it to
+  the dead loop counter `i` two statements EARLIER, before the `drops` store, puts the product in
+  EBX and the next load after it, as in the game (7 rows -> 2, .work/probe/io2, 2026-11-26).
+
 ## 6. A near miss is not a proof: `nmrefs.py`
 
 A matching function proves the C means what the game's code does. A near miss does not: fndiff
