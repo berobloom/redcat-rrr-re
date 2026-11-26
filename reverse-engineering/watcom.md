@@ -86,3 +86,7 @@ and the game. Two traps:
 
 The site sits behind a Cloudflare check: scripts (curl, fetch tools) get 403, so scratches are
 read in a browser.
+
+`reverse-engineering/tools/wc/scratch.py PROG NAME 0xADDR OURS.OBJ OUTDIR` writes a function's
+target assembly in that form, with its addresses from the executable's fixup records as
+symbol+offset of our object's externals, and checks a GNU twin against the game's bytes.
