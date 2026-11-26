@@ -419,3 +419,7 @@ Rules for the agent:
     to short (`(short)(bodies[n].x >> 16)`, `(short)((y >> 16) - (z >> 16))`); plus abs() in the
     game's subtraction order. Now: muis_crash_tick 32, muis_tick 24, bull_crash_tick 128,
     bull_tick 133, player_tick 143, player_crash_tick 259, ai_waypoint_action 64.
+  - 2026-11-26 (Opus, after Fable's muis_crash_tick 32 -> 6): bull_crash_tick 128 -> 42 rows, three
+    new levers in MATCHING.md (a local zeroed first when the game stores 0 from its register; if/else
+    arm order; re-score a game-faithful spelling after each lever), nmrefs 147/147. Still one-sided
+    rows (the go==0 arm's f24 load), so not READY FOR REVIEW.

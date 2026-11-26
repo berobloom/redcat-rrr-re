@@ -269,6 +269,26 @@ Levers seen so far (add to this list when one produces a MATCH):
   movsx there, with it it does (observed, not a documented rule). Worth 3-30 rows per tick function (2026-11-26), but
   usually only together with a fresh declaration-order sweep.
 
+- **A store of 0 from a register means a local was zeroed first.** When the game opens with
+  `xor ebp, ebp` and then stores EBP where the C stores 0, the local that lives in EBP (`go` in
+  `bull_crash_tick` 0x19c8c) is assigned 0 before those stores: WCC reuses the zeroed register
+  for the constant. Moving `go = 0;` from third to first statement, with the next item: 128 -> 48
+  rows (2026-11-26, .work/probe/bcx/t2). The sibling crash ticks keep it third, so read each
+  function's prologue rather than copying the order.
+
+- **Which arm of an if/else comes first follows the C's arm order, not the test's sense.**
+  `if (!racer_contact(n, 4)) v55ff4 = 0; else if (...)` puts the short arm in the fall-through slot;
+  the game's `je` over the long arm to an out-of-line `v55ff4 = 0` is `if (racer_contact(n, 4)) {
+  ... } else v55ff4 = 0;` (bull_crash_tick, -5 rows with or without `go = 0` first, which alone is -29: 82 -> 53 -> 48). Same rule as
+  `main`'s negated tests: write the arm the game places first as the if-arm.
+
+- **A spelling that costs rows alone can be the game's: score it again after the next lever.**
+  bull_crash_tick's `(short)` x in the tail cost 60+ rows on the 48-row text (best 110 over 5,040
+  orders); with four more neutral respellings found by a random search (.work/probe/bcx/genR.py) it
+  reached 51, and a fresh declaration sweep then 42, with the tail matching the game's
+  `sar edx, 0x10; movsx ebp, dx`. Keep the game-faithful spelling in the search set even when
+  it looks worse.
+
 ## 6. A near miss is not a proof: `nmrefs.py`
 
 A matching function proves the C means what the game's code does. A near miss does not: fndiff
