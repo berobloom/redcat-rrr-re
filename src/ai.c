@@ -61,6 +61,10 @@
  * racer 2's drop arm reuse those values as ours do. Declaring i register/long/short/split, a world
  * local, reusing n for i, a racer copy (aw5), and `->`/pointer spellings of that arm alone (aw6)
  * leave it at 64 (n reused: 61 rows but 1004 bytes).
+ * 2026-11-26 (later, .work/probe/aw7): the top level does not move i's home either: `if (i < 0)
+ * {fallback} else {script}` compiles to the same 1151 bytes, and `if (i >= 0) {script} else
+ * {fallback}` gives 480 rows. The f24-chain lever (an unsigned if/else-if chain written as a
+ * switch) has nothing to act on here: the dispatch already is a switch on f4.
  */
 
 void ai_waypoint_action(int racer, int n)
