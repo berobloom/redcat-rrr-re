@@ -11,7 +11,13 @@
    from the disassembly; every racer has its own copy (player 0x19497, Brutus 0x19c8c), each about
    1900 bytes, and they are not the same C: the three instruction streams share under half their
    instructions. */
-/* 2026-11-26: 67 -> 46 rows with two text changes found in place (inplace.py, .work/probe/mc2-mc6):
+/* 2026-11-26 (later): 46 -> 40. The f24 chain is a switch: the game's `test; jbe A; cmp 3; je B;
+   jmp join` with both arms out of line (0x1a63b-0x1a644) is how WCC lowers `switch (f) { case 0:
+   ... case 3: ... }` on an unsigned f, and that block now matches. The want chain is the same
+   kind of switch (0x1a699-0x1a6a2), and written as one it matches too, but it costs elsewhere (42
+   rows at best: the want == 3 body's bodies/stats registers mirror, 12 body orders x 288
+   declaration orders, .work/probe/mc7-mc8), so it stays the if/else-if here.
+   Earlier the same day: 67 -> 46 rows with two text changes found in place (inplace.py, .work/probe/mc2-mc6):
    the declarations `short k; int go, d, m, h; unsigned want, f;` (16 of 576 orders x chain
    spellings reach 46; the old order gave go/m each other's stack slot once the chains moved) and
    the want chain as `if (!want) f24 = 0; else if (want == 3) {...}` - want is unsigned, so this is
@@ -30,7 +36,7 @@
 int muis_crash_tick(short n)
 {
     short k;
-    int go, d, m, h;
+    int m, d, go, h;
     unsigned want, f;
 
     bodies[n].f1c = 0;
@@ -67,17 +73,20 @@ int muis_crash_tick(short n)
         v56028 = 1;
     if (!finished4 && !wait4) {
         f = stats[bodies[n].stats].f24;
-        if (f <= 0) {
+        switch (f) {
+        case 0:
             if (v5602c && stats[bodies[n].stats].boosts
                     && bodies[n].speed < 0x170000) {
                 go = 1;
                 want = 3;
             }
-        } else if (f == 3) {
+            break;
+        case 3:
             if (!v5602c || bodies[n].speed < 0x170000) {
                 go = 1;
                 want = 0;
             }
+            break;
         }
         if (go) {
             if (!want)

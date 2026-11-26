@@ -250,6 +250,12 @@ Levers seen so far (add to this list when one produces a MATCH):
   the orders for inplace.py. In a file with several near misses, score the whole object: drive.c's
   three ticks share tails, so muis_tick's best order costs player_tick 7 rows.
 
+- **`test; jbe A; cmp 3; je B; jmp join` is a switch.** On an unsigned value, WCC lowers
+  `switch (v) { case 0: ... case 3: ... }` to that, with both arms out of line; `if (v <= 0) ...
+  else if (v == 3) ...` puts them in the fall-through slot instead. `muis_crash_tick` 0x1a42a's
+  f24 chain: 46 -> 40 rows (2026-11-26). Spotting it needs the game's listing, not fndiff: fndiff
+  only shows the missing `jmp`.
+
 ## 6. A near miss is not a proof: `nmrefs.py`
 
 A matching function proves the C means what the game's code does. A near miss does not: fndiff
