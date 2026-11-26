@@ -243,6 +243,13 @@ Levers seen so far (add to this list when one produces a MATCH):
   the dead loop counter `i` two statements EARLIER, before the `drops` store, puts the product in
   EBX and the next load after it, as in the game (7 rows -> 2, .work/probe/io2, 2026-11-26).
 
+- **Re-sweep declaration order after every text change.** An order swept once stops being the best
+  when the C around it changes: `muis_crash_tick` 0x1a42a's negated want chain scored 72 under the
+  old declarations and 46 under `short k; int go, d, m, h; unsigned want, f;`, 16 of 576 order x
+  spelling combinations (2026-11-26). `.work/probe/declsweep.py FILE.c FUNC OUTDIR [MAX]` writes
+  the orders for inplace.py. In a file with several near misses, score the whole object: drive.c's
+  three ticks share tails, so muis_tick's best order costs player_tick 7 rows.
+
 ## 6. A near miss is not a proof: `nmrefs.py`
 
 A matching function proves the C means what the game's code does. A near miss does not: fndiff

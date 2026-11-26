@@ -409,3 +409,8 @@ Rules for the agent:
     `SMACKER_C = (0x21c00, ...)` stops libmap with "Smacker range called from 0x21b58, outside
     smacker.c". PROGRESS.md's headline now counts only libmatch-verified library bytes (58,990,
     29.2%); emu387 and cstrt386 _TEXT match REKEN only, not 10.6's LIBs.
+  - 2026-11-26 (agent, in progress): declaration-order sweeps re-run against today's C (declsweep.py)
+    plus a negated want chain: muis_crash_tick 67 -> 46, bull_crash_tick 153 -> 137, muis_tick 86
+    -> 65, bull_tick 172 -> 168, player_tick 189 -> 183, player_crash_tick 276 -> 271;
+    ai_waypoint_action stays 64 (only racer 2's rocket arm rebuilds its index chains - jump tables
+    read, see src/ai.c). None is MATCH yet; all still have one-sided rows in nmclass.
