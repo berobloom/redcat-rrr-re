@@ -421,8 +421,8 @@ int bull_tick(short n)
 int muis_tick(short n)
 {
     short k;
+    int d, m, h, go;
     unsigned want, f;
-    int go, m, d, h;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
@@ -441,8 +441,8 @@ int muis_tick(short n)
     d = fixdiv(0x1e0000, stats[bodies[n].stats].mass);
     if (lights_done) {
         if (!finished4) {
-            if (abs((waypoint4[waypoint_index4].x >> 16) - (bodies[4].x >> 16))
-                    + abs((waypoint4[waypoint_index4].y >> 16) - (bodies[4].y >> 16)) < 0x28) {
+            if (abs((bodies[4].x >> 16) - (waypoint4[waypoint_index4].x >> 16))
+                    + abs((bodies[4].y >> 16) - (waypoint4[waypoint_index4].y >> 16)) < 0x28) {
                 ai_waypoint_action(n, waypoint_index4);
                 if (!finished4 && waypoint_count4 - 1 > waypoint_index4)
                     waypoint_index4++;
@@ -450,7 +450,7 @@ int muis_tick(short n)
             if (!ai_unstick(n)) {
                 h = direction_to_waypoint(4, waypoint4[waypoint_index4].x,
                                           waypoint4[waypoint_index4].y);
-                if (h - stats[bodies[n].stats].heading && h != -1)
+                if (h != stats[bodies[n].stats].heading && h != -1)
                     stats[bodies[n].stats].heading =
                         turn_tbl[h][stats[bodies[n].stats].heading];
             }

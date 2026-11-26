@@ -89,7 +89,7 @@
    in its own module next to bull_tick/muis_tick (the game lays those three back to back and the
    three crash ticks back to back, with other modules between) is worth 7 rows here and 4 on
    muis_tick: the cross-group tail merge disappears.
-87 -> 86 -> 65 -> 35 0x130f8 muis_tick  (2026-11-26 later: f24 and want chains as switches, `(short)(bodies[n].x >> 16)` in the tail, `h - heading` test, `unsigned want, f; int go, m, d, h;` - .work/probe/cs/mt2_x1y0h1; earlier 2026-11-26: `short k; unsigned f, want; int m, d, go, h;`, .work/probe/mt1; it costs player_tick 7 and bull_tick 5 through drive.c's shared tails, net -18 over the three)  written 2026-11-27, src/drive.c; 2030 of 2037 B. 2026-11-25: `if (f <= 0)`
+87 -> 86 -> 65 -> 35 -> 30 0x130f8 muis_tick  (2026-11-26 latest: abs() as body - waypoint, the game's subtraction order, with `h != heading` and `int d, m, h, go;` - 2304 forms, .work/probe/mt5; the y short cast costs 22+ under every order; 2026-11-26 later: f24 and want chains as switches, `(short)(bodies[n].x >> 16)` in the tail, `h - heading` test, `unsigned want, f; int go, m, d, h;` - .work/probe/cs/mt2_x1y0h1; earlier 2026-11-26: `short k; unsigned f, want; int m, d, go, h;`, .work/probe/mt1; it costs player_tick 7 and bull_tick 5 through drive.c's shared tails, net -18 over the three)  written 2026-11-27, src/drive.c; 2030 of 2037 B. 2026-11-25: `if (f <= 0)`
    guard (+1). The `h - ...` heading test is tempting here (it lands the game's size 2037 = 2037 and its
    `sub ebx,[eax+@]` at 0x1327b) but scores 158 instead of 86: it moves the f24/want arm placement. Three fifths of it is
    muis_crash_tick's C (the AI block, the v56018-v5602c state, f24/want, throttle/turn, the z tail) -
