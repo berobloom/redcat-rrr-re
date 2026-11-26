@@ -497,7 +497,7 @@ int muis_tick(short n)
                 if (v56018) {
                     if (bodies[n].speed < stats[bodies[n].stats].top_speed) {
                         if (bodies[n].speed < 0x20000)
-                            play_fx(7, abs((bodies[n].x >> 16) - (bodies[0].x >> 16))
+                            play_fx(7, abs((bodies[0].x >> 16) - (bodies[n].x >> 16))
                                        + abs((bodies[n].y >> 16) - (bodies[0].y >> 16)));
                         v71ddc++;
                         bodies[n].speed += d;
