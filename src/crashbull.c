@@ -21,7 +21,7 @@
 int bull_crash_tick(short n)
 {
     int go, m, d, h;
-    unsigned f, want;
+    unsigned want, f;
     short k;
 
     bodies[n].f1c = 0;
