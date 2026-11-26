@@ -39,7 +39,8 @@
    (1 row each, 806 bytes); every positive-test spelling of the same behaviour merges the two stores
    (794 of 806 bytes, 11-14 rows). 72 spellings in .work/probe/mn: both test polarities x 3
    negation spellings, flat else-if arms, if/else-if chains over the four cases in all 24 orders
-   (best 823 bytes, 18 rows). nmrefs main: refs 75/75 same, no one-sided jump-target block.2 0x13c34 cos_sin_init  SKIP: only x's slot (ours [esp+0x10], the game [esp+8]); 120 declaration orders + 36 statement/declaration combinations all stop at 2 rows - Watcom's FP local layout, open question 24
+   (best 823 bytes, 18 rows). nmrefs main: refs 75/75 same, no one-sided jump-target block.
+2 0x13c34 cos_sin_init  SKIP: only x's slot (ours [esp+0x10], the game [esp+8]); 120 declaration orders + 36 statement/declaration combinations all stop at 2 rows - Watcom's FP local layout, open question 24
 2 0x178f6 dropped2_tick  OPEN, 16 -> 2 with the stats-index holder (`h = bodies[2].stats; stats[h].damage -= 10;` in the FIRST damage block, sharing the aim block's `int h`), which also took seven other functions to MATCH. What is left is one Watcom tie in the last x store, `sub edi,0x10` + `mov ,di` (game) vs `lea esi,[edi-0x10]` + `mov ,si` (ours), at the identical 619 bytes: ~70 tail spellings (.work/probe/d8-d11) and the older 34 of the damage statements (.work/probe/d2) do not move it - see the differs note in src/shadeobj2.c
 0 0x1103e start_lights  MATCH 2026-11-26: two pointer locals - lamps 1, 2, 5 through f and lamps 3, 4 through g (src/rrr.c). Was SKIP at 3 rows (one lamp's product register) through ~2400 one-local spellings (.work/probe/sl2); 26 of the 52 ways to share locals among the five lamps match (.work/probe/sl4), so which sharing the original had is not known - open question 33.
 
