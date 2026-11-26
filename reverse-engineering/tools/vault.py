@@ -13,7 +13,7 @@ generated note: rerun this instead. Each note says where it came from and how su
   Architecture/, Formats/, Tooling/   one note per `##` section of the reverse-engineering/
                  docs, MATCHING.md and AGENTS.md
   Lessons/<kind>/  one note per entry of GOTCHAS.md and reverse-engineering/watcom-levers.md:
-                 gotchas, levers, probe traps, dead ends
+                 gotchas, levers, probe traps, dead ends, working with agents
 
 Every note has frontmatter `confidence` (CONFIRMED, STRONGLY SUPPORTED, LIKELY, SPECULATIVE,
 RETRACTED, open, resolved, or unrated when the source states none) and `origin` (the project
@@ -49,7 +49,8 @@ SOURCES = [
     ('GOTCHAS.md', 'Lessons', 'lessons', 'evidence', PROJECT),
     ('reverse-engineering/watcom-levers.md', 'Lessons', 'lessons', 'wacky-re', 'wacky-re'),
 ]
-KINDS = [('lever', 'Levers'), ('dead-end', 'Dead ends'), ('probe-trap', 'Probe traps'), ('gotcha', 'Gotchas')]
+KINDS = [('lever', 'Levers'), ('dead-end', 'Dead ends'), ('probe-trap', 'Probe traps'), ('gotcha', 'Gotchas'),
+         ('working-with-agents', 'Working with agents')]
 
 
 def read(p):
@@ -90,7 +91,8 @@ def entries(text):
 
 def kind_of(heading):
     h = heading.lower()
-    for word, kind in (('lever', 'lever'), ('dead end', 'dead-end'), ('probe', 'probe-trap')):
+    for word, kind in (('lever', 'lever'), ('dead end', 'dead-end'), ('probe', 'probe-trap'),
+                       ('working with agents', 'working-with-agents')):
         if word in h:
             return kind
     return 'gotcha'
@@ -101,7 +103,10 @@ def levels_in(text):
 
 
 def weakest(levels):
-    return max(levels, key=LEVELS.index) if levels else None
+    """the weakest level claimed; RETRACTED only when nothing else is (a retracted side remark does
+    not retract the note)"""
+    live = [l for l in levels if l != 'RETRACTED'] or levels
+    return max(live, key=LEVELS.index) if live else None
 
 
 def yaml(d):
