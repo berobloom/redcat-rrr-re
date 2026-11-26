@@ -295,12 +295,16 @@ int fire_rocket(int racer)
 
 /* ---- 0x18759 -------------------------------------------------------------------------------- */
 
-/* differs: 8 rows, only the base/index choice: the game keeps n * 16 in EAX (the alloc_object
-   result, shifted in place) and loads the objects pointer into ECX/EDX per store, ours copies n
-   to ECX and shifts that, so every store encodes base/index the other way round. This switch is
-   the best shape found: if/else-if, else-if with !kind, and (*(objects + n)) all give 11 rows and
-   299 bytes (the game is 301); a struct object pointer local, a short kind and a second n copy
-   are worse. */
+/* differs: 8 rows (306 vs the game's 301 bytes). The game's code is an if/else-if chain (`cmp edx,2;
+   jne`, then `test edx,edx; jne`) that keeps n * 16 in EAX through all three arms and loads the
+   objects pointer into EDX in each; this switch gives the game's registers but Watcom's compare
+   tree (`test edx,edx; jbe` first) and a default arm that recomputes n << 4. Every if-shaped
+   spelling (if/else-if, !kind, braces, nested, goto, switch-then-if, if-then-switch) gives the
+   game's tree at 299 bytes but mirrors the registers (n * 16 copied to ECX, objects into EAX): 11
+   rows. 2026-11-26, all >= 8: int/unsigned/long n, long kind, `if ((n = alloc_object()) == -1)`
+   (128, .work/probe/sd2), six switch orders and hybrids (sd3), a second copy of n in the arms and
+   the period store moved (sd4). Earlier: (*(objects + n)) and if/else-if 11 rows, a struct object
+   pointer local, a short kind and a second n copy worse. */
 int spawn_dropped_object(int racer, int kind)
 {
     int n;
