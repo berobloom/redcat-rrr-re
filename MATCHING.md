@@ -257,8 +257,8 @@ Levers seen so far (add to this list when one produces a MATCH):
   only shows the missing `jmp`.
 
 - **A `movsx` after a `sar` is a `(short)` cast in the C.** The tick tails' `movsx ebx, bx` straight
-  after `sar ebx, 0x10` is `(short)(bodies[n].x >> 16)`; WCC drops a narrowing it can prove is
-  harmless only when no cast is written. Worth 3-30 rows per tick function (2026-11-26), but
+  after `sar ebx, 0x10` comes from `(short)(bodies[n].x >> 16)`: without the cast WCC emits no
+  movsx there, with it it does (observed, not a documented rule). Worth 3-30 rows per tick function (2026-11-26), but
   usually only together with a fresh declaration-order sweep.
 
 ## 6. A near miss is not a proof: `nmrefs.py`
