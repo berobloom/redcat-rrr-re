@@ -521,15 +521,14 @@ int finish_check(void)
 
 /* ---- 0x1103e -------------------------------------------------------------------------------- */
 
-/* differs: 3 rows, the fourth lamp (lamp[7], 0x11144): the game computes frames + i*12 as
-   imul edx; mov eax,[frames]; add eax,edx, ours with the registers swapped. The other four lamps
-   match from the same text. Tried: a frame pointer local, direct frames[..] expressions, frames + i,
-   an int index local, byte arithmetic, f += i, (int) cast, *(frames + i), mixes of these for lamp 7.
-   2026-11-25: ~2400 further spellings (.work/probe/sl2) change nothing; the lead and the list are on
-   the src/nearmiss.txt line and in research/open-questions.md 33. */
+/* MATCH 2026-11-26 with two pointer locals: lamps 1, 2 and 5 through f, lamps 3 and 4 through g. One
+   local for all five lamps leaves the fourth lamp's product in EAX (imul eax,eax,0xc; mov
+   edx,[frames]) where the game has imul edx,eax,0xc; mov eax,[frames] - the 3-row SKIP that ~2400
+   one-local spellings did not move (open question 33). Of the 52 ways to share locals among the five
+   lamps (.work/probe/sl4), 26 match; which one the original used is not decided by the code. */
 void start_lights(void)
 {
-    struct frame *f;
+    struct frame *f, *g;
 
     f = &frames[animset[0x56].steps[0].frame];
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
@@ -538,12 +537,12 @@ void start_lights(void)
     draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
     snd_play(1, 30, 64);
     delay_ms(1000);
-    f = &frames[animset[0x56].steps[2].frame];
-    draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
+    g = &frames[animset[0x56].steps[2].frame];
+    draw_frame(screen_buf, g->img, 226, 50, g->w, g->h);
     snd_play(1, 30, 64);
     delay_ms(1000);
-    f = &frames[animset[0x56].steps[3].frame];
-    draw_frame(screen_buf, f->img, 226, 50, f->w, f->h);
+    g = &frames[animset[0x56].steps[3].frame];
+    draw_frame(screen_buf, g->img, 226, 50, g->w, g->h);
     snd_play(1, 30, 64);
     delay_ms(1000);
     f = &frames[animset[0x56].steps[4].frame];

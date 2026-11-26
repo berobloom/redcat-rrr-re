@@ -231,6 +231,13 @@ Levers seen so far (add to this list when one produces a MATCH):
   both blocks does not (43) - the second site keeps its literal index (variants.py/inplace.py,
   .work/probe/d4-d7).
 
+- **Count the variables, not just the spellings.** `start_lights` 0x1103e sat at 3 rows (one lamp's
+  `imul` destination mirrored) through ~2400 spellings that all used one `struct frame *f` for the
+  five lamps. Two locals, `f` for lamps 1, 2, 5 and `g` for lamps 3, 4, MATCH; 26 of the 52 ways to
+  share locals among the lamps do (.work/probe/sl4, 2026-11-26). Each local is dead between its
+  uses, but each C variable is its own allocation candidate in WCC386, so reusing one for unrelated
+  values changes the register ties. Sweep the set partitions of a function's reused local.
+
 ## 6. A near miss is not a proof: `nmrefs.py`
 
 A matching function proves the C means what the game's code does. A near miss does not: fndiff

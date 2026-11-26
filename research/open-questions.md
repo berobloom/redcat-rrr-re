@@ -268,21 +268,12 @@
     (discoveries, "switch bodies and `lea` operands"), which suggests the tie is a
     value-identity question, not a spelling one.
 
-33. **Open: start_lights 0x1103e's last 3 rows are one register tie** (two instructions; the third
-    row is fndiff's alignment row). The fourth lamp's frame pointer: the game does `movsx
-    eax,[eax+0xe]; imul edx,eax,0xc; mov eax,[frames]; add eax,edx`, ours `imul eax,eax,0xc; mov
-    edx,[frames]; add eax,edx` - 427 = 427 bytes, and the other four lamps come from the same text.
-    2026-11-25: ~2400 spellings (.work/probe/sl2) stop at 3 - 20 forms per lamp in every one- and
-    two-lamp combination, dead statements in 11 slots, braces and `if (1)` nesting, `register` and
-    unused locals, `L`-suffixed constants, start_lights compiled alone vs in all of src/rrr.c,
-    Watcom 10.5 vs 10.6, and 40 `#pragma aux modify exact` clobber sets for delay_ms/draw_frame/
-    snd_play. What moves it: `f = frames; f += animset[0x56].steps[3].frame;` flips the product to
-    EDX and lands the game's `mov eax,[frames]; add eax,edx`, but the whole steps chain moves to EDX
-    with it (5 rows; 24 spellings of that shape stay at 5). The target is therefore the MIRROR of
-    what a base-first address addition gives: chain in EAX, product in a second register, base
-    reloaded into EAX. LIKELY mechanism: at 0x11144 the index register was still holding a
-    register-resident variable, so the product could not fold - the game's only other non-folding
-    product, hud_update 0x19276, has exactly that (its index is the live local `v`, discoveries
-    "Toolchain: switch bodies and `lea` operands"). The prologue (`push ebx/ecx/edx`, no stack slot)
-    rules out a memory local, and every local-index spelling found adds or moves instructions.
-    Same family as open questions 25, 26, 28, 29, 31 and 32.
+33. **Resolved 2026-11-26: start_lights 0x1103e's last 3 rows were how many pointer locals the lamps
+    share.** With one `struct frame *f` for all five lamps the fourth lamp's product lands in EAX
+    (`imul eax,eax,0xc; mov edx,[frames]`), the game's in EDX (`imul edx,eax,0xc; mov eax,[frames]`);
+    ~2400 one-local spellings (.work/probe/sl2) did not move it. Two locals, lamps 1/2/5 through `f`
+    and 3/4 through `g`, MATCH. 26 of the 52 set partitions of the five lamps over locals match
+    (.work/probe/sl4), so CONFIRMED that the original used more than one local, SPECULATIVE which
+    sharing. The earlier LIKELY mechanism (a register-resident index) is wrong. Lesson for the family
+    (25, 26, 28, 29, 31, 32): a register tie can be decided by how many C variables carry the values,
+    even when each one is dead between uses.
