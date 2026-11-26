@@ -11,6 +11,14 @@
    from the disassembly; every racer has its own copy (player 0x19497, Brutus 0x19c8c), each about
    1900 bytes, and they are not the same C: the three instruction streams share under half their
    instructions. */
+/* 2026-11-26: 67 -> 46 rows with two text changes found in place (inplace.py, .work/probe/mc2-mc6):
+   the declarations `short k; int go, d, m, h; unsigned want, f;` (16 of 576 orders x chain
+   spellings reach 46; the old order gave go/m each other's stack slot once the chains moved) and
+   the want chain as `if (!want) f24 = 0; else if (want == 3) {...}` - want is unsigned, so this is
+   the old `want > 0` test negated. The arithmetic heading test `h - heading` does give the game's
+   `sub` at 0x1a589 but costs 1 row overall. Left: the f24 and want chains' out-of-line arms (the
+   f24 spellings nest/eq3first/!f/switch: 46-71), the sprites base in EBP, the tail's registers.
+   Earlier: */
 /* differs: 67 rows, one block-placement decision plus register homes. The game puts both arms of
    the f24 chain and of the want chain out of line (test + jbe arm, cmp 3 + je body, jmp join at
    0x1a63d-0x1a644 and 0x1a699-0x1a6a2) and keeps both bodies as jump targets; ours puts the bodies
@@ -21,9 +29,9 @@
    epilogue. src/nearmiss.txt (SKIP). */
 int muis_crash_tick(short n)
 {
-    int go, m, d, h;
-    unsigned f, want;
     short k;
+    int go, d, m, h;
+    unsigned want, f;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
@@ -72,14 +80,13 @@ int muis_crash_tick(short n)
             }
         }
         if (go) {
-            if (want > 0) {
-                if (want == 3) {
-                    bodies[n].speed += d << 4;
-                    stats[bodies[n].stats].f24 = want;
-                    stats[bodies[n].stats].boosts--;
-                }
-            } else
+            if (!want)
                 stats[bodies[n].stats].f24 = 0;
+            else if (want == 3) {
+                bodies[n].speed += d << 4;
+                stats[bodies[n].stats].f24 = want;
+                stats[bodies[n].stats].boosts--;
+            }
         } else {
             f = stats[bodies[n].stats].f24;
             if (f <= 0) {
