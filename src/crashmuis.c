@@ -22,6 +22,18 @@
    round (one byte shorter, which is the 6th row); 24 statement orders, chained zero stores, six
    spellings of objects[n], the arms swapped or split, and ~3000 random neutral rewrites x
    declaration orders leave it. .work/probe/mcb (run.py scores variants in parallel; *.tsv).
+   Second pass on those 6 rows (.work/probe/mcc), none below 6: all 5040 one-per-line declaration
+   orders (56 reach 6); h/f/want/k declared in inner blocks; f merged into want or an unsigned h
+   (11); respellings of the tail, the fixmul arm, the z block and the clamps (2500 random combos);
+   holder variables and other index spellings inside the arm; 10.6 instead of 10.5; other
+   functions ahead of it in the object and the order of the externs in rrr.h (no effect at all, so
+   only this function's body decides). What a deletion diagnostic shows (pat.py, behaviour-changing,
+   so evidence only): of every single statement, only five flip the arm to the game's EAX/EDX when
+   removed - the two fixmul lines of the other arm and the tail's k, objects[n].x and objects[n].y
+   lines. Those are the blocks that index bodies[] as [n*5*8 + ...] like the arm does; the rest of
+   the function shifts to n*40 first. So the arm's registers hang on the n-derived temporaries it
+   shares with those blocks (LIKELY), not on `objects` (another pointer in the arm changes nothing)
+   and not on anything in the arm's own text.
    Before that: 40 -> 32. The tail truncates both coordinates to short as the game does
    (movsx at 0x1ab26 and 0x1ab5a): `(short)(bodies[n].x >> 16)` and `(short)((bodies[n].y >> 16) -
    (bodies[n].z >> 16))`, with the declarations `short k; unsigned f, want; int d, h, go, m;`. The
