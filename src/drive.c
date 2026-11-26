@@ -421,8 +421,8 @@ int bull_tick(short n)
 int muis_tick(short n)
 {
     short k;
-    unsigned f, want;
-    int m, d, go, h;
+    unsigned want, f;
+    int go, m, d, h;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
@@ -450,7 +450,7 @@ int muis_tick(short n)
             if (!ai_unstick(n)) {
                 h = direction_to_waypoint(4, waypoint4[waypoint_index4].x,
                                           waypoint4[waypoint_index4].y);
-                if (h != stats[bodies[n].stats].heading && h != -1)
+                if (h - stats[bodies[n].stats].heading && h != -1)
                     stats[bodies[n].stats].heading =
                         turn_tbl[h][stats[bodies[n].stats].heading];
             }
@@ -464,27 +464,33 @@ int muis_tick(short n)
         v56028 = 1;
     if (!finished4 && !wait4) {
         f = stats[bodies[n].stats].f24;
-        if (f <= 0) {
+        switch (f) {
+        case 0:
             if (v5602c && stats[bodies[n].stats].boosts
                     && bodies[n].speed < 0x1a0000) {
                 go = 1;
                 want = 3;
             }
-        } else if (f == 3) {
+            break;
+        case 3:
             if (!v5602c || bodies[n].speed < 0x1a0000) {
                 go = 1;
                 want = 0;
             }
+            break;
         }
         if (go) {
-            if (want > 0) {
-                if (want == 3) {
-                    bodies[n].speed += d << 4;
-                    stats[bodies[n].stats].f24 = want;
-                    stats[bodies[n].stats].boosts--;
-                }
-            } else
+            switch (want) {
+            case 0:
                 stats[bodies[n].stats].f24 = 0;
+                break;
+            case 3:
+                bodies[n].speed += d << 4;
+                stats[bodies[n].stats].f24 = want;
+                stats[bodies[n].stats].boosts--;
+
+                break;
+            }
         } else {
             f = stats[bodies[n].stats].f24;
             if (f <= 0) {
@@ -565,7 +571,7 @@ int muis_tick(short n)
         h = 0;
     objects[n].frame = stats[bodies[n].stats].heading + h;
     k = animset[objects[n].anim].steps[objects[n].frame].frame;
-    objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
+    objects[n].x = (short)(bodies[n].x >> 16) - frames[k].f8 - 16;
     objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
     return 0;
 }
