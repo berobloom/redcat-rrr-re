@@ -235,7 +235,14 @@ int player_tick(short n)
    and the racer-contact test, whose bump sound is play_fx(13, |speed| / 65536 * 10). Boost limit
    0x1c0000, puffs of kind damage, crash2 when damage or fuel runs out.
 
-   differs: 172 rows (was 208). Two spellings found 2026-11-25: the heading test is the game's
+   differs: 50 rows (was 208 -> 172 -> 133), 2246 of 2258 bytes, nmrefs refs all the same.
+   2026-11-26 (.work/probe/btx): the game computes vx and vy TWICE - once unconditionally, then
+   again inside `if (!finished2)` with the zero stores in the else (0x12d1e-0x12e06: two
+   cos_tbl/sin_tbl fixmul pairs; the other five ticks have one). A redundancy in the game's own
+   source, copied: 133 -> 111 rows and +77 bytes. Then `switch (want)`, the racer_contact test with
+   its true arm first, `damage < 0 || fuel < 0` as one test (both jump to the game's one
+   `crash2 = 1; return 0` block at 0x128a5) and one declaration per line in this order: 50.
+   Older notes, 2026-11-25: the heading test is the game's
    arithmetic truth test `if (h - stats[bodies[n].stats].heading && h != -1)` (the game computes the
    difference and tests it - `mov ebx,edx; sub ebx,[eax+@]` at 0x12a3e - not `h != ...`, worth 35 rows
    here, the opposite of muis_tick below), and the go==0 arm's f24 guard is `if (f <= 0)` (unsigned,
@@ -244,9 +251,13 @@ int player_tick(short n)
    plus the f24/want arm placement (src/nearmiss.txt). */
 int bull_tick(short n)
 {
-    unsigned f, want;
-    int m, go, d, h;
+    int m;
+    unsigned want;
+    int d;
+    int h;
     short k;
+    int go;
+    unsigned f;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
@@ -254,11 +265,7 @@ int bull_tick(short n)
     m = 0x1f;
     if (objects[n].period == -1)
         return 0;
-    if (stats[bodies[n].stats].damage < 0) {
-        crash2 = 1;
-        return 0;
-    }
-    if (stats[bodies[n].stats].fuel < 0) {
+    if (stats[bodies[n].stats].damage < 0 || stats[bodies[n].stats].fuel < 0) {
         crash2 = 1;
         return 0;
     }
@@ -304,14 +311,16 @@ int bull_tick(short n)
             break;
         }
         if (go) {
-            if (want > 0) {
-                if (want == 3) {
-                    bodies[n].speed += d << 4;
-                    stats[bodies[n].stats].f24 = want;
-                    stats[bodies[n].stats].boosts--;
-                }
-            } else
+            switch (want) {
+            case 0:
                 stats[bodies[n].stats].f24 = 0;
+                break;
+            case 3:
+                bodies[n].speed += d << 4;
+                stats[bodies[n].stats].f24 = want;
+                stats[bodies[n].stats].boosts--;
+                break;
+            }
         } else {
             f = stats[bodies[n].stats].f24;
             if (f <= 0) {
@@ -347,6 +356,8 @@ int bull_tick(short n)
         if (bodies[n].speed < 0x3333)
             bodies[n].speed = 0;
     }
+    bodies[n].vx = fixmul(bodies[n].speed, cos_tbl[stats[bodies[n].stats].heading]);
+    bodies[n].vy = fixmul(bodies[n].speed, sin_tbl[stats[bodies[n].stats].heading]);
     if (!finished2) {
         bodies[n].vx = fixmul(bodies[n].speed, cos_tbl[stats[bodies[n].stats].heading]);
         bodies[n].vy = fixmul(bodies[n].speed, sin_tbl[stats[bodies[n].stats].heading]);
@@ -371,13 +382,14 @@ int bull_tick(short n)
     ground_check(n);
     bodies[n].x += bodies[n].vx;
     bodies[n].y += bodies[n].vy;
-    if (!racer_contact(n, 4))
+    if (racer_contact(n, 4)) {
+        if (!v55ff4) {
+            racer_bounce(n, 4);
+            play_fx(13, (short)(abs(bodies[n].speed) >> 16) * 10);
+            v55ff4 = 1;
+        }
+    } else
         v55ff4 = 0;
-    else if (!v55ff4) {
-        racer_bounce(n, 4);
-        play_fx(13, (short)(abs(bodies[n].speed) >> 16) * 10);
-        v55ff4 = 1;
-    }
     cell_checks(n);
     if (bodies[n].x > 0x18e00000)
         bodies[n].x = 0x18e00000;

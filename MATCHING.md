@@ -243,6 +243,13 @@ Levers seen so far (add to this list when one produces a MATCH):
   the dead loop counter `i` two statements EARLIER, before the `drops` store, puts the product in
   EBX and the next load after it, as in the game (7 rows -> 2, .work/probe/io2, 2026-11-26).
 
+- **A near miss that is 50+ bytes short is missing code, not spelling: read the game's listing
+  for it before sweeping.** `bull_tick` 0x12826 was 2170 of 2258 bytes at 133 rows; the gap was
+  a second vx/vy fixmul pair the game computes unconditionally before the `if (!finished2)` one
+  (a redundancy in the original source). Counting one table's references per function on the
+  game's side (`cos_tbl` 0x73de0: 2 in bull_tick, 1 in the other five ticks) shows such a
+  duplicate quickly. Adding it: 133 -> 111 rows before any spelling work (2026-11-26).
+
 - **Re-sweep declaration order after every text change.** An order swept once stops being the best
   when the C around it changes: `muis_crash_tick` 0x1a42a's negated want chain scored 72 under the
   old declarations and 46 under `short k; int go, d, m, h; unsigned want, f;`, 16 of 576 order x

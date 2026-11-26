@@ -423,3 +423,6 @@ Rules for the agent:
     new levers in MATCHING.md (a local zeroed first when the game stores 0 from its register; if/else
     arm order; re-score a game-faithful spelling after each lever), nmrefs 147/147. Still one-sided
     rows (the go==0 arm's f24 load), so not READY FOR REVIEW.
+  - 2026-11-26 (Opus): bull_tick 133 -> 50 rows. The game computes vx/vy twice (missing content, now
+    in), plus `switch (want)`, racer_contact true arm first, the merged damage/fuel test and a new
+    declaration order; player_tick/muis_tick unchanged.
