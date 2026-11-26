@@ -75,7 +75,7 @@
    not a missing statement: the shift grows 13 -> 29 -> 114 bytes across the function, i.e. the game
    reloads `n` and recomputes the bodies[] index where we keep it in a register, and that costs a
    few bytes per block.
-196 0x11eb5 player_tick  (189 before muis_tick's 2026-11-26 declaration order, which moves the shared tails)  written 2026-11-27, src/drive.c; 2441 of 2417 B. 2026-11-28: the
+183 0x11eb5 player_tick  (2026-11-26 declaration order `unsigned want, f; short k; int g, m, h, vv, go, t, d;`, 27 of 1500 sampled orders, .work/probe/pt1; 189 before muis_tick's 2026-11-26 declaration order, which moves the shared tails)  written 2026-11-27, src/drive.c; 2441 of 2417 B. 2026-11-28: the
    waypoint-distance abs() pair wants its operands mirrored (`abs((bodies[0].x >> 16) -
    (waypoint0[waypoint_index0].x >> 16))`, -4); chained zero stores for the six key flags, the
    `want` chain and four spellings of the friction test leave 189 - 71 homes, and the one block-
@@ -99,7 +99,7 @@
    store (112 -> 99), the vz thresholds are negative constants (0xfffb0000 as an int is a huge
    positive and WCC compares unsigned; -0x50000 gives the game's jge), and the vz table sets
    objects[n].frame (+0xa), not anim (+8).
-282 -> 276 0x19497 player_crash_tick  written 2026-11-27, src/tick.c; 2049 of 2037 B, from the
+282 -> 276 -> 271 0x19497 player_crash_tick  (2026-11-26 declaration order, 173 of 1500 sampled, .work/probe/pc1)  written 2026-11-27, src/tick.c; 2049 of 2037 B, from the
    disassembly. 2026-11-25: 6 of those rows are the object - with all three crash ticks in one file
    WCC ended this one's tail with a jmp to the next one's epilogue, which the game never does. RedCat's crash tick: refreshes the player's input flags 0x55fd0-0x55fe8 from
    key_pressed(keymap[]), rocket/boost on key edges (0x55fc8/0x55fcc), throttle + fuel on

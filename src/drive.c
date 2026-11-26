@@ -38,9 +38,9 @@
    stack slot to an already full frame. */
 int player_tick(short n)
 {
-    int go, m, d, h, vv, t, g;
-    unsigned f, want;
+    unsigned want, f;
     short k;
+    int g, m, h, vv, go, t, d;
 
     key_forward = 0;
     key_back = 0;

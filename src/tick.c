@@ -25,10 +25,10 @@
    from the object: alone in its file, its tail stops jmping into another crash tick's epilogue. */
 int player_crash_tick(short n)
 {
-    int go, m, vv;
-    unsigned want, f;
-    int d, g, h, t, vh;
+    int t, vh, g, h, d;
     short k;
+    int m, vv, go;
+    unsigned f, want;
 
     key_forward = 0;
     key_back = 0;
