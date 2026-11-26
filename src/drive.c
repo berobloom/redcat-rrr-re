@@ -38,9 +38,9 @@
    stack slot to an already full frame. */
 int player_tick(short n)
 {
-    unsigned want, f;
     short k;
-    int g, m, h, vv, go, t, d;
+    unsigned f, want;
+    int vv, m, t, d, go, h, g;
 
     key_forward = 0;
     key_back = 0;
@@ -82,14 +82,17 @@ int player_tick(short n)
             waypoint_index0++;
     }
     if (go) {
-        if (want > 0) {
-            if (want == 3) {
-                bodies[n].speed += d << 4;
-                stats[bodies[n].stats].f24 = want;
-                stats[bodies[n].stats].boosts--;
-            }
-        } else
+        switch (want) {
+        case 0:
             stats[bodies[n].stats].f24 = 0;
+            break;
+        case 3:
+            bodies[n].speed += d << 4;
+            stats[bodies[n].stats].f24 = want;
+            stats[bodies[n].stats].boosts--;
+
+            break;
+        }
     } else if (!finished0) {
         f = stats[bodies[n].stats].f24;
         if (f <= 0) {
@@ -220,7 +223,7 @@ int player_tick(short n)
         h = 0;
     objects[n].frame = stats[bodies[n].stats].heading + h;
     k = animset[objects[n].anim].steps[objects[n].frame].frame;
-    objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
+    objects[n].x = (short)(bodies[n].x >> 16) - frames[k].f8 - 16;
     objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
     return 0;
 }
@@ -242,7 +245,7 @@ int player_tick(short n)
 int bull_tick(short n)
 {
     unsigned f, want;
-    int m, d, h, go;
+    int m, go, d, h;
     short k;
 
     bodies[n].f1c = 0;
@@ -262,8 +265,8 @@ int bull_tick(short n)
     d = fixdiv(0x1e0000, stats[bodies[n].stats].mass);
     if (lights_done) {
         if (!finished2) {
-            if (abs((waypoint2[waypoint_index2].x >> 16) - (bodies[2].x >> 16))
-                    + abs((waypoint2[waypoint_index2].y >> 16) - (bodies[2].y >> 16)) < 0x28) {
+            if (abs((bodies[2].x >> 16) - (waypoint2[waypoint_index2].x >> 16))
+                    + abs((bodies[2].y >> 16) - (waypoint2[waypoint_index2].y >> 16)) < 0x28) {
                 ai_waypoint_action(n, waypoint_index2);
                 if (!finished2 && waypoint_count2 - 1 > waypoint_index2)
                     waypoint_index2++;
@@ -285,17 +288,20 @@ int bull_tick(short n)
         v56008 = 1;
     if (!finished2 && !wait2) {
         f = stats[bodies[n].stats].f24;
-        if (f <= 0) {
+        switch (f) {
+        case 0:
             if (v5600c && stats[bodies[n].stats].boosts
                     && bodies[n].speed < 0x1c0000) {
                 go = 1;
                 want = 3;
             }
-        } else if (f == 3) {
+            break;
+        case 3:
             if (!v5600c || bodies[n].speed < 0x1c0000) {
                 go = 1;
                 want = 0;
             }
+            break;
         }
         if (go) {
             if (want > 0) {
@@ -395,8 +401,8 @@ int bull_tick(short n)
         h = 0;
     objects[n].frame = stats[bodies[n].stats].heading + h;
     k = animset[objects[n].anim].steps[objects[n].frame].frame;
-    objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
-    objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
+    objects[n].x = (short)(bodies[n].x >> 16) - frames[k].f8 - 16;
+    objects[n].y = (short)((bodies[n].y >> 16) - (bodies[n].z >> 16)) - frames[k].fa;
     return 0;
 }
 
