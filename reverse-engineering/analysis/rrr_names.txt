@@ -504,6 +504,7 @@
 0x7144c keymap               # CONFIRMED: key bindings in play, [0] rocket, [1] boost (discoveries.md); set_keys fills it
 0x753a0 joymap               # LIKELY: joystick calibration copied by set_keys from rrrio.joy
 0x1b469 set_keys             # CONFIRMED (code): copies RRRIO's keys (or fixed joystick codes) into keymap
+0x20d1f fg_makepcx           # CONFIRMED: Fastgraph 4.03 FG32.LIB MAKEPCX.ASM (public _fg_makepcx, cdecl); screenshot writes screenNN.pcx with it
 0x2779e fg_initjoy           # CONFIRMED: Fastgraph 4.03 FG32.LIB INITJOY.ASM, links as itself here (link Q4)
 0x804c0 keystate             # CONFIRMED: key state per scancode (key_pressed, joystick_to_keys)
 0x27837 fg_button            # CONFIRMED: Fastgraph 4.03 FG32.LIB BUTTON.ASM, links as itself here (link Q4)

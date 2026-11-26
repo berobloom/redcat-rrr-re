@@ -318,7 +318,7 @@ Rules for the agent:
     noefgfmt's 36-byte CONST, so nomem is LIKELY not in the game); emu387 386inite (no code hit in
     RRR); math387 _matherr and clib fpeinth (code on page 0x3d000, where Smacker's fixups come first
     in the game's input order: with fpeinth in, fixup records 83938 of 84546).
-    The CONST2/_DATA boundary (0x55338) and the CONST start (0x50000) are SPECULATIVE: blob bytes
+    The CONST2/_DATA boundary (0x55338; since main.c links as itself, 0x55400 - see the 2026-11-26 main.c note) and the CONST start (0x50000) are SPECULATIVE: blob bytes
     only, any 4-aligned choice between the placed segments links the same bytes; 0x55338 is the
     one that also gives the fixup order (0x5ff7c put the game's _DATA fixups at 0x5fdf4 in the
     CONST2 piece).
@@ -373,6 +373,20 @@ Rules for the agent:
     (ground_check), NEW2IO (draw_view), SHADEOBJ (hit_test). rrr.c's race_end/winner_film/podium
     (0x1585e-0x15c02) are init.c's: they share a merged literal with it (0x50e22) and their strings
     continue its CONST (0x5113b -> 0x5116a), so init.c = 0x148db-0x15c02, waiting on init_objects.
+
+  - 2026-11-26 (main.c): **151 real objects**, `$(cat .work/link/libobjs.args11)` -> `LINK: 419179 of
+    419179`. start_lights matched (two pointer locals, MATCHING levers), so 0x10010-0x11526 is whole:
+    new `src/main.c` (22 functions, all MATCH) with its _DATA defined there in address order - the two
+    1309-byte font blocks, sndman's tables (blaster_ports has 8 entries, not 6), main's ints. CONST
+    3115 B at 0x50004 and _DATA 2995 B at 0x55400 identical in place (data.baseline 2366 -> 8476).
+    The CONST2/_DATA seam moves from 0x55338 to 0x55400: with 0x55338 the 0x5538c-0x553a8 table
+    (a library's, read from 0x3d208) is a _DATA piece that has to be fed before main.c, and page
+    0x55000's fixups come out in the wrong order (418994); 0x553a8 -> 419028; anything from 0x553ac
+    to 0x55400 links byte-identically. So that table is CONST2 (CONFIRMED by the fixup order) and the
+    seam is 0x553ac-0x55400 (0x55400 chosen: main.c's first variable). Two calls had placeholder
+    names WLINK could not resolve once their modules are real: fn_1b469 is guard.c's set_keys and
+    fn_20d1f Fastgraph's _fg_makepcx. blob.py writes a fixup's addend modulo 2^32 (a target below the
+    nearest public of a real object).
 
 - [ ] **Q5 The six tick functions and ai_waypoint_action**
   Report: same question; these are the only near misses with one-sided rows (wrong C), per

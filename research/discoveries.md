@@ -247,6 +247,15 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
     race_end, winner_film and podium (in src/rrr.c today). race_end uses init's literal at 0x50e22
     (Watcom merges literals only inside one object), and those functions' strings continue init's
     CONST block.
+  - CONFIRMED (link, 2026-11-26): main.c's object (0x10010-0x11526, sndman.c included) links as
+    itself, src/main.c with its _DATA defined in address order: CONST 0x50004-0x50c2f, _DATA
+    0x55400-0x55fb3 (font12/font20 blocks of 1309 bytes each, movie_dir[30], wav_names[34] with
+    "kick.wav" twice (one merged literal), snd_volume, sound_ready, sb_ports/blaster_ports[8],
+    sb_irqs/blaster_irqs[5], sb_dmas/blaster_dmas[3], snd_cfg_b..d = -1, dma/port/irq_opts, then
+    lights_done, shot_no, finish_order = {-1,-1,-1}, finish_count, finish_done[3], camera_racer).
+    Watcom packs it with no alignment. The 0x5538c-0x553a8 pointer table (library code 0x3d208) is
+    CONST2, not _DATA: as _DATA it has to be fed ahead of main.c and page 0x55000's fixups go out
+    of order. The CONST2/_DATA seam is between 0x553ac and 0x55400.
   - LIKELY: clib nomem is not in RRR. Its 18-byte _TEXT is identical to noefgfmt's (both "found"
     at 0x33abf), and noefgfmt's 36-byte CONST is what sits at 0x54e0c, where nomem's CONST would
     have to be.

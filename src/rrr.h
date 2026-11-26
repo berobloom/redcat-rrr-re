@@ -99,7 +99,7 @@ void sndbuf_play(int track, int sample, int vol);             /* 0x1ec03 */
 void fn_1f579(void);
 void fn_1f5a0(void);
 int easy_init(int a, int n, int *handles, char **names, int last);   /* 0x20b80 */
-void __cdecl fn_20d1f(int x0, int x1, int y0, int y1, char *name);
+void __cdecl fg_makepcx(int x0, int x1, int y0, int y1, char *name);   /* 0x20d1f, Fastgraph */
 void goodbye(void);
 int sound_init(short argc, char **argv);
 void fn_1f210(int a);
@@ -128,7 +128,6 @@ void fn_24942(int a);
 #pragma aux fn_24942 parm routine [] modify [eax ecx edx];
 int rrrio_load(void);
 void rrrio_save(void);                    /* 0x1ab7f */
-void fn_1b469(void);
 short fn_1f83f(int n);
 short fn_25bbd(int n);
 int stage_map_index(void);
@@ -183,7 +182,7 @@ void delay_ms(int ms);
 
 extern char           movie_dir[];          /* 0x55e3a: "d:\\MOVIE" */
 extern char          *wav_names[34];        /* 0x55e58 */
-extern char          *blaster_ports[6];     /* 0x55ef5: "A210".."A260" */
+extern char          *blaster_ports[8];     /* 0x55ef5: "A210".."A280" */
 extern char          *blaster_irqs[5];      /* 0x55f1f: "I2".."I10" */
 extern char          *blaster_dmas[3];      /* 0x55f39: "D0", "D1", "D3" */
 extern short          snd_cfg_b;            /* 0x55f45 */

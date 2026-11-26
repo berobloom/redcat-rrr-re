@@ -210,7 +210,7 @@ def emit_ordered(o, segof, base, img, lo, hi, sites, target_of, flat, order, bou
         done.add(s)
         tseg, toff = target_of(s)
         seg, slo = segof(s)
-        o.ledata(seg, s - slo, struct.pack('<I', toff), [(0, tseg)], flat)
+        o.ledata(seg, s - slo, struct.pack('<I', toff & 0xFFFFFFFF), [(0, tseg)], flat)   # below a public: wraps
     missing = [s for s in cut if s not in done]
     if missing:
         raise SystemExit('%d fixup sites not in the page order, first %#x' % (len(missing), missing[0]))

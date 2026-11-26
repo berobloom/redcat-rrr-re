@@ -39,7 +39,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    share one object (discoveries "real data segments link byte-identically"). Left out: nomem (not in
    the game, LIKELY), 386inite, and _matherr/fpeinth on code page 0x3d000. **Four src/ modules
    (ORDER, SHADE, RACEANIM, HUD) link as themselves too, and GUARD and HISCORE after the hiscore.c
-   split, and RRRIO (out of rrr.c): 150 real objects**, `$(cat .work/link/libobjs.args9)`,
+   split, RRRIO (out of rrr.c) and MAIN (0x10010-0x11526, src/main.c): 151 real objects**, `$(cat .work/link/libobjs.args11)`,
    `LINK: 419179 of 419179`. More src/ modules can join as their
    whole module matches. Code pages 0x29000/0x3d000 stay blobs (the
    original feed order there is not placement order, QUEUE Q4 note).
