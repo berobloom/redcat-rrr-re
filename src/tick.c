@@ -19,16 +19,34 @@
    pair of the other two is still here, but nothing sets it, so the whole `if (go)` arm at 0x19672
    is dead code the game carries anyway. It also asks ground_check what the ground height is and
    only scrapes along when the body is above it. */
-/* differs: 276 rows. Register homes (m in a stack slot at [esp+8] and vv at [esp+0xc] in the game,
+/* differs: 114 rows (was 282 -> 276 -> 259), 2066 of the game's 2037 bytes, nmrefs: no constant or
+   address one side only. 2026-11-26 (.work/probe/pcx), all behaviour-neutral:
+   `(g * 1000) << 16` for the ground test - the game's `imul eax, edi, 0x3e8; shl eax, 0x10`; WCC
+   folds `g * 1000 * 0x10000` into one shift/sub chain (the old only-one-side constant) -
+   259 -> 147 with a fresh declaration order, at exactly 2037 bytes; the finished0 arm last
+   (`else if (!finished0) { f = f24; if (f <= 0) {...} } else {...}` - the game jumps out of line
+   to it at 0x196fa, and loads f24 into EDX for an unsigned `ja`) -> 122; the game's head: all seven
+   key flags first, then f1c, `want = 0` (the game zeroes both [esp] and [esp+4]), go, m, and
+   `h = 1; vv = 1` (`mov ebp, 1; mov [esp+0xc], ebp` - h, the steering column, was set inside the
+   arm) -> 114 on 1,500 sampled orders. Declaration order matters here only through a handful of
+   score classes (2,000 orders of the old text: five scores). The game's frame is 0x10: go [esp],
+   want [esp+4], m [esp+8], vv [esp+0xc], h in EBP, d in EDI.
+   Older note: Register homes (m in a stack slot at [esp+8] and vv at [esp+0xc] in the game,
    we keep m in EBP) plus the go/want body placement of muis_crash_tick 0x1a42a's family; the go/want
    pair is dead code here that the game carries anyway (0x19672-0x196a6). 6 of the old 282 rows came
    from the object: alone in its file, its tail stops jmping into another crash tick's epilogue. */
 int player_crash_tick(short n)
 {
     short k;
-    unsigned want, f;
-    int g, vh, d, h, t;
-    int vv, m, go;
+    unsigned want;
+    int m;
+    unsigned f;
+    int d;
+    int vv;
+    int g;
+    int h;
+    int go;
+    int t;
 
     key_forward = 0;
     key_back = 0;
@@ -36,11 +54,13 @@ int player_crash_tick(short n)
     key_left = 0;
     v55fe0 = 0;
     v55fe4 = 0;
-    bodies[n].f1c = 0;
     v55fe8 = 0;
+    bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
+    want = 0;
     go = 0;
     m = 0x1f;
+    h = 1;
     vv = 1;
     if (objects[n].period == -1)
         return 0;
@@ -72,10 +92,9 @@ int player_crash_tick(short n)
 
             break;
         }
-    } else if (finished0) {
-        bodies[n].speed = 0;
-        objects[n].frame = 2;
-    } else if (!stats[bodies[n].stats].f24) {
+    } else if (!finished0) {
+        f = stats[bodies[n].stats].f24;
+        if (f <= 0) {
         if (v55fe4) {
             if (!v55fc8) {
                 v55fc8 = 1;
@@ -104,7 +123,6 @@ int player_crash_tick(short n)
             if (v75174 > 3)
                 v75174 = 0;
         }
-        h = 1;
         if (key_left)
             h = 0;
         if (key_right)
@@ -128,6 +146,10 @@ int player_crash_tick(short n)
                 objects[n].frame = 2;
             }
         }
+        }
+    } else {
+        bodies[n].speed = 0;
+        objects[n].frame = 2;
     }
     bodies[n].vx = fixmul(bodies[n].speed, cos_tbl[stats[bodies[n].stats].heading]);
     bodies[n].vy = fixmul(bodies[n].speed, sin_tbl[stats[bodies[n].stats].heading]);
@@ -135,7 +157,7 @@ int player_crash_tick(short n)
     bodies[n].z += bodies[n].vz;
     if (bodies[n].vz > -0x140000)
         bodies[n].vz -= fixmul(0x4000, abs(bodies[n].vz)) + 0x4000;
-    if (g * 1000 * 0x10000 > bodies[n].z) {
+    if ((g * 1000) << 16 > bodies[n].z) {
         bodies[n].vx -= fixmul(bodies[n].vx, 0x2666);
         bodies[n].vy -= fixmul(bodies[n].vy, 0x2666);
         bodies[n].z = 0;
@@ -175,4 +197,3 @@ int player_crash_tick(short n)
     objects[n].y = (short)((bodies[n].y >> 16) - (bodies[n].z >> 16)) - frames[k].fa;
     return 0;
 }
-

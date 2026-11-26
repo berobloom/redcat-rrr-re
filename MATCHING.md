@@ -250,6 +250,13 @@ Levers seen so far (add to this list when one produces a MATCH):
   game's side (`cos_tbl` 0x73de0: 2 in bull_tick, 1 in the other five ticks) shows such a
   duplicate quickly. Adding it: 133 -> 111 rows before any spelling work (2026-11-26).
 
+- **`imul r, x, K; shl r, S` is `(x * K) << S`, not `x * K * 2^S`.** WCC folds a product of
+  constants into one multiplier and lowers it as a shift/add chain; the game's `imul eax, edi,
+  0x3e8; shl eax, 0x10` keeps the two apart, so the C shifts. `player_crash_tick` 0x19497's
+  ground test `(g * 1000) << 16`: the only one-side constant gone and 259 -> 147 rows after a
+  declaration sample (2026-11-26). Same bits, so behaviour-neutral. player_tick 0x11eb5 has the
+  same test.
+
 - **Re-sweep declaration order after every text change.** An order swept once stops being the best
   when the C around it changes: `muis_crash_tick` 0x1a42a's negated want chain scored 72 under the
   old declarations and 46 under `short k; int go, d, m, h; unsigned want, f;`, 16 of 576 order x

@@ -426,3 +426,5 @@ Rules for the agent:
   - 2026-11-26 (Opus): bull_tick 133 -> 50 rows. The game computes vx/vy twice (missing content, now
     in), plus `switch (want)`, racer_contact true arm first, the merged damage/fuel test and a new
     declaration order; player_tick/muis_tick unchanged.
+  - 2026-11-26 (Opus): player_crash_tick 259 -> 114 rows: `(g * 1000) << 16` (the game's imul + shl,
+    nmrefs now clean), finished0 arm last, the game's head order; MATCHING lever for imul + shl.
