@@ -52,6 +52,15 @@
  * gives i a home. In that switch context, `i = j = ai_script_find(...)` and a second index local
  * (m1/m2 - WCC copy-propagates them into one), `h2`/`h4` per arm, guard clauses, `default: break;`,
  * `int act`, `int s`: 39-73. Kept here: the if/else-if chain, the shape the game's dispatch has.
+ *
+ * 2026-11-26: the rebuilt index chains are local to ONE block. The jump tables (0x1af53 racer 2,
+ * 0x1af6b racer 4: f4+1 = 0..5 -> 1b465 1b465 1b196/1b389 1b157/1b34a 1b25e 1b2c7/1b407) show
+ * racer 2's rocket arm 0x1b196 is reached only from its table, yet it alone rebuilds
+ * stats[bodies[racer].stats] for each of its four uses and script2[rrrio.world][i] from
+ * rrrio.world with imul ecx(i),0x18; racer 4's rocket arm 0x1b389, the boost arm 0x1b25e and
+ * racer 2's drop arm reuse those values as ours do. Declaring i register/long/short/split, a world
+ * local, reusing n for i, a racer copy (aw5), and `->`/pointer spellings of that arm alone (aw6)
+ * leave it at 64 (n reused: 61 rows but 1004 bytes).
  */
 
 void ai_waypoint_action(int racer, int n)
