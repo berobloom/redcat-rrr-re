@@ -58,7 +58,7 @@
    (EAX=11025, EDX=34, EBX=wav_handles, ECX=wav_names). No C spelling of the arguments, in-tree or in
    a local, moves the order without the parm list (5 tried). Whether the game's header really wrote a
    parm list is SPECULATIVE; what is CONFIRMED is that it is the only spelling that lands the order.
-15 0x1889d ground_check  41 -> 15: no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c. 2026-11-27: raising register
+13 0x1889d ground_check  41 -> 15 -> 13 (2026-11-26: cy reassigned to the current row before the second lookup fixes the d == -1 arm; the second lookup's kept product is left, ~400 more spellings in .work/probe/gc5-gcb): no ox/oy locals (inline cell indices) puts n in ESI and h in EDI like the game; what is left is which temporary Watcom keeps live across the inner branch (it keeps the product, the game keeps (y >> 16) / 40) and the d == -1 arm's stats register - see the differs note in src/map.c. 2026-11-27: raising register
    pressure is not the lever either - hoisted row/column/raw-shifted-coordinate/z locals in place
    (.work/gc/v1-v8, inplace.py) give 46-158 rows; nmclass.py reads the 15 as 2 register homes, 3 shape
    rows and 8 only-ours against 2 only-game instructions

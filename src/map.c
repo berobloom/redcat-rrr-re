@@ -18,7 +18,14 @@ int fn_18886(int v, int lo, int hi)
 
 /* ---- 0x1889d -------------------------------------------------------------------------------- */
 
-/* differs: 15 rows (was 41). Writing the x and y cell indices inline (no ox/oy locals) puts n in
+/* 2026-11-26: 15 -> 13 rows by reassigning cy to the current row ((bodies[n].y >> 16) / 40) before
+   the second lookup and reading it again in the third: the d == -1 arm's stats register (below)
+   comes right with it. Left: the second lookup's product only. Also tried then, all >= 13: holders
+   for the x and y quotients over d/cx/cy/new locals (45, .work/probe/gc5), operand orders of the
+   second and third index (108 + 98, gc6/gc8), product and row holders (gc7), the vx/vy stores
+   before the third lookup (gc9, 54+), and casts that make the products different expressions -
+   (int)map_w, (unsigned)cy, ... - in up to two of the four lookups (49 + 112, gca/gcb).
+   differs: 15 rows (was 41). Writing the x and y cell indices inline (no ox/oy locals) puts n in
    ESI, the cell height h in EDI and the division by 40 in EDI, as the game has them: the ox/oy
    locals made Watcom keep n in EDI and h in ESI, a mirror of 20+ rows. What is left:
    - the second cell lookup (0x189ff): the game keeps (bodies[n].y >> 16) / 40 in EAX and multiplies
@@ -33,7 +40,7 @@ int fn_18886(int v, int lo, int hi)
      the same expression in a probe with one register less busy (.work/probe/gc3/Q.C q0/q1:
      `mov esi,[map_w]; imul esi,eax`), so pressure, not the text, picks it here.
    - in the d == -1 arm (0x1898e) the game takes bodies[n].stats into EAX (its d is dead there) and
-     we into EDX; same family, no spelling found. */
+     we into EDX; same family, no spelling found. (Fixed 2026-11-26, see above.) */
 int ground_check(int n)
 {
     int h, cx, cy, d;
@@ -56,7 +63,8 @@ int ground_check(int n)
                 h = 0;
             return h;
         } else {
-            h = map[((bodies[n].y >> 16) / 40 * map_w + cx) * 6 + 5];
+            cy = (bodies[n].y >> 16) / 40;
+            h = map[(cy * map_w + cx) * 6 + 5];
             if (h * 1000 << 16 <= bodies[n].z) {
                 d = fn_18886(bodies[n].vx, -0x30000, 0x30000);
                 if (!key_left && !key_right) {
@@ -70,7 +78,7 @@ int ground_check(int n)
                     h = 0;
                 return h;
             } else {
-                h = map[((bodies[n].y >> 16) / 40 * map_w + (bodies[n].x >> 16) / 32) * 6 + 5];
+                h = map[(cy * map_w + (bodies[n].x >> 16) / 32) * 6 + 5];
                 bodies[n].vx = 0;
                 bodies[n].vy = 0;
                 if (h < 0)
