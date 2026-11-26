@@ -118,7 +118,7 @@
    transplanted from muis_crash_tick with racer 2's globals (v55ff8-v5600c, v55ff4, v71918) and the
    extra racer_contact/racer_bounce block the other crash ticks do without; register allocation and
    the go/want body layout are what is off, the logic reads complete
-70 -> 67 -> 46 -> 40 0x1a42a muis_crash_tick  SKIP (2026-11-26 later: the f24 chain is `switch (f) { case 0: case 3: }`; earlier 2026-11-26: declaration order `short k; int go, d, m, h; unsigned want, f;` + `if (!want) ... else if (want == 3)`, .work/probe/mc2-mc6; see src/crashmuis.c) 2026-11-25: written 2026-11-27 (now src/crashmuis.c, its own
+70 -> 67 -> 46 -> 40 -> 32 0x1a42a muis_crash_tick  SKIP (2026-11-26 latest: short casts on x and y in the tail, .work/probe/mc9; 2026-11-26 later: the f24 chain is `switch (f) { case 0: case 3: }`; earlier 2026-11-26: declaration order `short k; int go, d, m, h; unsigned want, f;` + `if (!want) ... else if (want == 3)`, .work/probe/mc2-mc6; see src/crashmuis.c) 2026-11-25: written 2026-11-27 (now src/crashmuis.c, its own
    object, see src/tick.c); 1874 of the game's 1867 bytes. What is left is one block-placement
    decision plus register homes: the game puts both arms of the f24 chain and of the want chain out
    of line (test + `jbe arm`, `cmp 3` + `je body`, `jmp join`; 0x1a63d-0x1a644 and 0x1a699-0x1a6a2),

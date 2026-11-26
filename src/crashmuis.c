@@ -11,7 +11,14 @@
    from the disassembly; every racer has its own copy (player 0x19497, Brutus 0x19c8c), each about
    1900 bytes, and they are not the same C: the three instruction streams share under half their
    instructions. */
-/* 2026-11-26 (later): 46 -> 40. The f24 chain is a switch: the game's `test; jbe A; cmp 3; je B;
+/* 2026-11-26 (latest): 40 -> 32. The tail truncates both coordinates to short as the game does
+   (movsx at 0x1ab26 and 0x1ab5a): `(short)(bodies[n].x >> 16)` and `(short)((bodies[n].y >> 16) -
+   (bodies[n].z >> 16))`, with the declarations `short k; unsigned f, want; int d, h, go, m;`. The
+   same behaviour: x >> 16 is clamped to 0x18e0 and both results are stored to short fields. One
+   cast alone costs (61-68 rows); abs() written body - waypoint, as the game subtracts at
+   0x1a4e8/0x1a50b, costs 5, and `h - heading` 35 (16 forms x 61 declaration orders,
+   .work/probe/mc9).
+   Earlier: 46 -> 40. The f24 chain is a switch: the game's `test; jbe A; cmp 3; je B;
    jmp join` with both arms out of line (0x1a63b-0x1a644) is how WCC lowers `switch (f) { case 0:
    ... case 3: ... }` on an unsigned f, and that block now matches. The want chain is the same
    kind of switch (0x1a699-0x1a6a2), and written as one it matches too, but it costs elsewhere (42
@@ -35,9 +42,9 @@
    epilogue. src/nearmiss.txt (SKIP). */
 int muis_crash_tick(short n)
 {
+    unsigned f, want;
     short k;
-    int m, d, go, h;
-    unsigned want, f;
+    int d, h, go, m;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
@@ -163,7 +170,7 @@ int muis_crash_tick(short n)
         bodies[n].y = 0;
     objects[n].anim = (stats[bodies[n].stats].heading >> 1) + 0x46;
     k = animset[objects[n].anim].steps[objects[n].frame].frame;
-    objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
-    objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
+    objects[n].x = (short)(bodies[n].x >> 16) - frames[k].f8 - 16;
+    objects[n].y = (short)((bodies[n].y >> 16) - (bodies[n].z >> 16)) - frames[k].fa;
     return 0;
 }
