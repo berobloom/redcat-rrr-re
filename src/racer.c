@@ -75,7 +75,14 @@ int on_screen(int x, int y)
    racer.o with the natural statement order and the tail y1, x2, y2, x3, y3, x4, x1, y4 (the whole
    file, not hit_test alone, picks the allocation - .work/probe/ht sweeps incl. 3600 declaration
    orders and 1400 with h moved into the tail, which always breaks the frame). h/x1 slot numbering
-   is not steerable from C; GOTCHAS dead end. */
+   is not steerable from C; GOTCHAS dead end.
+   2026-11-26, the start_lights lever and others, all >= 5 rows: merging locals whose lifetimes do
+   not overlap (size/x/h/a hosting a later one, singles and pairs, 838 files, ht3); declaring
+   subsets in an inner block from h, fx or x1 on (2021, ht4); x1, y1 or h inline (ht5); extra
+   holders for bodies[b].x/.y or (h + 0x28) & 0x1f and a dead local (ht6); racer.c compiled with
+   up to eight of rrr.c's preceding and three following functions (36, ht7: always 5); h/x1 types
+   (ht8); the 384 corner orders (ht9: only the natural one is 5); the four tests' operand orders
+   (625, hta). */
 
 /* hit_test(a, b, size) (discoveries.md): 1..5 when one of racer b's four corners, 30 px along
    and across its heading, or its centre lies strictly inside object a's box (bodies[a].x/y +/-
