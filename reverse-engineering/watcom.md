@@ -68,3 +68,21 @@ disassemble objects with capstone instead.
 The compare tools are in `reverse-engineering/tools/wc/` (from wacky-re): `libmatch.py` finds an
 OMF library's modules in a program's code, `objmatch.py` compares an object's functions with the
 game at their named addresses. The workflow is `MATCHING.md`.
+
+## decomp.me
+
+decomp.me runs the same compiler: its `wcc10.5` entry ("Watcom Optimizing C i386 Compiler 10.5",
+`binnt/wcc386.exe` under wibo, adding `-zq` and its own include paths; decomp.me's
+`cromper/cromper/compilers.py`). CONFIRMED for one function, 2026-11-26: scratch DKj58,
+start_lights 0x1103e with `-bt=dos -3r -s -ox`, compiles to the same 111 instructions as ours
+and the game. Two traps:
+
+- The `wpp10.5` entry ("... C++ ...") compiles `src.cpp` with `wpp386`. Its code is not ours:
+  compiled locally as C++ inside `extern "C"`, muis_tick goes 24 -> 151 rows, player_tick
+  143 -> 216, muis_crash_tick 32 -> 79. Pick the C entry.
+- The target assembly is assembled with JWasm (MASM syntax: `.386p`/`.model flat`, `extrn`,
+  a `_TEXT segment ... use32 'CODE'`, `proc`/`endp`, hex as `2b4h`), not GNU as. Watcom's
+  names: data `_name`, functions `name_`. The diff label is the function's `name_`.
+
+The site sits behind a Cloudflare check: scripts (curl, fetch tools) get 403, so scratches are
+read in a browser.
