@@ -108,7 +108,7 @@
    z < 0. Its go/want pair is never set, so the `if (go)` arm at 0x19672 is dead code the game
    carries; want is unsigned (jbe at 0x19681). Diff rows are register homes again: m in a stack
    slot at [esp+8] and vv at [esp+0xc], we keep m in EBP.
-185 -> 153 -> 137 0x19c8c bull_crash_tick  (2026-11-26: `unsigned want, f;` - 4 of 144 declaration orders reach 137, .work/probe/bc1; the negated want chain that helps muis_crash_tick costs 17 here)  written 2026-11-27, src/crashbull.c (its own object, see the
+185 -> 153 -> 137 -> 128 0x19c8c bull_crash_tick  (2026-11-26 later: both the f24 and the want chain as `switch (x) { case 0: case 3: }` with `short k; unsigned want, f; int d, m, go, h;`, .work/probe/bc2 - our frame is then 8 bytes, the game's 0xc; earlier 2026-11-26: `unsigned want, f;` - 4 of 144 declaration orders reach 137, .work/probe/bc1; the negated want chain that helps muis_crash_tick costs 17 here)  written 2026-11-27, src/crashbull.c (its own object, see the
    note in src/tick.c); 1929 of 1877+73=1950 B. 2026-11-25: the go==0 arm's f24 guard is
    `if (f <= 0)`, not `if (f == 0)` - the game's test is unsigned (`test` + `ja`), and that one word
    takes 25 rows off here (and 3 off muis_crash_tick); `if (h - stats[...].heading && h != -1)` is -5

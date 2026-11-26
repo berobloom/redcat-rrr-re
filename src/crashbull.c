@@ -20,9 +20,9 @@
    && h != -1)` (-5 here, +5 there). src/nearmiss.txt. */
 int bull_crash_tick(short n)
 {
-    int go, m, d, h;
-    unsigned want, f;
     short k;
+    unsigned want, f;
+    int d, m, go, h;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
@@ -58,27 +58,32 @@ int bull_crash_tick(short n)
         v56008 = 1;
     if (!finished2 && !wait2) {
         f = stats[bodies[n].stats].f24;
-        if (f <= 0) {
+        switch (f) {
+        case 0:
             if (v5600c && stats[bodies[n].stats].boosts
                     && bodies[n].speed < 0x190000) {
                 go = 1;
                 want = 3;
             }
-        } else if (f == 3) {
+            break;
+        case 3:
             if (!v5600c || bodies[n].speed < 0x190000) {
                 go = 1;
                 want = 0;
             }
+            break;
         }
         if (go) {
-            if (want > 0) {
-                if (want == 3) {
+            switch (want) {
+            case 0:
+                stats[bodies[n].stats].f24 = 0;
+                break;
+            case 3:
                     bodies[n].speed += d << 4;
                     stats[bodies[n].stats].f24 = want;
                     stats[bodies[n].stats].boosts--;
-                }
-            } else
-                stats[bodies[n].stats].f24 = 0;
+                break;
+            }
         } else {
             f = stats[bodies[n].stats].f24;
             if (f <= 0) {
