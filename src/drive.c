@@ -241,8 +241,8 @@ int player_tick(short n)
    plus the f24/want arm placement (src/nearmiss.txt). */
 int bull_tick(short n)
 {
-    int go, m, d, h;
     unsigned f, want;
+    int m, d, h, go;
     short k;
 
     bodies[n].f1c = 0;
@@ -420,9 +420,9 @@ int bull_tick(short n)
    it in a register, and the want<=0 arm. src/nearmiss.txt. */
 int muis_tick(short n)
 {
-    int go, m, d, h;
-    unsigned f, want;
     short k;
+    unsigned f, want;
+    int m, d, go, h;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
