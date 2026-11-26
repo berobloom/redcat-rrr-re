@@ -66,7 +66,7 @@ int on_screen(int x, int y)
 /* ---- 0x1430e -------------------------------------------------------------------------------- */
 
 /* differs: 5 rows (550 vs 550 bytes) - two swapped stack slots and nothing else: the game keeps
-   h at [esp+0x14] and x1 at [esp+0x10], ours the other way round (h's store and reload, x1's store
+   h at [esp+0x10] (0x14371) and x1 at [esp+0x14] (0x1440b), ours the other way round (h's store and reload, x1's store
    and two reloads). Prologue, the four products, all five tests, the frame size and the epilogue
    are byte-identical. 71 -> 5: sin_tbl[h] as the second product and (h + 0x28) & 0x1f as the
    third/fourth index (11 rows, the racer_contact convention), test 5's y-check as `bodies[b].y > yl`
