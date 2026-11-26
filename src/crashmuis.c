@@ -11,7 +11,18 @@
    from the disassembly; every racer has its own copy (player 0x19497, Brutus 0x19c8c), each about
    1900 bytes, and they are not the same C: the three instruction streams share under half their
    instructions. */
-/* 2026-11-26 (latest): 40 -> 32. The tail truncates both coordinates to short as the game does
+/* 2026-11-26 (latest): 32 -> 6. Four text changes that each cost rows alone and only pay together,
+   under a new declaration order (unsigned want; int go; int m; unsigned f; int d; int h; short k;):
+   (1) the f24 chain switches on the field itself, `switch (stats[bodies[n].stats].f24)`, with the
+   field unsigned in rrr.h (a cast on an int field scores the same); `f` stays for the go == 0 arm
+   only (without it: 57 at best over all 720 orders); (2) the want chain is a switch too; (3) both
+   abs() pairs are body - waypoint; (4) the heading test is `h - heading`. With the `f` local in the
+   first switch the same text is 23 rows at best over 288 orders. Left, 6 rows: in the finished4
+   arm of the vx/vy block (0x1a90d) the game has n in EAX and `objects` in EDX, ours the other way
+   round (one byte shorter, which is the 6th row); 24 statement orders, chained zero stores, six
+   spellings of objects[n], the arms swapped or split, and ~3000 random neutral rewrites x
+   declaration orders leave it. .work/probe/mcb (run.py scores variants in parallel; *.tsv).
+   Before that: 40 -> 32. The tail truncates both coordinates to short as the game does
    (movsx at 0x1ab26 and 0x1ab5a): `(short)(bodies[n].x >> 16)` and `(short)((bodies[n].y >> 16) -
    (bodies[n].z >> 16))`, with the declarations `short k; unsigned f, want; int d, h, go, m;`. The
    same behaviour: x >> 16 is clamped to 0x18e0 and both results are stored to short fields. One
@@ -33,7 +44,8 @@
    `sub` at 0x1a589 but costs 1 row overall. Left: the f24 and want chains' out-of-line arms (the
    f24 spellings nest/eq3first/!f/switch: 46-71), the sprites base in EBP, the tail's registers.
    Earlier: */
-/* differs: 67 rows, one block-placement decision plus register homes. The game puts both arms of
+/* differs (now 6 rows, see the top note; the text below is the 67-row state):
+   67 rows, one block-placement decision plus register homes. The game puts both arms of
    the f24 chain and of the want chain out of line (test + jbe arm, cmp 3 + je body, jmp join at
    0x1a63d-0x1a644 and 0x1a699-0x1a6a2) and keeps both bodies as jump targets; ours puts the bodies
    in the fall-through slot. 36 spellings of the two chains (11 x 5 minus duplicates, solo-compiled,
@@ -43,9 +55,13 @@
    epilogue. src/nearmiss.txt (SKIP). */
 int muis_crash_tick(short n)
 {
-    unsigned f, want;
+    unsigned want;
+    int go;
+    int m;
+    unsigned f;
+    int d;
+    int h;
     short k;
-    int d, h, go, m;
 
     bodies[n].f1c = 0;
     sprites[objects[n].sprite].mode = 1;
@@ -56,8 +72,8 @@ int muis_crash_tick(short n)
     d = fixdiv(0x1e0000, stats[bodies[n].stats].mass);
     if (lights_done) {
         if (!finished4) {
-            if (abs((waypoint4[waypoint_index4].x >> 16) - (bodies[4].x >> 16))
-                    + abs((waypoint4[waypoint_index4].y >> 16) - (bodies[4].y >> 16)) < 0x28) {
+            if (abs((bodies[4].x >> 16) - (waypoint4[waypoint_index4].x >> 16))
+                    + abs((bodies[4].y >> 16) - (waypoint4[waypoint_index4].y >> 16)) < 0x28) {
                 ai_waypoint_action(n, waypoint_index4);
                 if (!finished4 && waypoint_count4 - 1 > waypoint_index4)
                     waypoint_index4++;
@@ -65,7 +81,7 @@ int muis_crash_tick(short n)
             if (!ai_unstick(n)) {
                 h = direction_to_waypoint(4, waypoint4[waypoint_index4].x,
                                           waypoint4[waypoint_index4].y);
-                if (h != stats[bodies[n].stats].heading && h != -1)
+                if (h - stats[bodies[n].stats].heading && h != -1)
                     stats[bodies[n].stats].heading =
                         turn_tbl[h][stats[bodies[n].stats].heading];
             }
@@ -80,8 +96,7 @@ int muis_crash_tick(short n)
     if (v56018 || v5601c)
         v56028 = 1;
     if (!finished4 && !wait4) {
-        f = stats[bodies[n].stats].f24;
-        switch (f) {
+        switch (stats[bodies[n].stats].f24) {
         case 0:
             if (v5602c && stats[bodies[n].stats].boosts
                     && bodies[n].speed < 0x170000) {
@@ -97,12 +112,15 @@ int muis_crash_tick(short n)
             break;
         }
         if (go) {
-            if (!want)
+            switch (want) {
+            case 0:
                 stats[bodies[n].stats].f24 = 0;
-            else if (want == 3) {
+                break;
+            case 3:
                 bodies[n].speed += d << 4;
                 stats[bodies[n].stats].f24 = want;
                 stats[bodies[n].stats].boosts--;
+                break;
             }
         } else {
             f = stats[bodies[n].stats].f24;

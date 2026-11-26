@@ -256,6 +256,14 @@ Levers seen so far (add to this list when one produces a MATCH):
   f24 chain: 46 -> 40 rows (2026-11-26). Spotting it needs the game's listing, not fndiff: fndiff
   only shows the missing `jmp`.
 
+- **Switch on the field, not on a copy of it.** `f = stats[...].f24; switch (f)` and
+  `switch (stats[...].f24)` are the same compares, but the local is one more allocation candidate
+  and it moves registers all over the function: `muis_crash_tick` 0x1a42a went 23 -> 6 rows on
+  that one line (the field unsigned, 2026-11-26). It only showed once the game's other spellings
+  were in together (`switch (want)`, body - waypoint, `h - heading`), each of which costs rows
+  alone: when several "true" spellings each score worse, try them all at once and re-sweep the
+  declarations, one variable per line (.work/probe/mcb).
+
 - **A `movsx` after a `sar` is a `(short)` cast in the C.** The tick tails' `movsx ebx, bx` straight
   after `sar ebx, 0x10` comes from `(short)(bodies[n].x >> 16)`: without the cast WCC emits no
   movsx there, with it it does (observed, not a documented rule). Worth 3-30 rows per tick function (2026-11-26), but

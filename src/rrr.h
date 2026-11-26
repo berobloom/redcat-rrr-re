@@ -271,7 +271,7 @@ struct stats {                              /* 48 bytes per racer (discoveries.m
     int     fuel, boosts;
     int     f10, f14, f18;
     int     rockets;                            /* +0x1c */
-    int     drops, f24;                         /* +0x20: objects left to drop; LIKELY unsigned, the game's tests on it are jbe/ja (muis_crash_tick 0x1a63d) */
+    int     drops; unsigned f24;                       /* +0x20: objects left to drop; f24 STRONGLY SUPPORTED unsigned: the game's tests on it are jbe/ja, and muis_crash_tick 0x1a63d switches on the field itself (32 -> 6 rows) */
     int     damage;                             /* +0x28 */
     int     top_speed;                          /* +0x2c */
 };
