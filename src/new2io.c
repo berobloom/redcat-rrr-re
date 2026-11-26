@@ -23,7 +23,11 @@
    Both sides have 263 instructions, frame 0x2c and 11 spill slots, so the frame is not the
    constraint; the game spends its three pushed registers on col/py/temps and we spend them on
    px/ox/oy, and no spelling shifts the tie (watcom-levers "9.5b frame and evaluation-order rules",
-   (b): IR counts, not C counts). */
+   (b): IR counts, not C counts).
+   2026-11-26, the start_lights lever (how many C variables carry the values): every merge of a
+   sprite-loop local (cx/cy/ox/oy/ww/hh/n/e) into a tile-loop one (row/col/px/py/tx/ty) costs
+   80-200 rows (48 singles, .work/probe/dv3); a tile-value local, tx/ty in the tile index and
+   moving the sx/sy saves give 62-176 (dv4). */
 void draw_view(short dy, short dx)
 {
     int cx, hh, ww, e, sx, ty, tx, sy, n, ox, oy, cy, row, col, px, py;
