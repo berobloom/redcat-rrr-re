@@ -25,10 +25,10 @@
    from the object: alone in its file, its tail stops jmping into another crash tick's epilogue. */
 int player_crash_tick(short n)
 {
-    int t, vh, g, h, d;
     short k;
-    int m, vv, go;
-    unsigned f, want;
+    unsigned want, f;
+    int g, vh, d, h, t;
+    int vv, m, go;
 
     key_forward = 0;
     key_back = 0;
@@ -61,14 +61,17 @@ int player_crash_tick(short n)
     if (key_forward || key_back || key_left || key_right)
         v55fe0 = 1;
     if (go) {
-        if (want > 0) {
-            if (want == 3) {
-                stats[bodies[n].stats].f24 = 3;
-                bodies[n].speed += d << 4;
-                stats[bodies[n].stats].boosts--;
-            }
-        } else
+        switch (want) {
+        case 0:
             stats[bodies[n].stats].f24 = 0;
+            break;
+        case 3:
+            stats[bodies[n].stats].f24 = 3;
+            bodies[n].speed += d << 4;
+            stats[bodies[n].stats].boosts--;
+
+            break;
+        }
     } else if (finished0) {
         bodies[n].speed = 0;
         objects[n].frame = 2;
@@ -169,7 +172,7 @@ int player_crash_tick(short n)
     objects[n].frame = stats[bodies[n].stats].heading + 0x16;
     k = animset[objects[n].anim].steps[objects[n].frame].frame;
     objects[n].x = (bodies[n].x >> 16) - frames[k].f8 - 16;
-    objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
+    objects[n].y = (short)((bodies[n].y >> 16) - (bodies[n].z >> 16)) - frames[k].fa;
     return 0;
 }
 

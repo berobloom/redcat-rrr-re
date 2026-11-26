@@ -99,7 +99,7 @@
    store (112 -> 99), the vz thresholds are negative constants (0xfffb0000 as an int is a huge
    positive and WCC compares unsigned; -0x50000 gives the game's jge), and the vz table sets
    objects[n].frame (+0xa), not anim (+8).
-282 -> 276 -> 271 0x19497 player_crash_tick  (2026-11-26 declaration order, 173 of 1500 sampled, .work/probe/pc1)  written 2026-11-27, src/tick.c; 2049 of 2037 B, from the
+282 -> 276 -> 271 -> 259 0x19497 player_crash_tick  (2026-11-26 latest: want chain as a switch, `(short)((bodies[n].y >> 16) - (bodies[n].z >> 16))` in the tail, .work/probe/cs/pc2_w1x0y1a0; 2026-11-26 declaration order, 173 of 1500 sampled, .work/probe/pc1)  written 2026-11-27, src/tick.c; 2049 of 2037 B, from the
    disassembly. 2026-11-25: 6 of those rows are the object - with all three crash ticks in one file
    WCC ended this one's tail with a jmp to the next one's epilogue, which the game never does. RedCat's crash tick: refreshes the player's input flags 0x55fd0-0x55fe8 from
    key_pressed(keymap[]), rocket/boost on key edges (0x55fc8/0x55fcc), throttle + fuel on

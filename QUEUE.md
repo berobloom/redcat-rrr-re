@@ -414,3 +414,8 @@ Rules for the agent:
     -> 65, bull_tick 172 -> 168, player_tick 189 -> 183, player_crash_tick 276 -> 271;
     ai_waypoint_action stays 64 (only racer 2's rocket arm rebuilds its index chains - jump tables
     read, see src/ai.c). None is MATCH yet; all still have one-sided rows in nmclass.
+  - 2026-11-26 later: two more levers - an unsigned `if (v <= 0) .. else if (v == 3)` chain is
+    `switch (v) { case 0: case 3: }` (the game's test/jbe/cmp 3/je/jmp), and the tails truncate
+    to short (`(short)(bodies[n].x >> 16)`, `(short)((y >> 16) - (z >> 16))`); plus abs() in the
+    game's subtraction order. Now: muis_crash_tick 32, muis_tick 24, bull_crash_tick 128,
+    bull_tick 133, player_tick 143, player_crash_tick 259, ai_waypoint_action 64.
