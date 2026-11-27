@@ -62,6 +62,9 @@
  *        store sinks two places. That is exactly the game's MUIS pattern, in the wrong block. So
  *        the store's slot follows from how WCC allocates the result temporary across the
  *        function, not from statement order (STRONGLY SUPPORTED: no statement order moved it).
+ *        2026-11-27, the scheduler route (research/open-questions.md 35): the slot depends on the
+ *        code after the block, and a model of Watcom's scheduler (tools/wc/simsched.py) gives
+ *        the game's MUIS order from our unscheduled code, where real 10.5/10.6 do not.
  * -------------------------------------------------------------------------------------------- */
 
 void init_objects(void)

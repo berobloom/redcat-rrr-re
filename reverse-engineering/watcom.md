@@ -115,3 +115,15 @@ into a `CONST` segment of the target, names a strength-reduced loop's base below
 `reverse-engineering/tools/wc/mkscratch.sh NAME 0xADDR [SRC.c]` makes a whole scratch folder,
 `.work/scratch/NAME/`: context.h, NAME.c, target.asm and target.s. It prints the standalone score
 next to the in-module one, because decomp.me compiles the function on its own.
+
+## The instruction scheduler (-or)
+
+`-ox` = `-oeilmr -s` here (CONFIRMED on init_objects: identical bytes); `-oeilm -s` leaves out `r`,
+the scheduler, and gives the code in its order before scheduling. `tools/wc/simsched.py` replays
+the scheduler on one block of such a compile, following Open Watcom's bld/cg/c/inssched.c
+(bottom-up list scheduling; ties by stall cost, height, 'stallable', source order), redefby.c
+(aliasing) and f.h (unit costs). `tools/wc/schedfit.py` scores the model, or variants of its
+tie-breaks, against every block of a set of compiles: 450 of src/'s 530 blocks are reproduced
+(2026-11-27). Where it fails, 10.x differs from the published code or the model is incomplete
+(open question 35).
+

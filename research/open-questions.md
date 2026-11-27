@@ -383,3 +383,35 @@
     one extra `mov edx,ecx` before the xor, 120 rows untuned (.work/scratch/bcrash).
     src/ keeps the 50-row `return 0;` text. On that text, mirroring only the waypoint abs() gives 48,
     but that text is tuned to the wrong tail, so it was not taken.
+
+35. **Open: why WCC 10.x keeps init_objects' MUIS heading store early (the function's last 2 rows).**
+    2026-11-27, reverse-engineering/tools/wc/simsched.py and schedfit.py, probes in
+    .work/scratch/sched.
+    - CONFIRMED: `-oeilmr -s` compiles init_objects to exactly `-ox`'s bytes, and `-oeilm -s` (no
+      `r`, no scheduling) gives the order before the scheduler: MUIS copies the result
+      (`mov ebx,eax`), loads the index, then stores heading, f24, damage, top speed, vx, vy, vz.
+    - CONFIRMED: Watcom 10.6 (the game's compiler) gives the same 2 rows, and -4r/-5r/-3s/-4s/-5s
+      are 109+ rows, so it is neither the version nor the CPU target.
+    - CONFIRMED, small probes: the store's slot depends on the code AFTER the block. With the
+      follower statements removed, MUIS's store sinks like the game's. With all but the last two
+      removed from the start it still sinks; with three or more it does not. Padding with
+      unrelated stores changes nothing. A label, braces, `if (1) {}` and `;` are no block
+      boundary.
+    - The scheduler (Open Watcom inssched.c) builds each block bottom-up and breaks ties by
+      stall cost, then height, then 'stallable', then source order. A model of it reproduces
+      450 of the 530 blocks in src/. On init_objects' 118-instruction block (BULL, MUIS and the
+      followers) it matches the real compile everywhere except MUIS's heading store - and there
+      it gives the game's order exactly (f24, index load, damage, table load, heading, vx, top).
+      So the published logic turns our unscheduled code into the game's bytes, and real 10.5/10.6
+      do not. CONFIRMED for the model's output; whether the model is right is LIKELY.
+    - The deciding tie is the 'stallable' rule: heading (`mov [eax+4],ebx`, 5) against f24/damage
+      stores and the table load (3), equal in cost and height. Without that rule MUIS comes out as
+      ours, but then BULL's heading store stops sinking below its f24 store, which the game and
+      our compile both do, and small blocks such as high_load 0x18f keep source order. So 10.x
+      breaks this tie by something the model does not have. SPECULATIVE what: a fit over
+      ancestor height, dependant height, both summed, stallable with and without registers,
+      successor and predecessor counts, flags, adjacency to the instruction below, and source
+      order found nothing better than the published order (80 of 530 blocks wrong).
+    Next: make the model exact on the 80 blocks it gets wrong (FP units, `add reg,const` index
+    sliding, call clobbers), then ask it which input order or dependency would give the game's
+    MUIS slot under the rule that fits.
