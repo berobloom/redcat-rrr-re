@@ -36,9 +36,10 @@
    and four spellings of that decision leave it alone (2026-11-27, .work/scratch/bull_tick): the
    merged test, the same test as `!(damage >= 0 && fuel >= 0)` (50 rows, byte-identical to the merged
    form), as `!(damage >= 0) || !(fuel >= 0)` (191), as `!(damage > -1 && fuel > -1)` (52) and as a
-   `?:` chain (119). With the negated pair WCC still puts both tests together and the crash store out
-   of line, so the store's slot and the period test's jump target are not the fall-through choice -
-   open question 34.
+   `?:` chain (119); a labelled shared tail (`goto out;` / `out:` after the store, the literal shape
+   of the game's jump) gives 57 and still places the store out of line. With the negated pair WCC
+   still puts both tests together and the crash store out of line, so the store's slot and the period
+   test's jump target are not the fall-through choice - open question 34.
    2026-11-26 (.work/probe/btx): the game computes vx and vy TWICE - once unconditionally, then
    again inside `if (!finished2)` with the zero stores in the else (0x12d1e-0x12e06: two
    cos_tbl/sin_tbl fixmul pairs; the other five ticks have one). A redundancy in the game's own

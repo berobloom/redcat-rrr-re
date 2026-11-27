@@ -309,8 +309,12 @@
     unchanged, two of them byte-identical to the current text: merged `damage < 0
     || fuel < 0` (50 rows), `!(damage >= 0 && fuel >= 0)` (50), `!(damage >= 0)
     || !(fuel >= 0)` (191), `!(damage > -1 && fuel > -1)` (52), `a < 0 ? 1 : b < 0`
-    (119) - .work/scratch/bull_tick, 2026-11-27. So the fall-through choice is
-    not the C's polarity here (unlike the follower_tick 0x167aa lever, where
-    negating the pair did move the store); whether it is WCC's block placement
-    alone or a source-order difference is open. It is worth three functions and
-    210 near-miss rows, so it is the first thing to bring a new idea to.
+    (119) - .work/scratch/bull_tick, 2026-11-27. A shared tail written with a label
+    (`goto out;` for the period test, `out:` right after the `crash2 = 1` store -
+    the literal shape the game's jump suggests) gives 57, still places the store
+    out of line, and moves our go/m slots to [esp]/[esp+4]. So the fall-through
+    choice is not the C's polarity here (unlike the follower_tick 0x167aa lever,
+    where negating the pair did move the store) and neither is a labelled shared
+    return; whether the placement is WCC's own or follows a source-order
+    difference is open. It is worth three functions and 210 near-miss rows, so it
+    is the first thing to bring a new idea to.
