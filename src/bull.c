@@ -19,6 +19,20 @@
    0x1c0000, puffs of kind damage, crash2 when damage or fuel runs out.
 
    differs: 50 rows (was 208 -> 172 -> 133), 2246 of 2258 bytes, nmrefs refs all the same.
+   2026-11-27, frame map (`tools/wc/stackmap.py` + the [esp] uses read off the game's listing): the
+   game's frame is 0x10 and uses all four slots - [esp+4] go, [esp+8] m = 0x1f (both as ours),
+   [esp+0xc] = `d` (spilled at 0x128d4 after the fixdiv, reloaded at 0x12ae9/0x12bb7/0x12c24 for the
+   three speed updates) and [esp] as a scratch for the head's `objects[n].x` offset (0x1285b
+   `mov [esp],ebx` / 0x12864 `add ebx,[esp]`, and again at 0x12bb0). Ours is 0xc: we keep `d` and that
+   scratch in registers, and 22 of the 50 rows are homes. So the game's allocator was under more
+   pressure than ours - three ways to raise it here, all worse: an address-taken `d` (`int *pd = &d;`,
+   .work/scratch/bull_tick/v_pd.c) gives 215, and a stats-index holder `s` gives 295 because the game
+   re-derives `bodies[n].stats` per block (as the older note said) - the holder also merges the
+   damage/fuel tests' index chain, which is not what the game does. Also first in the listing, and a
+   shape difference rather than a home: the game's `objects[n].period == -1` return jumps INTO the tail
+   of the crash-return block (0x12887 `je 0x128af`, and 0x128af is `xor eax,eax; jmp 0x130ee` right
+   after the `crash2 = 1` store at 0x128a5), where ours jumps straight to the epilogue (0x12886
+   `je 0x130e0`). The same head appears in player_tick and muis_tick, so it is worth one decision.
    2026-11-26 (.work/probe/btx): the game computes vx and vy TWICE - once unconditionally, then
    again inside `if (!finished2)` with the zero stores in the else (0x12d1e-0x12e06: two
    cos_tbl/sin_tbl fixmul pairs; the other five ticks have one). A redundancy in the game's own

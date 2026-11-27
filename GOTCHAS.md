@@ -328,6 +328,17 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
+- **You cannot force Watcom to spill by taking a local's address.** `int *pd = &d;` and reading
+  `*pd` later does not reproduce a game function's extra stack slot - it restructures everything
+  (bull_tick 0x12826, 50 -> 215 rows, .work/scratch/bull_tick/v_pd.c). A stack slot in the game that
+  we keep in a register means its allocator had more live values there; find what is live, do not
+  fake the spill. [generic]
+- **A stats-index holder is wrong where the game re-derives the index.** `s = bodies[n].stats;` +
+  `stats[s]` is what took dropped2_tick 0x178f6 16 -> 2, but in bull_tick 0x12826 it costs 245 rows
+  (295) because the game reloads `bodies[n].stats` in every block there - the holder also merges the
+  damage/fuel tests' index chain, which the game does not merge. Same text, opposite verdict: check
+  the per-block loads in the game's listing before introducing a holder. [generic]
+
 - **`objects[n]` store encoding (spawn_dropped_object 0x18759, 8 rows):** the game is an if/else-if
   chain (kind == 2, then kind == 0) keeping `n << 4` in EAX and the objects pointer in EDX per arm.
   Our `switch` has the game's registers but two other things: Watcom lays out its own compare tree
