@@ -424,5 +424,50 @@
       (store in the game's slot) but swaps the result copy and the index load at 0x14d7a; the
       model reproduces that only with an extra copy<->load edge that no redefby.c rule makes
       (cause SPECULATIVE). Statement sequence is out (Open Watcom sets it only for x87 code).
-    Next: find where the MUIS store's base is dropped (addrfold.c X_FAKE_BASE, ScaleIndex in
-    namelist.c) and what C keeps it, without B's extra edge.
+    - 2026-11-27e (pi agent, .work/pi/fold: simsched3.py = simsched2.py plus forced-stallable and
+      index-name markings, cmp3.py, search_stall.py, gen_muis.py, gen_decl.py, gen_order.py).
+      Step 1, where an N_INDEXED can lose its base in OW bld/cg (all paths, file:line): only
+      ScaleIndex (namelist.c:577-613,606-607) ever writes i.base, so base == NULL can only enter at
+      addrfold.c:204 (CL_POINTER - the address sits in a register/temp with no symbol: a real C
+      pointer), :211 (CL_TEMP_OFFSET), :220/:224 (CL_CONS and default - an integer value used as an
+      address), x86split.c:358 (SplitIndex, whose flags get X_FAKE_BASE at :353) and 386tls.c:224
+      (thread-local storage, explicit NULL). Every other call site passes op->i.base through and can
+      only propagate a base already lost: cse.c:1383, loopopts.c:1580/2314, unroll.c:351/357,
+      fixindex.c:109 (FixIndexAdjust's index temp), inssched.c:812/822 (the scheduler's own
+      INDEX_ADJUST rewrite), regalloc.c:131, scins.c:184, x86index.c:259/413, 386sib.c:223,
+      386opseg.c:71. `stats[bodies[4].stats]` is a CL_GLOBAL_INDEX, which addrfold.c:208 builds with
+      the stats symbol and X_FAKE_BASE cleared, so LIKELY neither our nor the game's compile loses
+      that base, and the w214u marking is one equivalent change rather than the mechanism
+      (SPECULATIVE). cse.c:1377-1386 is the one path that changes an indexed operand's *index* name
+      (it points it at the CSE'd address temp); marking the index as a different name with the base
+      kept gives 3 rows, not 0, so that path is not it either.
+      Step 2, BULL (-oeilm 166-185) vs MUIS (203-222): the two groups have the same shape and the
+      same single *48 product shared by the heading/f24/damage/top_speed stores with nothing between
+      the address and them; only the roles swap (BULL copies the result to EDX at 171 then loads
+      bodies[2].stats into EBX at 172, MUIS copies to EBX at 208 and loads bodies[4].stats into EDX
+      at 209) and in src/init.c only the vx store's source slot differs (before top_speed in BULL,
+      after it in MUIS). No base-loss path distinguishes them; the store's value register is the only
+      visible difference.
+      Step 3: the remaining 2 rows are one InsStallable tie. inssched.c:101-130 scores each operand
+      by *name class* (N_INDEXED +3, N_REGISTER +2, N_MEMORY +1, N_TEMP +0, plus +3 for an indexed
+      result) and inssched.c:908-930 uses it after cost and height; at the pick that places the MUIS
+      heading store, it and the f24/damage stores and the table load are all cost 0 and height 74, so
+      the store wins by counting 5 (value a named register/memory name - the game) or loses on the id
+      tie-break counting 3 (value a bare N_TEMP - ours, 0x14d8c). Forcing instruction 214's stallable
+      below 3 reproduces real A's block exactly (rows=0) and is the only one of 826 single forced
+      stallables over the whole block that does; the same forced value on BULL's identical store
+      (177) costs 4 rows, so our compile counts BULL's call-result value and not MUIS's (LIKELY).
+      No forced stallable, base marking or index-name marking reproduces real B - its pair still
+      needs the extra copy<->load edge. 10.5 accepts -oa, the CGSW_GEN_RELAX_ALIAS switch of
+      redefby.c:85-90/203-208 (base-unknown indexed operands stop aliasing): 1515 bytes and 87 rows,
+      so the game was not built with it and no option carries this. C candidates on the A seed: every
+      spelling that names the value does move the store to the game's slot and pays elsewhere -
+      result holder alone 8 rows, ri + si (seed B) 2 with the 0x14d7a pair swapped in all six
+      declaration orders, `stats[(si = bodies[4].stats)].heading = ri;` 2, one `si` holder over the
+      whole MUIS store group 13-34, two holders / `register` / `unsigned` 8 - and moving the heading
+      statement to each other slot of its block on the A seed gives 5, 11, 23, 23, 25, 27. Best is
+      still 2 (.work/pi/fold/V/m_ri_si.c).
+    Next: the store's slot is a name-class question (its stored value must count +1 or +2 in
+    InsStallable), and the pair at 0x14d7a is the open half: find the C that names the value without
+    turning its copy into the holder assignment - or the dependency that holds the index load under
+    the copy in seed B (no redefby.c rule and no name-class marking gives it).
