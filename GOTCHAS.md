@@ -115,6 +115,13 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Matching
 
+- **A `return` whose jump lands in another block's `xor eax,eax` can mean the function's LAST
+  return is not a constant.** WCC sends an early `return 0` to the final `xor eax,eax` when it can
+  share it. bull_tick's period return lands in the crash block (0x128af) because its end is
+  `mov eax,ebx; ...; xor eax,ebx` (y ^ y, still 0). Read the epilogue before probing the head.
+  WCC 10.5 compiles `t ^ t` on one variable to `xor eax,eax` and propagates int copies, so
+  `xor eax,R` after `mov eax,R` needs two temporaries the optimiser cannot merge, e.g. an int store
+  to memory (`(gi = t) ^ t`). An assignment to a short field always adds a movsx (open question 34). [generic]
 - **A wrong *field* of a right global is invisible to every check:** the fixup masks the whole
   `[reg + disp]`, so `bodies[r].f1c = 0` and `bodies[r].speed = 0` score alike (check.sh, fndiff and
   nmrefs all print it as `@`). Only the game's raw displacement says, and a second site pins the

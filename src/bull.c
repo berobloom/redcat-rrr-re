@@ -19,6 +19,13 @@
    0x1c0000, puffs of kind damage, crash2 when damage or fuel runs out.
 
    differs: 50 rows (was 208 -> 172 -> 133), 2246 of 2258 bytes, nmrefs refs all the same.
+   2026-11-27 (later), the tail: the game does not `return 0`. It returns the y value XORed with a
+   copy of itself (0x130e5 `mov eax,ebx`, 0x130e7 the objects[n].y store from bx, 0x130ec
+   `xor eax,ebx`), as bull_crash_tick does (0x1a41e). That is why the period return lands on the
+   crash block's `xor eax,eax` (0x128af): there is no constant-zero epilogue to share. muis_tick and
+   player_tick jump straight to theirs (0x13158, 0x11f45). A stand-in `return k;` already gives the
+   game's 0x10 frame (78 rows). No C for it found yet: WCC turns `y ^ y` into `xor eax,eax` and an
+   assignment to the short field adds a movsx. Best tail spelling 97 rows (open question 34).
    2026-11-27, frame map (`tools/wc/stackmap.py` + the [esp] uses read off the game's listing): the
    game's frame is 0x10 and uses all four slots - [esp+4] go, [esp+8] m = 0x1f (both as ours),
    [esp+0xc] = `d` (spilled at 0x128d4 after the fixdiv, reloaded at 0x12ae9/0x12bb7/0x12c24 for the

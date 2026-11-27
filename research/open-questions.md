@@ -318,3 +318,22 @@
     return; whether the placement is WCC's own or follows a source-order
     difference is open. It is worth three functions and 210 near-miss rows, so it
     is the first thing to bring a new idea to.
+    2026-11-27 (later), **the jump target is explained by the tail, and only bull_tick has it**
+    (CONFIRMED from the game's bytes): muis_tick's period return is 0x13158 `je 0x138e1` and
+    player_tick's is 0x11f45 `je 0x1281a`, both straight to their final `xor eax,eax`, so the
+    "same head in three ticks" premise above was wrong for the target. bull_tick's final return is
+    NOT a constant: 0x130e5 `mov eax,ebx` / 0x130e7 `mov [edx+edi+6],bx` (objects[n].y) / 0x130ec
+    `xor eax,ebx` returns y XOR y. With no shareable `xor eax,eax` at the end, the period return lands
+    on the crash block's own one at 0x128af. bull_crash_tick 0x19c8c ends the same way (0x1a417
+    `mov eax,ecx` / 0x1a419 `mov [edx+ebx+6],cx` / 0x1a41e `xor eax,ecx`). A byte scan of RRR's
+    code found no other `mov eax,R ... xor eax,R`. STRONGLY SUPPORTED: any non-constant return moves
+    the head. A stand-in `return k;` gives the game's `sub esp,0x10` frame and rewrites the period
+    test. Still open: the C behind it. In WCC 10.5 (about 300 one-function probes in
+    .work/scratch/bull2): `t ^ t` on one variable compiles to `xor eax,eax` (and `t - t` to `sub
+    eax,eax`); a copy through an int local is propagated away (`r = t; return r ^ t;` is also `xor
+    eax,eax`). Two distinct temporaries survive only through an int store to memory (`return (gi = t) ^ t;`
+    gives the game's exact `mov eax,edx; mov [gi],edx; xor eax,edx`) or through two reaching definitions
+    (`if (c) r = t; else r = t;`, which leaves a dead `cmp`). An assignment to the short field always adds
+    a `movsx`/`cwde`, whatever the return type (int, short, char, unsigned, long) or operand types. In
+    the full function the closest is `return (objects[n].y = y = E) ^ y;` with a new `int y;` declared
+    first: 97 rows, worse than the 50 we have, so src/ keeps `return 0;`.
