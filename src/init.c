@@ -49,6 +49,19 @@
  *        of each block, result/index holders over i/a/b/f in every combination (~700 files,
  *        .work/probe/io4-io9), 5040 store orders with both holders (io7), holder types and
  *        declaration orders (io8), chained and pointer forms (ioa): none below 2.
+ *        2026-11-27 (.work/scratch/io), none below 2 either:
+ *        - a holder for the top-speed value as well as the result, with the statements in the
+ *          game's literal order (f24, damage, top load, heading, vx, top store);
+ *        - a holder in BULL alone (BULL's bytes do not change);
+ *        - casts on either call result;
+ *        - separate variables for the loops and the fuel value;
+ *        - 1,500 random orders of the 30 independent statements between MUIS's call and the
+ *          final loop, the follower blocks included.
+ *        Any result holder in MUIS (i or a new variable) puts MUIS's store in the game's slot.
+ *        Then BULL (no holder) takes the result in EBX with the index loaded first, and its
+ *        store sinks two places. That is exactly the game's MUIS pattern, in the wrong block. So
+ *        the store's slot follows from how WCC allocates the result temporary across the
+ *        function, not from statement order (STRONGLY SUPPORTED: no statement order moved it).
  * -------------------------------------------------------------------------------------------- */
 
 void init_objects(void)
