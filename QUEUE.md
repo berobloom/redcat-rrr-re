@@ -428,3 +428,13 @@ Rules for the agent:
     declaration order; player_tick/muis_tick unchanged.
   - 2026-11-26 (Opus): player_crash_tick 259 -> 114 rows: `(g * 1000) << 16` (the game's imul + shl,
     nmrefs now clean), finished0 arm last, the game's head order; MATCHING lever for imul + shl.
+  - 2026-11-27 (agent): the three normal ticks are now three modules - player_tick stays in src/drive.c,
+    bull_tick 0x12826 to src/bull.c, muis_tick 0x130f8 to src/muis.c. player_tick 143 -> 136 rows and
+    muis_tick 2030 -> 2036 of the game's 2037 bytes (own epilogue); bull_tick stays 50. Check that
+    proves: `src/check.sh 2>&1 | grep -c ' MATCH at'` is still 128 and `fndiff.py rrr
+    .work/src/DRIVE.OBJ player_tick_ 0x11eb5 | tail -1` says 136; mutation that fails it: put
+    muis_tick back in drive.c and player_tick reads 143 again. New lead for bull_tick from
+    `tools/wc/stackmap.py`: the game's frame is 0x10 with all four slots used (14 accesses), ours is
+    0xc touching two, so one spilled local is missing - 22 of its 50 rows are homes. muis_tick's frame
+    map already equals the game's and 14 further spellings of its four sites all cost rows (86-119 for
+    the game's arithmetic heading test), so its 24 rows stay.
