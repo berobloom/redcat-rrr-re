@@ -139,6 +139,24 @@
    Written 2026-11-27: the game's f24/want tests are unsigned (test/jbe, test/ja) so those locals are
    `unsigned`, and `objects[n].frame = 2`, not anim. Not a copy of bull_crash_tick 0x19c8c or
    player_crash_tick 0x19497: under half the instruction stream is shared.
+   2026-11-27 (probe mcd/): the else-arm register lever is the fixmul IF-arm's IR length,
+   confirmed empirically. Deleting the sin fixmul line flips the else arm to the game's
+   allocation (n->EAX, n*16->EAX, ptr->EDX); a shared speed temp does NOT flip it (still
+   n->EDX); a shared heading temp flips it to n->EBX (a third pattern). So the game's
+   else arm (n->EAX) is what the compiler emits for a "short" if-arm IR - yet the game's
+   if-arm has BOTH fixmul lines with byte-identical bytes to our plain form. Paradox:
+   identical if-arm bytes, different else-arm register choice; the game's if-arm IR must be
+   shorter in a way codegen re-materializes to the same bytes, but neither the plain form,
+   the heading temp, nor the speed temp reproduces it. MIRROR: bull_crash_tick's finished2
+   arm (same 4-statement C) emits n->EAX / ptr->EDX in OUR build - exactly the game's muis
+   pattern - while the game's bull arm emits n->EDX / 5n->EAX. Our bull function's
+   surrounding structure already yields the muis-correct allocation for the identical arm C;
+   the muis function's surrounding structure yields the bull-correct one. The difference is
+   fixed by the game's bytes in the non-arm blocks (top store order, f24 switch form), so it
+   cannot be copied. The 6th row (the ret) is a 1-byte length gap: ours is 1876 bytes, the
+   game's 1877, so our epilogue lands 1 byte early and the ret misaligns; the missing body
+   byte is masked (fixup) in fndiff, not yet located. Known hard near-miss; revisit if a WCC
+   register-allocation model emerges.
 19 0x138ed camera_follow  SKIP 2026-11-26: two Watcom allocation ties, 62 -> 19; the C is established (see the differs note in src/rrr.c) - a declaration order either spills tx to the game's [esp+8] and mirrors vx/vy (ours EDX/ESI, the game ESI/EDX) or gets vx/vy right and keeps tx in ESI (frame 0x8); ~200 spellings incl. 50+ declaration orders; same class as draw_view 0x11526 (watcom-levers "register tie")
 0 0x1517a find_waypoints  MATCH 2026-11-27: the last thing it needed was its object's content - init_objects 0x148db (1635 B, 3 mod 4) in src/init.c makes Watcom land the game's three jump-table pad bytes at 0x1556c (open question 30). Spelling that got +0..+1009 identical: `unsigned short w` and no n local, `(w & 0xff)` written where used
 51 0x11526 draw_view  SKIP: register homes only, and they never move - 190 in-place spellings (.work/probe/dv2: 128 tile-loop x clip x cx-mutations, 52 declaration-order swaps/shuffles, pointer and hoisted-subexpression locals, 9 draw_tile pragma forms); ours gives ESI to px and keeps ox/oy/ww in registers, the game gives ESI to col and keeps &sprites[n] in EBP/EDI spilling cx/ox/x+w to slots. Instruction counts (263), frame (0x2c) and spill-slot count (11) are identical on both sides, so only the homes differ; any spelling that forces px through `col * 32` or moves another home goes to 87-250 rows; 2026-11-26: merging sprite-loop locals into tile-loop ones (48, .work/probe/dv3) 80+ rows, setup/tile-index variants (dv4) 62+

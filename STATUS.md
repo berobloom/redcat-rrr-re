@@ -205,6 +205,22 @@ Short: where the project stands, and what is next. History is in git; no diary.
    script index homed in a register so the arms re-derive the offset, and two wait bodies) at 39 rows,
    but WCC's switch tree is not the game's two cmp/jne - no spelling of the chain gives the index a
    home. See the differs note in `src/ai.c` and nearmiss.txt.
+   2026-11-28: `src/check.sh` is at 128 MATCH (128/147, 87.1%); `src/data.baseline` 9677/9677.
+   QUEUE: Q2 (library map) and Q4 (first WLINK) are both marked READY FOR REVIEW - Q4's Accept line
+   holds, `link.sh .work/link/q4check $(cat .work/link/libobjs.args11)` -> `LINK: 419179 of 419179
+   file bytes identical`, every section IDENTICAL, 9909/9909 fixups identical. `muis_crash_tick`
+   0x1a42a is a known hard near-miss (SKIP, 6 rows = 5 home + 1 ret): the else-arm register lever is
+   the fixmul **if-arm's IR length** (probe .work/probe/mcd/), confirmed empirically - deleting the
+   sin fixmul flips the else arm to the game's allocation (n->EAX), a shared speed temp does not,
+   a shared heading temp gives a third pattern (n->EBX). Yet the game's if-arm has BOTH fixmuls with
+   byte-identical bytes to our plain form, so it behaves like a short if-arm in the allocator with
+   no plain C form found (a paradox). MIRROR: bull_crash_tick's finished2 arm (the same 4-statement
+   C) emits n->EAX/ptr->EDX in OUR build - the game's muis pattern - while the game's bull arm emits
+   n->EDX/5n->EAX; each function's surrounding structure fixes the other's allocation, so the arm C
+   cannot be copied to fix it. A 1-byte length gap (ours 1876 B, game 1877) misaligns the ret. The
+   tractable Q5 targets now: muis_tick 0x130f8 (24 rows, 14 home), bull_crash_tick 0x19c8c (42),
+   bull_tick 0x12826 (50), ai_waypoint_action 0x1af83 (64), player_crash_tick 0x19497 (114),
+   player_tick 0x11eb5 (136).
 4. Later: the rest of the module boundaries in 0x10010-0x1B915 (one source file per original
    module; `src/racer.c` 0x1404a-0x1467b found from epilogue sharing and `src/init.c`
    0x148db-0x1585d from its string block head ('player_direction : %d wp: %d' 0x50e04 runs into
