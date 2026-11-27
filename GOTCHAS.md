@@ -127,6 +127,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   tail and head (both CONFIRMED against the game) took it from 50 to 100+ rows: WCC allocates over
   the whole function, so the declaration order and spellings chosen under `return 0;` no longer fit.
   Keep the confirmed statement in every later search, even while src/ holds the lower-count text.
+- **A control-flow merge ends WCC's reuse of computed addresses.** After `r = y ? y : 0;` (or any
+  if/else) WCC recomputed `movsx ebx,si; shl ebx,4` for the next `objects[n]` instead of reusing the
+  offset it already had, and then folded the earlier offset into a pointer. Putting the store before
+  the merge (`objects[n].y = y; if (y) r = y; else r = 0; return r ^ y;`) kept the offset in one
+  register to the end, as the game does (bull_tick, 100 -> 63 rows). If the game reuses a value
+  across a spot where ours recomputes it, look for a merge between the two in our C. [generic]
 - **A wrong *field* of a right global is invisible to every check:** the fixup masks the whole
   `[reg + disp]`, so `bodies[r].f1c = 0` and `bodies[r].speed = 0` score alike (check.sh, fndiff and
   nmrefs all print it as `@`). Only the game's raw displacement says, and a second site pins the

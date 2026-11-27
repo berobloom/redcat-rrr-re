@@ -360,3 +360,26 @@
     a real branch for the `?:` (`je` / `mov edx,ebx` / `jmp` / `xor edx,edx` before the xor), which the game
     does not have. So 71 is not on the path to the game's bytes, even though its head layout matches.
     The branch-free form is the one with the copy in its own variable before the store (floor 100 so far).
+    2026-11-27 (later), **the store goes before the merge: 58 rows.** `objects[n].y = y; if (y) f = y;
+    else f = 0; return f ^ y;` (f is the existing `unsigned f`) gives the game's tail: `sub ebx,eax;
+    mov eax,ebx; mov [edx+edi+6],bx; xor eax,ebx`, with EDI holding objects[n]'s offset from 0x13061
+    to the end, as in the game (CONFIRMED, in place; only the `mov edx,[objects]` is scheduled one
+    instruction earlier than the game's). With the merge before the store, WCC recomputes the offset
+    after the merge. With this tail, the best of 3,000 sampled declaration orders is 63. Mirroring the
+    second `abs()` of both distance sums (`abs((waypoint2[i].y >> 16) - (bodies[2].y >> 16))` and
+    `abs((bodies[0].y >> 16) - (bodies[n].y >> 16))`) gives 58, and 58 is the floor over all 40,320
+    orders of the 8 declarations (CONFIRMED for this text; .work/scratch/bull2/tpl_M.c, sw_M_all.txt).
+    These changes leave it at 58 or worse: any of the 24 orders of the four head statements, six
+    spelling toggles (operand order of the waypoint-count and vz compares, the negated racer_contact
+    test, `f24 = 3`, `d * 16`, `f == 0`) and six declaration types. What is left is allocation:
+    - the game's frame is 0x10 with a spilled temp at `[esp]` in the head (0x1285b, the sprite
+      index), and `d` at `[esp+0xc]` where ours has `d` at `[esp]` in a 0xc frame;
+    - the n extension and `want` are in each other's registers (game EDI/EBP, ours EBP/EDI);
+    - a few subtractions and the anim/k lookup in the tail pick other registers.
+    The spill suggests that one more value is live across the game's head than across ours, and that
+    is SPECULATIVE. A probe that makes `h` possibly-unset does give a 0x10 frame with head spills, but
+    not the game's.
+    bull_crash_tick: with the store first, `if (y) f = y; else f = y;` gives the game's tail except for
+    one extra `mov edx,ecx` before the xor, 120 rows untuned (.work/scratch/bcrash).
+    src/ keeps the 50-row `return 0;` text. On that text, mirroring only the waypoint abs() gives 48,
+    but that text is tuned to the wrong tail, so it was not taken.
