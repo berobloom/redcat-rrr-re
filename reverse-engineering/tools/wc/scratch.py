@@ -92,14 +92,28 @@ def main():
         raise SystemExit('externals with no address in %s_names.txt: %s' % (prog, missing))
     sym_of_call = {a: e for a, e in ext_at}
 
-    def data_sym(t):
-        best = None
-        for a, e in ext_at:
-            if a <= t and not e.endswith('_'):
-                best = (a, e)
-        if best is None:
-            raise SystemExit('no external of %s holds 0x%x' % (obj, t))
-        return best[1], t - best[0]
+    strings = {}
+
+    def data_sym(t, indexed):
+        """symbol, offset for the address t that a fixup of the game points at"""
+        if t in sym_of_call and sym_of_call[t].endswith('_'):
+            return sym_of_call[t], 0       # a function's address as a value (a callback store)
+        data = [(a, e) for a, e in ext_at if not e.endswith('_')]
+        below = [x for x in data if x[0] <= t]
+        above = [x for x in data if x[0] > t]
+        if indexed and above and above[0][0] - t <= 64:
+            # a base just below an array, the index register making up the difference
+            # (Watcom's strength-reduced loops: [eax+bodies-8] with eax from 0xf0)
+            return above[0][1], t - above[0][0]
+        if below:
+            return below[-1][1], t - below[-1][0]
+        if t not in strings:               # a string of the module's own CONST (debug messages)
+            b = img.read(t, 256)
+            z = b.find(b'\0')
+            if z <= 0 or not all(32 <= c < 127 or c in (9, 10, 13) for c in b[:z]):
+                raise SystemExit('no external of %s holds 0x%x' % (obj, t))
+            strings[t] = b[:z]
+        return 'LS%x' % t, 0
 
     targets = {int(i.op_str, 16) for i in inss
                if i.mnemonic.startswith('j') and re.fullmatch(r'0x[0-9a-f]+', i.op_str)}
@@ -119,6 +133,15 @@ def main():
                 g = m = sym_of_call[t]; used_funcs.add(g)
             else:
                 raise SystemExit('0x%x: %s to 0x%x, which %s does not reference' % (ins.address, ins.mnemonic, t, obj))
+            short_ok = ins.mnemonic != 'call' and -128 <= t - (ins.address + 2) <= 127
+            if ins.size > 2 and short_ok:
+                # the game keeps a long form an assembler would shorten: spell its bytes out
+                opc = bytes(ins.bytes[:ins.size - 4])
+                gas.append('    .byte %s  # %s %s' % (', '.join('0x%02x' % c for c in opc), ins.mnemonic, g))
+                gas.append('    .long %s - . - 4' % g)
+                masm.append('    db %s  ; %s %s' % (', '.join(hexm(c) for c in opc), ins.mnemonic, m))
+                masm.append('    dd %s - $ - 4' % m)
+                continue
             gas.append('    %s %s' % (ins.mnemonic, g)); masm.append('    %s %s' % (ins.mnemonic, m))
             continue
         gop = mop = op
@@ -126,13 +149,16 @@ def main():
             covered.update(range(a, a + 4))
             t = fix[a]
             v = struct.unpack_from('<I', img.read(a, 4))[0]
-            sym, off = data_sym(t)
-            used_data.add(sym)
+            lit = '0x%x' % v
+            inmem = re.search(r'\[[^\]]*' + lit + r'[^\]]*\]', op)
+            sym, off = data_sym(t, bool(inmem) and bool(re.search(r'\[\s*e[a-ds][xip]', inmem.group(0))))
+            if not sym.startswith('LS'):
+                (used_funcs if sym.endswith('_') else used_data).add(sym)
             lit = '0x%x' % v
             if lit not in op:
                 raise SystemExit('0x%x: fixup value %s not in "%s"' % (ins.address, lit, op))
-            gsub = sym + ('+%d' % off if off else '')
-            msub = sym + ('+' + hexm(off) if off else '')
+            gsub = sym + ('%+d' % off if off else '')
+            msub = sym + (('+' if off > 0 else '-') + hexm(abs(off)) if off else '')
             inmem = re.search(r'\[[^\]]*' + lit + r'[^\]]*\]', op)
             if not inmem:              # an address as an immediate
                 gsub, msub = 'OFFSET ' + gsub, 'offset ' + msub
@@ -147,14 +173,31 @@ def main():
         raise SystemExit('fixups outside instruction operands (a jump table?): %s' % [hex(a) for a in stray])
 
     fn = name + '_'
+    def masm_db(b):
+        parts, run = [], ''
+        for c in b:
+            if 32 <= c < 127 and c != 39:
+                run += chr(c)
+            else:
+                if run:
+                    parts.append("'%s'" % run); run = ''
+                parts.append(hexm(c))
+        if run:
+            parts.append("'%s'" % run)
+        return ', '.join(parts + ['0'])
+    gdata = ['', '.data'] + sum((['LS%x:' % t, '    .byte ' + ', '.join(str(c) for c in b + b'\0')]
+                                 for t, b in sorted(strings.items())), []) if strings else []
     open(os.path.join(outdir, 'target.s'), 'w').write('\n'.join(
-        ['.intel_syntax noprefix', '.globl ' + fn, fn + ':'] + gas) + '\n')
+        ['.intel_syntax noprefix', '.globl ' + fn, fn + ':'] + gas + gdata) + '\n')
     hdr = ['.386p', '.model flat', '']
     hdr += ['extrn %s:dword' % s for s in sorted(used_data)]
     hdr += ['extrn %s:near' % s for s in sorted(used_funcs)]
     hdr += ['', "_TEXT segment dword public use32 'CODE'", 'public ' + fn, fn + ' proc near']
+    mdata = (["CONST segment dword public use32 'DATA'"] +
+             ['LS%x db %s' % (t, masm_db(b)) for t, b in sorted(strings.items())] +
+             ['CONST ends']) if strings else []
     open(os.path.join(outdir, 'target.asm'), 'w').write('\n'.join(
-        hdr + masm + [fn + ' endp', '_TEXT ends', 'end']) + '\n')
+        hdr + masm + [fn + ' endp', '_TEXT ends'] + mdata + ['end']) + '\n')
 
     # check: GNU as of target.s == the game's bytes outside the relocation fields
     o = os.path.join(outdir, 'check.o')

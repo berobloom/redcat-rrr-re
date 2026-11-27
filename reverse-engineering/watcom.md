@@ -108,3 +108,10 @@ More from the DKj58 session (chat 2026-11-26):
 `reverse-engineering/tools/wc/scratch.py PROG NAME 0xADDR OURS.OBJ OUTDIR` writes a function's
 target assembly in that form, with its addresses from the executable's fixup records as
 symbol+offset of our object's externals, and checks a GNU twin against the game's bytes.
+It also names callback stores by their function, writes the module's own strings (a debug message)
+into a `CONST` segment of the target, names a strength-reduced loop's base below an array as
+`_bodies-28h`, and spells out the game's long jumps that an assembler would shorten
+(`db 0fh, 85h` / `dd L - $ - 4`). The last two are not yet tried on decomp.me (2026-11-27).
+`reverse-engineering/tools/wc/mkscratch.sh NAME 0xADDR [SRC.c]` makes a whole scratch folder,
+`.work/scratch/NAME/`: context.h, NAME.c, target.asm and target.s. It prints the standalone score
+next to the in-module one, because decomp.me compiles the function on its own.
