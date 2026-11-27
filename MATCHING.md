@@ -186,7 +186,12 @@ cos_sin_init_frames.txt`, 2026-11-27).
   objects"). `follower_tick` 0x167aa is the other direction: the game gives it its own epilogue, so it
   now sits alone in `src/shadeobj.c` and the callbacks moved to `src/shadeobj2.c` (13 -> 9 rows);
   there the string blocks say the same thing (one padding byte, 0x51783, between the two modules'
-  strings) - take the boundary when both tests agree.
+  strings) - take the boundary when both tests agree. Read the two epilogues before using this test in
+  that direction: WCC shares only *identical* ones, so a function that ends in its own `pop`/ret next
+  to a neighbour whose epilogue differs anyway (`add esp` count, the return-value instruction) proves
+  nothing. The three normal ticks are the case: 0x1281a `xor eax,eax; add esp,0x10`, 0x130ec `xor
+  eax,ebx; add esp,0x10`, 0x138e1 `xor eax,eax; add esp,0xc` - their split into src/drive.c, src/bull.c
+  and src/muis.c is worth 7 rows and 6 bytes, but the module question stays open (open question 27).
 - **Negate the whole test to choose the fall-through arm.** Two conditions joined by `||` are not the
   same text as the negated pair: the game's `jle` into the `frame = 32` store with the `heading` store
   forward means it wrote `if (!(damage > 0 && fuel > 0)) frame = 32; else frame = heading & 31;`.

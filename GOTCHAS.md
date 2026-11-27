@@ -313,6 +313,19 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   had already found the answer reported "no hit" and cost a round. Parse both forms and sanity-check
   the parser on a function whose slots you already know (`tools/wc/stackmap.py` does both). [generic]
 
+- **An epilogue that is not shared does not prove a module boundary.** WCC shares an epilogue only
+  between functions whose epilogues are identical, so three neighbours that each end in their own
+  pop/ret say nothing if those differ anyway (the three normal ticks: 0x1281a `xor eax,eax;
+  add esp,0x10`, 0x130ec `xor eax,ebx; add esp,0x10`, 0x138e1 `xor eax,eax; add esp,0xc`). Our
+  bull_tick could jmp into muis_tick's epilogue only because our frame was 0xc where the game's is
+  0x10 - the frame, not the object. Check the frame map before reading a boundary. [generic]
+- **A near miss 4 bytes short of the game's frame is missing a spilled local, and that is why its
+  register homes never move.** `tools/wc/stackmap.py .work/src/<MODULE>.OBJ rrr NAME` prints our frame
+  and slots; count the game's `[esp+…]` uses in the same way. bull_tick 0x12826: the game uses all
+  four slots of its 0x10 frame (14 accesses), ours touches two of 0xc, and 22 of its 50 rows are
+  homes (2026-11-27). Same check says when a frame already matches, so the rows are not a slot
+  question (muis_tick 0x130f8: frame 0xc, slots [esp], [esp+4], [esp+8], equal to the game's). [generic]
+
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
 - **`objects[n]` store encoding (spawn_dropped_object 0x18759, 8 rows):** the game is an if/else-if

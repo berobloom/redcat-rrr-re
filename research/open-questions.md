@@ -152,6 +152,17 @@
     -> 0x15565, dropped0/2/4_tick + mine/sign/bomb/fn_16e46 -> 0x17b5b.
     Where each module starts is still unknown; string-block boundaries and
     the error strings' file names are the other two tests MATCHING.md 4 gives.
+    Caveat added 2026-11-27: the test works one way only. Sharing proves
+    together; *not* sharing proves nothing unless the two epilogues are
+    identical (WCC shares only identical ones), so check the `add esp` count
+    and the return-value instruction first. The three normal ticks -
+    player_tick 0x11eb5, bull_tick 0x12826, muis_tick 0x130f8 - end at
+    0x1281a `xor eax,eax; add esp,0x10`, 0x130ec `xor eax,ebx; add esp,0x10`
+    and 0x138e1 `xor eax,eax; add esp,0xc`: three different epilogues, so the
+    game may have had them in one object or three. src/ now keeps them in
+    drive.c / bull.c / muis.c because that is where our compiler is closest to
+    the game (player_tick 143 -> 136 rows, muis_tick 2030 -> 2036 of its 2037
+    bytes), not because the boundary is proven.
     2026-11-26, the two tests agree at shadeobj.c: a padding byte 0x51783 between
     'illegal shade object : %d following :%d' (used only by follower_tick 0x167aa)
     and 'illegal object : %d ' (used only from obj_callback_1696c 0x1696c to
