@@ -126,12 +126,26 @@ commit as the code that adds a MATCH, and only after `src/check.sh` shows the co
    column, the game the RIGHT. `fncompare.py` (instruction counts per side, same text but different
    encoding) and `objdiff.py` (both full listings) answer what fndiff cannot.
 4. **Probe spellings in bulk.** `reverse-engineering/tools/wc/variants.py` scores many copies of the
-   function in one compile; compile the winner in place before believing it.
+   function in one compile; compile the winner in place before believing it. If the only rows are
+   stack displacements (two `[esp+...]` numbers differ), stop permuting spellings and compare frames:
+   `reverse-engineering/tools/wc/stackmap.py .work/src/<MODULE>.OBJ rrr NAME` prints the slots a
+   compiled function touches and the holes it leaves (see the frame-layout lever below).
 5. **Write down what you learned.** A near miss keeps a `/* differs: ... */` note above it in
    `src/rrr.c` with the causes and the spellings tried; the `nearmiss.txt` line gets the count and
    the status. Commit after each function, MATCH or SKIP.
 
 Levers seen so far (add to this list when one produces a MATCH):
+
+- **Frame layout: put the value in an object, not a local.** WCC lays the frame out as a band of
+  4-byte scalars at the top, then a gap (its FP temporaries / alignment), then what it will not band -
+  local arrays and 8-byte objects - at the next 8-byte-aligned offset; unused locals, dead stores,
+  propagated constants and `register` cost no frame space. Declaration order only picks which scalar
+  gets which band slot. cos_sin_init 0x13c34 stayed at 2 rows through 156 spellings of a local `x`
+  (always [esp+10]) and matched as `int v[3]` with the value in `v[2]` (the game's 12-byte object at
+  [esp+0..0xB]), with the angle expression written twice so WCC CSEs it and no `double t` is needed.
+  Check the shape with `tools/wc/stackmap.py`; found by sweeping 216 array-element x declaration-order
+  spellings (`tools/wc/sweeps/cos_sin_init_frames.py`, table in `reverse-engineering/analysis/
+cos_sin_init_frames.txt`, 2026-11-27).
 
 - **Loop shape.** `-ox` includes loop rotation: a `for` loop with the test at the bottom of the
   generated code becomes a test at the top only when written as `while (cond && ...)`

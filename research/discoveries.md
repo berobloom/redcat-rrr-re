@@ -746,6 +746,17 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   bytes cannot say which the game had: the spelling in `src/rrr.c` is the shortest that matches.
 - CONFIRMED: a local int array of 2 (8 bytes) lands at [esp+8] too, but it or a `double` local grows
   the frame (0x20 -> 0x24); arrays of 1 behave as scalars.
+- CONFIRMED (the sweep, in git as `reverse-engineering/tools/wc/sweeps/cos_sin_init_frames.py`): the
+  shape search that found it - one function per compile, the loop's two int results in a local array
+  element plus a scalar, over array size 2/3/4 x which element holds the cos value x every declaration
+  order of i, a, y, the array (216 compiles). 24 spellings give the game's frame map (frame 0x20,
+  slots [esp+1Ch], [esp+18h], [esp+14h], [esp+8], holes [esp+0xC..0x10] and [esp+0..4]) - the frame
+  map alone does not identify the C, since within one shape WCC's slot set does not depend on
+  declaration order - so every frame hit is scored against the game with `variants.py`; 2 of the 24
+  score 0, `int i; int y; float a; int v[3];` (what `src/rrr.c` has, read as v[2]) and
+  `int v[3]; int i; float a; int y;`. The table is `reverse-engineering/analysis/cos_sin_init_frames.txt`.
+  The two tools it runs are in git too: `tools/wc/stackmap.py` (frame size,
+  the slots a compiled function touches, its holes) and `tools/wc/variants.py` (row score).
 
 ## The game's own C is many objects
 

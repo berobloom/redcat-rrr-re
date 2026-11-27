@@ -1,0 +1,77 @@
+# cos_sin_init 0x13c34 frame sweep, 2026-11-27: 216 spellings (array size 2/3/4 x which element takes the cos value x every declaration
+# order of i, a, y and the array), one compile each; only the 24 whose frame map is the game's are listed
+# (HIT = frame 0x20 with slots 1c 18 14 8; near = its i/a slots match but the rest does not). score = instruction
+# rows vs the game from tools/wc/variants.py, 0x13c34-0x13cba. Regenerate with tools/wc/sweeps/cos_sin_init_frames.py.
+near d[3] cos=d[0] | int i float a int y int d[3] | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int i float a int d[3] int y | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int i int y float a int d[3] | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int i int y int d[3] float a | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int i int d[3] float a int y | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int i int d[3] int y float a | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | float a int i int y int d[3] | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | float a int i int d[3] int y | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | float a int y int i int d[3] | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | float a int y int d[3] int i | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | float a int d[3] int i int y | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | float a int d[3] int y int i | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int y int i float a int d[3] | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int y int i int d[3] float a | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int y float a int i int d[3] | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int y float a int d[3] int i | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int y int d[3] int i float a | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int y int d[3] float a int i | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int d[3] int i float a int y | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int d[3] int i int y float a | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int d[3] float a int i int y | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int d[3] float a int y int i | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int d[3] int y int i float a | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[0] | int d[3] int y float a int i | frame=0x20 pushes=0  slots: 1c 18 14  holes: 10-0
+near d[3] cos=d[1] | int i float a int y int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int i float a int d[3] int y | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int i int y float a int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int i int y int d[3] float a | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int i int d[3] float a int y | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int i int d[3] int y float a | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | float a int i int y int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | float a int i int d[3] int y | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | float a int y int i int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | float a int y int d[3] int i | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | float a int d[3] int i int y | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | float a int d[3] int y int i | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int y int i float a int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int y int i int d[3] float a | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int y float a int i int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int y float a int d[3] int i | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int y int d[3] int i float a | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int y int d[3] float a int i | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int d[3] int i float a int y | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int d[3] int i int y float a | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int d[3] float a int i int y | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int d[3] float a int y int i | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int d[3] int y int i float a | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+near d[3] cos=d[1] | int d[3] int y float a int i | frame=0x20 pushes=0  slots: 1c 18 14 4  holes: 10-8 0-0
+HIT  d[3] cos=d[2] | int i float a int y int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | int i float a int d[3] int y | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | int i int y float a int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=0 sizediffs=0
+HIT  d[3] cos=d[2] | int i int y int d[3] float a | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | int i int d[3] float a int y | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | int i int d[3] int y float a | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | float a int i int y int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | float a int i int d[3] int y | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | float a int y int i int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | float a int y int d[3] int i | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | float a int d[3] int i int y | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | float a int d[3] int y int i | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int y int i float a int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=4 sizediffs=0
+HIT  d[3] cos=d[2] | int y int i int d[3] float a | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int y float a int i int d[3] | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int y float a int d[3] int i | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int y int d[3] int i float a | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int y int d[3] float a int i | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int d[3] int i float a int y | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=0 sizediffs=0
+HIT  d[3] cos=d[2] | int d[3] int i int y float a | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | int d[3] float a int i int y | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=8 sizediffs=0
+HIT  d[3] cos=d[2] | int d[3] float a int y int i | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int d[3] int y int i float a | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=14 sizediffs=0
+HIT  d[3] cos=d[2] | int d[3] int y float a int i | frame=0x20 pushes=0  slots: 1c 18 14 8  holes: 10-c 4-0 | score=4 sizediffs=0
+done hits=24

@@ -159,6 +159,17 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   gives `setne al; movzx eax,al`.
 - **Chained assignment:** `a = b = 4000;` stores `b` and reloads it into `a`; two separate
   statements do not (`clear_objects` 0x14861).
+- **Rows that are only stack displacements: change the frame, not the spelling.** WCC puts the 4-byte
+  scalars in a band at the top of the frame, then a gap (its FP temporaries / alignment), then what it
+  will not band - local arrays and 8-byte objects - at the next 8-byte-aligned offset; unused locals,
+  dead stores, propagated constants and `register` cost no frame space, and declaration order only
+  picks which scalar gets which band slot. Read the frame with `tools/wc/stackmap.py
+  .work/src/<MODULE>.OBJ rrr NAME` (slots touched + holes) and land the value where the game's sits:
+  cos_sin_init 0x13c34 stopped at 2 rows through 156 spellings of a local `x` (always [esp+10]) and
+  MATCHed as `int v[3]` with the value in `v[2]` (game: 12-byte object at [esp+0..0xB]) with the angle
+  expression written twice so WCC CSEs it (no `double t`, frame stays 0x20); 127 -> 128. Found by
+  sweeping 216 array-element x declaration-order spellings - the sweep is in git,
+  `tools/wc/sweeps/cos_sin_init_frames.py`, its lesson is the frame rule above. [generic]
 - **Store order is source order:** `rrrio_load` sets `joy[0], joy[1], joy[4], joy[5], joy[2],
   joy[3]` in that order; write the stores as the game does them.
 
@@ -293,6 +304,15 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   Private directories per compile do not make it safe: the muis_crash_tick sweeps ran eight in
   parallel that way and only the two winners were re-checked, so their "nothing below 6" floors are
   LIKELY until rerun serially (chat 2026-11-26).
+- **`variants.py`'s END is the function's own end, not the next public.** The cos_sin_init frame sweep
+  scored its MATCHing spelling as 2 rows because it passed END=0x13cbc, two bytes past the function's
+  real end 0x13cba (0x13c34 + 134): the neighbour's head counted as diffs. Compute END from the known
+  byte length before ranking variants; `fndiff.py`, which cuts at the next public, said 0 all along. [generic]
+- **A slot regex that demands the hex prefix silently reports no hits.** capstone prints
+  `[esp + 8]`, not `[esp + 0x8]`: my sweep's slot parser matched only the `0x` form, so a sweep that
+  had already found the answer reported "no hit" and cost a round. Parse both forms and sanity-check
+  the parser on a function whose slots you already know (`tools/wc/stackmap.py` does both). [generic]
+
 ### Dead ends on RRR: SKIP at once unless you bring a new idea
 
 - **`objects[n]` store encoding (spawn_dropped_object 0x18759, 8 rows):** the game is an if/else-if
@@ -302,11 +322,6 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   Every if shape gets the game's tree but mirrors the registers (11 rows, 299 bytes); `!kind`,
   `(*(objects + n))` also 11, a `struct object *` local 19. (Corrected 2026-11-26 from chat; the old
   text described an if/else build.)
-- **cos_sin_init 0x13c34 (solved 2026-11-27, was 2 rows):** the game's cos value is not a local in the
-  scalar band but sits at [esp+8], in a 12-byte object under WCC's scalar band. MATCH as `int v[3]` with
-  the cos value in `v[2]` and the angle expression written twice (WCC CSEs it). The 156 spellings of x
-  as a local were wasted effort: what was wrong was the frame, not the order - see discoveries
-  "Toolchain: how WCC lays out a function's stack frame" for the layout rule worth other near misses.
 - **The droppedN_tick damage block's load register (open question 25):** the game loads
   `bodies[2].stats` into EAX, ours into EDX, and no spelling or compiler option moves it (30+ tried).
   It is worth 8 functions, so it is worth a fresh idea, not another 30 spellings - see the note in
