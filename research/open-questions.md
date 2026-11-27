@@ -412,6 +412,17 @@
       ancestor height, dependant height, both summed, stallable with and without registers,
       successor and predecessor counts, flags, adjacency to the instruction below, and source
       order found nothing better than the published order (80 of 530 blocks wrong).
-    Next: make the model exact on the 80 blocks it gets wrong (FP units, `add reg,const` index
-    sliding, call clobbers), then ask it which input order or dependency would give the game's
-    MUIS slot under the rule that fits.
+    - 2026-11-27, later (pi agent, .work/pi/base/, notes in src/nearmiss.txt): the "different
+      rule" reading above is superseded. Spelling B (`ri = <call>; si = bodies[4].stats;
+      stats[si].heading = ri;`) compiles byte-identical to src/ at -oeilm -s but schedules
+      differently, so the scheduler reads state the listing does not show (CONFIRMED).
+      Under the published rules, marking MUIS's heading store (or its f24 store) as an indexed
+      operand with unknown base (aliases every memory operand, redefby.c ZapsIndexed)
+      reproduces our real -ox block 149-266 exactly; it is the only one of 708 single
+      markings that does (CONFIRMED for the model). So LIKELY our compile loses that store's
+      base symbol where the game keeps it, and the scheduler is the same. B keeps the base
+      (store in the game's slot) but swaps the result copy and the index load at 0x14d7a; the
+      model reproduces that only with an extra copy<->load edge that no redefby.c rule makes
+      (cause SPECULATIVE). Statement sequence is out (Open Watcom sets it only for x87 code).
+    Next: find where the MUIS store's base is dropped (addrfold.c X_FAKE_BASE, ScaleIndex in
+    namelist.c) and what C keeps it, without B's extra edge.
