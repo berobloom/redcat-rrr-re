@@ -32,7 +32,13 @@
    shape difference rather than a home: the game's `objects[n].period == -1` return jumps INTO the tail
    of the crash-return block (0x12887 `je 0x128af`, and 0x128af is `xor eax,eax; jmp 0x130ee` right
    after the `crash2 = 1` store at 0x128a5), where ours jumps straight to the epilogue (0x12886
-   `je 0x130e0`). The same head appears in player_tick and muis_tick, so it is worth one decision.
+   `je 0x130e0`). The same head appears in player_tick and muis_tick, so it is worth one decision -
+   and four spellings of that decision leave it alone (2026-11-27, .work/scratch/bull_tick): the
+   merged test, the same test as `!(damage >= 0 && fuel >= 0)` (50 rows, byte-identical to the merged
+   form), as `!(damage >= 0) || !(fuel >= 0)` (191), as `!(damage > -1 && fuel > -1)` (52) and as a
+   `?:` chain (119). With the negated pair WCC still puts both tests together and the crash store out
+   of line, so the store's slot and the period test's jump target are not the fall-through choice -
+   open question 34.
    2026-11-26 (.work/probe/btx): the game computes vx and vy TWICE - once unconditionally, then
    again inside `if (!finished2)` with the zero stores in the else (0x12d1e-0x12e06: two
    cos_tbl/sin_tbl fixmul pairs; the other five ticks have one). A redundancy in the game's own

@@ -296,3 +296,21 @@
     sharing. The earlier LIKELY mechanism (a register-resident index) is wrong. Lesson for the family
     (25, 26, 28, 29, 31, 32): a register tie can be decided by how many C variables carry the values,
     even when each one is dead between uses.
+
+34. **Open: where WCC puts the crash-return block in the three normal ticks.**
+    In bull_tick 0x12826 (and with its own constants in player_tick 0x11eb5 and
+    muis_tick 0x130f8) the game tests `objects[n].period == -1` at 0x12887 and
+    jumps to 0x128af - which is the `xor eax,eax` in the *tail of the crash-return
+    block* (`crash2 = 1` at 0x128a5, then 0x128af/0x128b1) - and its first damage
+    test falls *through* into that store (`jge 0x128b6` skips it, and the fuel
+    test at 0x128b6 jumps back to it with `jl 0x128a5`). Ours puts both tests
+    together and the store out of line at 0x128ae, and the period test jumps
+    straight to the epilogue. Four spellings of the test leave the placement
+    unchanged, two of them byte-identical to the current text: merged `damage < 0
+    || fuel < 0` (50 rows), `!(damage >= 0 && fuel >= 0)` (50), `!(damage >= 0)
+    || !(fuel >= 0)` (191), `!(damage > -1 && fuel > -1)` (52), `a < 0 ? 1 : b < 0`
+    (119) - .work/scratch/bull_tick, 2026-11-27. So the fall-through choice is
+    not the C's polarity here (unlike the follower_tick 0x167aa lever, where
+    negating the pair did move the store); whether it is WCC's block placement
+    alone or a source-order difference is open. It is worth three functions and
+    210 near-miss rows, so it is the first thing to bring a new idea to.
