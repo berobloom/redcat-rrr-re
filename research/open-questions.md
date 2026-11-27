@@ -337,3 +337,21 @@
     a `movsx`/`cwde`, whatever the return type (int, short, char, unsigned, long) or operand types. In
     the full function the closest is `return (objects[n].y = y = E) ^ y;` with a new `int y;` declared
     first: 97 rows, worse than the 50 we have, so src/ keeps `return 0;`.
+    2026-11-27 (latest), **both the tail and the head layout reproduced, the total not yet.** A value
+    merged from two paths that both equal y survives as a second temporary. `y = E; r = y ? y : 0;
+    objects[n].y = y; return r ^ y;` compiles to the game's exact `mov eax,ebx; mov [..],bx; xor eax,ebx`
+    with no branch left (CONFIRMED, one-function probe, .work/scratch/bull2/gen7). So does `if (y) r = y;
+    else r = y;`. In bull_tick, that tail plus the damage and fuel tests written as two separate `if`
+    blocks gives the game's crash-block layout (0x128a5 store falling into the shared 0x128af `xor eax,eax;
+    jmp`, the period test's `je` into it): no diff rows left there (z_2_y_f.c). Neither change does it
+    alone: the head change with `return 0;` is 63 rows, the tail with the merged test leaves ours
+    jumping back to the period block's copy. CONFIRMED for the layout. The other rows go up: 114 at
+    first, and the declaration-order floor is 100 (reverse-engineering/tools/wc/psweep.py: every
+    order of 7 declarations with h as y and the copy in f, want or go, 5,040 each, floor 114; 2,000
+    sampled orders of 8 with a new y and the copy in want, m, go or a new r, floor 100). What is left
+    is allocation: the game keeps objects[n]'s offset in EDI across the whole tail (0x13061 `shl
+    edi,4`, reused by the three stores), where ours recomputes it. The current C's other spellings
+    were tuned against `return 0;` and have to be searched again with this tail and head. Whether
+    `?:` is the game's construct is SPECULATIVE: any two-path merge of equal values gives these bytes.
+    bull_crash_tick 0x19c8c has the same ending (0x1a41e). Its head already matched (its period
+    return is inline, 0x19cea), and the same tail takes it from 42 to 119+ rows untuned.

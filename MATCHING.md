@@ -280,7 +280,8 @@ cos_sin_init_frames.txt`, 2026-11-27).
   when the C around it changes: `muis_crash_tick` 0x1a42a's negated want chain scored 72 under the
   old declarations and 46 under `short k; int go, d, m, h; unsigned want, f;`, 16 of 576 order x
   spelling combinations (2026-11-26). `.work/probe/declsweep.py FILE.c FUNC OUTDIR [MAX]` writes
-  the orders for inplace.py. In a file with several near misses, score the whole object: drive.c's
+  the orders for inplace.py; `reverse-engineering/tools/wc/psweep.py` scores them itself, 8 at a
+  time (about 0.11 s an order, so all 5,040 orders of 7 declarations in ~9 min). In a file with several near misses, score the whole object: drive.c's
   three ticks share tails, so muis_tick's best order costs player_tick 7 rows.
 
 - **`test; jbe A; cmp 3; je B; jmp join` is a switch.** On an unsigned value, WCC lowers

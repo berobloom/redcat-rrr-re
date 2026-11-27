@@ -25,7 +25,10 @@
    crash block's `xor eax,eax` (0x128af): there is no constant-zero epilogue to share. muis_tick and
    player_tick jump straight to theirs (0x13158, 0x11f45). A stand-in `return k;` already gives the
    game's 0x10 frame (78 rows). No C for it found yet: WCC turns `y ^ y` into `xor eax,eax` and an
-   assignment to the short field adds a movsx. Best tail spelling 97 rows (open question 34).
+   assignment to the short field adds a movsx. Later the same day: a two-path merge reproduces it,
+   `y = E; r = y ? y : 0; objects[n].y = y; return r ^ y;`, and with the damage/fuel tests as two
+   separate ifs the head's crash-block layout matches too. The rest re-allocates: 114 rows, 100 at
+   the best declaration order (open question 34, .work/scratch/bull2), so src/ keeps the 50-row text.
    2026-11-27, frame map (`tools/wc/stackmap.py` + the [esp] uses read off the game's listing): the
    game's frame is 0x10 and uses all four slots - [esp+4] go, [esp+8] m = 0x1f (both as ours),
    [esp+0xc] = `d` (spilled at 0x128d4 after the fixdiv, reloaded at 0x12ae9/0x12bb7/0x12c24 for the
