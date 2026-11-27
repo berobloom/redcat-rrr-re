@@ -355,3 +355,8 @@
     `?:` is the game's construct is SPECULATIVE: any two-path merge of equal values gives these bytes.
     bull_crash_tick 0x19c8c has the same ending (0x1a41e). Its head already matched (its period
     return is inline, 0x19cea), and the same tail takes it from 42 to 119+ rows untuned.
+    Inline, without the extra variable, `objects[n].y = y; return (y ? y : 0) ^ y;` scores 71 at the best
+    of 3,000 sampled orders of 8 declarations (78 over all 5,040 with h as y). But at that order WCC keeps
+    a real branch for the `?:` (`je` / `mov edx,ebx` / `jmp` / `xor edx,edx` before the xor), which the game
+    does not have. So 71 is not on the path to the game's bytes, even though its head layout matches.
+    The branch-free form is the one with the copy in its own variable before the store (floor 100 so far).
