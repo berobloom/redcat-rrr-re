@@ -302,9 +302,11 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   Every if shape gets the game's tree but mirrors the registers (11 rows, 299 bytes); `!kind`,
   `(*(objects + n))` also 11, a `struct object *` local 19. (Corrected 2026-11-26 from chat; the old
   text described an if/else build.)
-- **cos_sin_init 0x13c34's last 2 rows:** only `x`'s stack slot (ours [esp+0x10], the game [esp+8]);
-  156 spellings (every declaration order of i, a, y, x, t; six statement orders with six declaration
-  lists) stop at 2. It is Watcom's FP local layout - open question 24, not the C.
+- **cos_sin_init 0x13c34 (solved 2026-11-27, was 2 rows):** the game's cos value is not a local in the
+  scalar band but sits at [esp+8], in a 12-byte object under WCC's scalar band. MATCH as `int v[3]` with
+  the cos value in `v[2]` and the angle expression written twice (WCC CSEs it). The 156 spellings of x
+  as a local were wasted effort: what was wrong was the frame, not the order - see discoveries
+  "Toolchain: how WCC lays out a function's stack frame" for the layout rule worth other near misses.
 - **The droppedN_tick damage block's load register (open question 25):** the game loads
   `bodies[2].stats` into EAX, ours into EDX, and no spelling or compiler option moves it (30+ tried).
   It is worth 8 functions, so it is worth a fresh idea, not another 30 spellings - see the note in

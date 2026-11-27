@@ -724,6 +724,29 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   byte for byte from `src/rrr.c` with exactly those options, and cos_sin_init 0x13c34 (inline
   fsin/fcos) differs only in one stack slot.
 
+## Toolchain: how WCC lays out a function's stack frame
+
+- CONFIRMED (probe: `extern void sink(void *); sink(&x);` on a copy of cos_sin_init 0x13c34, in
+  `.work/scratch/cos_sin_init/`): WCC puts the 4-byte scalars in a band at the top of the frame, then
+  a gap, then the things it will not put in that band - local arrays and 8-byte objects - at the next
+  8-byte-aligned offset. The gap is 8 bytes in every probe (WCC's own FP temporaries, or alignment:
+  not separable from the object code). Frame = the span of all of it. Declaration order decides which
+  scalar gets which band slot, not where the band is.
+- CONFIRMED: unused locals, dead stores, constant-propagated locals and `register` cost no frame space
+  (WCC kills them before allocating), so a hole in the game's frame is never a dead local: it is the
+  gap or alignment padding.
+- CONFIRMED: that is why cos_sin_init 0x13c34 stopped at 2 rows for 156 spellings. The game's cos
+  value is not one of the three 4-byte band locals (i [esp+1Ch], a [esp+18h], y [esp+14h]) but sits at
+  [esp+8], inside a 12-byte object at [esp+0..0xB] below the gap; our `int x` local always joined the
+  band at [esp+10].
+- CONFIRMED (src/check.sh, 2026-11-27): the shape that matches is a local array whose element 2 holds
+  the cos value, with the angle expression written twice - WCC CSEs it, so the FP instructions are the
+  game's (no `double t` local; a `double t` grows the frame to 0x24). `src/rrr.c`: 134 bytes, 0 diffs.
+  `long v[3]` and a local `struct { int x, y, z; }` with only `.z` used give the same 134 bytes, so the
+  bytes cannot say which the game had: the spelling in `src/rrr.c` is the shortest that matches.
+- CONFIRMED: a local int array of 2 (8 bytes) lands at [esp+8] too, but it or a `double` local grows
+  the frame (0x20 -> 0x24); arrays of 1 behave as scalars.
+
 ## The game's own C is many objects
 
 - CONFIRMED: WCC386 10.5 shares an epilogue (a `jmp` to another function's `pop`/`ret`) only inside

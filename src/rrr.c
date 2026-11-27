@@ -144,24 +144,24 @@ void fn_13bb8(int racer)
 
 /* ---- 0x13c34 -------------------------------------------------------------------------------- */
 
-/* SKIP: 2 rows, and only the slot of x (ours [esp+0x10], the game [esp+8]; everything else, frame
-   included, is identical). Matched on the way: a double t for the angle (the game's frame has its 8
-   bytes), x and i and y in that order. Tried: all 120 declaration orders of i, a, y, x, t (2 rows is
-   the floor, no order puts x at 8), six statement orders for x = / i = / y = with six declaration
-   orders, x and y as temporaries (cos_tbl[i = a] = ...), (int)a indexes. Open question 24 (10.5 vs a
-   patched 10.5/10.6) is the likely cause: this is Watcom's FP local layout, not the C. */
+/* MATCH: the game's cos value is not a 4-byte local - it sits at [esp+8], in a 12-byte object below
+   the gap that WCC leaves under its scalar band (i [esp+1Ch], a [esp+18h], y [esp+14h]; discoveries
+   "Toolchain: how WCC lays out a function's stack frame"). So x goes in element 2 of a local int[3],
+   and the angle is written twice instead of kept in a `double t`: WCC CSEs it (the FP instructions are
+   the game's) and a `double t` would grow the frame to 0x24. `long v[3]` and a local
+   `struct { int x, y, z; }` used as .z give the same 134 bytes - the bytes cannot say which the game
+   had. What does NOT work: x as a local, in any of 156 spellings (all 120 declaration orders of
+   i, a, y, x, t and 36 statement/declaration combinations stop at 2 rows, x always at [esp+10]). */
 void cos_sin_init(void)
 {
-    int i;
+    int i, y;
     float a;
-    int y, x;
-    double t;
+    int v[3];
     for (a = 0; a < 32; a++) {
-        t = (a + 8.0) * -0.19634954087500001;
-        x = cos(t) * 65536.0;
+        v[2] = cos((a + 8.0) * -0.19634954087500001) * 65536.0;
         i = a;
-        y = sin(t) * 65536.0;
-        cos_tbl[i] = x;
+        y = sin((a + 8.0) * -0.19634954087500001) * 65536.0;
+        cos_tbl[i] = v[2];
         sin_tbl[i] = y;
     }
 }

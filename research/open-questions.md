@@ -89,8 +89,11 @@
     option) rebuilds dir_tbl_init 0x13cba (fild, atan2 as a call to IF@DATAN2, __CHP before
     fistp) byte for byte, and cos_sin_init 0x13c34 (inline fsin/fcos) to the same code apart from
     one stack slot (all 120 declaration orders of i, a, y, x, t and 36 statement/declaration
-    combinations stop at 2 rows - our `x` lands in [esp+0x10], the game's in [esp+8]; that is Watcom's
-    FP local layout, not the C). RESOLVED 2026-11-27 (the version half): it is **10.6** - RRR links
+    combinations stop at 2 rows - our `x` lands in [esp+0x10], the game's in [esp+8]). RESOLVED
+    2026-11-27 (that slot as well, and it was C): the game's cos value is not one of the three 4-byte
+    band locals at all; `int v[3]` with the cos value in `v[2]` and the angle expression written twice
+    (no `double t`) rebuilds it byte for byte. See discoveries "Toolchain: how WCC lays out a
+    function's stack frame". RESOLVED 2026-11-27 (the version half): it is **10.6** - RRR links
     10.6's CLIB3R modules (118 byte-identical, including `sprintf` 0x1b916, which is the one byte off
     in 10.5's), 10.5's in only 108; see discoveries "Executables". The version does *not* explain the
     near misses: 10.5 and 10.6 agree byte for byte on every module of `src/` (tools/wc/segcmp.py), so
