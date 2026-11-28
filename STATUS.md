@@ -251,7 +251,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    cannot be copied to fix it. A 1-byte length gap (ours 1876 B, game 1877) misaligns the ret. The
    tractable Q5 targets now: muis_tick 0x130f8 (24 rows, 14 home), bull_crash_tick 0x19c8c (42),
    bull_tick 0x12826 (50), ai_waypoint_action 0x1af83 (64), player_crash_tick 0x19497 (114),
-   player_tick 0x11eb5 (136).
+   player_tick 0x11eb5 (136); `bull_crash_tick` is `ON:` after 2026-11-28's 32 spellings (floor 42).
 4. Later: the rest of the module boundaries in 0x10010-0x1B915 (one source file per original
    module; `src/racer.c` 0x1404a-0x1467b found from epilogue sharing and `src/init.c`
    0x148db-0x1585d from its string block head ('player_direction : %d wp: %d' 0x50e04 runs into

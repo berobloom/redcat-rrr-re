@@ -649,3 +649,31 @@ Rules for the agent:
     grep -c ' MATCH at'` = 129 = `src/matched.baseline` (unchanged), `grep -c WRONG` = 0, DATA 9677
     of 9677. Q6's next unwalked line: `bull_crash_tick` 0x19c8c (42), then `bull_tick` 0x12826 (50),
     `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight): Q6 round 1 of `bull_crash_tick` 0x19c8c: stays 42 rows after 32 in-module
+    vbatch spellings (.work/pi/bct/v.py, v2.py, v3.py, control 42); nothing below 42, so only its
+    `differs:` comment changed in `src/`. The 42 rows are five register ties plus the epilogue the
+    byte gap shifts (side-by-side dump .work/pi/bct/base.txt): the f24 switch's index chains
+    0x19e7b-0x19edc (game n->EDX / bodies->EAX / stats->ECX, ours EAX / ECX / EAX), the want case-0
+    arm's n temp (0x19f01, EBX vs EDX), the want case-3 arm where the game reads `bodies[n].stats`
+    (0x19f3c `mov ebx,[ecx*8+0x6cc10]`) before the speed `add` at 0x19f43, the else guard (`mov
+    edx,[f24]; test edx,edx`, 14 B, against our `cmp [f24],0`, 13 B, at 0x19f82) and the finished2
+    zeroing block's mirror 0x1a16e-0x1a1a2. Ours is 1947 of the game's 1950 bytes and those 3 are
+    exactly the D and E encodings, which is why the game's `pop ecx`/`pop ebx`/`ret` at
+    0x1a427-0x1a429 have no partner. CONFIRMED negative: every stats-index holder is wrong here -
+    `h` (the direction_to_waypoint local) before the speed add 106 rows, a new `int s` before it 90,
+    after it 90, one `s` shared by the switch value, both boost stores and the guard 168 - so the
+    game's early load is WCC hoisting an index load over a store it proves non-aliasing, not a holder
+    in its source; a local for the else guard 127, the switch value through `h` 104 or on the field
+    directly 113 (so `f`); both switch arm orders cost (want 60, f24 63); `int k` 140 and `short h`
+    129 confirm `short k`/`int h`; the y `abs()` mirror 51 and `waypoint_index2 + 1 <
+    waypoint_count2` 66; `stats[...].f24 == 0` in the guard costs exactly 1 row (43), so the game's
+    unsigned `<= 0` (`ja` 0x19f8a) is right. Twelve spellings score 42 and compile byte-identical to
+    the current text (the function's masked code bytes hashed, .work/pi/bct/bytes.py): `unsigned m`,
+    `unsigned go`, `d * 16`, `bodies[n].vz > -0x140000`, `bodies[n].f1c = go`, `stats[...].f24 = 3`,
+    the two boost stores swapped, `int m = 0x1f` in the declaration, the else-if merge, and
+    `default: break;` on the f24 switch, on the want switch and on both; `int k` reaches the game's
+    1950 bytes but 140 rows. Its
+    `src/nearmiss.txt` line now starts `ON:` (round 1 done); open question 36 gained the case-3 arm.
+    Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline` (unchanged),
+    `grep -c WRONG` = 0, DATA 9677 of 9677. Q6's next unwalked line: `bull_tick` 0x12826 (50), then
+    `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).

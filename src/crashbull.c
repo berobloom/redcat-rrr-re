@@ -23,7 +23,25 @@
    finished2 zeroing block take EAX/ECX/EDX in another order (the same kind of tie as
    muis_crash_tick's last 6), and the `go == 0` arm's f24 test, which the game loads into EDX
    (`mov edx, [..]; test edx, edx`) - the `f = ...; if (f <= 0)` spelling that would do that
-   scores 90 under all 5,040 orders. src/nearmiss.txt. */
+   scores 90 under all 5,040 orders. 2026-11-28 round 1: 32 more in-module spellings (.work/pi/bct/
+   v.py, v2.py, v3.py; labels in its nearmiss.txt line) leave 42 as the floor. The rows are FIVE
+   register ties plus the epilogue they shift (side-by-side dumps .work/pi/bct/base.txt, lock.py):
+   the f24 switch's index chains 0x19e7b-0x19edc (game n->EDX / bodies->EAX / stats->ECX, ours
+   EAX / ECX / EAX), the want case-0 arm's n temp (EBX vs EDX, 0x19f01), the want case-3 arm where
+   the game reads `bodies[n].stats` at 0x19f3c BEFORE `add bodies[n].speed` at 0x19f43 and chains off
+   EBX, the else guard (`mov edx,[f24]; test edx,edx` vs our `cmp [f24],0`, 1 byte), and the finished2
+   zeroing block's mirror 0x1a16e-0x1a1a2 (2 more bytes); the pop/pop/ret rows at 0x1a424 are only
+   that 1947 vs 1950 byte gap (3 = D's 1 + E's 2). CONFIRMED: no stats-index holder is the game's here (`h` or a new `int s`
+   before the add 106/90, after it 90, one shared over switch + stores + guard 168) - the
+   `s`-before-the-add form does land the game's load at 0x19f3c and its `add` at 0x19f43, but then
+   homes the index in EAX, `d << 4` in EDX and `want` in ECX (.work/pi/bct/one.py), so the game has
+   no holder and (C) is the allocator's; `== 0` costs
+   exactly 1 row (the guard is the unsigned `<= 0`, `ja` 0x19f8a); `int k` 140 and `short h` 129
+   confirm `short k`/`int h`; both switch arm orders cost (60/63) and the y `abs()` mirror 51;
+   `default: break;` on either switch, `d * 16`, `bodies[n].vz > -0x140000`, `f1c = go`, `f24 = 3`,
+   the two boost stores swapped, `int m = 0x1f` in the declaration and `unsigned m`/`unsigned go`
+   change no byte. Same tie class as open question 36 (WCC's allocator, not its scheduler).
+   src/nearmiss.txt. */
 int bull_crash_tick(short n)
 {
     int go;

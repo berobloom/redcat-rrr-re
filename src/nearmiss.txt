@@ -267,5 +267,36 @@ both switch arm orders cost (49 want / 39 f24), the vz h-chain arm order 37, the
 156, `int k` 92 and `unsigned short k` 25 (so `short k`), the second play_fx abs mirrored 28, a
 heading local 127, a speed local 59, the top_speed test mirrored 46 (line added 2026-11-28 for QUEUE
 Q6; history in QUEUE.md Q5, src/muis.c))
-42 0x19c8c bull_crash_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in its src file)
+42 0x19c8c bull_crash_tick  ON: 2026-11-28 32 variants (hload3, sload3, sload3post, sboth, gload,
+   elseelif, hswitch, dmul16, switchfield, want3first, f24_3first, load3gload, ktoint, muns, gouns,
+   hshort, dabs, vzgt, waypplus, f1cgo, zerothenf1c, headafterd, speed0f, booster, mdecl, framefirst,
+   zassign, speedassign, defF24, defWant, defBoth, guardne), best 42 rows (control; muns, gouns,
+   dmul16, elseelif, f1cgo, speed0f, booster, mdecl, vzgt, defF24, defWant and defBoth also 42, and
+   those twelve hash the same masked code bytes as the control (.work/pi/bct/bytes.py)), OPEN:
+   nothing below 42, so the C stays. What the 42 rows are, now named (.work/pi/bct/base.txt, side-by-
+   side dumps .work/pi/bct/lock.py): five register ties plus the epilogue they shift - (A) 0x19e7b-
+   0x19edc the f24 switch's index chains, game n->EDX / bodies->EAX / stats->ECX, ours EAX / ECX /
+   EAX (14 rows); (B) 0x19f01-0x19f09 the want case-0 arm's n temp, game EBX, ours EDX (4); (C)
+   0x19f3c-0x19f5a the want case-3 arm, where the game loads `bodies[n].stats` (+0x20, `mov ebx,
+   [ecx*8+0x6cc10]` 0x19f3c) BEFORE `add [ecx*8+0x6cc08],eax` (speed) and chains off EBX, ours loads
+   it after the add (8); (D) 0x19f82 the else guard, game `mov edx,[f24]; test edx,edx` (14 B) vs our
+   `cmp [f24],0` (13 B) - that 1 byte plus the `mov eax,edx` in (E) is the whole 1947 vs 1950 gap;
+   (E) 0x1a16e-0x1a1a2 the finished2 zeroing block, same chain mirror (game n->EDX/bodies->EAX) with
+   the `objects` load one slot later (9); (F) 0x1a424-0x1a426 pop/pop/ret, unmatched only because our
+   code ends 3 bytes early (the game's ret is 0x1a429). CONFIRMED here (all in-module, .work/pi/bct/v.py v2.py v3.py): every
+   stats-index holder costs here - `h` before the speed add 106, a new `int s` before it 90, after
+   it 90, one `s` shared by the switch value, both stores and the else guard 168 - and the best of
+   them (`s` before the add) DOES land the game's `mov ebx,[ecx*8+@]` at 0x19f3c and its `add` at
+   0x19f43, then homes the index in EAX, `d << 4` in EDX and `want` in ECX where the game has ECX,
+   EAX and EDI (dump .work/pi/bct/one.py): the order is reachable, the arm's register homes are the
+   price, so the game has no holder; a local for
+   the else guard (new `unsigned g`) 127 and the switch through a local (existing `h`) 104 / on the
+   field directly 113, so `f` is the game's holder; both switch arm orders cost (want first 60, f24
+   first 63); `int k` 140 and `short h` 129 confirm `short k`/`int h`; the y `abs()` mirrored 51 and
+   `waypoint_index2 + 1 < waypoint_count2` 66 confirm the current operand order; `stats[...].f24 == 0`
+   costs exactly 1 row (43), so the game's test really is the unsigned `<= 0` (`ja` 0x19f8a); and
+   `default: break;` on either or both switches, `d * 16`, `bodies[n].vz > -0x140000`,
+   `bodies[n].f1c = go`, `f24 = 3`, the two boost stores swapped, `int m = 0x1f` in the declaration and
+   `unsigned m`/`unsigned go` are all invisible (42, same bytes). Same tie class as open question 36.
+   (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in src/crashbull.c)
 50 0x12826 bull_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5, src/bull.c)

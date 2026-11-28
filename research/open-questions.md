@@ -554,3 +554,16 @@
      from that; and muis_tick 0x130f8 (24 spellings, floor 24) keeps the game's `movsx edx,dx`
      0x138cd only if the tail's difference lands in EDX, which no spelling of that line reaches. In
      both, a holder, a cast or an arm swap moves one site and costs 30-170 rows elsewhere.
+   - Same tie class again, 2026-11-28: `bull_crash_tick` 0x19c8c (32 in-module spellings,
+     .work/pi/bct/v.py v2.py v3.py, floor 42 of the game's 1950 bytes) has FIVE independent ties in
+     one function. Its sharpest case is the want switch's `case 3:` arm: the game reads
+     `bodies[n].stats` (0x19f3c `mov ebx,[ecx*8+0x6cc10]`) BEFORE the `add` on `bodies[n].speed`
+     (0x19f43) and builds its `*48` chain off EBX, where our build reads the index after the add for
+     the same three statements. CONFIRMED: a holder does reproduce that order -
+     `s = bodies[n].stats;` before the add gives `mov ebx,[ecx*8+@]` at the game's 0x19f3c and
+     `add [ecx*8+@],eax` at 0x19f43 - but then WCC re-homes everything in the arm (index in EAX
+     where the game has ECX, `d << 4` in EDX where the game has EAX, and it materialises `want` in
+     ECX instead of keeping it in EDI): 90 rows, and 106 with the existing `h`, 90 with the holder
+     after the add, 168 with one holder shared by the switch value, both boost stores and the else
+     guard. So the load order is reachable and the price is the arm's register homes: the tie is the
+     allocator's, and it is set by the rest of the function, which no local spelling reaches.
