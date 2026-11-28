@@ -677,3 +677,24 @@ Rules for the agent:
     Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline` (unchanged),
     `grep -c WRONG` = 0, DATA 9677 of 9677. Q6's next unwalked line: `bull_tick` 0x12826 (50), then
     `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight): Q6 round 1 of `bull_tick` 0x12826: 50 -> **48 rows**, 2246 -> 2247 of the
+    game's 2258 bytes, and it went into `src/` (one respelling: the waypoint sum's second `abs()`
+    mirrored, `abs((waypoint2[waypoint_index2].y >> 16) - (bodies[2].y >> 16))` - a 2-row drop, the
+    bar in the pass rules). 22 in-module vbatch spellings in two batches (.work/pi/bt/v.py, v2.py;
+    batch 2 built on the winner); nothing below 48. CONFIRMED: the four `abs()` terms of the two
+    distance sums each have their own order - the waypoint sum is body-first then waypoint-first, the
+    `play_fx(6, ...)` sum is `bodies[n] - bodies[0]` twice (mirroring those costs 51/52/55) - and the
+    2026-11-26/27 write-up that called the mirror expensive had only ever scored it bundled with the
+    two-path-merge tail (new lever in MATCHING.md). CONFIRMED per function: bull_tick's else-arm
+    guard keeps its `f` local (testing the field directly, the game's shape in `bull_crash_tick`, is
+    112 rows here). Ties at 48: `go = 0;` first, the mode store last, `waypoint_index2 <
+    waypoint_count2 - 1`, the want arms swapped, `-0x140000 < bodies[n].vz`, the unconditional vx/vy
+    pair swapped, the two boost stores swapped; worse: the damage/fuel test as two ifs 61, the
+    case-3 test's operands flipped 53. What is still wrong is allocation, as open question 34 says:
+    the game's frame is 0x10 with the objects[] offset spilled to [esp] at 0x1285b and reloaded at
+    0x12864, ours is 0xc with both in registers, and n/want sit in EDI/EBP where we have EBP/EDI
+    (0x12831, 0x12a74). Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
+    `src/matched.baseline`, `grep -c WRONG` = 0, `DATA: 9677 of 9677`, and `fndiff.py rrr
+    .work/src/BULL.OBJ bull_tick 0x12826 | tail -1` says 48 (was 50); mutation that shows it: put the
+    y `abs()` back body-first -> 50 rows. Its `src/nearmiss.txt` line now starts `ON:` with 48. Q6's
+    remaining unwalked lines: `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).

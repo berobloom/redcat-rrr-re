@@ -18,7 +18,20 @@
    and the racer-contact test, whose bump sound is play_fx(13, |speed| / 65536 * 10). Boost limit
    0x1c0000, puffs of kind damage, crash2 when damage or fuel runs out.
 
-   differs: 50 rows (was 208 -> 172 -> 133), 2246 of 2258 bytes, nmrefs refs all the same.
+   differs: 48 rows (was 208 -> 172 -> 133 -> 50), 2247 of the game's 2258 bytes, nmrefs refs all the
+   same. 2026-11-28: the waypoint sum's SECOND abs() is mirrored in the game, `abs((waypoint2[
+   waypoint_index2].y >> 16) - (bodies[2].y >> 16))` - 50 -> 48 rows and 2246 -> 2247 B (that mirror
+   was recorded on 2026-11-26/27 as costing rows, but only ever scored together with the two-path
+   merge tail; alone on this text it wins 2). CONFIRMED with it: the play_fx(6, distance to RedCat)
+   pair wants NO mirror (y 51, x 52, both 55) and the else arm's guard must keep the `f` local -
+   testing the field directly, which IS the game's shape in bull_crash_tick 0x19c8c, is 112 rows
+   here, so those two copies really do differ. Ties at 48 (not taken): `go = 0;` first, the mode
+   store last, `waypoint_index2 < waypoint_count2 - 1` for the current `waypoint_count2 - 1 >
+   waypoint_index2`, the want arms swapped, `-0x140000 < bodies[n].vz`, the unconditional vx/vy pair
+   swapped, the two boost stores swapped. Worse: the damage/fuel test as two ifs 61 (the game has
+   one `crash2 = 1` block at 0x128a5) and the case-3 test's operands flipped 53. 22 in-module
+   spellings, floor 48 (.work/pi/bt/v.py, v2.py); the head's [esp] scratch with frame 0x10 and the
+   n/want EDI/EBP mirror (0x12831, 0x12a74) are still open question 34.
    2026-11-27 (later), the tail: the game does not `return 0`. It returns the y value XORed with a
    copy of itself (0x130e5 `mov eax,ebx`, 0x130e7 the objects[n].y store from bx, 0x130ec
    `xor eax,ebx`), as bull_crash_tick does (0x1a41e). That is why the period return lands on the
@@ -87,7 +100,7 @@ int bull_tick(short n)
     if (lights_done) {
         if (!finished2) {
             if (abs((bodies[2].x >> 16) - (waypoint2[waypoint_index2].x >> 16))
-                    + abs((bodies[2].y >> 16) - (waypoint2[waypoint_index2].y >> 16)) < 0x28) {
+                    + abs((waypoint2[waypoint_index2].y >> 16) - (bodies[2].y >> 16)) < 0x28) {
                 ai_waypoint_action(n, waypoint_index2);
                 if (!finished2 && waypoint_count2 - 1 > waypoint_index2)
                     waypoint_index2++;

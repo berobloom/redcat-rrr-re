@@ -303,6 +303,14 @@ cos_sin_init_frames.txt`, 2026-11-27).
   movsx there, with it it does (observed, not a documented rule). Worth 3-30 rows per tick function (2026-11-26), but
   usually only together with a fresh declaration-order sweep.
 
+- **Inside `abs(a - b) + abs(c - d)` the operand order is per SUM and per TERM.** `bull_tick`
+  0x12826: its waypoint sum is `abs((bodies[2].x >> 16) - (waypoint2[i].x >> 16)) + abs((waypoint2[i].y
+  >> 16) - (bodies[2].y >> 16))` - the first term body-first, the second waypoint-first - while its
+  `play_fx(6, distance to RedCat)` sum is `bodies[n] - bodies[0]` in both terms. Mirroring the second
+  term of the first sum wins 2 rows (50 -> 48), mirroring the play_fx pair costs 1-7 and mirroring
+  three of the four is worse than two (2026-11-28, .work/pi/bt/v.py, v2.py). Score each term on its
+  own: a mirror written up as "costs rows" had only ever been scored bundled with the tail rewrite.
+
 - **A store of 0 from a register means a local was zeroed first.** When the game opens with
   `xor ebp, ebp` and then stores EBP where the C stores 0, the local that lives in EBP (`go` in
   `bull_crash_tick` 0x19c8c) is assigned 0 before those stores: WCC reuses the zeroed register
