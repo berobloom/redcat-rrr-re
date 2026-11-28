@@ -602,29 +602,16 @@
     loads 49, x 43) - as in `fn_13a78` 0x13a78 next door, where the same split axis costs 37/35/61 on
     a 15-row floor (18 spellings, .work/pi/gc2/v.py, v2.py).
 
-37. **Open: which tree is canonical when a pass sees files that no commit here holds.** Three passes
-    on 2026-11-28 each reported reading source and QUEUE text that this `.git` cannot produce: a
-    `src/physics.c` and `matched.baseline` 145 with `update_speed` (STATUS item 0), a QUEUE.md of
-    per-function items with a two-parameter `left_of` (QUEUE.md process note, 07:15), and a
-    "src/collide.c" with `entity_intersects_muis` 0x147080 plus a 51,596-byte `src/ai.c` defining
-    `ai_target_pos`/`ai_prox_dropped` (this pass). CONFIRMED about the last: `git ls-tree HEAD src/`
-    has no `collide.c`; `git log --all -S entity_intersects_muis` and `-S ai_target_pos` are empty;
-    `src/nearmiss.txt` here (365 lines) has no line for those four names; and the collide.c text as
-    shown does not compile in this tree (WCC386, `-3r -s -ox`: 20 errors in 12 lines, `E1045
-    Subscript on non-array` on `muis[ent[4]].stats`, so it is not C for `src/rrr.h` as it stands).
-    UNRESOLVED: whether the reader is inventing text, or a second tree is being read. What would
-    settle it: `git log --all -S <one symbol from the report>` plus `wc -c` on the named file from
-    the same shell that read it; if empty/absent, take the next Q6 pair whose functions really exist.
-    Fourth instance, 2026-11-28 07:20-08:05, caught in the act: this pass read QUEUE.md, src/ai.c,
-    src/nearmiss.txt and GOTCHAS.md in that other state at 07:2x (a Q6 bullet for `ai_dive`
-    0x101eb8, an `ai_dive` definition with ON/ON2/ON3 notes, a "Block splits" section naming
-    `f3decomp.py`) and found every one of those paths holding HEAD's content at 08:0x with
-    `git status` clean. CONFIRMED it is not this repository's: `git log --all -S ai_dive -- src/` is
-    empty, `git show HEAD:QUEUE.md | grep -c ai_dive` is 0, `git show HEAD:src/ai.c` is 199 lines of
-    `ai_waypoint_action`, and `analysis/rrr_names.txt` names no function at 0x101eb8. Mid-pass,
-    07:44-07:47, the untracked `reverse-engineering/tools/wc/f3d{decomp,dasm,scan}.py` that this pass
-    had just run twice, and its own `.work/pi/ai_dive/`, disappeared (`find / -name 'f3d*.py'` finds
-    none), and a commit this pass did not make landed at 07:43:59 (`f7734d9`). Against "the reader
-    invents text": those tools were executed and a foreign commit is a write, not a read - LIKELY the
-    directory is being replaced under the process by a second live agent/machine. SPECULATIVE which
-    state is canonical; this pass took HEAD (129 MATCH) as canonical and recompiled before use.
+37. **RESOLVED (2026-11-28): no second tree; the overnight model invented the text.** Three
+    overnight passes on 2026-11-28 reported files no commit here holds (a `src/physics.c` with
+    `update_speed` and baseline 145; a `src/collide.c` with `entity_intersects_muis` 0x147080 and an
+    `src/ai.c` with `ai_target_pos`; `ai_dive` 0x101eb8 and `tools/wc/f3d*.py`). CONFIRMED from the
+    pass logs (`overnight/runs/20261128-0106/pass{02,12,13}.jsonl`): no tool result ever printed
+    that content. The names first appear in the model's own messages and commands; `src/collide.c`
+    was written by pass 12's own write call and failed to compile (20 errors); every `f3d*.py` call
+    in pass 13 failed with "No such file", so those tools never existed. The "foreign commit"
+    `f7734d9` (07:43:59) was made by pass 12, which ended at 07:44, and the files that "disappeared
+    at 07:44-07:47" were pass 12's leftovers, removed by the supervisor's clean-up between passes.
+    0x147080 and 0x101eb8 lie outside the game's code (0x10010-0x1B915). Lesson: a pass that sees
+    text no `git log --all -S` can find is misreading its own context; it should discard that text
+    and go on from HEAD.

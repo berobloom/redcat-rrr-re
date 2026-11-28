@@ -896,6 +896,9 @@ Rules for the agent:
     printed 6 WRONG fixup lines - the masked displacement bytes hid wrong fields, so not a match),
     and worked the first Q6 function that really
     exists here and still needed a round.
+    Correction (2026-11-28, review): there was no second agent or tree. The `ai_dive`, `f3d*.py`
+    and `collide.c` text came from the model, not from any tool output, and `f7734d9` was pass 12's
+    own commit (open question 37, RESOLVED).
   - 2026-11-28 (overnight): Q6 round 2 of `fn_13a78` 0x13a78 and `camera_follow` 0x138ed, the two
     lines that still had only `ON:`; neither moved, so nothing went into `src/` except their
     comments (`src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline`,

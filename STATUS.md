@@ -18,17 +18,11 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
-0. **Overnight pass of 2026-11-29, QUEUE Q5** (detail in its notes and `src/nearmiss.txt`).
+0. **Overnight pass of 2026-11-28 (01:06-10:00), QUEUE Q5** (detail in its notes and `src/nearmiss.txt`).
    `player_tick` 0x11eb5 (`src/drive.c`) 136 -> **54 rows**: `want = 0;` first (the game's zero
    register), the vz -> `objects[n].frame` offset split out of the steering `h` into `hz` (both
    GOTCHAS). `player_crash_tick` 0x19497 (`src/tick.c`) stays **114** (28 spellings, best 113).
    Gates: 129 ` MATCH at` = baseline, 0 WRONG, DATA 9677/9677; all of Q5's walked once, none MATCH.
-
-0. **The overnight pass of 2026-11-28 21:45-23:40 ran in a different state of this project and its
-   work is gone** (`update_speed` 0x12e1b in a tree with `matched.baseline` 145 and a 505,776 B
-   `.work/le/rrr.obj1.bin`; here that bin is 201,776 B, this `.git` has no `c514b90` nor any
-   `update_speed` line - restore that state before resuming it). A concurrent instance landed a
-   foreign commit (open question 37; GOTCHAS: run `check.sh` and `fndiff.py` in one command).
 
 0. QUEUE Q4: a WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
    link/link.sh`, `LINK: 419179 of 419179`), and since 2026-11-25 **104 library modules link as

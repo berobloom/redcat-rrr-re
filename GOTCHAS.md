@@ -150,8 +150,8 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 - **libmatch's short hits are not evidence.** A module under ~40 bytes can match anywhere
   (`cstrt386` "at 0x10000", `mblen` at 0x1ae36 inside the game's C); trust long modules only.
 - **`.work/src/*.OBJ` is not yours.** `src/check.sh` rebuilds every module into the shared
-  `.work/src`, so with a second agent live in this directory (open question 37) the OBJ an `fndiff.py`
-  reads can come from a different tree than the source you read. Run `check.sh` and `fndiff.py` in one
+  `.work/src`, so if another `check.sh` runs in this directory between yours and your `fndiff.py`,
+  the OBJ it reads can come from different source than you think. Run `check.sh` and `fndiff.py` in one
   command, and a 0-row `fndiff` whose `check.sh` prints any `WRONG` line is masked fixup bytes, not a
   match (`ai_dive`, 2026-11-28: 0 rows and 6 WRONG at once).
 - **The function list is a recursive-descent scan (~60% of the code).** Functions reached only
