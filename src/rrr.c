@@ -40,6 +40,21 @@
  * intermediate, sx/sy locals, register keyword, int t). Same class as
  * draw_view 0x11526's homes (watcom-levers "register tie"); take the next
  * line.
+ *
+ * 2026-11-28, 35 more in-module variants (.work/pi/cf/v.py, v2.py, v3.py, control 19): the
+ * ground_check repeated-assignment lever on x/y (50-72) and on vw/vh before their clamps (56-86),
+ * tx/ty or x/y as int/short (58-89), the x/y reads inlined into tx/ty (55), the vx/vy reads inlined
+ * into the sign ternaries (43), one shared step local (70), a `struct body *b` local (68), one
+ * merged local for x and y (59), two clamp locals (40), `map_w * 32 - vw * 32` (80), `vh * 20` as
+ * two shifts (71), the lead term first (42), the two easings swapped (63), the clamp comparisons
+ * with the operand order reversed, `20 * vh`, the step shifted in place, and dropping the dead
+ * sx/sy: nothing below 19. `nocast` (no (short) cast on tx/ty), `deadgone`, `clamporder` and
+ * `vhmul` compile byte-identical to the text below (CONFIRMED: 19 rows each, and the (short) casts
+ * on x/y are needed - without them 39). All 19 rows hang on the game's ONE allocation decision,
+ * tx's home = [esp+8] (frame 0xc): that frees ESI for `ty`, which is why the game gets
+ * `lea eax,[esi+edx]` at 0x13991 where we must use EDI/EDX, and it is also why our `add esp,8` /
+ * `jmp` epilogue rows are unmatched. Nothing tried moves it; open question 36 (WCC's allocator,
+ * not its scheduler).
  * -------------------------------------------------------------------------------------------- */
 
 void camera_follow(int racer)

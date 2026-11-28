@@ -614,3 +614,20 @@ Rules for the agent:
     holds the accumulator. Its `src/nearmiss.txt` line now starts `ON2:` (round 2 done) and the
     differs note in `src/shadeobj2.c` names the nine sites. Check: `src/check.sh 2>&1 | grep -c '
     MATCH at'` = 129 = `src/matched.baseline` (unchanged), `grep -c WRONG` = 0, DATA 9677 of 9677.
+  - 2026-11-28 (overnight): Q6 round 1 of `camera_follow` 0x138ed: stays 19 rows after 35 in-module
+    vbatch spellings (`.work/pi/cf/v.py`, `v2.py`, `v3.py`, control 19); four tie at 19 with
+    byte-identical code (`nocast`, `deadgone`, `clamporder`, `vhmul`), everything else is worse, so
+    nothing went into `src/`. Content was probed first and every probe fails (CONFIRMED): the
+    repeated-assignment lever that MATCHed `ground_check` costs 50-72 on x/y and 56-86 on vw/vh, the
+    `(short)` casts on x/y are needed (39 without), `vh * 20` must be a product (71 as two shifts),
+    the sign must be the ternary (60 as if/else), a shared step local 70, `struct body *b` 68, one
+    merged x/y local 59, `map_w * 32 - vw * 32` 80. What the 19 rows are, now named (CONFIRMED from
+    the side-by-side disassembly): ONE Watcom decision, the game homing `tx` at [esp+8] (frame 0xc,
+    its store `mov [esp+8],eax` 0x13966 and its reload `movsx eax,word [esp+8]` 0x13996) while we
+    keep tx in ESI (frame 8); that spill is what frees ESI for `ty` so the game can do
+    `lea eax,[esi+edx]` at 0x13991 where we must use EDI then EDX, and it is also why our
+    `add esp,8`/`jmp` epilogue pair is unmatched. splitprobe found no split in reach here
+    (`.work/pi/split/probe/camera_follow.txt`, 2026-11-28). Its `src/nearmiss.txt` line now starts
+    `ON:` (round 1 done). Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
+    `src/matched.baseline` (unchanged), `grep -c WRONG` = 0, DATA 9677 of 9677. Q6's next unwalked
+    line: `muis_tick` 0x130f8 (24).
