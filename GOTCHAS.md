@@ -218,6 +218,19 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   sound_init 0x1043a: each its own `return -1`).
 - **A fill loop, not memset:** `for (i = 0; i < 4; i++) tracks[i] = -1;` gives the game's `_STOSD`
   call with ECX = 4, EDX = -1; `memset` gives other registers (sound_init).
+- **A local the original initialises before anything else = the game's zero register.** `player_tick`
+  0x11eb5: `want = 0;` as the FIRST statement, 136 -> 121 rows. The game materialises 0 once
+  (`xor ebp,ebp` 0x11ec6) and stores that one register at every `= 0` of the block (seven key globals
+  0x11ecb-0x11ef6, `bodies[n].f1c` 0x11f02, its own `go` slot 0x11f3f), because the register is also a
+  live local - `want`, whose f24 store is `mov [eax+0x6fbe4],ebp` at 0x120f2. With no assignment to
+  that local WCC has no live zero and emits nine `mov dword [@], 0` immediates instead. Ask which
+  local the original assigns a constant to and the rebuild leaves unassigned. (2026-11-29)
+- **One local with two homes is two locals in the source: split it.** `player_tick`'s vz ->
+  objects[n].frame offset became its own `hz` next to the steering `h`: 121 -> 100 rows. The game
+  keeps `h` in [esp+0xc] (0x1231c, 0x12327, loaded 0x1233e) and runs the frame offset in EAX (0x1273c,
+  0x12743, 0x12762, 0x12769, 0x12770), adding it to the heading in that register (0x12796). Splitting
+  a local that has ONE home costs rows (splitting the steer `h` too: 114), so read the homes per
+  block first. (2026-11-29)
 - **Locals' stack slots follow declaration order, not first use:** sound_init's irq/port/dma slots
   matched only with `int dma, port, irq` (score all orders in place).
 

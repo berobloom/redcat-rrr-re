@@ -466,6 +466,31 @@ Rules for the agent:
     0xc touching two, so one spilled local is missing - 22 of its 50 rows are homes. muis_tick's frame
     map already equals the game's and 14 further spellings of its four sites all cost rows (86-119 for
     the game's arithmetic heading test), so its 24 rows stay.
+  - 2026-11-29 (overnight): Q5 round 1 of `player_tick` 0x11eb5: 136 -> **54 rows**, in `src/drive.c`.
+    68 in-module vbatch spellings in six batches (.work/pi/pt/v.py .. v6.py, control 136 = `fndiff.py
+    rrr .work/src/DRIVE.OBJ player_tick 0x11eb5 | tail -1` before the change; re-measured 54 after).
+    Three content findings, each CONFIRMED in-module, and their order matters: (a) `want = 0;` as the
+    FIRST statement, 136 -> 121 - the game materialises 0 in EBP (`xor ebp,ebp` 0x11ec6) and stores
+    that one register to the seven key globals 0x55fd0-0x55fe8 (0x11ecb-0x11ef6), to bodies[n].f1c
+    (0x11f02) and to its own go slot (0x11f3f `mov [esp],ebp`), and EBP is also `want` (f24 store
+    0x120f2 `mov DWORD [eax+0x6fbe4],ebp`); with no assignment to `want` WCC has no live zero and
+    emits nine `mov dword [@], 0` immediates; (b) the vz -> objects[n].frame chain runs on its OWN
+    local `hz`, 121 -> 100 - the game's steer `h` is a stack local ([esp+0xc]: 0x1231c, 0x12327,
+    0x1233e) while the frame offset is EAX (0x1273c, 0x12743, 0x12762, 0x12769, 0x12770) and is added
+    to the heading in that register (0x12796 `add esi,eax`); splitting the steer `h` too costs 114;
+    (c) `int vv, hz, m, t, d, go, h, g;`, 100 -> 56 (the same eight locals in another order: 56, 56,
+    56, 56, 73, 91, 94, 98, 98, 130 - the slot band is a knife-edge, GOTCHAS "Locals' stack slots
+    follow declaration order"). Plus the waypoint sum's y term is waypoint - body while its x term is
+    body - waypoint, 56 -> 54, the same per-term order as bull_tick 0x12826. `(g * 1000) << 16`
+    (MATCHING's imul+shl lever) wins at 136 and 121 rows and LOSES at 54-56: not applied.
+    nmclass 136 -> 54 (19 home, 16 shape, 9 only-ours, 10 only-game, 21 B); stackmap: both sides
+    frame 0x10 with six pushes, ours still leaves [esp] a hole where the game keeps `go`.
+    Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline` (unchanged),
+    `grep -c WRONG` = 0, `DATA: 9677 of 9677`, and `fndiff.py rrr .work/src/DRIVE.OBJ player_tick
+    0x11eb5 | tail -1` says 54; mutation that shows it: `vbatch.py player_tick 0x11eb5
+    .work/pi/adr/noop.py --base .work/pi/adr/head_drive.c` (a copy of HEAD's drive.c) scores 136.
+    Its `src/nearmiss.txt` line now starts `ON:` with 54. Q5's last unwalked function:
+    `player_crash_tick` 0x19497 (114 rows, src/tick.c).
 
 - [ ] **Q6 Overnight 2026-11-28/29: the near misses, smallest first**
   Report: the human wants a night of matching work from the local model. The block-split probe

@@ -128,7 +128,19 @@ GOTCHAS "Block splits") 37 / 35 / 61.   ON: 2026-11-28 12 variants (vwre, vhre, 
    not a missing statement: the shift grows 13 -> 29 -> 114 bytes across the function, i.e. the game
    reloads `n` and recomputes the bodies[] index where we keep it in a register, and that costs a
    few bytes per block.
-143 -> 136 0x11eb5 player_tick  (2026-11-27: drive.c split three ways - player_tick stays in src/drive.c, bull_tick 0x12826 goes to src/bull.c, muis_tick 0x130f8 to src/muis.c - 7 rows here, and muis_tick's bytes 2030 -> 2036 of the game's 2037 because it now ends in its own epilogue instead of jmping into bull_tick's. Whether the three are really three objects is NOT settled: the game gives each its own epilogue (0x1281a `xor eax,eax; add esp,0x10`, 0x130ec `xor eax,ebx; add esp,0x10`, 0x138e1 `xor eax,eax; add esp,0xc`) but those differ from each other anyway, so non-sharing proves nothing on its own - see the note in src/bull.c. The split is where our compiler gives the closest bytes.)
+143 -> 136 -> 54 0x11eb5 player_tick  ON: 2026-11-29 68 variants (six vbatch batches
+   .work/pi/pt/v.py .. v6.py; best fric, yabs, fricyabs, ycast, all3, gozero, zreg, wantzero,
+   declhm, declhm2, wantlast, hzsplit, wz, wz_fric, wz_yabs, wz_fric_yabs, wzB, wz_decl1,
+   wz_declhm, wz_hzsplit, wz_gozero, wz_ycast, wz_fric_yabs_yc, hzz, hzz_fric, hzz_yabs,
+   hzz_fric_yabs, hzz_ycast, hzz_gozero, hzz_declhm, hzz_declhz1, hzz_steer, hzz_msplit, d1,
+   d1_fric, d1_fric_yabs, d2, d3, d4, d5, d6, d7, d3_fric, d6_fric, d1_steer, e1, e1_fric,
+   e1_yabs, e2, e3, e4, e5, e6, e7, e8, e9, e10, f1, f1_fric, f1_ycast, f1_fdirect, f1_msplit,
+   f1_gozero, f1_vvfirst, f1_speedarm, f1_tdswap, f1_klast, f1_hzend), best 54 rows (f1) -
+   APPLIED to src/drive.c: `want = 0;` first (136 -> 121, the game's EBP-as-zero register), the
+   vz/frame-offset chain on its own local `hz` (121 -> 100), `int vv, hz, m, t, d, go, h, g;`
+   (100 -> 56) and the y term of the waypoint sum mirrored (56 -> 54). nmclass 136 -> 54 rows
+   (19 home, 16 shape, 9 only-ours, 10 only-game); 2428 of the game's 2417 B, frame 0x10 both
+   sides, ours still leaves [esp] a hole.   (2026-11-27: drive.c split three ways - player_tick stays in src/drive.c, bull_tick 0x12826 goes to src/bull.c, muis_tick 0x130f8 to src/muis.c - 7 rows here, and muis_tick's bytes 2030 -> 2036 of the game's 2037 because it now ends in its own epilogue instead of jmping into bull_tick's. Whether the three are really three objects is NOT settled: the game gives each its own epilogue (0x1281a `xor eax,eax; add esp,0x10`, 0x130ec `xor eax,ebx; add esp,0x10`, 0x138e1 `xor eax,eax; add esp,0xc`) but those differ from each other anyway, so non-sharing proves nothing on its own - see the note in src/bull.c. The split is where our compiler gives the closest bytes.)
    2026-11-26 latest: want chain as a switch, `(short)(bodies[n].x >> 16)` in the tail - 136 alone, 143 next to bull_tick's new text through the shared tails, .work/probe/cs/pt2 and pt3; 2026-11-26 declaration order `unsigned want, f; short k; int g, m, h, vv, go, t, d;`, 27 of 1500 sampled orders, .work/probe/pt1; 189 before muis_tick's 2026-11-26 declaration order, which moves the shared tails)  written 2026-11-27, src/drive.c; 2441 of 2417 B. 2026-11-28: the
    waypoint-distance abs() pair wants its operands mirrored (`abs((bodies[0].x >> 16) -
    (waypoint0[waypoint_index0].x >> 16))`, -4); chained zero stores for the six key flags, the

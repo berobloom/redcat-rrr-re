@@ -19,30 +19,48 @@
    copied with it: the second bounce test compares rand() % 100 with 20 at 0x12696 and then jumps
    into racer 4's comparison with 10, so the 20 is dead.
 
-   differs: 136 rows (143 in one drive.c with the other two ticks - the cross-function tail merge).
-   Frame map (stackmap.py): the game's is 0x10 with go at [esp], vv [esp+4], m [esp+8], h [esp+0xc]
-   and want in EBP; ours is 0x14 with go [esp+4], want [esp+8], vv [esp+0xc], m [esp+0x10] and h in
-   EDI - one slot too many and the same four values in another order, and 71 of the 136 rows are
-   homes. No C spelling moves the homes. The game re-derives the bodies[] index per
-   block. Rest: the
-   f24/want arm placement (test + `jbe else`, `cmp 3` + `je body` at 0x120cd, the body out of line - the
-   same one decision that costs 22 rows in muis_crash_tick) and the bounce-test chain.
-   2026-11-28: the waypoint-distance abs() pair wants its operands mirrored like bull_crash_tick's -
-   `abs((bodies[0].x >> 16) - (waypoint0[waypoint_index0].x >> 16))` (0x1202f loads bodies[0].x first,
-   0x12035 waypoint0[] second, `sub edx,eax`): -4 rows, the same word mirrored costs +7 in
-   muis_crash_tick. Nothing else moved: chained zero stores for the six key flags, `bodies[n].f1c = 0`
-   in the game's place (0x11f02, after v55fe8), clearing all seven in one chain, both spellings of the
-   `want` chain (`want > 0 && want != 3` then `else if (want == 3)`, and `want == 3` first: 200 and 194),
-   and four spellings of the friction test - the game's `imul eax,edi,0x3e8` + `shl eax,0x10` against our
-   WCC shift/sub chain for the folded 65536000 (`shl 5; sub; shl 2; add; shl 0x13`, the only nmrefs
-   constant difference in the function); `q = g * 1000` as its own local costs 30+ because it adds a
-   stack slot to an already full frame. */
+   differs: 54 rows (2428 of the game's 2417 bytes; 136 before the three content fixes below, 143
+   back in one drive.c with the other two ticks - the cross-function tail merge).
+   nmclass: 19 home, 16 shape, 9 only-ours, 10 only-game (21 B).
+   Frame map (stackmap.py): ours and the game's are both frame 0x10 with six pushes; the game's
+   slots are go [esp], vv [esp+4], m [esp+8], h [esp+0xc] with want in EBP, ours has [esp] still a
+   hole. The game re-derives the bodies[] index per block.
+   2026-11-29 (round 1: 68 spellings in six vbatch batches, .work/pi/pt/v.py .. v6.py, control 136;
+   three of them together take 136 -> 54):
+   - `want = 0;` as the FIRST statement of the body (136 -> 121, CONFIRMED): the game materialises
+     zero in EBP (`xor ebp,ebp` 0x11ec6) and stores that one register to all seven key globals
+     (0x55fd0-0x55fe8 at 0x11ecb-0x11ef6), to bodies[n].f1c (0x11f02) and to its own go slot
+     (0x11f3f `mov [esp],ebp`), and EBP is also `want` (its f24 store 0x120f2
+     `mov DWORD [eax+0x6fbe4],ebp`). Without an assignment to want WCC has no live zero and emits
+     nine `mov dword [@], 0` immediates instead.
+   - the vz -> objects[n].frame chain has its OWN local `hz`, not the steer `h` (121 -> 100):
+     the game keeps the steer `h` in memory ([esp+0xc]: stores 0x1231c/0x12327, load 0x1233e) while
+     the chain's frame offset runs in EAX (0x1273c, 0x12743, 0x12762, 0x12769, 0x12770) and is
+     added to the heading there (0x12796 `add esi,eax`) - two homes, so two variables. Splitting
+     the steer `h` as well (hs) costs 114.
+   - declaration order (100 -> 56): `int vv, hz, m, t, d, go, h, g;`. `int hz, vv, ...` 73,
+     `int vv, m, hz, ...` and `vv, m, t, hz, ...` and `vv, hz, m, t, d, h, go, g;` 56 too, while
+     `vv, hz, m, go, t, ...` 56, `vv, hz, m, t, d, h, go, g;` 91, `... go, g, h;` 94,
+     `... h, g, hz;` 98, `vv, hz, m, d, t, ...` 98, `int h, m, vv, go, ...` 130.
+   - the waypoint sum's y term is waypoint - body, its x term body - waypoint (56 -> 54), exactly
+     as in bull_tick 0x12826: 0x1202f `mov edx,ds:0x6cbf0` (bodies[0].x) before 0x12035
+     `mov eax,[eax*8+0x70f94]`, but 0x12052 `mov edx,[eax*8+0x70f98]` (waypoint0[].y) before 0x12059
+     `mov eax,ds:0x6cbf4`.
+   Worse on this base, not applied: `(g * 1000) << 16` 59 (it wins at 136 and 121 rows - 140 and 126
+   - and loses now), `(short)` on the tail y difference 107, testing stats[].f24 directly instead of
+   through `f` 132, `m = 0x1f;` moved next to its use 81, vv/h key arm order 66, the top_speed
+   if/else arms swapped 85, `go = 0;` moved up front 54 (same), `unsigned want, f;` 163 at the old
+   text, chained zero stores, `want > 0 && want != 3`, `q = g * 1000`, four friction-test spellings
+   (2026-11-28 notes above). Rest: the f24/want arm placement (test + `jbe else`, `cmp 3` +
+   `je body` at 0x120cd, the body out of line - the same one decision that costs 22 rows in
+   muis_crash_tick) and the bounce-test chain. */
 int player_tick(short n)
 {
     short k;
     unsigned f, want;
-    int vv, m, t, d, go, h, g;
+    int vv, hz, m, t, d, go, h, g;
 
+    want = 0;
     key_forward = 0;
     key_back = 0;
     key_right = 0;
@@ -78,7 +96,7 @@ int player_tick(short n)
     if (key_forward || key_back || key_left || key_right)
         v55fe0 = 1;
     if (abs((bodies[0].x >> 16) - (waypoint0[waypoint_index0].x >> 16))
-            + abs((bodies[0].y >> 16) - (waypoint0[waypoint_index0].y >> 16)) < 0x78) {
+            + abs((waypoint0[waypoint_index0].y >> 16) - (bodies[0].y >> 16)) < 0x78) {
         if (!finished0 && waypoint_count0 - 1 > waypoint_index0)
             waypoint_index0++;
     }
@@ -212,17 +230,17 @@ int player_tick(short n)
         bodies[n].y = 0;
     if (bodies[n].vz > 0x30000) {
         if (bodies[n].vz > 0x40000)
-            h = 0x40;
+            hz = 0x40;
         else
-            h = 0x20;
+            hz = 0x20;
     } else if (bodies[n].vz < -0x50000) {
         if (bodies[n].vz < -0x70000)
-            h = 0x80;
+            hz = 0x80;
         else
-            h = 0x60;
+            hz = 0x60;
     } else
-        h = 0;
-    objects[n].frame = stats[bodies[n].stats].heading + h;
+        hz = 0;
+    objects[n].frame = stats[bodies[n].stats].heading + hz;
     k = animset[objects[n].anim].steps[objects[n].frame].frame;
     objects[n].x = (short)(bodies[n].x >> 16) - frames[k].f8 - 16;
     objects[n].y = (bodies[n].y >> 16) - (bodies[n].z >> 16) - frames[k].fa;
