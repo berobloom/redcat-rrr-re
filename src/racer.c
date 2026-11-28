@@ -82,7 +82,7 @@ int on_screen(int x, int y)
    holders for bodies[b].x/.y or (h + 0x28) & 0x1f and a dead local (ht6); racer.c compiled with
    up to eight of rrr.c's preceding and three following functions (36, ht7: always 5); h/x1 types
    (ht8); the 384 corner orders (ht9: only the natural one is 5); the four tests' operand orders
-   (625, hta).  2026-11-29 round 2 (.work/pi/ht2/v.py, v3.py, v5.py, 22 variants): `register` is
+   (625, hta).  2026-11-28 round 2 (.work/pi/ht2/v.py, v3.py, v5.py, 22 variants): `register` is
    INERT in this compiler - `register int h`, `register int x1`, both together, and `register` on
    each of the three parameters all compile to the control's exact bytes with the same two slots
    (CONFIRMED: fndiff's row text identical). `x2 = (bodies[b].x + fx) - gx`, `y1 = (bodies[b].y +
