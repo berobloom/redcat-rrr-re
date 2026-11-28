@@ -21,7 +21,23 @@
    types (int, long, unsigned, char, unsigned short), every declaration order, `frame = 0x20` /
    `(short)32` / braces / `| 0`, `heading` cast spellings, `t = n - 1` as two statements,
    (int)/(short)/L/`n + -1`/`--n` in the check_object_nr call, an extra local, and the mode, period,
-   anim and bodies-copy statements moved - ~60 variants, each compiled alone in .work/probe/ft2. */
+   anim and bodies-copy statements moved - ~60 variants, each compiled alone in .work/probe/ft2.
+   2026-11-29 (.work/pi/ft/v.py, v2.py, 20 vbatch variants in-module): argint, framecast, framensu,
+   testzero, statsholder, objptr, pixel, framesub, paramcopy, paramhead, hex32, cast32, hexmask,
+   modecast, periodcast, argsub, nlocal, tnocall, bodiesFirst, kdeclblock - none below 9, and
+   argint, framecast, testzero, hex32, cast32, hexmask, modecast, argsub, tnocall all hold 9.
+   (framensu, framesub and the first testzero scored 63 because my edit text dropped the `else` arm -
+   invalid probes, not evidence.) New,
+   CONFIRMED (side-by-side dump .work/pi/lo/dump.py on .work/src/SHADEOBJ.OBJ): (a) a named int copy
+   of the short parameter does NOT buy the game's in-place extension - `int m = n;` then `m - 1` and
+   `objects[m]` is 24 rows (paramcopy, paramhead; `register int m` 24); (b) the `frame = 32` store's
+   instruction is byte-identical (`mov word ptr [edx+eax+0xa],0x20` 0x16896 game / 0x16899 ours), so
+   its 3 rows are only which of EAX/EDX holds the re-derived `n << 4` and which holds `objects` - no
+   RHS spelling (32, 0x20, (short)32), guard spelling (`0 < damage && 0 < fuel`) or index cast
+   moves it; (c) both sides keep `n << 4` in EBX live into the else arm and reuse it there
+   (`mov [ebx+eax+0xa],dx` 0x168b0 game, 0x168b3 ours) - the then arm re-derives it. Row 9 is the
+   head's 2-byte length gap (game `cwde`+`mov esi,eax`+`dec eax` = 4 B, ours `movsx esi,ax`+
+   `lea eax,[esi-1]` = 6 B), which leaves the game's `push edx` at 0x16945 without a partner. */
 int follower_tick(short n)
 {
     short k;

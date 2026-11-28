@@ -550,3 +550,16 @@ Rules for the agent:
     putting `default` in the middle hides 1 row (8 -> 7). Its nearmiss line now starts `ON:`; new
     open question 36 (WCC's register allocator, not its scheduler, decides this). Q6's next unwalked
     line is `follower_tick` 0x167aa (9).
+  - 2026-11-29 (overnight): sixth function, `follower_tick` 0x167aa: stays 9 rows after 20 more
+    in-module vbatch spellings (.work/pi/ft/v.py, v2.py); nine of them keep the same 9, none is below,
+    so nothing went into `src/` (`src/check.sh` 128 MATCH, 0 WRONG, DATA 9677/9677). Three new facts,
+    all CONFIRMED on the in-module compile: a named `int m = n;` copy of the short parameter - the one
+    lever that could have bought the game's in-place `cwde` (0x167b9) - gives 24 rows; the `frame = 32`
+    store instruction is ALREADY byte-identical (`mov word [edx+eax+0xa],0x20`, 0x16896 game / 0x16899
+    ours) so those 3 rows are only which of EAX/EDX takes the re-derived `n << 4` (no RHS spelling
+    32/0x20/(short)32, guard form `0 < damage && 0 < fuel`, or index cast moves it); and both sides
+    keep `n << 4` in EBX live into the else arm and reuse it there (`mov [ebx+eax+0xa],dx` 0x168b0 /
+    0x168b3). Its nearmiss line now starts `ON:`. Q6's remaining unwalked lines: `ground_check`
+    0x1889d (13), `fn_13a78` 0x13a78 (15), `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24),
+    `bull_crash_tick` 0x19c8c (42), `bull_tick` 0x12826 (50), `draw_view` 0x11526 (51),
+    `ai_waypoint_action` 0x1af83 (64).

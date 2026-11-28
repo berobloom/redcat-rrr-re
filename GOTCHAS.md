@@ -391,7 +391,10 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   src/shadeobj2.c before starting.
 - **follower_tick 0x167aa's last 9 rows:** two Watcom choices, the short parameter's sign extension
   (`cwde` + `mov esi,eax` + `dec eax` in the game, `movsx` + `lea` in ours) and an EAX/EDX swap in the
-  `frame = 32` store; ~60 variants stop there (.work/probe/ft2). What did work, and is worth trying
+  `frame = 32` store; ~60 variants stop there (.work/probe/ft2). 2026-11-29 (20 more, .work/pi/ft/):
+  the mirror is not a typing question - the store's own instruction is already byte-identical
+  (`mov word [edx+eax+0xa],0x20`, 0x16896 game / 0x16899 ours), and a named `int m = n;` copy of the
+  short parameter (the one idea that could buy the game's `cwde`) costs 15 rows (24 vs 9). What did work, and is worth trying
   in the other object callbacks: the two-part test written as `!(damage > 0 && fuel > 0)` (30 rows
   better than `damage <= 0 || fuel <= 0`), and follower_tick alone in its own file so its epilogue
   stops merging into fn_16e46's (4 rows).

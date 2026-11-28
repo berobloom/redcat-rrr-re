@@ -84,8 +84,13 @@ Short: where the project stands, and what is next. History is in git; no diary.
    register pair plus the length the pair decides - muis_crash_tick's `mov eax,[@]` at 0x1a922 is
    the 5-byte moffs form where the game's `mov edx,[@]` needs 6, which is its 6th row (discoveries
    "Toolchain: register parameters and the 5-byte `mov eax,[disp32]`"); `src/check.sh` is still 128
-   MATCH of 147 (87.1%), 0 WRONG, DATA 9677/9677, and Q6's next unwalked line is
-   `spawn_dropped_object` 0x18759 (8). Earlier in `src/init.c`: `init_objects` 0x148db (1635 B) in front of
+   MATCH of 147 (87.1%), 0 WRONG, DATA 9677/9677. 2026-11-29 overnight, two more:
+   `spawn_dropped_object` 0x18759 holds 8 (floor 7, switch arm order `case 2 / default / case 0`; its
+   rows are one register mirror that the dispatch construct BELOW the period store decides - open
+   question 36) and `follower_tick` 0x167aa holds 9 after 20 more spellings (the `frame = 32` store is
+   already byte-identical; a named `int m = n;` costs 15). Both nearmiss lines now start `ON:`; counts
+   unchanged at 128 of 147. Q6's next unwalked line is `ground_check` 0x1889d (13). Earlier in
+   `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
 2. Otherwise: a near miss (item 3). Nothing in 0x10010-0x1B915 is unwritten C any more:
