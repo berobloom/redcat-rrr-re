@@ -35,7 +35,8 @@
    shares with those blocks (LIKELY), not on `objects` (another pointer in the arm changes nothing)
    and not on anything in the arm's own text.
    Third pass 2026-11-29 (serial, .work/pi/mct2/v.py v2.py v3.py, 28 variants through vbatch.py,
-   nothing below 6; fourteen of them tie at 6 and are byte-identical to the current text): the six
+   nothing below 6; fourteen tie at 6, five of them dumped and byte-identical to the current
+   text): the six
    rows are ONE register pair, now named instruction by instruction (.work/pi/mct2/dump.py prints
    both sides with bytes). Ours: `movsx edx,si` 0x1a90d, `mov eax,[@]` 0x1a922 (the 5-byte moffs
    form `a1 disp32`), `shl edx,4` 0x1a932. The game: `movsx eax,si`, `mov edx,[@]` 0x1a922 (the
