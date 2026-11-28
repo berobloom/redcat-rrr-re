@@ -18,6 +18,22 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
+0. **Overnight pass of 2026-11-29, QUEUE Q5.** Two functions worked, two commits each.
+   `player_tick` 0x11eb5 (`src/drive.c`) 136 -> **54 rows**: 68 variants in six batches
+   (`.work/pi/pt/v*.py`); what paid was `want = 0;` as the first statement (the game's zero
+   register, GOTCHAS) and splitting the vz -> `objects[n].frame` offset out of the steering `h`
+   into its own `hz` (GOTCHAS: one value with two homes is two source locals). Declaration order
+   `int vv, hz, m, t, d, go, h, g;`; the waypoint sum keeps body-first x and waypoint-first y.
+   Both sides now frame 0x10 with six pushes (`stackmap`); ours leaves [esp] a hole where the game
+   keeps `go`. `player_crash_tick` 0x19497 (`src/tick.c`) stays **114 rows**: 36 spellings, 28
+   scored, best 113 (`sumymirror`), under the bar - see its QUEUE note. Gates after both:
+   `src/check.sh` 129 ` MATCH at` lines = `src/matched.baseline` (unchanged), 0 WRONG,
+   `DATA: 9677 of 9677`; `PROGRESS.md` unchanged so no regeneration. Q5's listed functions are now
+   each walked at least once, none MATCH, so Q5 stays open; Q6 has its own list and its notes say
+   which lines are unwalked (`fn_13a78` 0x13a78, `camera_follow` 0x138ed at 19 were the last named
+   there). `vbatch.py` edit lists are `(old, new)` pairs - a bare string in one aborts the batch
+   after it has already scored the earlier ones.
+
 0. **The overnight pass of 2026-11-28 21:45-23:40 ran in a different state of this project and its
    work is gone.** It worked `update_speed` 0x12e1b (370 near-miss rows, that tree's QUEUE item 11)
    in a tree with `src/matched.baseline` 145, a `src/physics.c`, a `GOALS.md` and a `.work` whose

@@ -491,6 +491,23 @@ Rules for the agent:
     .work/pi/adr/noop.py --base .work/pi/adr/head_drive.c` (a copy of HEAD's drive.c) scores 136.
     Its `src/nearmiss.txt` line now starts `ON:` with 54. Q5's last unwalked function:
     `player_crash_tick` 0x19497 (114 rows, src/tick.c).
+  - 2026-11-29 (overnight): Q5 round 1 of `player_crash_tick` 0x19497: 36 spellings written in three
+    in-module `vbatch` batches (`.work/pi/adr/pctv.py`, `pctv2.py`, `pctv3.py`), 28 scored - the first
+    batch aborted after 4 variants on a malformed edit list in its own file, and `vbatch` takes its
+    edits as `(old, new)` pairs, so a bare string there is a crash, not a variant. Control 114 rows
+    throughout; best `sumymirror` 113 (the waypoint sum's y term as
+    `abs((bodies[0].y >> 16) - (waypoint0[waypoint_index0].y >> 16))`) - one row, under the bar, NOT
+    applied, so the function stays 114 and `src/tick.c` changed in its comment only. Content read off
+    the game (CONFIRMED): its waypoint sum is body - waypoint in BOTH terms (`sub eax,edx` 0x195f6,
+    `sub edx,eax` 0x19617) yet only the y mirror pays (x only 125, both 126), while `player_tick`
+    0x11eb5 wanted body-first x and waypoint-first y - the per-term order is per function (as
+    `bull_tick` 0x12826 already said). Costs, all CONFIRMED in-module: a stats-index local in the
+    dead case-3 arm 285/169/271, `short t` 289, `short m` 291, `(short)(bodies[n].x >> 16)` in the
+    tail 257 although the game has `movsx esi,ax` at 0x19c37 there, `abs(bodies[n].vz) > 0x10000` as
+    a range test 296, two merged declaration orders 144-159. nmclass at 114: 42 home, 24 shape, 21
+    only-ours (17 B), 27 only-game (58 B), 2066 of the game's 2037 B. Its `src/nearmiss.txt` line now
+    starts `ON:`. Q5's listed functions are now all walked at least once, none MATCH, so Q5 stays
+    open; its accept line wants MATCH or a SKIP whose nmclass is home rows only.
 
 - [ ] **Q6 Overnight 2026-11-28/29: the near misses, smallest first**
   Report: the human wants a night of matching work from the local model. The block-split probe
