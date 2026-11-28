@@ -65,6 +65,19 @@
  * {fallback} else {script}` compiles to the same 1151 bytes, and `if (i >= 0) {script} else
  * {fallback}` gives 480 rows. The f24-chain lever (an unsigned if/else-if chain written as a
  * switch) has nothing to act on here: the dispatch already is a switch on f4.
+ *
+ * 2026-11-28 (round 1, .work/pi/awa/v.py, v2.py, 17 spellings, control 64): nothing is below 64.
+ * The one global the game references more often than we do is `rrrio.world` (0x751a4 = rrrio
+ * 0x75178 + 0x2c): caching it in a local and indexing `scriptN[w][i]` costs 124 rows (188), so the
+ * game's extra read is WCC re-materialising `scriptN[rrrio.world][i]` per statement, not a variable
+ * of its source. `h = aim_at_player(racer, ...); stats[bodies[racer].stats].heading = h;` in the
+ * rocket arm (either racer, or both) leaves 64 unchanged - its one extra aim_at_player call and one
+ * fewer fire_rocket call (nmrefs) come from WCC merging only the `fire_rocket(racer); play_fx(20,
+ * 0);` tail of its two rocket arms, which no spelling of the body asks for. Also 64: the `-1/0` arm
+ * last, `.f8` read into a local before spawn_dropped_object, the `speed`/`wait2` and `vz`/`speed`
+ * swaps inside the arms. Worse: `case 1:` first 150, `case 3:` first 149, `wait2 = 0;` before the
+ * case-4 test 70, `.f14` into a local 65. `(scriptN[rrrio.world] + i)->f8` never scored - the
+ * variant's replacement text was missing its '('.
  */
 
 void ai_waypoint_action(int racer, int n)

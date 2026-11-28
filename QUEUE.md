@@ -713,3 +713,22 @@ Rules for the agent:
     are if/else not ternaries (235), the clip arms keep their `else` (55, both 59), and the tile-loop
     initializers (55) and the clamp block order (68) are the C's. Its `src/nearmiss.txt` line now
     starts `ON:` (round 1 done). Q6's last unwalked line: `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight): Q6 round 1 of `ai_waypoint_action` 0x1af83: stays 64 rows after 16
+    in-module vbatch spellings in two batches (`.work/pi/awa/v.py`, `v2.py`, control 64; `ptrarms`
+    never compiled, its replacement text missed its '('); ten tie at 64 and nothing is below, so
+    nothing went into `src/` (`src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
+    `src/matched.baseline`, `grep -c WRONG` = 0, `DATA: 9677 of 9677`, `fndiff.py rrr
+    .work/src/AI.OBJ ai_waypoint_action 0x1af83 | tail -1` says 64). Two content questions answered
+    (CONFIRMED, in-module): the one address the game references more often than we do is
+    `rrrio.world` (0x751a4 = rrrio 0x75178 + 0x2c, from struct rrrio in `src/rrr.h`), and caching it
+    in a local costs 124 rows (188) - so its extra read is WCC re-materialising
+    `scriptN[rrrio.world][i]` per statement, not a variable of its source; and the aim result through
+    a local (`h = aim_at_player(...); stats[...].heading = h;` in one rocket arm, the other, or both)
+    is exactly 64, so its one extra `aim_at_player` and one fewer `fire_rocket` (nmrefs) come from
+    WCC merging only the `fire_rocket(racer); play_fx(20, 0);` tail of its two rocket arms - no
+    spelling of the body asks for that. Also 64: the `-1/0` arm last, `.f8` read into a local before
+    `spawn_dropped_object`, the `speed`/`wait2` and `vz`/`speed` swaps inside the arms; worse: `case 1:`
+    first 150, `case 3:` first 149, `wait2 = 0;` before the case-4 test 70, `.f14` into a local 65.
+    Its `src/nearmiss.txt` line now starts `ON:` (round 1 done), as does every Q6 line; only
+    `dropped2_tick` 0x178f6 has `ON2:` so far, so the item's Accept line (two rounds each, or MATCH)
+    is not met. Q6's remaining work is round 2 on the twelve `ON:` lines.
