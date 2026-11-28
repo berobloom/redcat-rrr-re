@@ -433,53 +433,55 @@
 0x7f948 map_h                # CONFIRMED (code): map height in cells (camera_start's clamp)
 0x57a58 anims_inited         # CONFIRMED (code): set by init_anims; every raceanim.c set function checks it
 0x57798 anim_list            # SPECULATIVE: passed to fn_25a9d by init_anims and to every set function
-0x7552c anim_buf             # SPECULATIVE: freed (fn_2670e) and reloaded by the set functions
+0x7552c mem_images           # CONFIRMED (code): -1-terminated list of RC image numbers to page in/out; count at 0x5fe00, filled by mem_images_add_anim, reset by mem_images_reset
 0x750ac anim_img_path        # LIKELY: fn_218e4 builds the path of "rc.img" here
 0x74fe4 anim_ind_path        # LIKELY: fn_218e4 builds the path of "rc.ind" here
 0x600d4 anim_err             # SPECULATIVE: printed with "not enough memory for animation data"
-0x57620 anim_set_57620        # SPECULATIVE: an animation set, started/stopped by raceanim.c
-0x57670 anim_set_57670        # SPECULATIVE: an animation set, started/stopped by raceanim.c
-0x5767c anim_set_5767c        # SPECULATIVE: an animation set, started/stopped by raceanim.c
-0x57684 anim_set_57684        # SPECULATIVE: an animation set, started/stopped by raceanim.c
-0x5768c anim_set_5768c        # SPECULATIVE: an animation set, started/stopped by raceanim.c
-0x57710 anim_set_57710        # SPECULATIVE: an animation set, started/stopped by raceanim.c
-0x57754 anim_set_57754        # SPECULATIVE: an animation set, started/stopped by raceanim.c
-0x15c66 fn_15c66             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57620, reloads rc.img/rc.ind
-0x15cf1 fn_15cf1             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57620
-0x15d34 fn_15d34             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57620, reloads rc.img/rc.ind
-0x15dbf fn_15dbf             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57620
-0x15e02 fn_15e02             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57670, reloads rc.img/rc.ind
-0x15e8d fn_15e8d             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57670
-0x15ed0 fn_15ed0             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57670, reloads rc.img/rc.ind
-0x15f5b fn_15f5b             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57670
-0x15f9e fn_15f9e             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_5767c, reloads rc.img/rc.ind
-0x16029 fn_16029             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_5767c
-0x1606c fn_1606c             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_5767c, reloads rc.img/rc.ind
-0x160f7 fn_160f7             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_5767c
-0x1613a fn_1613a             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57684, reloads rc.img/rc.ind
-0x161c5 fn_161c5             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57684
-0x16208 fn_16208             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57684, reloads rc.img/rc.ind
-0x16293 fn_16293             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57684
-0x162d6 fn_162d6             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_5768c, reloads rc.img/rc.ind
-0x16361 fn_16361             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_5768c
-0x163a4 fn_163a4             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_5768c, reloads rc.img/rc.ind
-0x1642f fn_1642f             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_5768c
-0x16472 fn_16472             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57710, reloads rc.img/rc.ind
-0x164fd fn_164fd             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57710
-0x16540 fn_16540             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57710, reloads rc.img/rc.ind
-0x165cb fn_165cb             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57710
-0x1660e fn_1660e             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57754, reloads rc.img/rc.ind
-0x16699 fn_16699             # CONFIRMED (code): raceanim.c, 0x1bd71 anim_set_57754
-0x166dc fn_166dc             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57754, reloads rc.img/rc.ind
-0x16767 fn_16767             # CONFIRMED (code): raceanim.c, 0x1bda1 anim_set_57754
+0x57620 object_anims         # STRONGLY SUPPORTED: -1-terminated anim list, anims 4-21 and 86 (shadows, mine, smoke, boost, signs, cactus, rockets, explosion, start lights); loaded first by main.c, before the drive sets
+0x57670 rc_drive_anims       # STRONGLY SUPPORTED: -1-terminated anim list, anims 2, 3 (RedCat driving); main.c logs "RC Drive Anims initialised" after loading it; switch_anims frees it on a crash
+0x5767c bull_drive_anims     # STRONGLY SUPPORTED: -1-terminated anim list, anim 0 (Brutus driving); main.c logs "BULL Drive Anims initialised" after loading it; switch_anims frees it on a crash
+0x57684 muis_drive_anims     # STRONGLY SUPPORTED: -1-terminated anim list, anim 1 (Snitch driving); main.c logs "MUIS Drive Anims initialised" after loading it; switch_anims frees it on a crash
+0x5768c rc_crash_anims       # STRONGLY SUPPORTED: -1-terminated anim list, anims 22-53 (RedCat wreck); switch_anims frees racer 0 (RedCat)'s drive set and loads this one when it crashes
+0x57710 bull_crash_anims     # STRONGLY SUPPORTED: -1-terminated anim list, anims 54-69 (Brutus wreck); switch_anims frees racer 2 (Brutus)'s drive set and loads this one when it crashes
+0x57754 muis_crash_anims     # STRONGLY SUPPORTED: -1-terminated anim list, anims 70-85 (Snitch wreck); switch_anims frees racer 4 (Snitch)'s drive set and loads this one when it crashes
+0x15c66 load_object_anims    # CONFIRMED (code): pages in the images of object_anims: disable_mem_images, mem_images_reset, mem_images_add_set, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x15cf1 free_object_anims    # CONFIRMED (code): frees the images of object_anims: mem_images_reset, mem_images_add_set, disable_mem_images
+0x15d34 load_object_anims_half # CONFIRMED (code): pages in half of the images of object_anims: disable_mem_images, mem_images_reset, mem_images_add_set_half, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x15dbf free_object_anims_half # CONFIRMED (code): frees half of the images of object_anims: mem_images_reset, mem_images_add_set_half, disable_mem_images
+0x15e02 load_rc_drive_anims  # CONFIRMED (code): pages in the images of rc_drive_anims: disable_mem_images, mem_images_reset, mem_images_add_set, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x15e8d free_rc_drive_anims  # CONFIRMED (code): frees the images of rc_drive_anims: mem_images_reset, mem_images_add_set, disable_mem_images
+0x15ed0 load_rc_drive_anims_half # CONFIRMED (code): pages in half of the images of rc_drive_anims: disable_mem_images, mem_images_reset, mem_images_add_set_half, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x15f5b free_rc_drive_anims_half # CONFIRMED (code): frees half of the images of rc_drive_anims: mem_images_reset, mem_images_add_set_half, disable_mem_images
+0x15f9e load_bull_drive_anims # CONFIRMED (code): pages in the images of bull_drive_anims: disable_mem_images, mem_images_reset, mem_images_add_set, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x16029 free_bull_drive_anims # CONFIRMED (code): frees the images of bull_drive_anims: mem_images_reset, mem_images_add_set, disable_mem_images
+0x1606c load_bull_drive_anims_half # CONFIRMED (code): pages in half of the images of bull_drive_anims: disable_mem_images, mem_images_reset, mem_images_add_set_half, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x160f7 free_bull_drive_anims_half # CONFIRMED (code): frees half of the images of bull_drive_anims: mem_images_reset, mem_images_add_set_half, disable_mem_images
+0x1613a load_muis_drive_anims # CONFIRMED (code): pages in the images of muis_drive_anims: disable_mem_images, mem_images_reset, mem_images_add_set, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x161c5 free_muis_drive_anims # CONFIRMED (code): frees the images of muis_drive_anims: mem_images_reset, mem_images_add_set, disable_mem_images
+0x16208 load_muis_drive_anims_half # CONFIRMED (code): pages in half of the images of muis_drive_anims: disable_mem_images, mem_images_reset, mem_images_add_set_half, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x16293 free_muis_drive_anims_half # CONFIRMED (code): frees half of the images of muis_drive_anims: mem_images_reset, mem_images_add_set_half, disable_mem_images
+0x162d6 load_rc_crash_anims  # CONFIRMED (code): pages in the images of rc_crash_anims: disable_mem_images, mem_images_reset, mem_images_add_set, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x16361 free_rc_crash_anims  # CONFIRMED (code): frees the images of rc_crash_anims: mem_images_reset, mem_images_add_set, disable_mem_images
+0x163a4 load_rc_crash_anims_half # CONFIRMED (code): pages in half of the images of rc_crash_anims: disable_mem_images, mem_images_reset, mem_images_add_set_half, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x1642f free_rc_crash_anims_half # CONFIRMED (code): frees half of the images of rc_crash_anims: mem_images_reset, mem_images_add_set_half, disable_mem_images
+0x16472 load_bull_crash_anims # CONFIRMED (code): pages in the images of bull_crash_anims: disable_mem_images, mem_images_reset, mem_images_add_set, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x164fd free_bull_crash_anims # CONFIRMED (code): frees the images of bull_crash_anims: mem_images_reset, mem_images_add_set, disable_mem_images
+0x16540 load_bull_crash_anims_half # CONFIRMED (code): pages in half of the images of bull_crash_anims: disable_mem_images, mem_images_reset, mem_images_add_set_half, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x165cb free_bull_crash_anims_half # CONFIRMED (code): frees half of the images of bull_crash_anims: mem_images_reset, mem_images_add_set_half, disable_mem_images
+0x1660e load_muis_crash_anims # CONFIRMED (code): pages in the images of muis_crash_anims: disable_mem_images, mem_images_reset, mem_images_add_set, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x16699 free_muis_crash_anims # CONFIRMED (code): frees the images of muis_crash_anims: mem_images_reset, mem_images_add_set, disable_mem_images
+0x166dc load_muis_crash_anims_half # CONFIRMED (code): pages in half of the images of muis_crash_anims: disable_mem_images, mem_images_reset, mem_images_add_set_half, load_mem_images from rc.img/rc.ind (2000 on failure)
+0x16767 free_muis_crash_anims_half # CONFIRMED (code): frees half of the images of muis_crash_anims: mem_images_reset, mem_images_add_set_half, disable_mem_images
 0x25a9d fn_25a9d             # SPECULATIVE: animation library, called by raceanim.c
 0x26782 fn_26782             # SPECULATIVE: animation library, called by raceanim.c
 0x218e4 fn_218e4             # SPECULATIVE: animation library, called by raceanim.c
-0x2643f fn_2643f             # SPECULATIVE: animation library, called by raceanim.c
-0x2670e fn_2670e             # SPECULATIVE: animation library, called by raceanim.c
-0x1bcb7 fn_1bcb7             # SPECULATIVE: animation library, called by raceanim.c
-0x1bd71 fn_1bd71             # SPECULATIVE: animation library, called by raceanim.c
-0x1bda1 fn_1bda1             # SPECULATIVE: animation library, called by raceanim.c
+0x2643f load_mem_images      # LIKELY: loads the images listed in mem_images from rc.img/rc.ind (rcimgret.c; opens both "rb", seeks the index); nonzero on failure
+0x2670e disable_mem_images   # CONFIRMED (code): frees each listed image's frames[] buffer and clears it; its own error string names it 'disable_mem_images' (rcimgret.c)
+0x1bcb7 mem_images_reset     # STRONGLY SUPPORTED: count 0x5fe00 = 0, the 10000 mem_images entries = -1, 0x5fe04 = 1 (stdlib.c; checked by 'anim base not properly reset')
+0x1bce0 mem_images_add_anim  # CONFIRMED (code): appends each frame's image of one anim to mem_images unless already listed; "too many mem_images" past 10000 (stdlib.c)
+0x5fe00 mem_images_count     # CONFIRMED (code): entries used in mem_images
+0x1bd71 mem_images_add_set   # CONFIRMED (code): for each anim index of a -1-terminated set, mem_images_add_anim(&anim_list[i])
+0x1bda1 mem_images_add_set_half # CONFIRMED (code): as mem_images_add_set, but first gives every odd frame its even neighbour's image (frames 2k+1 = 2k), so a set pages in half the images
 0x19391 hud_count            # CONFIRMED (code): draws boosts (13) or rockets (23) as two digits at (389|494, 415); any other value draws with uninitialised locals
 0x15166 fn_15166             # CONFIRMED (code): fn_19391(13); fn_19391(23)
 0x18886 fn_18886             # CONFIRMED (code): -1 below lo, 1 above hi, else 0

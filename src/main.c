@@ -436,20 +436,20 @@ void init_game(char **argv, int argc)
     debug_printf("Init anims.\n");
     init_anims();
     debug_printf("use config.\n");
-    if (fn_15c66())
+    if (load_object_anims())
         rc_error("memory overflow initialising anims.");
-    fn_1bcb7();
-    if (fn_15e02())
+    mem_images_reset();
+    if (load_rc_drive_anims())
         rc_error("memory overflow initialising anims.");
-    fn_1bcb7();
+    mem_images_reset();
     debug_printf("RC Drive Anims initialised ok using %ld bytes. \n", anim_bytes);
-    if (fn_15f9e())
+    if (load_bull_drive_anims())
         rc_error("memory overflow initialising anims.");
-    fn_1bcb7();
+    mem_images_reset();
     debug_printf("BULL Drive Anims initialised ok using %ld bytes. \n", anim_bytes);
-    if (fn_1613a())
+    if (load_muis_drive_anims())
         rc_error("memory overflow initialising anims.");
-    fn_1bcb7();
+    mem_images_reset();
     debug_printf("MUIS Drive Anims initialised ok using %ld bytes. \n", anim_bytes);
     debug_printf("Direction tables initialised ok.\n");
     scroll_y = 0;

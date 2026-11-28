@@ -323,9 +323,9 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   `#line N "raceanim.c"` sets it (raceanim.c, all 28 set functions).
 - **A register load hoisted above a library call = the pragma is missing a modify list.** With
   `parm routine []` alone Watcom assumes EDX survives the call and loads the next argument early;
-  `modify [eax ecx edx]` puts it after the call, as in the game (fn_1bd71/fn_1bda1). A function
+  `modify [eax ecx edx]` puts it after the call, as in the game (mem_images_add_set/mem_images_add_set_half). A function
   that saves EBX/ECX/EDX it never uses calls something declared `modify [eax ebx ecx edx]`
-  (fn_1bcb7).
+  (mem_images_reset).
 
 - **`if (n == -1) return -1;`, not `return n;`.** With `return n` Watcom jumps to a `mov eax, n`
   before the epilogue; with the constant it knows EAX already holds -1 and jumps past it, as the

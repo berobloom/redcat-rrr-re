@@ -618,6 +618,15 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   450–478 and 1054–1055. Anims 22–53 are RedCat's wreck, 32 headings × 8
   frames (577–832, in order); anims 54–69 and 70–85 are Brutus's and
   Snitch's, 16 headings × 8 frames each (439–576 mixed, 833–1053).
+- CONFIRMED (code, 2026-11-28): RC images are paged in and out by animation set (raceanim.c,
+  0x15c66-0x167a9). Seven -1-terminated lists of anim numbers: object_anims 0x57620 (anims 4-21,
+  86), rc/bull/muis_drive_anims 0x57670/0x5767c/0x57684 (anims 2-3, 0, 1) and
+  rc/bull/muis_crash_anims 0x5768c/0x57710/0x57754 (22-53, 54-69, 70-85). main.c loads the object
+  set and the three drive sets; switch_anims frees a crashed racer's drive set and loads its crash
+  set. Each set has four functions, load/free and load/free `_half`; `_half` goes through
+  `mem_images_add_set_half` 0x1bda1, which first sets every odd frame's image to its even
+  neighbour's. The game calls only the nine full-set functions above, so the static Brutus/Snitch
+  "one image per two headings" layout is in the table itself, not produced at run time.
 - CONFIRMED: sprite hotspots are the RC.IMG headers' x, y as signed 16-bit
   values (544 of 544 loaded images match the run-time records).
 - CONFIRMED: the race palette is the tileset's (identical to RACESCR3.PCX's;

@@ -268,30 +268,30 @@ int switch_anims(void)
     if (!crash0 && !crash2 && !crash4)
         return 0;
     if (crash0) {
-        fn_15e8d();
-        if (fn_162d6())
+        free_rc_drive_anims();
+        if (load_rc_crash_anims())
             return -1;
         start_crash(0);
         crash0 = 0;
-        fn_1bcb7();
+        mem_images_reset();
         return 0;
     } else if (crash2) {
-        fn_16029();
-        if (fn_16472())
+        free_bull_drive_anims();
+        if (load_bull_crash_anims())
             return -1;
         start_crash(2);
         crash2 = 0;
         stats[bodies[2].stats].damage = 100;
-        fn_1bcb7();
+        mem_images_reset();
         return 0;
     } else if (crash4) {
-        fn_161c5();
-        if (fn_1660e())
+        free_muis_drive_anims();
+        if (load_muis_crash_anims())
             return -1;
         start_crash(4);
         crash4 = 0;
         stats[bodies[4].stats].damage = 100;
-        fn_1bcb7();
+        mem_images_reset();
         return 0;
     }
     return 0;
