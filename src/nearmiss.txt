@@ -68,7 +68,12 @@
    halves are independent and each spelling reaches only one: the switch keeps the game's registers
    and pays Watcom's range tree, every if-chain lands the game's two tests and pays the mirrored
    period store - see the differs note in src/heap.c. SKIP: the game is an if/else-if chain keeping n*16 in EAX and objects in EDX per arm; our switch has the game's registers but Watcom's compare tree and a recomputed n<<4 in default (8 rows, 306 vs 301 B), every if-shape has the game's tree but mirrors the registers (11 rows, 299 B). 2026-11-26: ~150 more (types, alloc spelling, switch/if hybrids, n copies, .work/probe/sd1-sd4) - see the differs note in src/heap.c
-9 0x167aa follower_tick  ON: 2026-11-29 20 variants (argint, framecast, framensu, testzero,
+9 0x167aa follower_tick  ON2: 2026-11-28 9 variants (kr, krint, oframe, modefirst, modefirstof,
+hstore, andmask, krhstore, oframeh), best 9 rows (kr, oframe tie at 9; krint 66, oframeh 80,
+modefirst 32, andmask 38, hstore 49, modefirstof did not compile) - an old-style definition
+`int follower_tick(n) short n;` and `(&objects[n])->frame` reach the same 9 as the current source, so
+neither is a lever; .work/pi/adr/v2.py, v3.py. The head's in-place `cwde` (0x167b9) stays out of
+reach. ON: 2026-11-29 20 variants (argint, framecast, framensu, testzero,
    statsholder, objptr, pixel, framesub, paramcopy, paramhead, hex32, cast32, hexmask, modecast,
    periodcast, argsub, nlocal, tnocall, bodiesFirst, kdeclblock), best 9 rows (control; argint,
    framecast, testzero, hex32, cast32, hexmask, modecast, argsub and tnocall also 9), OPEN. New

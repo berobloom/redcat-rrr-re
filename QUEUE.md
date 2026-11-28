@@ -828,3 +828,29 @@ Rules for the agent:
     committed. Decision: took the next Q6 pair whose functions really exist (`bull_crash_tick`
     0x19c8c, `draw_view` 0x11526) and re-measured every number with `fndiff.py`/`vbatch.py` before use.
     Same class as the 2026-11-28 21:45 STATUS item 0 and the process note above it.
+  - 2026-11-28 (overnight): Q6 round 2 of `follower_tick` 0x167aa: stays 9 rows after 9 in-module
+    vbatch variants (.work/pi/adr/v2.py, v3.py) - old-style `int follower_tick(n) short n;` (kr) and
+    `(&objects[n])->frame` (oframe) tie at 9; old-style `int n;` 66, a `struct body *b` else-arm
+    holder with `(&objects[n])` 80, the mode store moved before the call 32, `heading % 32` 38, an
+    `int h` heading holder 49; one variant did not compile (E1081). Its `src/nearmiss.txt` line now
+    starts `ON2:` and still carries `ON:`, so that function meets the Accept line. Also CONFIRMED:
+    the game's `push edx` at 0x16945 is `free_object_tick`'s own prologue (rrr_names.txt line 40),
+    not a statement follower_tick lacks. Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
+    `src/matched.baseline`, `grep -c WRONG` = 0, DATA 9677 of 9677; `src/shadeobj.c` changed in its
+    comment only.
+  - 2026-11-28 (overnight): process note, third instance - the first seen switching *during* a pass.
+    At 07:2x this pass read a QUEUE.md whose first open Q6 bullets named `ai_dive` 0x101eb8 and
+    `spawn_object`, a `src/ai.c` defining `ai_dive` with ON/ON2/ON3 differs notes, `nearmiss.txt`
+    lines for them, and a GOTCHAS "Block splits" section naming `f3decomp.py`; by 08:0x every one of
+    those paths held HEAD's content and `git status` was clean. CONFIRMED none of it is in this
+    repository: `git log --all -S ai_dive -- src/` is empty, `git show HEAD:QUEUE.md | grep -c
+    ai_dive` is 0, `git show HEAD:src/ai.c` is 199 lines of `ai_waypoint_action` only, and
+    `reverse-engineering/analysis/rrr_names.txt` names no function at 0x101eb8. Mid-pass, between
+    07:44 and 07:47, the untracked `reverse-engineering/tools/wc/f3d{decomp,dasm,scan}.py` and this
+    pass's own `.work/pi/ai_dive/` disappeared (`find / -name 'f3d*.py'` now finds none), and a
+    commit this pass did not make appeared at 07:43:59 (`f7734d9`) - a second agent is live here.
+    Decision: recompiled from HEAD (129 MATCH, 0 WRONG, DATA 9677/9677), discarded every number read
+    from the other state (including a 0-row `fndiff` reading for `ai_dive` whose `check.sh` run
+    printed 6 WRONG fixup lines - the masked displacement bytes hid wrong fields, so not a match),
+    and worked the first Q6 function that really
+    exists here and still needed a round.

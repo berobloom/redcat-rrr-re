@@ -604,3 +604,16 @@
     UNRESOLVED: whether the reader is inventing text, or a second tree is being read. What would
     settle it: `git log --all -S <one symbol from the report>` plus `wc -c` on the named file from
     the same shell that read it; if empty/absent, take the next Q6 pair whose functions really exist.
+    Fourth instance, 2026-11-28 07:20-08:05, caught in the act: this pass read QUEUE.md, src/ai.c,
+    src/nearmiss.txt and GOTCHAS.md in that other state at 07:2x (a Q6 bullet for `ai_dive`
+    0x101eb8, an `ai_dive` definition with ON/ON2/ON3 notes, a "Block splits" section naming
+    `f3decomp.py`) and found every one of those paths holding HEAD's content at 08:0x with
+    `git status` clean. CONFIRMED it is not this repository's: `git log --all -S ai_dive -- src/` is
+    empty, `git show HEAD:QUEUE.md | grep -c ai_dive` is 0, `git show HEAD:src/ai.c` is 199 lines of
+    `ai_waypoint_action`, and `analysis/rrr_names.txt` names no function at 0x101eb8. Mid-pass,
+    07:44-07:47, the untracked `reverse-engineering/tools/wc/f3d{decomp,dasm,scan}.py` that this pass
+    had just run twice, and its own `.work/pi/ai_dive/`, disappeared (`find / -name 'f3d*.py'` finds
+    none), and a commit this pass did not make landed at 07:43:59 (`f7734d9`). Against "the reader
+    invents text": those tools were executed and a foreign commit is a write, not a read - LIKELY the
+    directory is being replaced under the process by a second live agent/machine. SPECULATIVE which
+    state is canonical; this pass took HEAD (129 MATCH) as canonical and recompiled before use.

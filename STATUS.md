@@ -23,12 +23,12 @@ Short: where the project stands, and what is next. History is in git; no diary.
    in a tree with `src/matched.baseline` 145, a `src/physics.c`, a `GOALS.md` and a `.work` whose
    `rrr.obj1.bin` was 505,776 B; this directory, `.git` included, replaced it mid-session, and
    another agent was working here at the same time (`.work/pi/split/exhaust.py`, init_objects).
-   Evidence (CONFIRMED): this `.git`'s 276-entry reflog holds neither of its commits
-   (`git cat-file -t c514b90` -> no such object), `src/nearmiss.txt` here has no `update_speed`
-   line, `.work/pi/update_speed/` is gone, and `.work/le/rrr.obj1.bin` here is 201,776 B
-   (`leparse.py .work/iso/RRR.EXE`: obj1 base 0x10000, vsize 0x31430), so the addresses it recorded
-   cannot be re-checked against this `.work`. Its finding is in the message of d2f8268; restore that
-   state (or re-run the item) before resuming `update_speed`.
+   Evidence (CONFIRMED): this `.git`'s reflog has neither commit (`c514b90` no such object), no
+   `update_speed` line in `nearmiss.txt`, `.work/le/rrr.obj1.bin` here is 201,776 B, so its
+   addresses cannot be re-checked here; restore that state before resuming `update_speed`. A fourth
+   instance was caught mid-pass, 07:44-07:47: paths already read, untracked `tools/wc/f3d*.py` and
+   the pass's own `.work/pi/` dir were replaced and a foreign commit landed (open question 37) - run
+   `check.sh` and `fndiff.py` in one command (GOTCHAS). Finding: d2f8268's message.
 
 0. QUEUE Q4: a WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
    link/link.sh`, `LINK: 419179 of 419179`), and since 2026-11-25 **104 library modules link as

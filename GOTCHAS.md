@@ -149,6 +149,11 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   `main` 0x111e8: DIFFER -> same, 75/75 refs). Read `DIFFER` on a MATCH as a tool bug first.
 - **libmatch's short hits are not evidence.** A module under ~40 bytes can match anywhere
   (`cstrt386` "at 0x10000", `mblen` at 0x1ae36 inside the game's C); trust long modules only.
+- **`.work/src/*.OBJ` is not yours.** `src/check.sh` rebuilds every module into the shared
+  `.work/src`, so with a second agent live in this directory (open question 37) the OBJ an `fndiff.py`
+  reads can come from a different tree than the source you read. Run `check.sh` and `fndiff.py` in one
+  command, and a 0-row `fndiff` whose `check.sh` prints any `WRONG` line is masked fixup bytes, not a
+  match (`ai_dive`, 2026-11-28: 0 rows and 6 WRONG at once).
 - **The function list is a recursive-descent scan (~60% of the code).** Functions reached only
   through pointers are missing until named: 0x10010 and 0x10029 are not in `rrr_funcs.tsv`.
 - **An `e8` byte inside an immediate is not a call.** `fn_1963e` 0x1963e's only "caller" (0x18f3e)

@@ -37,7 +37,15 @@
    moves it; (c) both sides keep `n << 4` in EBX live into the else arm and reuse it there
    (`mov [ebx+eax+0xa],dx` 0x168b0 game, 0x168b3 ours) - the then arm re-derives it. Row 9 is the
    head's 2-byte length gap (game `cwde`+`mov esi,eax`+`dec eax` = 4 B, ours `movsx esi,ax`+
-   `lea eax,[esi-1]` = 6 B), which leaves the game's `push edx` at 0x16945 without a partner. */
+   `lea eax,[esi-1]` = 6 B), which leaves the game's `push edx` at 0x16945 without a partner - that
+   push is NOT a missing statement, 0x16945 is `free_object_tick` (rrr_names.txt line 40) and the
+   game's `ret` sits at 0x16944.
+   2026-11-28 round 2 (.work/pi/adr/v2.py, v3.py, 9 in-module vbatch variants): kr (old-style
+   `int follower_tick(n) short n;`) and oframe (`(&objects[n])->frame`) hold 9; krint (old-style
+   `int n;`) 66, oframeh (a `struct body *b` in the else arm plus `(&objects[n])`) 80, modefirst
+   (the mode store before the call) 32, andmask (`heading % 32`) 38, hstore (an `int h` holder in
+   the else arm) 49; krhstore 49; modefirstof did not compile (E1081). So K&R parameter promotion
+   is not the route to the game's in-place `cwde` either - floor 9 rows. */
 int follower_tick(short n)
 {
     short k;
