@@ -34,7 +34,25 @@
    Older note: Register homes (m in a stack slot at [esp+8] and vv at [esp+0xc] in the game,
    we keep m in EBP) plus the go/want body placement of muis_crash_tick 0x1a42a's family; the go/want
    pair is dead code here that the game carries anyway (0x19672-0x196a6). 6 of the old 282 rows came
-   from the object: alone in its file, its tail stops jmping into another crash tick's epilogue. */
+   from the object: alone in its file, its tail stops jmping into another crash tick's epilogue.
+   2026-11-29 (Q5 round 1: 36 spellings written in three in-module vbatch batches, .work/pi/adr/
+   pctv.py pctv2.py pctv3.py, 28 scored - one batch died on a malformed edit of its own file;
+   control 114). Best `sumymirror` 113: the y term of the waypoint sum written body - waypoint.
+   One row, under the bar, NOT applied. The game's bytes give body - waypoint in BOTH terms here
+   (x: `mov edx,[eax*8+0x70f94]` 0x195e4, `mov eax,ds:0x6cbf0` 0x195eb, `sub eax,edx` 0x195f6;
+   y: `mov edx,ds:0x6cbf4` 0x19604, `mov eax,[eax*8+0x70f98]` 0x1960a, `sub edx,eax` 0x19617) but
+   only the y mirror pays (x only 125, both 126); player_tick 0x11eb5 wants the opposite mix
+   (body-first x, waypoint-first y), so the per-term order is per function, as in bull_tick 0x12826.
+   Costs, all CONFIRMED in-module: a stats-index local in the dead case-3 arm 285 (`int s`) and 169
+   (`short s`), the same local shared with the arm's f24 load 271, `short t` 289 and `short m` 291
+   (the local types are the game's), the case-3 statements reordered 130 (braced 114, ties),
+   `abs(bodies[n].vz) > 0x10000` as an explicit range test 296, `(g * 1000) << 16` written as the
+   mirrored test `bodies[n].z < ((g * 1000) << 16)` 114 ties and with `bodies[n].z = 0` first 116,
+   the vx/vy pair swapped 114 ties, `(short)(bodies[n].x >> 16)` in the tail 257 - the game does have
+   `movsx esi,ax` at 0x19c37 there, but the cast re-allocates the whole function. Two merged
+   declaration orders cost 144-159: the one-per-line order above is the knife-edge (open question
+   36). nmclass at 114 rows: 42 home, 24 shape, 21 only-ours (17 B), 27 only-game (58 B), 2066 of
+   the game's 2037 bytes. */
 int player_crash_tick(short n)
 {
     short k;
