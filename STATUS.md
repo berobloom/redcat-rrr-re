@@ -20,19 +20,18 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 0. **Overnight pass of 2026-11-29, QUEUE Q5** (detail in its notes and `src/nearmiss.txt`).
    `player_tick` 0x11eb5 (`src/drive.c`) 136 -> **54 rows**: `want = 0;` first (the game's zero
-   register) and the vz -> `objects[n].frame` offset split out of the steering `h` into `hz` (both
+   register), the vz -> `objects[n].frame` offset split out of the steering `h` into `hz` (both
    GOTCHAS), order `int vv, hz, m, t, d, go, h, g;`. `player_crash_tick` 0x19497 (`src/tick.c`)
-   stays **114** (28 spellings scored, best 113, under the bar). Gates: 129 ` MATCH at` =
-   `src/matched.baseline`, 0 WRONG, `DATA: 9677 of 9677`. Every function Q5 lists has now been
-   walked at least once, none MATCH, so Q5 stays open. `vbatch.py` edit lists are `(old, new)`
-   pairs; a bare string aborts the batch mid-way.
+   stays **114** (28 spellings scored, best 113). Gates: 129 ` MATCH at` = `src/matched.baseline`,
+   0 WRONG, `DATA: 9677 of 9677`. All of Q5's functions walked once, none MATCH. `vbatch.py` edit
+   lists are `(old, new)` pairs; a bare string aborts the batch mid-way.
 
 0. **The overnight pass of 2026-11-28 21:45-23:40 ran in a different state of this project and its
-   work is gone** (it worked `update_speed` 0x12e1b, 370 rows, in a tree with `matched.baseline` 145,
-   a `src/physics.c` and a 505,776 B `.work/le/rrr.obj1.bin`; here that bin is 201,776 B, this `.git`
-   has no `c514b90` and no `update_speed` line, so its addresses cannot be re-checked here - restore
-   that state first). A concurrent instance landed a foreign commit here (open question 37; GOTCHAS:
-   run `check.sh` and `fndiff.py` in one command). Finding: d2f8268's message.
+   work is gone** (`update_speed` 0x12e1b, 370 rows, in a tree with `matched.baseline` 145, a
+   `src/physics.c` and a 505,776 B `.work/le/rrr.obj1.bin`; here that bin is 201,776 B and this `.git`
+   has no `c514b90` nor any `update_speed` line, so restore that state before resuming it). A
+   concurrent instance landed a foreign commit here (open question 37; GOTCHAS: run `check.sh` and
+   `fndiff.py` in one command). Finding: d2f8268's message.
 
 0. QUEUE Q4: a WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
    link/link.sh`, `LINK: 419179 of 419179`), and since 2026-11-25 **104 library modules link as
