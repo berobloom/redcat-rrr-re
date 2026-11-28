@@ -372,7 +372,16 @@ int rocket_tick(short n)
    load, and the second block keeps its literal index (622, 43). 34 older spellings of the two
    damage statements (.work/probe/d2) and ~70 of the tail (.work/probe/d8-d11: parens and operand
    order on the x and y lines, `- (frames[k].f8 + 16)`, `h = bodies[n].x >> 16` holders, `(short)`
-   casts, extra dead locals, declaration order, pragma aux clobber lists) leave those 2 rows. */
+   casts, extra dead locals, declaration order, pragma aux clobber lists) leave those 2 rows.  2026-11-28: 16 more through vbatch (.work/pi/d2/v.py, v2.py) - `animset[16]` 38
+   rows, `steps[bodies[n].stats]` 29, both 48, a holder for the whole x value 40, the chain `h =
+   bodies[n].x >> 16; h -= frames[k].f8; h -= 16;` 51, `- (frames[k].f8 + 16)` 6, `bodies[n].speed`
+   cached in the dead `h` 19, `bodies[n].stats` cached in `h` 54, the aim test's operand order 6, `int
+   k` 12, `stats[h].damage = stats[h].damage - 10;` 53, `bodies[n].f24 = bodies[n].f24 - 1;` 30, the y
+   line's operand order 40, and `rc_error("illegal object : %d ", n)` without the `(int)` cast 2 (the
+   same bytes). Nothing beats 2: the pair moves with any id change in the function but never to the
+   game's `sub` + `mov ,di`, and splitprobe 2026-11-28 (.work/pi/split/probe/dropped2_tick.txt) pads
+   all 37 statement starts at n = 6, 14, 20 and never goes under control, so no block split decides
+   it. */
 int dropped2_tick(short n)
 {
     int h;

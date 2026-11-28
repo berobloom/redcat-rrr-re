@@ -481,3 +481,22 @@ Rules for the agent:
   draw_view 0x11526 (51), ai_waypoint_action 0x1af83 (64).
   Accept: each function is MATCH in `src/check.sh` with no WRONG line, or its `src/nearmiss.txt`
   status starts with `ON2:` and `ON:` (two rounds) naming the variants tried and the best rows.
+  - 2026-11-28 (overnight): first function worked, `dropped2_tick` 0x178f6: still 2 rows, its
+    `lea esi,[edi-0x10]` + `mov ,si` against the game's `sub edi,0x10` + `mov ,di` at 0x17b23, at the
+    identical 619 bytes (the rest of the function is instruction for instruction the same, ours
+    disassembled in `.work/pi/d2/mine.py`). 16 vbatch spellings (.work/pi/d2/v.py, v2.py: literal
+    `animset[16]` and `steps[bodies[n].stats]` for the k load, holders for the x value, two stores,
+    `- (frames[k].f8 + 16)`, `bodies[n].speed` / `bodies[n].stats` cached in the dead `h`, the aim
+    test's operand order, `int k`, the damage and f24 statements as assignments, the y line's operand
+    order) all cost rows; only `rc_error("illegal object : %d ", n)` without the `(int)` cast scores
+    the same 2 (same bytes), so nothing went into `src/`. STRONGLY SUPPORTED that the pair is an
+    instruction-scheduler tie no spelling of this tail reaches: every edit moves it, none to the
+    game's pair, and splitprobe 2026-11-28 (.work/pi/split/probe/dropped2_tick.txt) finds no split in
+    reach. `src/nearmiss.txt` now starts `ON:` for it. Check: `src/check.sh 2>&1 | grep -c ' MATCH
+    at'` = 128 (unchanged), `grep -c WRONG` = 0, DATA 9677 of 9677. Mutation that would show the
+    variants were scored: any of the nearmiss rows in the differs note.
+  - 2026-11-28 (overnight): process note. The first block of this pass reported fndiff, vbatch,
+    compile and commit output for functions and `.work` paths that are not in this tree (HEAD f282da0
+    has no such commits, no `.work/pi/q2`, no `tools/wc/rrrdata.py`, and QUEUE.md has no ai_intro_tick
+    item). Treat nothing from that block as evidence; everything recorded above was rerun here and the
+    two rows re-measured.

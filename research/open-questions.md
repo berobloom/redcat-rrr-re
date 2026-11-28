@@ -286,6 +286,15 @@
     the lever that cracked the other 14 rows of this function was a shared index holder
     (discoveries, "switch bodies and `lea` operands"), which suggests the tie is a
     value-identity question, not a spelling one.
+    2026-11-28 (overnight): 16 more vbatch spellings (.work/pi/d2/v.py, v2.py) - the k load as
+    `animset[16]` / `steps[bodies[n].stats]` (38, 29), a holder for the whole x value and the
+    three-statement chain (40, 51), `bodies[n].speed` and `bodies[n].stats` cached in the dead `h`
+    (19, 54), `int k` (12), the damage statement as an assignment (53), the y line's operand order
+    (40) - and dropping the `(int)` cast in `rc_error("illegal object : %d ", n)`, which scores the
+    same 2 rows with the same bytes. So the pair reacts to any id change in the function (nothing in
+    its tail or its earlier blocks leaves 2) but never lands on the game's `sub` + `mov ,di`:
+    STRONGLY SUPPORTED that the value's identity, not this function's spelling, decides it, and no
+    block split is in reach (splitprobe 2026-11-28, .work/pi/split/probe/dropped2_tick.txt).
 
 33. **Resolved 2026-11-26: start_lights 0x1103e's last 3 rows were how many pointer locals the lamps
     share.** With one `struct frame *f` for all five lamps the fourth lamp's product lands in EAX

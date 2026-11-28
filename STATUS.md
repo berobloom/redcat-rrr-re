@@ -63,7 +63,9 @@ Short: where the project stands, and what is next. History is in git; no diary.
    make it fail: `stats[bodies[2].stats].damage -= 10;` back in that block (dropped2_tick to 16 rows,
    the other seven differ again), or a separate `int s` instead of `h` (44 rows). `dropped2_tick`
    itself is a 2-row near miss at the exact length now - one register tie in its last x store, open
-   question 32. Earlier in `src/init.c`: `init_objects` 0x148db (1635 B) in front of
+   question 32; 2026-11-28 overnight: 16 more vbatch spellings (.work/pi/d2/v.py, v2.py) all cost
+   rows, so it stays 2 and `src/check.sh` stays at 128 MATCH, 0 WRONG, DATA 9677/9677; QUEUE Q6's
+   next function is `hit_test` 0x1430e (5 rows). Earlier in `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
 2. Otherwise: a near miss (item 3). Nothing in 0x10010-0x1B915 is unwritten C any more:
