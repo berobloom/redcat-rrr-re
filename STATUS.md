@@ -18,6 +18,18 @@ Short: where the project stands, and what is next. History is in git; no diary.
 
 ## Next
 
+0. **An overnight pass on 2026-11-28 (21:45-23:40) ran against a different state of this project and
+   lost its work.** That pass took QUEUE item 11 (`update_speed` 0x12e1b, 370 near-miss rows) in a
+   tree whose `src/matched.baseline` was 145, with a `src/physics.c`, a `GOALS.md`, a 259-line
+   STATUS and `.work/le/rrr.obj1.bin` of 505,776 B; the whole directory, `.git` included, was
+   replaced mid-session. Evidence (CONFIRMED): this `.git`'s 276-entry reflog contains neither of its
+   commits (`git cat-file -t c514b90` -> no such object), `src/nearmiss.txt` here has no
+   `update_speed` line, `.work/pi/update_speed/` is gone, and this tree's `.work/iso/RRR.EXE`
+   (md5 69da5879123c085d858ae61837149b2f, LE obj1 base 0x10000 vsize 0x31430 = 201,776 B, per
+   `leparse.py`) is not the image it disassembled. Nothing from it applies here and nothing was
+   committed into this tree; check.sh is unchanged at 128 MATCH. Find that state (or a snapshot) and
+   re-run its item before resuming `update_speed`.
+
 0. QUEUE Q4: a WLINK 10.6 link reproduces RRR.EXE byte for byte (`reverse-engineering/tools/
    link/link.sh`, `LINK: 419179 of 419179`), and since 2026-11-25 **104 library modules link as
    themselves** in place of their blob ranges (`$(cat .work/link/libobjs.args4)` plus
