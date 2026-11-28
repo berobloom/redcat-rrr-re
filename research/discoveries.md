@@ -773,6 +773,23 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   The two tools it runs are in git too: `tools/wc/stackmap.py` (frame size,
   the slots a compiled function touches, its holes) and `tools/wc/variants.py` (row score).
 
+## Toolchain: register parameters and the 5-byte `mov eax,[disp32]`
+
+- The first four int parameters of a cdecl function arrive in EAX, EDX, EBX, ECX - the third in EBX
+  and the fourth in ECX, not the other way round. CONFIRMED with a 19-byte probe through the
+  project's WCC (`.work/pi/lo/conv/P.C`, `-3r -s -ox`): `probe(int a, int b, int c, int d, int e,
+  int f)` returning `(a - c) + (b - d) + (e - f)` compiles to `sub eax,ebx; sub edx,ecx; add eax,
+  edx; mov edx,[esp+4]; sub edx,[esp+8]; add eax,edx; ret 8`. It is also what `left_of` 0x1401d
+  says on both sides (its first product reads EBX, its second ECX), so that near miss's rows are
+  not a parameter-mapping question.
+- A global loaded into EAX is the 5-byte moffs form `a1 disp32`; into any other general register it
+  is the 6-byte `8b /r disp32`. So an EAX/EDX register mirror changes a function's length and moves
+  its epilogue: `muis_crash_tick` 0x1a42a is 1876 bytes against the game's 1877 because ours writes
+  `mov eax,[0x804b8]` at 0x1a922 where the game writes `mov edx,[0x804b8]`, and that is where its
+  6th row comes from: its `ret` sits at 0x1ab7e while ours, one byte short, ends at 0x1ab7d.
+  `left_of` 0x1401d is 41 bytes against the
+  game's 45 for the mirror's two extra moves.
+
 ## The game's own C is many objects
 
 - CONFIRMED: WCC386 10.5 shares an epilogue (a `jmp` to another function's `pop`/`ret`) only inside

@@ -78,13 +78,20 @@ Short: where the project stands, and what is next. History is in git; no diary.
    question 32; 2026-11-28 overnight: 16 more vbatch spellings (.work/pi/d2/v.py, v2.py) all cost
    rows, so it stays 2 and `src/check.sh` stays at 128 MATCH, 0 WRONG, DATA 9677/9677; QUEUE Q6's
    next functions are `muis_crash_tick` 0x1a42a (6) and `left_of` 0x1401d (8) - `hit_test` 0x1430e
-   holds at 5 (its `h`/`x1` stack slots; 7 more spellings on 2026-11-28, none below 5). Earlier in `src/init.c`: `init_objects` 0x148db (1635 B) in front of
+   holds at 5 (its `h`/`x1` stack slots; 7 more spellings on 2026-11-28, none below 5). 2026-11-29
+   overnight: `muis_crash_tick` 0x1a42a stays 6 and `left_of` 0x1401d stays 8 after 28 and 21
+   spellings scored serially (.work/pi/mct2/, .work/pi/left_of/); each is now pinned down to ONE
+   register pair plus the length the pair decides - muis_crash_tick's `mov eax,[@]` at 0x1a922 is
+   the 5-byte moffs form where the game's `mov edx,[@]` needs 6, which is its 6th row (discoveries
+   "Toolchain: register parameters and the 5-byte `mov eax,[disp32]`"); `src/check.sh` is still 128
+   MATCH of 147 (87.1%), 0 WRONG, DATA 9677/9677, and Q6's next unwalked line is
+   `spawn_dropped_object` 0x18759 (8). Earlier in `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
 2. Otherwise: a near miss (item 3). Nothing in 0x10010-0x1B915 is unwritten C any more:
    `blit_sprite` 0x11bb4 and `blit_sprite_trans` 0x17d94 carry `ASM:` lines in `src/nearmiss.txt`
    (the game's two `enter`-frame assembly modules, discoveries "Executables"), so `PROGRESS.md` reads
-   124 of 147 (84.4%), 21 near misses, 0 not written, 2 assembly, and `grep -c 'not in src/ yet'
+   128 of 147 (87.1%), 17 near misses, 0 not written, 2 assembly, and `grep -c 'not in src/ yet'
    PROGRESS.md` is 0. What follows is how that C got written: 2026-11-27 wrote the three normal
    ticks, player_tick 0x11eb5 (193 rows),
    bull_tick 0x12826 (208) and muis_tick 0x130f8 (87), into a second new module `src/drive.c`: the
