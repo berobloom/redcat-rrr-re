@@ -521,3 +521,23 @@
       The game's store order there is drops, top_speed, f24, fuel, boosts, f10, f14, vx, rockets,
       vy, damage, vz (0x14b2f-0x14bb0). 100 of 240 orders tried (.work/pi/split/pl2.py, pl2.out):
       best 4 WRONG (damage after f14 or vy); damage after rockets loses the reload (1630 bytes).
+
+36. **Open: which register WCC 10.x picks for a shared `[base + index]` address is decided by the
+   statement that FOLLOWS it (spawn_dropped_object 0x18759, 7 of its 8 rows).** 2026-11-29,
+   vbatch probes in .work/pi/spawn/ (v.py, v2.py, v3.py, v4.py; side-by-side dumps with
+   .work/pi/spawn/one.py).
+   - CONFIRMED: with `switch (kind) {case 2: / case 0: / default:}` the period store compiles to the
+     game's `mov ecx,[objects]` (0x1876f), `shl eax,4` (0x18775), `mov word [ecx+eax],1` (0x18778),
+     and all three arm stores keep the game's `mov edx,[objects]` + `mov [edx+eax+0xc]`; what is
+     wrong is only Watcom's dispatch tree, `test edx,edx` + `jbe` (0x1877e) and `cmp edx,2` + `jne`
+     (0x18782), against the game's `cmp edx,2` + `jne` (0x1877e) and `test edx,edx` + `jne` (0x18793),
+     plus one arm's 5-byte `mov eax,edi` + `shl eax,4` recompute (the whole 306 vs 301 byte gap).
+   - CONFIRMED: with an `if (kind == 2) ... else if (kind == 0) ... else ...` chain the two tests land
+     at the game's addresses, but the same period-store statement compiles to `mov ecx,eax` +
+     `mov eax,[objects]` + `shl ecx,4`, and the three arms become `mov eax,[objects]` +
+     `mov [ecx+eax+0xc]`: 11 rows. No chain or switch spelling tried (31) gets both halves.
+   - SPECULATIVE: WCC's global register assignment treats EAX as the cheaper sacrifice in a straight
+     if-chain and keeps the live shifted value in EAX through a switch DAG; that is the same allocator
+     tie as left_of 0x1401d, muis_crash_tick 0x1a42a, follower_tick 0x167aa and draw_view 0x11526.
+     What would settle it is a model of WCC's register allocator (not its scheduler), which we do not
+     have; simsched.py models only the scheduler and cannot see this.

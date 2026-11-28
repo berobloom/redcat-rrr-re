@@ -59,7 +59,15 @@
    CONFIRMED on our own compile: parameters 3 and 4 sit in EBX and ECX (the first product reads
    EBX, the second ECX), which is also what the game's code does, so the C's parameter mapping is
    the game's.
-8 0x18759 spawn_dropped_object  SKIP: the game is an if/else-if chain keeping n*16 in EAX and objects in EDX per arm; our switch has the game's registers but Watcom's compare tree and a recomputed n<<4 in default (8 rows, 306 vs 301 B), every if-shape has the game's tree but mirrors the registers (11 rows, 299 B). 2026-11-26: ~150 more (types, alloc spelling, switch/if hybrids, n copies, .work/probe/sd1-sd4) - see the differs note in src/heap.c
+8 0x18759 spawn_dropped_object  ON: 2026-11-29 31 variants (ifchain, ifkind, ifelsSwitch, sw0first,
+   swdefirst, ifcmpne, swDefIf, swDefIf0, sw2d0, sw0d2, swd02, swucast, swnobreak, ifsw2, swcase4,
+   sw2d0u, sw2d0cast, ifsw2sw, sw2case0only, ifk3, ifshort, ifchain_full, ifchain_nohi, sw2d0_dfl,
+   sw2d0_regn, chain_u, chain_reg, sw0DefIf, sw2def2, chain_else_if_neg, sw2d0_sw0), best 7 rows
+   (sw2d0: switch arms in the order case 2 / default / case 0; sw2d0u, sw2d0cast, sw2d0_regn and
+   sw2d0_sw0 also 7) - 1 row off, so NOT applied to src/; the floor stays 8. CONFIRMED the two
+   halves are independent and each spelling reaches only one: the switch keeps the game's registers
+   and pays Watcom's range tree, every if-chain lands the game's two tests and pays the mirrored
+   period store - see the differs note in src/heap.c. SKIP: the game is an if/else-if chain keeping n*16 in EAX and objects in EDX per arm; our switch has the game's registers but Watcom's compare tree and a recomputed n<<4 in default (8 rows, 306 vs 301 B), every if-shape has the game's tree but mirrors the registers (11 rows, 299 B). 2026-11-26: ~150 more (types, alloc spelling, switch/if hybrids, n copies, .work/probe/sd1-sd4) - see the differs note in src/heap.c
 9 0x167aa follower_tick  SKIP: two Watcom choices left - the game sign-extends the short parameter in place (cwde, mov esi,eax, dec eax), we movsx+lea, and the `frame = 32` store swaps EAX/EDX; ~60 variants (.work/probe/ft2) stop at 9. It got there from 41: the damage/fuel test as `!(damage > 0 && fuel > 0)` (30 rows off as `<= 0 ||`) and follower_tick alone in src/shadeobj.c so its epilogue stops merging into fn_16e46's (string padding byte 0x51783 says the module ends there, open question 27)
 0 0x1043a sound_init  MATCH 2026-11-28: `#pragma aux fn_1d2a6 parm [edx][ebx][ecx][eax] modify exact
    [eax]` in src/rrr.h. Two facts, both measured: fn_1d2a6 0x1d2a6 is `mov [0x5fe99],eax; ret` so it

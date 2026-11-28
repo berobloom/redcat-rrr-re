@@ -378,7 +378,13 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   (`test edx,edx; jbe` first), and the default arm recomputes `n << 4` (306 bytes, the game 301).
   Every if shape gets the game's tree but mirrors the registers (11 rows, 299 bytes); `!kind`,
   `(*(objects + n))` also 11, a `struct object *` local 19. (Corrected 2026-11-26 from chat; the old
-  text described an if/else build.)
+  text described an if/else build.) 2026-11-29 (31 vbatch spellings, .work/pi/spawn/): the floor is 7,
+  reached only by arm order (`case 2: / default: / case 0:`) - which arm recomputes `n << 4` is an
+  arm-order choice and putting it in the middle hides 1 row. CONFIRMED: the register pair at the
+  `period` store (0x1876f) is decided by the dispatch construct that FOLLOWS it - identical
+  statements, `switch` gives `mov ecx,[objects]` + `shl eax,4`, an `if` chain gives `mov ecx,eax` +
+  `mov eax,[objects]` + `shl ecx,4` - and both carry that choice into all three arm stores. Do not
+  chase these 7 with more chain spellings; open question 36.
 - **The droppedN_tick damage block's load register (open question 25):** the game loads
   `bodies[2].stats` into EAX, ours into EDX, and no spelling or compiler option moves it (30+ tried).
   It is worth 8 functions, so it is worth a fresh idea, not another 30 spellings - see the note in

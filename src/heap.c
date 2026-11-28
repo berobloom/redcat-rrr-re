@@ -304,7 +304,24 @@ int fire_rocket(int racer)
    rows. 2026-11-26, all >= 8: int/unsigned/long n, long kind, `if ((n = alloc_object()) == -1)`
    (128, .work/probe/sd2), six switch orders and hybrids (sd3), a second copy of n in the arms and
    the period store moved (sd4). Earlier: (*(objects + n)) and if/else-if 11 rows, a struct object
-   pointer local, a short kind and a second n copy worse. */
+   pointer local, a short kind and a second n copy worse.
+   2026-11-29 (.work/pi/spawn/v.py..v4.py, 31 variants scored, floor 7 rows): ifchain, ifkind,
+   ifelsSwitch, sw0first, swdefirst, ifcmpne, swDefIf, swDefIf0, sw2d0, sw0d2, swd02, swucast,
+   swnobreak, ifsw2, swcase4, sw2d0u, sw2d0cast, ifsw2sw, sw2case0only, ifk3, ifshort, ifchain_full,
+   ifchain_nohi, sw2d0_dfl, sw2d0_regn, chain_u, chain_reg, sw0DefIf, sw2def2, chain_else_if_neg,
+   sw2d0_sw0. Best 7 = switch with the arms written case 2 / default / case 0 (sw2d0; also 7 with
+   `(unsigned)kind` or `register int n`), 1 row off the current text so NOT applied. CONFIRMED the
+   two halves are independent (side-by-side dump: .work/pi/spawn/one.py): the switch keeps the
+   game's period-store pair (`mov ecx,[@]` 0x1876f, `shl eax,4` 0x18775, `mov ,1` 0x18778) and the
+   game's arm stores (`mov edx,[@]` + `mov [edx+eax+0xc]`), and only the tree is Watcom's range tree
+   (`test edx,edx` + `jbe` 0x1877e, `cmp edx,2` + `jne` 0x18782) where the game tests for equality
+   (`cmp edx,2` + `jne` 0x1877e, `test edx,edx` + `jne` 0x18793); every if-chain lands the game's
+   two tests at 0x1877f/0x18793 but pays the period store as `mov ecx,eax` + `mov eax,[@]` +
+   `shl ecx,4` and three arms `mov eax,[@]` + `mov [ecx+eax+0xc]` - so WCC's choice of which
+   register holds n<<4 and which holds the objects base at 0x1876f IS decided by the dispatch
+   construct that follows it (same statements, switch vs if, first difference 6 instructions
+   earlier). Which arm recomputes n<<4 is set by the arm order: case 2 / default / case 0 puts the
+   5-byte `mov eax,edi` + `shl eax,4` (0x18797, 0x1879f) where difflib aligns best (8 -> 7 rows). */
 int spawn_dropped_object(int racer, int kind)
 {
     int n;

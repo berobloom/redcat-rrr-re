@@ -534,3 +534,19 @@ Rules for the agent:
     rows are not a mapping question. Check: `fndiff.py rrr .work/src/RRR.OBJ left_of 0x1401d | tail -1`
     says 8, `src/check.sh 2>&1 | grep -c ' MATCH at'` = 128, `grep -c WRONG` = 0, DATA 9677 of 9677.
     Its nearmiss line now starts `ON:`. Q6's next unwalked line is `spawn_dropped_object` 0x18759 (8).
+  - 2026-11-29 (overnight): fifth function, `spawn_dropped_object` 0x18759: floor is 7 rows, no
+    MATCH, nothing went into `src/` (a 1-row drop is under the 2-row bar). 31 spellings scored with
+    vbatch.py (.work/pi/spawn/v.py..v4.py); best `sw2d0` = the same `switch (kind)` with the arms in
+    the order `case 2: / default: / case 0:` (7 rows; `(unsigned)kind` and `register int n` clones
+    also 7). What the rows are, now named for both spellings (side-by-side dumps,
+    .work/pi/spawn/one.py): the switch keeps the game's registers (period store `mov ecx,[@]`
+    0x1876f, `shl eax,4` 0x18775; arms `mov edx,[@]` + `mov [edx+eax+0xc]`) and pays Watcom's range
+    tree (`test edx,edx`+`jbe` 0x1877e, `cmp edx,2`+`jne` 0x18782) plus one arm's 5-byte
+    `mov eax,edi`+`shl eax,4`; every if-chain lands the game's two tests (0x1877f, 0x18793) and pays
+    the mirror (`mov ecx,eax` + `mov eax,[@]` + `shl ecx,4` at the period store, `mov eax,[@]` +
+    `mov [ecx+eax+0xc]` in all three arms). CONFIRMED the register pair at 0x1876f is chosen by the
+    dispatch construct that follows the store - same statements, only switch-vs-if differs, and the
+    first difference is 6 instructions earlier. Which arm recomputes `n << 4` is an arm-order choice:
+    putting `default` in the middle hides 1 row (8 -> 7). Its nearmiss line now starts `ON:`; new
+    open question 36 (WCC's register allocator, not its scheduler, decides this). Q6's next unwalked
+    line is `follower_tick` 0x167aa (9).
