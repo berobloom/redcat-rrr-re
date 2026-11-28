@@ -381,7 +381,22 @@ int rocket_tick(short n)
    same bytes). Nothing beats 2: the pair moves with any id change in the function but never to the
    game's `sub` + `mov ,di`, and splitprobe 2026-11-28 (.work/pi/split/probe/dropped2_tick.txt) pads
    all 37 statement starts at n = 6, 14, 20 and never goes under control, so no block split decides
-   it. */
+   it. 2026-11-28b (round 2, .work/pi/d2r2/v.py-v4.py): 28 more spellings of the x line - four `h`
+   holder forms (`objects[n].x = (h = (bodies[n].x >> 16) - frames[k].f8) - 16;` and `hpre` compile
+   byte-identical to the control, so `h` is CSEd away), `-16 + (...)`, `(short)` casts, `- 16` before
+   `frames[k].f8` (5 rows), an `int x` in a nested block (10), a `struct frame *fp = frames + k` for
+   both lines (38), the y line first (38), `h` for both lines (41) and a `short k`/`int h` decl swap
+   (2). Seven tie at 2 with identical bytes; floor 2 again.
+
+   Why the two rows are an allocation choice, not this statement's C (CONFIRMED 2026-11-28): in the
+   game's module 0x16c00-0x17d60 the same x-line text appears nine times - seven compile to
+   `lea r,[r-0x10]` (0x16c22, 0x16d03, 0x16e0d, 0x171eb, 0x17323, 0x1757b, 0x178b1) and two to
+   `sub r,0x10` (fn_16e46 0x17052 and here 0x17b23) - and our build agrees with every one of them, so
+   the identical C in fn_16e46 gives the in-place `sub eax,0x10` (ours 0x1704d-0x17052: `sar eax,0x10`
+   / `sub eax,edi` / `sub eax,0x10`) while the identical C in cactus_tick gives `lea ebx,[edi-0x10]`
+   (ours and the game's both at 0x17323). SPECULATIVE the tie is decided by which register holds the
+   accumulator (EAX folds it, EDI gets a fresh destination), which no spelling of this statement or of
+   the locals reaches: the 16 + 70 + 34 + 28 variants only move the pair. That question stays open. */
 int dropped2_tick(short n)
 {
     int h;

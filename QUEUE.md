@@ -596,3 +596,21 @@ Rules for the agent:
     copy `mov ebx,eax` (0x13aa4) the mirror costs us, which is why ours is 321 bytes and the game 320
     (CONFIRMED by the side-by-side dump in the differs note). Its nearmiss line now starts `ON:`
     (round 1 done). Q6's next unwalked line: `camera_follow` 0x138ed (19).
+  - 2026-11-28 (overnight): process note. This pass began in a state that is not in this `.git` (a
+    `src/MAIN.c` holding `panel_update` and a `src/nearmiss.txt` line for it; `git cat-file -t
+    a4f2c5a` -> not a valid object), and the worktree became 0968c97 (`overnight/20261128`, lowercase
+    `src/*.c`) at 03:47, mid-pass. Nothing from that first block is evidence, and no tracked file of
+    this tree was written from it.
+  - 2026-11-28 (overnight): Q6 round 2, `dropped2_tick` 0x178f6: still 2 rows. 28 vbatch spellings of
+    the x line (`.work/pi/d2r2/v.py`, `v2.py`, `v3.py`, `v4.py`): `h` holders four ways, `-16 + (...)`,
+    `(short)` casts, `- 16` before `frames[k].f8` (5 rows), `int x` in a nested block (10), a
+    `struct frame *fp = frames + k` over both lines (38), the y line first (38), `h` in both lines
+    (41), explicit parens, and a `short k`/`int h` decl swap - seven tie at 2 with byte-identical
+    code, none below 2. New evidence that the pair is an allocation tie and not this statement's C
+    (CONFIRMED): in the game's 0x16c00-0x17d60 the same x-line text compiles to `lea r,[r-0x10]` seven
+    times and to `sub r,0x10` twice (fn_16e46 0x17052, dropped2_tick 0x17b23), and our build equals
+    every one of them - so the identical C in fn_16e46 does give the in-place `sub` (ours
+    0x1704d-0x17052), and cactus_tick 0x17323 does not. SPECULATIVE the choice follows which register
+    holds the accumulator. Its `src/nearmiss.txt` line now starts `ON2:` (round 2 done) and the
+    differs note in `src/shadeobj2.c` names the nine sites. Check: `src/check.sh 2>&1 | grep -c '
+    MATCH at'` = 129 = `src/matched.baseline` (unchanged), `grep -c WRONG` = 0, DATA 9677 of 9677.
