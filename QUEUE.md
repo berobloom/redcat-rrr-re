@@ -854,3 +854,23 @@ Rules for the agent:
     printed 6 WRONG fixup lines - the masked displacement bytes hid wrong fields, so not a match),
     and worked the first Q6 function that really
     exists here and still needed a round.
+  - 2026-11-28 (overnight): Q6 round 2 of `fn_13a78` 0x13a78 and `camera_follow` 0x138ed, the two
+    lines that still had only `ON:`; neither moved, so nothing went into `src/` except their
+    comments (`src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline`,
+    `grep -c WRONG` = 0, DATA 9677 of 9677). `fn_13a78` stays 15 rows after 18 in-module vbatch
+    variants (.work/pi/gc2/v.py, v2.py, control 15): the local TYPES are wrong (`unsigned short vw,
+    vh` 17, `int t` 17), `register` is inert (15), the tx intermediate as its own statement 45, the
+    ty line first 55, the two clamp blocks swapped 39, the clamp comparisons flipped 17, `vh * 20` as
+    `(vh << 4) + (vh << 2)` 26, and splitting each view-size load into two statements (the 75-id
+    block-split axis) 37 / 35 / 61; eight tie at 15 (`regvw`, `mullead`, `txparens`, `vhsplit`,
+    `mapmul`, `headswap`, `nested`, `txshort`). `camera_follow` stays 19 rows after 12 of 18 scored
+    (.work/pi/cf2/v.py, v2.py, control 19; six rejected for non-unique old text next door in
+    fn_13a78), and round 2's new axis rules the memory home out as a source shape (CONFIRMED):
+    `volatile short tx` is 64 rows - the game reloads tx exactly ONCE (0x13996 `movsx eax,word
+    [esp+8]`) and reuses that EAX for the `cmp` at 0x139ac, which `volatile` forbids - and an
+    address-taken tx (`short *ptx = &tx;`) is 59, so its [esp+8] is WCC's own spill; every statement
+    split costs (txsplit 40, txplus 53, typlus 41, the step split 63, view-size loads split 49, x in
+    two statements 43, the sign through the dead `sx` 50), clamp temp before the negative clamp 35,
+    `int vw` 62. Both nearmiss lines now start `ON2:` and still carry `ON:`, so those two functions
+    meet the Accept line. Q6's remaining unwalked lines: `muis_tick` 0x130f8 (24, round 2),
+    `bull_tick` 0x12826 (50, round 2), `ai_waypoint_action` 0x1af83 (64, round 2).

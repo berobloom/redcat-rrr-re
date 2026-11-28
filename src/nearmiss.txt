@@ -106,7 +106,15 @@ reach. ON: 2026-11-29 20 variants (argint, framecast, framensu, testzero,
    indices (no ox/oy locals) put n in ESI and the height/divisor in EDI; holders for the product,
    the x column or a second row local, casts, operand orders and 720 declaration orders stayed at
    13-15 (.work/probe/gc5-gcb, .work/gc/v1-v8).
-15 0x13a78 fn_13a78  ON: 2026-11-28 12 variants (vwre, vhre, vwvhre, txclamplocal, tsplit, declmerge, declswap, leadswap, leadswapx, leadswapy, leadsteps, vwvhint), best 15 rows (control; txclamplocal and declmerge also 15),  (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
+15 0x13a78 fn_13a78  ON2: 2026-11-28 18 variants (ushorts, tint, regvw, mullead, txparens, txsplit,
+txlast, vhshift, vhsplit, clampsSwap, clampopX, mapmul, vwload, vhload, headswap, nested, txshort,
+bothload), best 15 rows (control; regvw, mullead, txparens, vhsplit, mapmul, headswap, nested and
+txshort also 15), OPEN: round 2 adds nothing, the three EAX/EBX mirrors stay WCC's. New negative
+evidence, all in-module vbatch (.work/pi/gc2/v.py, v2.py, control 15): the local TYPES are wrong
+(`unsigned short vw, vh` 17, `int t` 17), `register` is inert (15), the tx intermediate as its own
+statement 45, ty line first 55, the two clamp blocks swapped 39, clamp comparisons flipped 17, `vh *
+20` as two shifts 26, and splitting each view-size load into two statements (the block-split axis,
+GOTCHAS "Block splits") 37 / 35 / 61.   ON: 2026-11-28 12 variants (vwre, vhre, vwvhre, txclamplocal, tsplit, declmerge, declswap, leadswap, leadswapx, leadswapy, leadsteps, vwvhint), best 15 rows (control; txclamplocal and declmerge also 15),  (the game shifts the lead in EAX and vw<<4 into EBX, we mirror; same for the vy sign and for map_h - vh); ~30 spellings, 14 declaration orders, an object of its own - see its differs note
 208 -> 172 -> 168 -> 133 -> 50 -> 48 0x12826 bull_tick  (2026-11-27, src/bull.c: 50 rows, 2246 of 2258 bytes; 2026-11-28: 48 rows and 2247 B, see the ON: line at the end of this file. 2026-11-27 later: the game's last return is y ^ y through two distinct temporaries (0x130e5 `mov eax,ebx` / 0x130ec `xor eax,ebx`), not `return 0`, which is what sends the period return to the crash block's xor at 0x128af (open question 34). Reproduced by a two-path merge (`r = y ? y : 0; objects[n].y = y; return r ^ y;`), and with the damage/fuel tests as two ifs the head layout matches; the rest re-allocates to 100 rows at the best of 23,120 declaration orders (psweep.py), so the 50-row text stays until the other spellings are re-searched with that tail. Inline `return (y ? y : 0) ^ y;` reaches 71 but keeps a real ?: branch the game lacks. New lead from `stackmap.py`: the game's frame is 0x10 and it uses all four slots - [esp], [esp+4], [esp+8], [esp+0xc], 14 memory accesses - while ours is 0xc and touches only [esp+4] and [esp+8]: we are missing one spilled local, and 22 of the 50 rows are homes. The game also ends `mov eax,ebx; xor eax,ebx` (0x130e5, 0x130ec) where we end `xor eax,eax`: its return value is materialised through the live difference, so a value is live into the epilogue that we have already dropped. 2026-11-27 latest: with the store before the merge (`objects[n].y = y; if (y) f = y; else f = 0; return f ^ y;`) and the second abs() of both distance sums mirrored, the tail matches the game's and the floor over all 40,320 declaration orders is 58 (.work/scratch/bull2/tpl_M.c, sw_M_all.txt; open question 34); what is left is the head's [esp] spill and frame 0x10, and the n/want EDI/EBP swap.)
    2026-11-26 latest: the game computes vx/vy twice, unconditionally and again under `if (!finished2)` - missing content, 133 -> 111 and 2170 -> 2247 B; then `switch (want)`, racer_contact true arm first, `damage < 0 || fuel < 0` in one test, declaration order `int m; unsigned want; int d; int h; short k; int go; unsigned f;` - 50 rows, 2246 of 2258 B, player_tick and muis_tick unchanged, .work/probe/btx/sw/AWR_1504.c (sweep floor LIKELY, scored in parallel); 2026-11-26 latest: f24 chain as a switch, both coordinates short in the tail, abs() as body - waypoint, .work/probe/cs/bt2_cfx1y1a1; 2026-11-26: `unsigned f, want; int m, d, h, go; short k;`, 162 alone, 168 next to muis_tick's new order, .work/probe/bt1)  written 2026-11-27, src/drive.c; 2146 of 2258 B. 2026-11-25: two words -
    the heading test is the game's arithmetic truth test `if (h - stats[bodies[n].stats].heading &&
@@ -201,7 +209,16 @@ reach. ON: 2026-11-29 20 variants (argint, framecast, framensu, testzero,
    byte is masked (fixup) in fndiff, not yet located [2026-11-29: located - the 5-byte moffs
    `mov eax,[@]` at 0x1a922 against the game's 6-byte `mov edx,[@]`; see the ON: line above]. Known hard near-miss; revisit if a WCC
    register-allocation model emerges.
-19 0x138ed camera_follow  ON: 2026-11-28 35 variants (xre, yre, xyre, vwclamp, vhclamp, vwvhclamp,
+19 0x138ed camera_follow  ON2: 2026-11-28 12 variants scored of 18 written (volatx, ptx, txsplit, txplus, headsplit,
+tbeforeneg, stepsplitX, signsx, vwload, xload2, typlus, intvw; six never compiled, their old text is
+not unique next door in fn_13a78), best 19 rows (control), OPEN: nothing below 19,
+and the memory home itself is now ruled out as a source shape (CONFIRMED): `volatile short tx` is 64
+rows because the game reloads tx ONCE (0x13996 `movsx eax,word [esp+8]`) and reuses that EAX for the
+`cmp` at 0x139ac, which volatile forbids, and an address-taken tx (`short *ptx = &tx;`) is 59 - so
+[esp+8] is WCC's own spill; every statement split costs (txsplit 40, txplus 53, typlus 41, the step
+split 63, the two view-size loads split 49, x in two statements 43, the sign through the dead sx 50),
+so the 75-id block split is not reachable that way either; clamp temp before the negative clamp 35,
+`int vw` 62.   ON: 2026-11-28 35 variants (xre, yre, xyre, vwclamp, vhclamp, vwvhclamp,
 nocast, inttx, mergep, t2, easeyx, ptr, stepd, xyshort, xinline, tyfirst, leadfirst, vxin, tyint,
 vwint, scopex, xyorder, clamporder, longclamp, stepshift, guardswap, deadgone, tlead, signif,
 nocastxy, vhrev, txsub, vhmul), best 19 rows (control; nocast, deadgone, clamporder and vhmul also

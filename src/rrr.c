@@ -55,6 +55,20 @@
  * `lea eax,[esi+edx]` at 0x13991 where we must use EDI/EDX, and it is also why our `add esp,8` /
  * `jmp` epilogue rows are unmatched. Nothing tried moves it; open question 36 (WCC's allocator,
  * not its scheduler).
+ *
+ * 2026-11-28 round 2, 12 of 18 written in-module variants scored (.work/pi/cf2/v.py, v2.py, control
+ * 19; six never compiled - their old text is not unique next door in fn_13a78): nothing below 19, and
+ * the new
+ * axis is the memory home itself. `volatile short tx` is 64 rows: the game reloads tx ONCE (0x13996
+ * `movsx eax,word [esp+8]`) and reuses that EAX for the `cmp` at 0x139ac, which volatile forbids, so
+ * its [esp+8] is WCC's own spill, not a source-level memory object; an address-taken tx
+ * (`short *ptx = &tx;`, read through it at both uses) is 59. Every statement split costs, so the
+ * 75-id block split (GOTCHAS "Block splits") is not reachable that way either: tx in two statements
+ * 40, `tx +=` 53, ty in two statements 41, `scroll_step_x = tx - scroll_x;` then the shift 63, the
+ * two view-size loads split 49, `x = bodies[racer].x >> 16; x = (short)x;` 43, the sign through the
+ * dead `sx` 50; clamp temp defined before the negative clamp 35, `int vw` 62. Round 2 labels:
+ * volatx, ptx, txsplit, txplus, headsplit, tbeforeneg, stepsplitX, signsx, vwload, xload2,
+ * typlus, intvw.
  * -------------------------------------------------------------------------------------------- */
 
 void camera_follow(int racer)
@@ -120,7 +134,16 @@ void camera_follow(int racer)
  * into two locals (16), the x limit as `* 32` (15, byte-identical), one merged short declaration
  * (15, byte-identical), the declaration order swapped (20), each lead written with its sign term first
  * (21 / 16 / 22), the leads as six plain statements (53), vw/vh as int (50). Nothing below 15, so the
- * three mirrors stay Watcom's.
+ * three mirrors stay Watcom's. 2026-11-28 round 2, 18 more in-module variants (.work/pi/gc2/v.py,
+ * v2.py, control 15): the local TYPES (`unsigned short vw, vh` 17, `int t` 17), `register short vw,
+ * vh` 15 (inert), the tx intermediate as its own statement (`tx = x - (vw << 4); tx = tx + (...);`)
+ * 45, the ty line first 55, the two clamp blocks swapped 39, the clamp comparisons flipped 17,
+ * `vh * 20` as `(vh << 4) + (vh << 2)` 26, each view-size load split into two statements 37 / 35 /
+ * 61, and holding 15 (no change taken): `* 16` / `* 64` for the tx shifts, `vh * 4 * 5` with
+ * `* 5 * 16`, `40 * (map_h - vh)`, explicit parens on the tx sum, nested ternaries, an explicit
+ * `(short)` over each whole line, and the vh load before the vw one. Round 2 labels: ushorts, tint,
+ * regvw, mullead, txparens, txsplit, txlast, vhshift, vhsplit, clampsSwap, clampopX, mapmul, vwload,
+ * vhload, headswap, nested, txshort, bothload.
  * -------------------------------------------------------------------------------------------- */
 
 void fn_13a78(int x, int y, int vx, int vy)

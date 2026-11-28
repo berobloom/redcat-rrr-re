@@ -591,6 +591,17 @@
     mirror), and `default: if (kind == 0) .. else ..` inside a `switch` is 11 with `== 0` and with
     `!kind`.
 
+  - Same tie class, 2026-11-28 Q6 round 2 on `camera_follow` 0x138ed (floor 19 after 12 more
+    in-module spellings, .work/pi/cf2/v.py, v2.py): its [esp+8] home for `tx` is now CONFIRMED not to
+    be a source-level memory object. `volatile short tx` scores 64 rows, because the game reloads tx
+    exactly ONCE (0x13996 `movsx eax,word [esp+8]`) and reuses that EAX for the `cmp` at 0x139ac,
+    which `volatile` forbids (it reloads at every use), and an address-taken tx (`short *ptx = &tx;`,
+    read through the pointer at both uses) scores 59. So WCC spilled an ordinary auto; and every
+    spelling that adds or splits whole statements, i.e. every way found so far of moving the 75-id
+    block split from the source side, costs rows there (tx 40/53, ty 41, the step 63, the view-size
+    loads 49, x 43) - as in `fn_13a78` 0x13a78 next door, where the same split axis costs 37/35/61 on
+    a 15-row floor (18 spellings, .work/pi/gc2/v.py, v2.py).
+
 37. **Open: which tree is canonical when a pass sees files that no commit here holds.** Three passes
     on 2026-11-28 each reported reading source and QUEUE text that this `.git` cannot produce: a
     `src/physics.c` and `matched.baseline` 145 with `update_speed` (STATUS item 0), a QUEUE.md of
