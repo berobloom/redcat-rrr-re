@@ -157,6 +157,21 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
 
 ### Levers that produced MATCHes on RRR (try these before SKIP)
 
+- **Block splits: Watcom ends a basic block every 75 instruction ids.** At each statement start the
+  code generator splits the current block once `InsId - first_id >= 75` (BlkTooBig, 10.6's loaded
+  image 0xa11ee5; Open Watcom `makeblk.c`, `INS_PER_BLOCK`). Ids are counted when an instruction is
+  *generated*, so copies, folded address arithmetic and dead stores count although the optimiser
+  deletes them. The scheduler and the register allocator never cross that boundary, so a store
+  "stuck early" or a pair swapped at the end of a long straight-line run can be a split in the wrong
+  place: no listing shows it. Probe: `reverse-engineering/tools/wc/splitprobe.py NAME 0xADDR` pads
+  each statement with n dead stores; a row count below control means a split decides the function.
+  The fix is the natural source with more (or fewer) ids, never the dead stores: init_objects 0x148db
+  reaches 0 rows when BULL's and MUIS's stats stores are written `stats[bodies[2].stats].fuel` like
+  every other line (constant propagation from `bodies[2].stats = 1;` folds them to `stats[1].fuel`,
+  same bytes, more ids). CONFIRMED (2026-11-28, Watcom 10.6 under winedbg, research/open-questions.md
+  35). Check `src/check.sh | grep WRONG` after such a change: moving the split re-sorts other
+  same-shaped stores, and fndiff's masked fixups hide a swapped field.
+
 - **`imul ebx; shrd eax,edx,16` is Davilex's inline fixed-point pragma, not C arithmetic:**
   `fixmul = "imul ebx" "shrd eax,edx,16" parm [eax] [ebx] value [eax] modify [edx]` and `fixdiv`
   (`cdq; shld edx,eax,16; shl eax,16; idiv ebx`) in src/rrr.h. The argument order picks which value

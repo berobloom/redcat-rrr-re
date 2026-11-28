@@ -466,3 +466,18 @@ Rules for the agent:
     0xc touching two, so one spilled local is missing - 22 of its 50 rows are homes. muis_tick's frame
     map already equals the game's and 14 further spellings of its four sites all cost rows (86-119 for
     the game's arithmetic heading test), so its 24 rows stay.
+
+- [ ] **Q6 Overnight 2026-11-28/29: the near misses, smallest first**
+  Report: the human wants a night of matching work from the local model. The block-split probe
+  (GOTCHAS "Block splits", `tools/wc/splitprobe.py`) finds no split in reach for any near miss
+  except init_objects (2026-11-28, outputs in `.work/pi/split/probe/`), so these are content and
+  spelling questions. init_objects is NOT part of this item: a script searches its player-block
+  order the same night (`.work/pi/split/exhaust.py`, results in `.work/pi/split/exhaust.out`); do
+  not edit init_objects or src/init.c's player block.
+  Functions, in this order (rows on 2026-11-28): dropped2_tick 0x178f6 (2), hit_test 0x1430e (5),
+  muis_crash_tick 0x1a42a (6), left_of 0x1401d (8), spawn_dropped_object 0x18759 (8),
+  follower_tick 0x167aa (9), ground_check 0x1889d (13), fn_13a78 0x13a78 (15), camera_follow
+  0x138ed (19), muis_tick 0x130f8 (24), bull_crash_tick 0x19c8c (42), bull_tick 0x12826 (50),
+  draw_view 0x11526 (51), ai_waypoint_action 0x1af83 (64).
+  Accept: each function is MATCH in `src/check.sh` with no WRONG line, or its `src/nearmiss.txt`
+  status starts with `ON2:` and `ON:` (two rounds) naming the variants tried and the best rows.

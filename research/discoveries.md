@@ -57,6 +57,21 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   checks. No function in any of the four LE programs has a `-d2` frame
   (`leave`), so REKEN's debug block comes from `-d1` or link-time options,
   which leave the code as it is. Sources: `src/rrr.c`, checked by `src/check.sh`.
+- CONFIRMED (2026-11-28): the 10.6 compiler can be debugged under Wine. `BINNT/WCC386.EXE` is a
+  9 KB PE stub that maps `BINW/WCC386.EXE`'s body (file offset 0x2800) at 0x9d0000 every run;
+  `winedbg --gdb --no-start` gives gdb, a hardware breakpoint at 0x9d0030 stops after the load, and
+  patched `int3` bytes cost one round trip per hit. Scripts: `.work/wcc/` (gdbrun.sh, cov.gdb,
+  sched.gdb, split.gdb; untracked). Found in the image, matching Open Watcom bld/cg line for line:
+  InsStallable 0xa3d002 (N_INDEXED +3, N_REGISTER +2, N_MEMORY +1, indexed result +3), the
+  scheduler's selection loop 0xa3da32 (dag node: ins +4, ready +0xc, stallable +0x10, visited +0x11,
+  height +0x14; StallCost 0xa3d773; ins: opcode +0x22, result +0x30, id +0x34, sequence +0x3a,
+  INS_INDEX_ADJUST = byte +0x40 & 0x80, num_operands +0x3f, operands +0x44; name: class byte +4),
+  and BlkTooBig 0xa11ee5 (`InsId` [0xa55948], `CurrBlock` [0xa55924], split at 75 ids), called from
+  BGStartBlock 0xa1c111. A run under the debugger writes the same code as a plain compile.
+- CONFIRMED (2026-11-28): Watcom splits a straight-line run into basic blocks every 75 generated
+  instruction ids, at the next statement start (GOTCHAS "Block splits"). init.c has exactly one such
+  split, at id 211 in a block that began at id 133, right after MUIS's heading statement: the
+  scheduler could not sink that store, which was init_objects' last 2 rows (open question 35).
 - LIKELY: REKEN, RRRMENU and INTRO use the same options (REKEN's
   `rrrio_save` 0x10a92 is RRR's instruction for instruction; not checked
   against other option sets).

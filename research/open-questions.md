@@ -471,3 +471,44 @@
     InsStallable), and the pair at 0x14d7a is the open half: find the C that names the value without
     turning its copy into the holder assignment - or the dependency that holds the index load under
     the copy in seed B (no redefby.c rule and no name-class marking gives it).
+    - 2026-11-28, content (not spelling) probes on the A seed, all in the src/init.c module
+      (.work/pi/content: defs.py runner, v1-v4.py, opts.sh); every one leaves the 2 rows or is worse,
+      so none of these facts about the program changes the tie (CONFIRMED for each):
+      * storage class: stats/bodies/racer_top_speeds/map_no/waypoint4/waypoint_index4/objects
+        defined in init.c (non-extern, and static for the first four with rrr.h's extern removed) -
+        2 rows each;
+      * direction_to_waypoint's declaration: unprototyped `int f();`, no declaration, and `#pragma aux`
+        `modify [eax]`, `modify exact [eax]`, `modify exact []`, `parm [eax][edx][ebx]`, `value [eax]`,
+        `parm caller` - 2 rows; `modify nomemory` (which the function's body would allow: it saves
+        ECX/EDX/EBX and writes no global, 0x13d60-0x13e3c) 48, `parm nomemory modify nomemory` 58;
+      * generic per-racer code (`n = 4;` then objects/bodies/direction_to_waypoint/stats indexed by n,
+        in the M, B, P blocks and combinations, `i` or a new local): 17-115 rows, the constant is
+        materialised, so the original was not written that way;
+      * options added to -3r -s -ox: -on -oc -ou -ol+ -oe=0/40/100 -op -oz -oil -zc -ze -za -j -ei -ri
+        -d1 -fpi87 -fp3 -fpc -zp1/4/8 -mf -ms -zdp -zff -zgf -zu all 2 rows (-oh -ok -oi+ are not 10.5
+        options; -oa 87);
+      * the module compiled as C++ (wpp386, inside extern "C"): 30 rows;
+      * 240 MUIS-only conversions (index as int/unsigned/long/unsigned long/+x/(int)(unsigned), result
+        through 8 casts, store as `stats[..].heading`, `*&`, `->`, `*(int *)&`, `*(unsigned *)&`):
+        all 2.
+    - **2026-11-28, ANSWERED (the 2 rows' cause): a block split.** Read in the real compiler (10.6
+      under winedbg, research/discoveries.md "debugged under Wine"): the scheduler, InsStallable and
+      the tie-breaks are Open Watcom's, but init.c's long straight-line run is TWO basic blocks.
+      BlkTooBig (0xa11ee5) ends the block at the next statement start once 75 instruction ids were
+      generated since it began; ours began at id 133 (after the crash0 `if`) and passes 75 during
+      MUIS's heading statement (ids 198-211), so the split falls between MUIS's heading store and
+      its f24 store, and the store cannot sink. Every earlier observation follows: holders and
+      statement orders move the split (ids, not bytes), and "the slot depends on the code after the
+      block" was the split. CONFIRMED by experiment: 14, 16 or 20 dead stores before
+      `objects[4].anim = 1;` give 0 rows (10 give 4, 12 give 2), and the natural spelling
+      `stats[bodies[2].stats].fuel` / `stats[bodies[4].stats].fuel` (etc.) for the six constant-index
+      stores of BULL and MUIS gives 0 rows (`.work/pi/split/init_BM.c`): with it the split moves to
+      id 210, before MUIS's fuel store. STRONGLY SUPPORTED that this is the original's spelling: the
+      game uses the `stats[bodies[n].stats]` form everywhere else, and constant propagation from
+      `bodies[2].stats = 1;` folds it to `stats[1]` before the call. NOT A MATCH YET: with that
+      spelling src/check.sh prints MATCH but 10 WRONG fixups in the player's stats block (0x14b58-
+      0x14bb2: the same-shaped `stats.f = rrrio.g` stores come out with their fields rotated), so the
+      player block's statement order (tuned in 2026-11-26 under the old split) must be re-derived.
+      The game's store order there is drops, top_speed, f24, fuel, boosts, f10, f14, vx, rockets,
+      vy, damage, vz (0x14b2f-0x14bb0). 100 of 240 orders tried (.work/pi/split/pl2.py, pl2.out):
+      best 4 WRONG (damage after f14 or vy); damage after rockets loses the reload (1630 bytes).

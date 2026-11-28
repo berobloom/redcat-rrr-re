@@ -1,0 +1,62 @@
+{
+  "pi": "/home/bjorn/.pi/agent/bin/pi",
+  "model": "Strata/qwen3.8-flash-next-iq3_s",
+  "thinking": [
+    "high"
+  ],
+  "server_health": "https://strata.b-server.nl/health",
+  "server_restart_cmd": "",
+  "server_wait_max_min": 90,
+  "max_hours": 9,
+  "max_passes": 40,
+  "pass_timeout_min": 90,
+  "stall_min": 15,
+  "max_stuck_item": 2,
+  "max_fruitless_passes": 6,
+  "max_resumes": 2,
+  "repair_attempts": 2,
+  "check_cmd": "overnight/check.sh",
+  "cleanup_cmd": "overnight/cleanup.sh",
+  "branch_prefix": "overnight",
+  "list_name": "Next",
+  "owned_processes": [
+    "(^|/)dosbox-x\\s+.*\\.work/dos/redcat\\.conf",
+    "\\bpython\\S*\\s+\\S*reverse-engineering/tools/dosrun\\.py",
+    "winedbg\\s+--gdb"
+  ],
+  "require_harness_free": true,
+  "policy": {
+    "forbidBash": [
+      "\\bgit\\s+(push|rebase|reset|checkout\\s+-[bB]|switch|branch\\s+-[dDmM]|tag\\s+-d|clean|filter-branch|stash|commit\\s+.*--amend)",
+      "\\bgit\\s+checkout\\s+(?!--\\s)[^-]",
+      "\\b(pkill|killall)\\b",
+      "\\bkill\\s+-?\\d*\\s*(-1|0)\\b",
+      "\\bdosrun\\.py\\b",
+      "\\bwinedbg\\b",
+      "\\b(2159|4444|2160|4445|2161|4446)\\b",
+      "\\brm\\s+-[a-zA-Z]*r[a-zA-Z]*\\s+(/|~|\\.\\.|\\.git|overnight|\\.work\\b(?!/(splitprobe|inplace|probe|vbatch|pi)))",
+      "\\bsudo\\b",
+      "\\bcurl\\b.*\\|\\s*(ba)?sh",
+      "\\.\\./(SAM|re_cold|cosmore|wacky-re|dave-re|sam-re)\\b"
+    ],
+    "allowWriteOutside": [
+      "/tmp"
+    ],
+    "protectedPaths": [
+      "overnight",
+      ".git",
+      "Redcat Razende Rekenrace.iso",
+      ".work/iso",
+      ".work/watcom"
+    ],
+    "repeatWindow": 12,
+    "repeatLimit": 3,
+    "maxRepeatBlocks": 6,
+    "errorStreak": 5,
+    "maxNudges": 3,
+    "softTurns": 110,
+    "hardTurns": 150,
+    "bashTimeout": 600,
+    "bashMaxTimeout": 1800
+  }
+}
