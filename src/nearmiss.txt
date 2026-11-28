@@ -253,6 +253,19 @@ open question 36. SKIP 2026-11-26: two Watcom allocation ties, 62 -> 19; the C i
    `a1 disp32` and `mov edx,[@]` the 6-byte `8b 15 disp32`, so ours is 1876 bytes and its `ret` sits
    at 0x1ab7d where the game's is at 0x1ab7e - LIKELY all six rows go with that one pair.
    (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in its src file)
-24 0x130f8 muis_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5, src/muis.c)
+24 0x130f8 muis_tick  ON: 2026-11-28 24 variants (shdm, shhead, shboth, headingswap, headread,
+tailsar, kint, topmirror, speedlocal, frameholder, f24holder, finsswap, taillocal, tailfullcast,
+tailsplit, yfirstfa, abssecond, switchwant, switchf, lightsnest, vzchain, pufftest, frameadd, uk),
+best 24 rows (control; headingswap, tailfullcast, pufftest and frameadd also 24), OPEN, nothing
+below 24 (lightsnest left one brace unbalanced and did not compile). CONFIRMED here: the
+stats-index holder that MATCHed dropped2_tick costs 91-170 here (shdm/shhead/shboth/f24holder/
+frameholder); the tail's y difference must be two separate `sar 16` (one `(y - z) >> 16` is 136), a
+`short` local for it 162, two stores 135, the fa term first 35; our 2036 of the game's 2037 bytes is
+exactly the game's `movsx edx,dx` (0x138cd, 3 B) against our `mov edx,eax` (2 B), and a `(short)`
+cast over the whole y line is CSEd away by WCC (24, byte-identical) so it does not buy that movsx;
+both switch arm orders cost (49 want / 39 f24), the vz h-chain arm order 37, the !finished4 arm swap
+156, `int k` 92 and `unsigned short k` 25 (so `short k`), the second play_fx abs mirrored 28, a
+heading local 127, a speed local 59, the top_speed test mirrored 46 (line added 2026-11-28 for QUEUE
+Q6; history in QUEUE.md Q5, src/muis.c))
 42 0x19c8c bull_crash_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in its src file)
 50 0x12826 bull_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5, src/bull.c)

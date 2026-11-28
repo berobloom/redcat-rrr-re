@@ -27,7 +27,21 @@
    arithmetic heading test gives 86/95/119 depending on spelling (it shrinks the frame to 8 and moves
    `m` into EBP), the `(short)` cast on the y difference gives 76, and mirroring play_fx's first abs
    gives 29. So the heading test stays `h != ...` and the y line stays uncast: 24 rows is the
-   knife-edge where the whole function's allocation lines up. src/nearmiss.txt. */
+   knife-edge where the whole function's allocation lines up. src/nearmiss.txt.
+
+   2026-11-28, 24 more in-module variants (.work/pi/mt/v.py, v2.py, control 24): the GOTCHAS
+   stats-index holder (`s = bodies[n].stats`, shared over the damage/fuel pair, over the heading
+   block, over the f24 sites, over the frame store) costs 91-170 - the lever that took
+   dropped2_tick 16 -> 2 does NOT apply here (CONFIRMED); a local for the turn_tbl index 127, a
+   local for bodies[n].speed 59; both switch arm orders (want 49, f24 39), the vz h-chain arm order
+   37, the !finished4 arm swap 156, the top_speed test mirrored 46, the second play_fx abs mirrored
+   28, `int k` 92 / `unsigned short k` 25 (so `short k`, CONFIRMED). Tail site named byte for byte:
+   the game is `mov edx,[y]; mov eax,[z]; sar; sar; sub edx,eax; movsx edx,dx` (0x138b2-0x138cd) and
+   we are `mov eax,[y]; mov edx,[z]; sar; sar; sub eax,edx; mov edx,eax` - its 3-byte movsx against
+   our 2-byte copy is the whole 2036-of-2037-byte gap (CONFIRMED), and no spelling tried gets it:
+   the difference in a `short` local 162, two stores 135, one `(y - z) >> 16` 136 (so the two
+   separate `sar 16` are the game's, CONFIRMED), the fa term before the z term 35, and a `(short)`
+   cast over the whole expression is dropped by WCC (24, byte-identical). Nothing below 24. */
 int muis_tick(short n)
 {
     short k;

@@ -631,3 +631,21 @@ Rules for the agent:
     `ON:` (round 1 done). Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
     `src/matched.baseline` (unchanged), `grep -c WRONG` = 0, DATA 9677 of 9677. Q6's next unwalked
     line: `muis_tick` 0x130f8 (24).
+  - 2026-11-28 (overnight): Q6 round 1 of `muis_tick` 0x130f8: stays 24 rows after 24 in-module
+    vbatch spellings (`.work/pi/mt/v.py`, `v2.py`, control 24); four tie at 24 (`headingswap`,
+    `tailfullcast`, `pufftest`, `frameadd`) and none is below, so nothing went into `src/`. The
+    GOTCHAS "same index variable" holder - `s = bodies[n].stats` shared over the damage/fuel pair,
+    the heading block, the f24 sites and the frame store - is CONFIRMED inert to harmful here (91,
+    109, 109, 110, 170 rows), unlike dropped2_tick 0x178f6 where it won 14 rows. The tail site is now
+    named byte for byte (CONFIRMED, side-by-side dump): the game is `mov edx,[y]; mov eax,[z]; sar;
+    sar; sub edx,eax; movsx edx,dx` (0x138b2-0x138cd) and we are `mov eax,[y]; mov edx,[z]; sar; sar;
+    sub eax,edx; mov edx,eax`, so its 3-byte movsx against our 2-byte copy is the whole 2036-of-2037
+    length gap; no spelling gets it - difference in a `short` local 162, two stores 135, one
+    `(y - z) >> 16` 136 (the two separate shifts are the game's), fa term first 35, and a `(short)`
+    cast over the whole line is CSEd away (24, byte-identical). Both switch arm orders cost (49
+    want, 39 f24), as do the vz arm order (37), the `!finished4` arm swap (156), a speed local (59)
+    and `int k` (92) / `unsigned short k` (25) - so the C is the game's and 24 is this knife-edge's
+    floor. Its `src/nearmiss.txt` line now starts `ON:` (round 1 done). Check: `src/check.sh 2>&1 |
+    grep -c ' MATCH at'` = 129 = `src/matched.baseline` (unchanged), `grep -c WRONG` = 0, DATA 9677
+    of 9677. Q6's next unwalked line: `bull_crash_tick` 0x19c8c (42), then `bull_tick` 0x12826 (50),
+    `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).

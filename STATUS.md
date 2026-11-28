@@ -93,7 +93,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    `cy = (bodies[n].y >> 16) / 40;` again before the last cell lookup kills WCC's CSE of `cy * map_w`, so the
    quotient survives the branch and each lookup multiplies it into its own register - the game's 584 bytes
    (GOTCHAS "Levers", open question 29 closed). 129 of 147 (87.8%), 0 WRONG, DATA 9677/9677, 16 near misses;
-   the whole `src/map.c` 0x18886-0x1918c now MATCHes (the Q4 lead). Q6's next line: `camera_follow` 0x138ed (19), `fn_13a78` round 1 done. Earlier in
+   the whole `src/map.c` 0x18886-0x1918c now MATCHes (the Q4 lead). Q6 round 1 walked `camera_follow` 0x138ed (19, the game's tx spill to [esp+8]) and `muis_tick` 0x130f8 (24, its tail movsx is the byte gap) on 2026-11-28; four lines still have no `ON:` status: `bull_crash_tick` 0x19c8c (42), `bull_tick` 0x12826 (50), `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64). Earlier in
    `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).

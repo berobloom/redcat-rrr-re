@@ -548,3 +548,9 @@
      tie as left_of 0x1401d, muis_crash_tick 0x1a42a, follower_tick 0x167aa and draw_view 0x11526.
      What would settle it is a model of WCC's register allocator (not its scheduler), which we do not
      have; simsched.py models only the scheduler and cannot see this.
+   - Same tie class, 2026-11-28: camera_follow 0x138ed (35 spellings, floor 19) is ONE decision - the
+     game homes the `tx` temporary at [esp+8] (frame 0xc, store 0x13966, reload 0x13996) which frees
+     ESI for `ty` (its `lea eax,[esi+edx]` 0x13991), and every row including its epilogue pair follows
+     from that; and muis_tick 0x130f8 (24 spellings, floor 24) keeps the game's `movsx edx,dx`
+     0x138cd only if the tail's difference lands in EDX, which no spelling of that line reaches. In
+     both, a holder, a cast or an arm swap moves one site and costs 30-170 rows elsewhere.
