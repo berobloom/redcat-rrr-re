@@ -183,7 +183,7 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   (`cdq; shld edx,eax,16; shl eax,16; idiv ebx`) in src/rrr.h. The argument order picks which value
   goes into EAX and which into EBX (`fixmul(0x4000, abs(vz))` vs `fixmul(vx, 0x2666)`). The pattern
   `f7 eb 0f ac d0 10` occurs 79 times in RRR's code (first at 0x123e6); hud_update 0x1918d and
-  fn_1733e 0x1733e MATCH with it. CONFIRMED (chat 2026-11-22).
+  trail_tick 0x1733e MATCH with it. CONFIRMED (chat 2026-11-22).
 - **Same index variable, not the same value:** two sites that write `stats[bodies[2].stats]` and
   `stats[bodies[4].stats]` get two temporaries with different register pairs, so the `*3 << 4` chains
   never merge and the function grows. Reading one of them through a local the function uses again
@@ -333,7 +333,7 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   game does (the heap.c spawners 0x180d3-0x18502, 2 bytes per function).
 
 - **A function's entry block can move next to its caller.** In one object Watcom placed
-  hud_count's first 54 bytes (the switch compares) straight after fn_15166, which tail-calls it,
+  hud_count's first 54 bytes (the switch compares) straight after draw_hud_counts, which tail-calls it,
   and the rest at its own place: the jumps then reach 2 KB away. Compiled in an object of its own
   it matched. A near miss whose first jump goes far outside the function means a caller earlier
   in the same file belongs to another module. `.work/objdis.py OBJ NAME` (or objmatch's publics)
@@ -432,7 +432,7 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   short parameter (the one idea that could buy the game's `cwde`) costs 15 rows (24 vs 9). What did work, and is worth trying
   in the other object callbacks: the two-part test written as `!(damage > 0 && fuel > 0)` (30 rows
   better than `damage <= 0 || fuel <= 0`), and follower_tick alone in its own file so its epilogue
-  stops merging into fn_16e46's (4 rows).
+  stops merging into smoke_tick's (4 rows).
 - **hit_test 0x1430e's last 5 rows (71 -> 5):** only two swapped stack slots - the game has h at
   [esp+0x10] and x1 at [esp+0x14] (0x14371 `mov [esp+0x10],eax`, 0x1440b `mov [esp+0x14],ebx`), ours
   the other way; every other byte of the 550 matches. What

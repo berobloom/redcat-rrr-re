@@ -18,7 +18,7 @@
  * following the sign of the racer's own velocity; scroll_x/scroll_y are then
  * clamped to 0 .. map size - view size and tile_x/tile_y recomputed.
  * scroll_step_x/scroll_step_y (0x56060, 0x56064) are written here and by
- * fn_13a78 and read nowhere in RRR.EXE.
+ * camera_ease_to and read nowhere in RRR.EXE.
  *
  * near miss: 62 -> 19 rows. The C is established: vw/vh/tx/ty short (the word
  * loads of view_tiles_w/h are Watcom narrowing the short locals' assignments),
@@ -57,7 +57,7 @@
  * not its scheduler).
  *
  * 2026-11-28 round 2, 12 of 18 written in-module variants scored (.work/pi/cf2/v.py, v2.py, control
- * 19; six never compiled - their old text is not unique next door in fn_13a78): nothing below 19, and
+ * 19; six never compiled - their old text is not unique next door in camera_ease_to): nothing below 19, and
  * the new
  * axis is the memory home itself. `volatile short tx` is 64 rows: the game reloads tx ONCE (0x13996
  * `movsx eax,word [esp+8]`) and reuses that EAX for the `cmp` at 0x139ac, which volatile forbids, so
@@ -116,7 +116,7 @@ void camera_follow(int racer)
 /* ---- 0x13a78 --------------------------------------------------------------------------------
  * camera_follow's twin for a caller that already knows the pixel position: same view size, same
  * 1/16 easing into scroll_x/scroll_y, same clamps and tile_x/tile_y; the lead is 64 px by 80 px
- * instead of 128 by 160, and the caller (fn_13bb8, which draws the view from scroll_x/scroll_y
+ * instead of 128 by 160, and the caller (step_and_draw_view, which draws the view from scroll_x/scroll_y
  * straight after) hands it objects[racer].x/y rather than a body.
  *
  * differs: 15 rows, all register mirrors - the game keeps the vx sign in EAX and shifts it there
@@ -128,7 +128,7 @@ void camera_follow(int racer)
  * leads as separate statements, a hoisted w = vw << 4, sx/sy locals, the clamps as * 32, * 5 * 8,
  * * 8 * 5, * 40u and with unsigned casts, a separate (map_w - vw) local, vw as int (both spill
  * differently) and this function compiled in an object of its own with camera_follow and
- * fn_13bb8 (camera_follow stays at its 62 rows there, the same mirror). 2026-11-28, 12 more in-module
+ * step_and_draw_view (camera_follow stays at its 62 rows there, the same mirror). 2026-11-28, 12 more in-module
  * variants (.work/pi/gc/v13.py, control 15): the ground_check CSE lever - `vw = view_tiles_w + 1;` /
  * `vh = view_tiles_h + 1;` written again before the clamp that reads them (68 / 65 / 75), `t` split
  * into two locals (16), the x limit as `* 32` (15, byte-identical), one merged short declaration
@@ -146,7 +146,7 @@ void camera_follow(int racer)
  * vhload, headswap, nested, txshort, bothload.
  * -------------------------------------------------------------------------------------------- */
 
-void fn_13a78(int x, int y, int vx, int vy)
+void camera_ease_to(int x, int y, int vx, int vy)
 {
     short vw, vh;
     short tx, ty;
@@ -178,10 +178,10 @@ void fn_13a78(int x, int y, int vx, int vy)
 
 /* ---- 0x13bb8 -------------------------------------------------------------------------------- */
 
-void fn_13bb8(int racer)
+void step_and_draw_view(int racer)
 {
     objects_tick();
-    fn_13a78(objects[racer].x, objects[racer].y, (short)(bodies[racer].vx >> 16), (short)(bodies[racer].vy >> 16));
+    camera_ease_to(objects[racer].x, objects[racer].y, (short)(bodies[racer].vx >> 16), (short)(bodies[racer].vy >> 16));
     draw_view(scroll_y % 40, scroll_x % 32);
 }
 

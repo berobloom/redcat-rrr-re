@@ -150,7 +150,7 @@ int stage_is_last(void)
 
 /* ---- 0x1aea5 -------------------------------------------------------------------------------- */
 
-int fn_1aea5(void)
+int stage_is_first(void)
 {
     int i = rrrio.stage;
     while (i > 0 && stage_table[rrrio.world - 1][i] != 0)

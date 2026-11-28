@@ -65,7 +65,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    chain once, so the racer-4 block ends in `jmp <chain>` like the game's, the function is exactly
    619 bytes, and the epilogue at 0x17b59 that five callbacks jmp to lands right: `src/check.sh |
    grep -c ' MATCH at'` = 124 of 147 (84.4%), with `dropped0_tick` 0x17b61, `dropped4_tick` 0x17c74,
-   `mine_tick`, `sign_tick`, `bomb_tick`, `fn_16e46` and `cactus_tick` MATCHing. The mutations that
+   `mine_tick`, `sign_tick`, `bomb_tick`, `smoke_tick` and `cactus_tick` MATCHing. The mutations that
    make it fail: `stats[bodies[2].stats].damage -= 10;` back in that block (dropped2_tick to 16 rows,
    the other seven differ again), or a separate `int s` instead of `h` (44 rows). `dropped2_tick`
    itself is a 2-row near miss at the exact length now - one register tie in its last x store, open
@@ -87,7 +87,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    `cy = (bodies[n].y >> 16) / 40;` again before the last cell lookup kills WCC's CSE of `cy * map_w`, so the
    quotient survives the branch and each lookup multiplies it into its own register - the game's 584 bytes
    (GOTCHAS "Levers", open question 29 closed). 129 of 147 (87.8%), 0 WRONG, DATA 9677/9677, 16 near misses;
-   the whole `src/map.c` 0x18886-0x1918c now MATCHes (the Q4 lead). Q6 round 1 walked `camera_follow` 0x138ed (19, the game's tx spill to [esp+8]) and `muis_tick` 0x130f8 (24, its tail movsx is the byte gap) on 2026-11-28; every Q6 line now carries `ON:` - the last two were `draw_view` 0x11526 (51: a local for `ww - ox` or for the clamp sums costs 80-235, so its slot stores are WCC's own spills) and `ai_waypoint_action` 0x1af83 (64: the extra read is `rrrio.world` 0x751a4, re-materialised by WCC). Eleven Q6 lines carry `ON2:` now - `follower_tick` 0x167aa (9), `bull_crash_tick` 0x19c8c (42), `draw_view` 0x11526 (51), and 2026-11-28 round 2 on `fn_13a78` 0x13a78 (15: local types 17, `register` inert, a tx intermediate 45, splitting the view-size loads 35-61) and `camera_follow` 0x138ed (19: `volatile short tx` 64 and an address-taken tx 59 rule out its [esp+8] home as a source shape - WCC spilled an ordinary auto; every statement split costs, open question 36) - on top of `left_of` 0x1401d: 8 rows, an aux clobber list on the function itself is inert and no copy or mixed-assignment form moves its ESI/EAX mirror; `spawn_dropped_object`: floor 7, `k = kind` and no `break` in default hold 7 and the if/switch hybrids pay the mirror in the arms they route through), plus `dropped2_tick`, plus round 2 on 2026-11-28 of `hit_test` 0x1430e (5 rows - `register` on a local or a parameter is inert, same bytes and same slots, and declaring `h` last drops its slot into the temporary band) and `muis_crash_tick` 0x1a42a (6 rows - a `#pragma aux` clobber list does move that function's allocation, 12-158 rows, but never the finished4 arm's EAX/EDX); muis_tick 24 took its round 2 on 2026-11-28 (the reversed y difference `(z >> 16) - (y >> 16)` ties at 24 rows and does not buy the tail `movsx edx,dx`, a `-=` temp costs 89-111); Q6's next work is round 2 on its two remaining `ON:` lines (bull_tick 48, ai_waypoint_action 64). Earlier in
+   the whole `src/map.c` 0x18886-0x1918c now MATCHes (the Q4 lead). Q6 round 1 walked `camera_follow` 0x138ed (19, the game's tx spill to [esp+8]) and `muis_tick` 0x130f8 (24, its tail movsx is the byte gap) on 2026-11-28; every Q6 line now carries `ON:` - the last two were `draw_view` 0x11526 (51: a local for `ww - ox` or for the clamp sums costs 80-235, so its slot stores are WCC's own spills) and `ai_waypoint_action` 0x1af83 (64: the extra read is `rrrio.world` 0x751a4, re-materialised by WCC). Eleven Q6 lines carry `ON2:` now - `follower_tick` 0x167aa (9), `bull_crash_tick` 0x19c8c (42), `draw_view` 0x11526 (51), and 2026-11-28 round 2 on `camera_ease_to` 0x13a78 (15: local types 17, `register` inert, a tx intermediate 45, splitting the view-size loads 35-61) and `camera_follow` 0x138ed (19: `volatile short tx` 64 and an address-taken tx 59 rule out its [esp+8] home as a source shape - WCC spilled an ordinary auto; every statement split costs, open question 36) - on top of `left_of` 0x1401d: 8 rows, an aux clobber list on the function itself is inert and no copy or mixed-assignment form moves its ESI/EAX mirror; `spawn_dropped_object`: floor 7, `k = kind` and no `break` in default hold 7 and the if/switch hybrids pay the mirror in the arms they route through), plus `dropped2_tick`, plus round 2 on 2026-11-28 of `hit_test` 0x1430e (5 rows - `register` on a local or a parameter is inert, same bytes and same slots, and declaring `h` last drops its slot into the temporary band) and `muis_crash_tick` 0x1a42a (6 rows - a `#pragma aux` clobber list does move that function's allocation, 12-158 rows, but never the finished4 arm's EAX/EDX); muis_tick 24 took its round 2 on 2026-11-28 (the reversed y difference `(z >> 16) - (y >> 16)` ties at 24 rows and does not buy the tail `movsx edx,dx`, a `-=` temp costs 89-111); Q6's next work is round 2 on its two remaining `ON:` lines (bull_tick 48, ai_waypoint_action 64). Earlier in
    `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
@@ -137,7 +137,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    segments for all 16 modules, so `src/check.sh` reads 117 MATCH and the same 28 near misses with
    both - the one-register-choice family (open questions 25, 26, 28, 29, 31) is still a C question.
    Two places to spend the next cycles, by prize rather than by row count: `dropped2_tick` 0x178f6
-   (mine/sign/bomb/fn_16e46/cactus_tick are already at 0 rows and only wait for its epilogue to land
+   (mine/sign/bomb/smoke_tick/cactus_tick are already at 0 rows and only wait for its epilogue to land
    at 0x17b59, so score the epilogue address, not the rows: the `s = bodies[X].stats;` holder spelling
    reaches the game's load-EAX shape at 9 rows but 580 of 619 bytes, and the missing ~49 bytes of a
    619-byte function are small enough to read off the disassembly), and the six tick functions
@@ -171,7 +171,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    mechanism is pinned
    (a second same-shape `stats[...].damage -=` statement flips the first one's load register; see
    the note in src/shadeobj2.c and the probes in .work/probe/S.C) but no block-2 spelling keeps
-   block 1 natural *and* the game's RMW tail; it gates mine/sign/bomb/cactus/fn_16e46 (0 rows)
+   block 1 natural *and* the game's RMW tail; it gates mine/sign/bomb/cactus/smoke_tick (0 rows)
    and dropped0/dropped4_tick. 2026-11-27, muis_crash_tick 0x1a42a is written in `src/tick.c`
    (1878 of 1877 bytes, 78 rows); it is not a copy of the other two crash ticks, under half their
    instruction streams agree, and it names racer 4's tick state 0x56018-0x5602c and the puff counter

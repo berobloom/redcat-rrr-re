@@ -471,7 +471,7 @@ void init_game(char **argv, int argc)
     debug_printf("Bonus search returned.\n");
     music_on = (!has_arg("/NOMUSIC", argc, argv) && (rrrio.sound & 2)) ? 1 : 0;
     stereo = has_arg("/STEREO", argc, argv);
-    if (sound_enabled && fn_1aea5()) {
+    if (sound_enabled && stage_is_first()) {
         debug_printf("Starting music.\n");
         snd_play(0, 31, 64);
         do {
@@ -503,7 +503,7 @@ void init_game(char **argv, int argc)
     }
     fn_2369f("racescr3.pcx", 15);
     debug_printf("Initialising dashboard.\n");
-    fn_15166();
+    draw_hud_counts();
     if (sound_enabled && music_on) {
         debug_printf("Starting music.\n");
         if (stereo) {

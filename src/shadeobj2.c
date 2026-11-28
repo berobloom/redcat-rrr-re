@@ -1,7 +1,7 @@
 /* shadeobj2.c: the object callbacks, 0x16945-0x17d93. One module, LIKELY: their
    'illegal object : %d ' block (0x51784-0x51798) is one string block - no gap between it and the
    strings of the functions that use it, padding byte 0x5179b before heap.c's - and mine/sign/bomb/
-   cactus_tick, fn_16e46 and dropped0/2/4_tick all jump into dropped2_tick's epilogue at 0x17b59/
+   cactus_tick, smoke_tick and dropped0/2/4_tick all jump into dropped2_tick's epilogue at 0x17b59/
    0x17b5b, which WCC386 only does inside one object. The name is a placeholder (nothing here passes
    a __FILE__, and the string carries none). The boundary that costs bytes is follower_tick's
    (src/shadeobj.c): free_object_tick and the 0x1696c-0x16ad9 callbacks can sit on either side, both
@@ -22,7 +22,7 @@ int free_object_tick(short n)
 
 /* ---- 0x1696c -------------------------------------------------------------------------------- */
 
-int obj_callback_1696c(short n)
+int still_smoke_tick(short n)
 {
     short k;
 
@@ -41,7 +41,7 @@ int obj_callback_1696c(short n)
 
 /* ---- 0x16a63 -------------------------------------------------------------------------------- */
 
-int obj_callback_16a63(short n)
+int boost_pickup_tick(short n)
 {
     short k;
 
@@ -60,7 +60,7 @@ int obj_callback_16a63(short n)
 
 /* ---- 0x16ad9 -------------------------------------------------------------------------------- */
 
-int obj_callback_16ad9(short n)
+int orb_pickup_tick(short n)
 {
     short k;
 
@@ -145,7 +145,7 @@ int bomb_tick(short n)
 
 /* ---- 0x16e46 -------------------------------------------------------------------------------- */
 
-int fn_16e46(short n)
+int smoke_tick(short n)
 {
     short k;
     int cx, cy;
@@ -186,7 +186,7 @@ int fn_16e46(short n)
 
 /* ---- 0x1709c -------------------------------------------------------------------------------- */
 
-int obj_callback_1709c(short n)
+int explosion_tick(short n)
 {
     short k;
 
@@ -242,7 +242,7 @@ int cactus_tick(short n)
 
 /* ---- 0x1733e -------------------------------------------------------------------------------- */
 
-int fn_1733e(short n)
+int trail_tick(short n)
 {
     short k;
     int g;
@@ -357,7 +357,7 @@ int rocket_tick(short n)
    `mov [objects+4],di`, ours `lea esi,[edi-0x10]` + `mov [objects+4],si`, for the same
    `(bodies[n].x >> 16) - frames[k].f8 - 16`. 619 = 619 bytes.
    What took 16 -> 2 (and took dropped0_tick 0x17b61, dropped4_tick 0x17c74, mine_tick 0x16b53,
-   sign_tick 0x16c5d, bomb_tick 0x16d30, fn_16e46 0x16e46 and cactus_tick 0x17236 to MATCH): the
+   sign_tick 0x16c5d, bomb_tick 0x16d30, smoke_tick 0x16e46 and cactus_tick 0x17236 to MATCH): the
    FIRST damage block reads the stats index through a local the function uses again later -
    `h = bodies[2].stats; stats[h].damage -= 10;` with the same `int h` the aim block uses - instead
    of `stats[bodies[2].stats].damage -= 10;`. With the literal index WCC colours the two blocks'
@@ -391,8 +391,8 @@ int rocket_tick(short n)
    Why the two rows are an allocation choice, not this statement's C (CONFIRMED 2026-11-28): in the
    game's module 0x16c00-0x17d60 the same x-line text appears nine times - seven compile to
    `lea r,[r-0x10]` (0x16c22, 0x16d03, 0x16e0d, 0x171eb, 0x17323, 0x1757b, 0x178b1) and two to
-   `sub r,0x10` (fn_16e46 0x17052 and here 0x17b23) - and our build agrees with every one of them, so
-   the identical C in fn_16e46 gives the in-place `sub eax,0x10` (ours 0x1704d-0x17052: `sar eax,0x10`
+   `sub r,0x10` (smoke_tick 0x17052 and here 0x17b23) - and our build agrees with every one of them, so
+   the identical C in smoke_tick gives the in-place `sub eax,0x10` (ours 0x1704d-0x17052: `sar eax,0x10`
    / `sub eax,edi` / `sub eax,0x10`) while the identical C in cactus_tick gives `lea ebx,[edi-0x10]`
    (ours and the game's both at 0x17323). SPECULATIVE the tie is decided by which register holds the
    accumulator (EAX folds it, EDI gets a fresh destination), which no spelling of this statement or of

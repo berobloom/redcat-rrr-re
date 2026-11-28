@@ -232,7 +232,7 @@ cos_sin_init_frames.txt`, 2026-11-27).
   `lea eax,[eax]`) depends on the size mod 4 of everything the object holds before it. That is the
   whole remaining diff of `find_waypoints`: +0..+1009 identical, then the game pads
   `find_bonus_objects`' ten-entry table with three bytes and we with two (LAYOUT in
-  `src/nearmiss.txt`). Adding a function to the module can fix or break it - `fn_15166` (20 B,
+  `src/nearmiss.txt`). Adding a function to the module can fix or break it - `draw_hud_counts` (20 B,
   0 mod 4) changes nothing, `init_objects` 0x148db (1635 B, 3 mod 4) would land the table right.
 - **A value used twice is not automatically a local.** `ground_check` 0x1889d computed its x and y
   cell numbers into `ox`/`oy` locals; writing them inline in the two `map[]` reads moved the whole

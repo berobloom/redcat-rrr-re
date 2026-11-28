@@ -3,7 +3,7 @@
    string), 'illegal shade object : %d following :%d' follows it with no gap, and the callbacks'
    'illegal object : %d ' starts a new block at 0x51784 (padding byte 0x51783) - so the module ends
    with follower_tick. That is also why the game gives follower_tick its own pop/ret at 0x1693a
-   while fn_16e46 (0x16e46) jumps into dropped2_tick's epilogue at 0x17b5b: one object shares an
+   while smoke_tick (0x16e46) jumps into dropped2_tick's epilogue at 0x17b5b: one object shares an
    epilogue, two do not. The callbacks are in src/shadeobj2.c. */
 
 #include "rrr.h"

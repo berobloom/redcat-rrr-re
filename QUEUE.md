@@ -39,7 +39,7 @@ Rules for the agent:
     straight through the address), so `PROGRESS.md` now reads 147 functions, 110
     byte-identical (74.8%), 22 near misses, 15 to write (the list is in STATUS.md).
   - 2026-11-23: still READY FOR REVIEW, counts moved: sound_init 0x1043a 13 -> 10 rows, the new
-    fn_13a78 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
+    camera_ease_to 0x13a78 is a 15-row near miss, and `enter`-frame scan of the C range shows blit_sprite
     0x11bb4 and blit_sprite_trans 0x17d94 are assembly, so 110 of 147, 23 near misses, 14 unwritten
     (13 C). `src/check.sh` still shows 110 MATCH and no WRONG fixups.
   - 2026-11-28 (later): `sound_init` 0x1043a byte-identical: `src/check.sh 2>&1 | grep -c ' MATCH at'`
@@ -85,7 +85,7 @@ Rules for the agent:
     block uses (`h = bodies[2].stats; stats[h].damage -= 10;`), which makes Watcom emit the
     `*3 << 4` chain once and puts its epilogue at the game's 0x17b59. Seven functions went to MATCH
     with it (dropped0_tick 0x17b61, dropped4_tick 0x17c74, mine_tick, sign_tick, bomb_tick,
-    fn_16e46, cactus_tick) and dropped2_tick itself is 16 -> 2 rows at the exact 619 bytes. The
+    smoke_tick, cactus_tick) and dropped2_tick itself is 16 -> 2 rows at the exact 619 bytes. The
     mutation that makes the check fail: `stats[bodies[2].stats].damage -= 10;` back in that block
     (dropped2_tick 16 rows, the other seven differ again); a separate `int s` also fails (44 rows).
   - 2026-11-27: still READY FOR REVIEW, and every C function of the range now has a spelling:
@@ -402,7 +402,7 @@ Rules for the agent:
     fn_20d1f Fastgraph's _fg_makepcx. blob.py writes a fixup's addend modulo 2^32 (a target below the
     nearest public of a real object).
   - 2026-11-26 (init.c): src/init.c now holds the whole module 0x148db-0x15c02 (start_crash,
-    switch_anims, fn_15166, race_end, winner_film, podium out of rrr.c). Its CONST (1106 B at
+    switch_anims, draw_hud_counts, race_end, winner_film, podium out of rrr.c). Its CONST (1106 B at
     0x50e04) is identical in place after find_waypoints' two "...SNITCH:%d" messages lost a "\n"
     the game never had: `DATA: 9677 of 9677` (data.baseline 8476 -> 9677). init_objects 7 -> 2 rows
     (fuel into `i` before the drops store); its last 2 rows (MUIS heading store slot) keep init.c
@@ -518,7 +518,7 @@ Rules for the agent:
   not edit init_objects or src/init.c's player block.
   Functions, in this order (rows on 2026-11-28): dropped2_tick 0x178f6 (2), hit_test 0x1430e (5),
   muis_crash_tick 0x1a42a (6), left_of 0x1401d (8), spawn_dropped_object 0x18759 (8),
-  follower_tick 0x167aa (9), ground_check 0x1889d (13), fn_13a78 0x13a78 (15), camera_follow
+  follower_tick 0x167aa (9), ground_check 0x1889d (13), camera_ease_to 0x13a78 (15), camera_follow
   0x138ed (19), muis_tick 0x130f8 (24), bull_crash_tick 0x19c8c (42), bull_tick 0x12826 (50),
   draw_view 0x11526 (51), ai_waypoint_action 0x1af83 (64).
   Accept: each function is MATCH in `src/check.sh` with no WRONG line, or its `src/nearmiss.txt`
@@ -602,7 +602,7 @@ Rules for the agent:
     32/0x20/(short)32, guard form `0 < damage && 0 < fuel`, or index cast moves it); and both sides
     keep `n << 4` in EBX live into the else arm and reuse it there (`mov [ebx+eax+0xa],dx` 0x168b0 /
     0x168b3). Its nearmiss line now starts `ON:`. Q6's remaining unwalked lines: `ground_check`
-    0x1889d (13), `fn_13a78` 0x13a78 (15), `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24),
+    0x1889d (13), `camera_ease_to` 0x13a78 (15), `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24),
     `bull_crash_tick` 0x19c8c (42), `bull_tick` 0x12826 (50), `draw_view` 0x11526 (51),
     `ai_waypoint_action` 0x1af83 (64).
   - 2026-11-28 (overnight): seventh function, `ground_check` 0x1889d -> **MATCH**, `src/check.sh 2>&1
@@ -624,10 +624,10 @@ Rules for the agent:
     check: delete the added `cy = ...` line -> 13 rows again
     (`vbatch.py ground_check 0x1889d` control), and `src/matched.baseline` 129 != 128. Lever written in
     GOTCHAS "Levers that produced MATCHes on RRR", finding in discoveries "Toolchain: what kills a
-    common subexpression", open question 29 closed. Q6's remaining unwalked lines: `fn_13a78` 0x13a78
+    common subexpression", open question 29 closed. Q6's remaining unwalked lines: `camera_ease_to` 0x13a78
     (15), `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42),
     `bull_tick` 0x12826 (50), `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
-  - 2026-11-28 (overnight, second function of this pass): `fn_13a78` 0x13a78 stays 15 rows after 12
+  - 2026-11-28 (overnight, second function of this pass): `camera_ease_to` 0x13a78 stays 15 rows after 12
     in-module vbatch spellings (`.work/pi/gc/v13.py`, control 15); `txclamplocal` (`* 32` for `<< 5`)
     and `declmerge` (one `short vw, vh, tx, ty;`) hold 15 with byte-identical code, everything else is
     worse, so nothing went into `src/` (`src/check.sh` 129 MATCH, 0 WRONG, DATA 9677/9677). The new
@@ -650,8 +650,8 @@ Rules for the agent:
     (41), explicit parens, and a `short k`/`int h` decl swap - seven tie at 2 with byte-identical
     code, none below 2. New evidence that the pair is an allocation tie and not this statement's C
     (CONFIRMED): in the game's 0x16c00-0x17d60 the same x-line text compiles to `lea r,[r-0x10]` seven
-    times and to `sub r,0x10` twice (fn_16e46 0x17052, dropped2_tick 0x17b23), and our build equals
-    every one of them - so the identical C in fn_16e46 does give the in-place `sub` (ours
+    times and to `sub r,0x10` twice (smoke_tick 0x17052, dropped2_tick 0x17b23), and our build equals
+    every one of them - so the identical C in smoke_tick does give the in-place `sub` (ours
     0x1704d-0x17052), and cactus_tick 0x17323 does not. SPECULATIVE the choice follows which register
     holds the accumulator. Its `src/nearmiss.txt` line now starts `ON2:` (round 2 done) and the
     differs note in `src/shadeobj2.c` names the nine sites. Check: `src/check.sh 2>&1 | grep -c '
@@ -805,7 +805,7 @@ Rules for the agent:
     `src/matched.baseline`, `grep -c WRONG` = 0, `DATA: 9677 of 9677`. Its `src/nearmiss.txt` line
     now starts `ON2:` (round 2 done). Q6 now has three `ON2:` lines (dropped2_tick, hit_test,
     muis_crash_tick); round 2 remains for `left_of` 0x1401d (8), `spawn_dropped_object` 0x18759 (8),
-    `follower_tick` 0x167aa (9), `fn_13a78` 0x13a78 (15), `camera_follow` 0x138ed (19),
+    `follower_tick` 0x167aa (9), `camera_ease_to` 0x13a78 (15), `camera_follow` 0x138ed (19),
     `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42), `bull_tick` 0x12826 (48),
     `draw_view` 0x11526 (51) and `ai_waypoint_action` 0x1af83 (64).
   - 2026-11-28 (overnight): Q6 round 2 of `left_of` 0x1401d (8 rows) and `spawn_dropped_object`
@@ -826,7 +826,7 @@ Rules for the agent:
     equality tree and its EAX-for-n<<4 registers still do not occur together at any construct
     boundary tried. Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
     `src/matched.baseline`, `grep -c WRONG` = 0, `DATA: 9677 of 9677`; both `src/nearmiss.txt` lines
-    now start `ON2:`. Q6 round 2 remains for `follower_tick` 0x167aa (9), `fn_13a78` 0x13a78 (15),
+    now start `ON2:`. Q6 round 2 remains for `follower_tick` 0x167aa (9), `camera_ease_to` 0x13a78 (15),
     `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42),
     `bull_tick` 0x12826 (48), `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
   - 2026-11-28 (overnight): process note. The file reader in this pass returned text that is not in
@@ -899,10 +899,10 @@ Rules for the agent:
     Correction (2026-11-28, review): there was no second agent or tree. The `ai_dive`, `f3d*.py`
     and `collide.c` text came from the model, not from any tool output, and `f7734d9` was pass 12's
     own commit (open question 37, RESOLVED).
-  - 2026-11-28 (overnight): Q6 round 2 of `fn_13a78` 0x13a78 and `camera_follow` 0x138ed, the two
+  - 2026-11-28 (overnight): Q6 round 2 of `camera_ease_to` 0x13a78 and `camera_follow` 0x138ed, the two
     lines that still had only `ON:`; neither moved, so nothing went into `src/` except their
     comments (`src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline`,
-    `grep -c WRONG` = 0, DATA 9677 of 9677). `fn_13a78` stays 15 rows after 18 in-module vbatch
+    `grep -c WRONG` = 0, DATA 9677 of 9677). `camera_ease_to` stays 15 rows after 18 in-module vbatch
     variants (.work/pi/gc2/v.py, v2.py, control 15): the local TYPES are wrong (`unsigned short vw,
     vh` 17, `int t` 17), `register` is inert (15), the tx intermediate as its own statement 45, the
     ty line first 55, the two clamp blocks swapped 39, the clamp comparisons flipped 17, `vh * 20` as
@@ -910,7 +910,7 @@ Rules for the agent:
     block-split axis) 37 / 35 / 61; eight tie at 15 (`regvw`, `mullead`, `txparens`, `vhsplit`,
     `mapmul`, `headswap`, `nested`, `txshort`). `camera_follow` stays 19 rows after 12 of 18 scored
     (.work/pi/cf2/v.py, v2.py, control 19; six rejected for non-unique old text next door in
-    fn_13a78), and round 2's new axis rules the memory home out as a source shape (CONFIRMED):
+    camera_ease_to), and round 2's new axis rules the memory home out as a source shape (CONFIRMED):
     `volatile short tx` is 64 rows - the game reloads tx exactly ONCE (0x13996 `movsx eax,word
     [esp+8]`) and reuses that EAX for the `cmp` at 0x139ac, which `volatile` forbids - and an
     address-taken tx (`short *ptx = &tx;`) is 59, so its [esp+8] is WCC's own spill; every statement

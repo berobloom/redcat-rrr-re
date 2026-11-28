@@ -107,7 +107,7 @@
     found so far loads EDX first, pays a `mov edx,eax`, and merges its tail
     with the second (racer 4) damage block 8 bytes later. That leaves our
     shared epilogue at +0x26d instead of +0x263, which is where
-    mine_tick 0x16b53, sign_tick 0x16c5d, bomb_tick 0x16d30, fn_16e46
+    mine_tick 0x16b53, sign_tick 0x16c5d, bomb_tick 0x16d30, smoke_tick
     0x16e46 and cactus_tick 0x17236 - all otherwise byte-identical - jump to.
     Prize: 8 functions. 30+ spellings and the option sets -ox, -ox -oe,
     -ox -oa, -ox -oi and -oe alone change nothing (session 13; the full list
@@ -149,7 +149,7 @@
     six shares also say which functions are certainly together: order_add
     -> 0x11add, trans_generate -> 0x11e23, camera_follow -> 0x13f8b,
     racer_bounce -> racer_contact 0x142d6, find_waypoints + find_bonus_objects
-    -> 0x15565, dropped0/2/4_tick + mine/sign/bomb/fn_16e46 -> 0x17b5b.
+    -> 0x15565, dropped0/2/4_tick + mine/sign/bomb/smoke_tick -> 0x17b5b.
     Where each module starts is still unknown; string-block boundaries and
     the error strings' file names are the other two tests MATCHING.md 4 gives.
     Caveat added 2026-11-27: the test works one way only. Sharing proves
@@ -165,10 +165,10 @@
     bytes), not because the boundary is proven.
     2026-11-26, the two tests agree at shadeobj.c: a padding byte 0x51783 between
     'illegal shade object : %d following :%d' (used only by follower_tick 0x167aa)
-    and 'illegal object : %d ' (used only from obj_callback_1696c 0x1696c to
+    and 'illegal object : %d ' (used only from still_smoke_tick 0x1696c to
     dropped4_tick 0x17c74) puts a module boundary at 0x16945, which is exactly
     where the epilogue evidence puts one - follower_tick keeps its own pop/ret
-    while fn_16e46 jumps into dropped2_tick's at 0x17b5b. Splitting follower_tick
+    while smoke_tick jumps into dropped2_tick's at 0x17b5b. Splitting follower_tick
     into src/shadeobj.c and the callbacks into src/shadeobj2.c won 4 rows
     (13 -> 9) and changed nothing else.
     2026-11-24, the same evidence names init.c: find_waypoints 0x1517a and
@@ -243,7 +243,7 @@
     supports: init_objects' only string 'player_direction : %d wp: %d\n' sits at 0x50e04 and runs
     into 'init.c' at 0x50e22 (29 + 1 bytes, and the four bytes before it are zero), so its string
     is the head of the init.c string block; and start_crash 0x14f3e, switch_anims 0x15084 and
-    fn_15166 0x15166 sit between init_objects and find_waypoints, still candidates for the same
+    draw_hud_counts 0x15166 sit between init_objects and find_waypoints, still candidates for the same
     module (their strings are still in rrr.c's pool, which is why find_waypoints' __FILE__ strings
     now land 1-2 bytes off the game's - layout, no match lost).
     Original question, kept for the record:
@@ -253,7 +253,7 @@
     (`lea eax,[eax]`, the game at 0x1556c) against our two (`mov eax,eax`,
     +1010). Watcom 4-aligns a jump table inside its own object, so the pad is
     set by the size mod 4 of everything earlier in the object: ours is empty in
-    front (find_waypoints is INIT.OBJ's first function). Putting fn_15166
+    front (find_waypoints is INIT.OBJ's first function). Putting draw_hud_counts
     (0x15166, 20 B = 0 mod 4) in front keeps the two-byte pad, so it is not
     enough; init_objects 0x148db is 1635 B = 3 mod 4 and would land the table
     at +1013 like the game. Which functions are in init.o is unknown: its
@@ -599,7 +599,7 @@
     read through the pointer at both uses) scores 59. So WCC spilled an ordinary auto; and every
     spelling that adds or splits whole statements, i.e. every way found so far of moving the 75-id
     block split from the source side, costs rows there (tx 40/53, ty 41, the step 63, the view-size
-    loads 49, x 43) - as in `fn_13a78` 0x13a78 next door, where the same split axis costs 37/35/61 on
+    loads 49, x 43) - as in `camera_ease_to` 0x13a78 next door, where the same split axis costs 37/35/61 on
     a 15-row floor (18 spellings, .work/pi/gc2/v.py, v2.py).
 
 37. **RESOLVED (2026-11-28): no second tree; the overnight model invented the text.** Three

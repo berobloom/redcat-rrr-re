@@ -12,7 +12,7 @@
    0x50e04 are zero (the end of the previous module's block, and the two doubles 0x50de3/0x50deb
    that direction_to_waypoint 0x13d60 uses sit just before them).
    STRONGLY SUPPORTED, 2026-11-26: the module is 0x148db-0x15c02 - start_crash, switch_anims and
-   fn_15166 (0x14f3e-0x1517a) and race_end, winner_film, podium (0x1585e-0x15c02) moved here from
+   draw_hud_counts (0x14f3e-0x1517a) and race_end, winner_film, podium (0x1585e-0x15c02) moved here from
    rrr.c, and the module's CONST (1106 bytes at 0x50e04) is then identical in place, once
    find_waypoints' two "...SNITCH:%d" messages lose the "\n" they never had. */
 
@@ -300,7 +300,7 @@ int switch_anims(void)
 
 /* ---- 0x15166 -------------------------------------------------------------------------------- */
 
-void fn_15166(void)
+void draw_hud_counts(void)
 {
     hud_count(13);
     hud_count(23);
@@ -330,7 +330,7 @@ void fn_15166(void)
  * 0x1556c and we with two (`mov eax,eax`) at +1010, so we are one byte short
  * and its table lands at +1012 instead of +1013. Watcom aligns a jump table to
  * a 4-byte boundary inside its own object, so the pad length follows from what
- * the object holds before find_waypoints: fn_15166 (20 B, 0 mod 4) in front of
+ * the object holds before find_waypoints: draw_hud_counts (20 B, 0 mod 4) in front of
  * it keeps the two-byte pad, init_objects 0x148db (1635 B, 3 mod 4) would give
  * three. That is the module question below, not a C spelling.
  * -------------------------------------------------------------------------------------------- */

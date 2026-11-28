@@ -1,12 +1,12 @@
 /* map.c: the map cells under a racer, 0x18886-0x1918c ('map.c' guard in cell_effect).
    cell_checks ends in a jump to ground_check's epilogue, so the two are one object; the start at
-   fn_18886 is LIKELY (it follows heap.c's last function and is only called from here). */
+   range_sign is LIKELY (it follows heap.c's last function and is only called from here). */
 
 #include "rrr.h"
 
 /* ---- 0x18886 -------------------------------------------------------------------------------- */
 
-int fn_18886(int v, int lo, int hi)
+int range_sign(int v, int lo, int hi)
 {
     if (v < lo)
         return -1;
@@ -47,7 +47,7 @@ int ground_check(int n)
     if (h * 1000 << 16 > bodies[n].z) {
         h = map[(cy * map_w + (bodies[n].x >> 16) / 32) * 6 + 5];
         if (h * 1000 << 16 <= bodies[n].z) {
-            d = fn_18886(bodies[n].vy, -0x30000, 0x30000);
+            d = range_sign(bodies[n].vy, -0x30000, 0x30000);
             if (!key_left && !key_right) {
                 if (d == -1)
                     stats[bodies[n].stats].heading = turn_tbl[0][stats[bodies[n].stats].heading];
@@ -62,7 +62,7 @@ int ground_check(int n)
             cy = (bodies[n].y >> 16) / 40;
             h = map[(cy * map_w + cx) * 6 + 5];
             if (h * 1000 << 16 <= bodies[n].z) {
-                d = fn_18886(bodies[n].vx, -0x30000, 0x30000);
+                d = range_sign(bodies[n].vx, -0x30000, 0x30000);
                 if (!key_left && !key_right) {
                     if (d == -1)
                         stats[bodies[n].stats].heading = turn_tbl[8][stats[bodies[n].stats].heading];

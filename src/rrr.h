@@ -150,11 +150,11 @@ void init_objects(void);
 void camera_start(int racer);
 int ai_unstick(int racer);
 void find_bonus_objects(void);
-int fn_1aea5(void);
+int stage_is_first(void);
 int key_pressed(int scancode);
 #pragma aux key_pressed parm routine [] modify [eax ecx edx];
 void mix_stop_track(int track);
-void fn_15166(void);
+void draw_hud_counts(void);
 int switch_anims(void);
 void objects_tick(void);
 #pragma aux objects_tick modify [eax ebx ecx edx];
@@ -380,15 +380,15 @@ int free_muis_crash_anims_half(void);
 
 /* rrr.c, still unsplit */
 void hud_count(int a);
-void fn_15166(void);
+void draw_hud_counts(void);
 int free_object_tick(short n);
-int fn_18886(int v, int lo, int hi);
-int fn_1aea5(void);
+int range_sign(int v, int lo, int hi);
+int stage_is_first(void);
 int check_object_nr(int n, char *file, int line);
 int check_waypoint_nr(int n, char *file, int line);
-int obj_callback_1696c(short n);
-int obj_callback_16a63(short n);
-int obj_callback_16ad9(short n);
+int still_smoke_tick(short n);
+int boost_pickup_tick(short n);
+int orb_pickup_tick(short n);
 struct script {                             /* 24 bytes: one waypoint action of a racer's script */
     int     key;                                /* waypoint number, -1 = end */
     int     f4, f8, fc, f10, f14;
@@ -411,11 +411,11 @@ int mine_tick(short n);
 int sign_tick(short n);
 int bomb_tick(short n);
 int cactus_tick(short n);
-int fn_1733e(short n);
+int trail_tick(short n);
 int spawn_trail(int count, int racer);
 int new_boost_pickup(int x, int y);
 int new_cactus(int x, int y);
-int fn_18324(int x, int y);
+int new_orb_pickup(int x, int y);
 int new_mine(int x, int y);
 int new_sign(int x, int y, int anim);
 int new_bomb(int x, int y);
@@ -473,8 +473,8 @@ extern int            hud_speed;            /* 0x57b7c */
 extern int            hud_rockets;          /* 0x57b80 */
 extern int            hud_boosts;           /* 0x57b84 */
 void hud_update(void);
-void fn_13a78(int x, int y, int vx, int vy);
-void fn_13bb8(int racer);
+void camera_ease_to(int x, int y, int vx, int vy);
+void step_and_draw_view(int racer);
 int on_screen(int x, int y);
 int hit_test(int a, int b, int size);              /* 0x1430e */
 int next_module_set(void);
@@ -482,8 +482,8 @@ int next_module_of(int world, int groep);
 int explode_objects(int count, int racer);
 int spawn_puffs(int count, int racer, int kind);
 int follower_tick(short n);
-int fn_16e46(short n);
-int obj_callback_1709c(short n);
+int smoke_tick(short n);
+int explosion_tick(short n);
 int ground_check(int n);
 int hit_test(int n, int racer, int dist);
 int rocket_tick(short n);

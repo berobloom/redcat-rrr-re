@@ -1,7 +1,7 @@
 /* hud.c (our name; the original's is not known): the race's panel, from hud_count 0x19391.
    It is in a module after map.c (0x18b8d) and before rrrio's strings; where it starts and
    ends is not known yet. Inside rrr.c Watcom moved hud_count's entry block next to its caller
-   fn_15166 (0x15166, two modules earlier), so it cannot be in the same object as that. */
+   draw_hud_counts (0x15166, two modules earlier), so it cannot be in the same object as that. */
 
 #include "rrr.h"
 

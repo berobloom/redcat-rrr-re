@@ -258,7 +258,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
     ("sndman.c" at 0x10303/0x10350, "main.c" at 0x10eff/0x111e8) in one object means an #include.
     So that module links as itself only once start_lights 0x1103e matches. A trial split at 0x10817
     also found a missing "!" in sound_init's "Probeer andere instellingen!" (fixed in src/rrr.c).
-  - STRONGLY SUPPORTED: init.c runs 0x148db-0x15c02, with start_crash, switch_anims, fn_15166,
+  - STRONGLY SUPPORTED: init.c runs 0x148db-0x15c02, with start_crash, switch_anims, draw_hud_counts,
     race_end, winner_film and podium (in src/rrr.c today). race_end uses init's literal at 0x50e22
     (Watcom merges literals only inside one object), and those functions' strings continue init's
     CONST block.
@@ -807,7 +807,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   never does: in 0x10010-0x1B915 it shares an epilogue exactly 6 times, each time between near
   neighbours - order_add -> 0x11add, trans_generate -> 0x11e23, camera_follow -> 0x13f8b,
   racer_bounce -> 0x142d6 (racer_contact's), find_waypoints + find_bonus_objects -> 0x15565,
-  dropped0/2/4_tick + fn_16e46 -> 0x17b5b (scan: capstone over the code object for `jmp rel32`
+  dropped0/2/4_tick + smoke_tick -> 0x17b5b (scan: capstone over the code object for `jmp rel32`
   whose target starts with `pop`s and ends in `ret`).
 - Therefore (STRONGLY SUPPORTED): the game's C range is many small objects, and every share names
   two functions of one object: racer_contact, on_screen, hit_test and racer_bounce (0x1404a-0x1467b)
@@ -818,10 +818,10 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   epilogue evidence agrees. In the data object: raceanim.c's last string ends at 0x5174e, pad byte
   0x5174f, then 'shadeobj.c' (0x51750) + 'illegal shade object : %d following :%d' (0x5175b, used
   only by follower_tick 0x167aa) with no gap between them, pad byte 0x51783, then 'illegal object :
-  %d ' (0x51784, used only from obj_callback_1696c 0x1696c to dropped4_tick 0x17c74), pad bytes
+  %d ' (0x51784, used only from still_smoke_tick 0x1696c to dropped4_tick 0x17c74), pad bytes
   0x51799-0x5179b, then 'heap.c'. So shadeobj.c is follower_tick alone and the callbacks are another
   module (src/shadeobj2.c): the game gives follower_tick its own pop/ret at 0x1693a although
-  fn_16e46 + dropped0/2/4_tick share one at 0x17b5b. Splitting them won follower_tick 4 rows (13 -> 9)
+  smoke_tick + dropped0/2/4_tick share one at 0x17b5b. Splitting them won follower_tick 4 rows (13 -> 9)
   and is the first boundary that both of MATCHING.md 4's tests give at the same address.
 - CONFIRMED: inside that module dropped0_tick 0x17b61 and dropped4_tick 0x17c74 end by jmping into
   dropped2_tick 0x178f6 - at its `call aim_at_player` (0x17a11 and 0x17a0f, only the EDX argument is
@@ -890,7 +890,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   [bodies[4].stats]` + `jmp <chain>`, like the game. A separate `int s` does not (44 rows); a
   `short s` merges the chains but truncates the load to `mov ax,[..]` + `cwtl` (21 rows); the holder
   in both blocks does not (43). dropped2_tick 0x178f6 went 16 -> 2 rows and dropped0_tick,
-  dropped4_tick, mine_tick, sign_tick, bomb_tick, fn_16e46 and cactus_tick to MATCH with it (117 ->
+  dropped4_tick, mine_tick, sign_tick, bomb_tick, smoke_tick and cactus_tick to MATCH with it (117 ->
   124): the 10 bytes the split chains cost were what put the shared epilogue at 0x17b59 out of reach.
 - CONFIRMED (compile, 2026-11-28): which of two identical store blocks survives depends on the test
    polarity, not on the source text alone. `main` 0x111e8's quit-after-finish fill has four cases over
@@ -981,7 +981,7 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   (map size − view − 1 tile). `init_game` sets the view to 19 × 10 tiles
   ([0x60044], [0x60048]); `camera_follow` (0x138ed) eases 1/16 per frame
   toward x − 320 + 128·sx, y − z − 220 + 160·sy.
-- CONFIRMED (code, `camera_follow` 0x138ed, `fn_13a78` 0x13a78): the lead
+- CONFIRMED (code, `camera_follow` 0x138ed, `camera_ease_to` 0x13a78): the lead
   signs sx/sy are the signs of the racer's own 16.16 velocities vx/vy, the view
   size used is (view + 1) tiles, and each frame's scroll delta
   ((target - scroll) >> 4) is stored to 0x56060/0x56064

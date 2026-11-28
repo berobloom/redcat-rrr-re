@@ -4,9 +4,11 @@
 
 ## Sound
 snd_track_free snd_play play_fx sound_init
+wav_lookup blaster_port blaster_irq blaster_dma snd_cfg_load snd_cfg_save sound_on
 
 ## Race flow and results
-race_init finish_check start_lights race_main race_end winner_film podium
+init_game finish_check start_lights main race_end winner_film podium
+banner goodbye screenshot next_module
 
 ## View, sprites and HUD
 draw_view sort_draw_order blit_sprite blit_sprite_trans trans_generate trans_save trans_load
@@ -18,6 +20,8 @@ load_muis_drive_anims free_muis_drive_anims load_muis_drive_anims_half free_muis
 load_rc_crash_anims free_rc_crash_anims load_rc_crash_anims_half free_rc_crash_anims_half
 load_bull_crash_anims free_bull_crash_anims load_bull_crash_anims_half free_bull_crash_anims_half
 load_muis_crash_anims free_muis_crash_anims load_muis_crash_anims_half free_muis_crash_anims_half
+order_clear order_alloc order_insert_before order_add order_has nearest_colour camera_start
+hud_count draw_hud_counts
 
 ## Racers and computer drivers
 player_tick bull_tick muis_tick follower_tick direction_to_waypoint aim_at_player racer_contact
@@ -25,18 +29,28 @@ racer_bounce ai_unstick start_crash player_crash_tick bull_crash_tick muis_crash
 ai_script_find ai_waypoint_action
 
 ## Objects, pickups and hazards
-clear_objects init_objects free_object_tick obj_callback_16a63 obj_callback_16ad9 mine_tick sign_tick
-bomb_tick obj_callback_1709c cactus_tick dropped2_tick dropped0_tick dropped4_tick alloc_object
+clear_objects init_objects free_object_tick boost_pickup_tick mine_tick sign_tick
+bomb_tick explosion_tick cactus_tick dropped2_tick dropped0_tick dropped4_tick alloc_object
 free_object explode_objects new_boost_pickup new_cactus new_mine new_sign new_bomb spawn_dropped_object
+smoke_tick trail_tick rocket_tick spawn_puffs spawn_trail fire_rocket
+
+## Geometry and lookup tables
+cos_sin_init dir_tbl_init turn_tbl_init merge_tbl_init left_of hit_test range_sign
 
 ## Map, waypoints and cells
 find_waypoints find_bonus_objects ground_check cell_checks cell_effect stage_map_index stage_is_last
+stage_is_first check_object_nr check_waypoint_nr
 
 ## Input
 joystick_to_keys
+set_keys
 
 ## Saved state and scores
 rrrio_save rrrio_load high_score
+high_load
 
 ## Never called
-copy_to_strbuf open_file
+# No call, jmp or stored pointer reaches these (rrr_names.txt). The raceanim.c set functions the game
+# does not call stay with their family under View.
+copy_to_strbuf open_file movie_dir_exists movie_dir_make step_and_draw_view camera_ease_to on_screen
+new_orb_pickup orb_pickup_tick still_smoke_tick next_module_set next_module_of

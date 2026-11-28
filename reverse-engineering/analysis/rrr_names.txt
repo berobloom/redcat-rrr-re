@@ -39,9 +39,9 @@
 0x167aa follower_tick        # CONFIRMED: objects 1/3/5 callback
 0x16945 free_object_tick     # CONFIRMED: callback of the free pool
 0x19497 player_crash_tick    # CONFIRMED: object 0 callback after damage/fuel < 0 (0x14f3e): wreck driving
-0x1709c obj_callback_1709c   # CONFIRMED: callback set by 0x17e87/0x17faa
-0x16a63 obj_callback_16a63   # CONFIRMED: callback set by 0x181ba
-0x16ad9 obj_callback_16ad9   # CONFIRMED: callback set by 0x18324
+0x1709c explosion_tick       # CONFIRMED: callback of anim 17, the explosion (exhaust at damage <= 50), set by spawn_puffs 0x17e87 and explode_objects 0x17faa
+0x16a63 boost_pickup_tick    # CONFIRMED (code): the boost pickup's tick (anim 8, set by new_boost_pickup): keeps it drawn at its body's position
+0x16ad9 orb_pickup_tick      # CONFIRMED (code): as boost_pickup_tick with anim 9; set only by new_orb_pickup, which is never called
 0x1889d ground_check         # CONFIRMED: blocks cells with z < level*1000, wall slide tables 0x721e0..
 0x1404a racer_contact        # CONFIRMED: racer-racer overlap test (4 corner points 50 px ahead)
 0x14534 racer_bounce         # CONFIRMED: merges headings via 0x72de0, averages speeds
@@ -319,8 +319,8 @@
 # sndman.c (start of the game's C)
 0x10010 copy_to_strbuf       # CONFIRMED (code): sprintf(strbuf, "%s", s), returns strbuf. Never called: no call/jmp and no pointer to it in either object (name from the body)
 0x10029 open_file            # CONFIRMED (code): return fopen(name, mode) (a jmp). Never called: no call/jmp and no pointer to it in either object (name from the body)
-0x1002e movie_dir_exists     # LIKELY: _dos_findfirst("d:\\MOVIE", _A_SUBDIR) == 0
-0x10052 movie_dir_make       # LIKELY: mkdir("d:\\MOVIE"), else "Couldn't create directory %s"
+0x1002e movie_dir_exists     # LIKELY: _dos_findfirst("d:\\MOVIE", _A_SUBDIR) == 0. Only caller: movie_dir_make, which is never called
+0x10052 movie_dir_make       # LIKELY: mkdir("d:\\MOVIE"), else "Couldn't create directory %s". Never called: no call/jmp and no pointer to it in either object
 0x10078 wav_lookup           # LIKELY: index of a .wav name in wav_names (stricmp) -> wav_handles[i], else -1
 0x100ae blaster_port         # CONFIRMED (code): index of "A210".."A260" in getenv("BLASTER"), else -1
 0x100f1 blaster_irq          # CONFIRMED (code): index of "I2".."I10" in BLASTER, else -1
@@ -386,7 +386,7 @@
 0x7f97c tile_x               # STRONGLY SUPPORTED: view left column in tiles (scroll_x = tile_x * 32 in draw_view)
 0x7f980 scroll_y             # LIKELY: draw_view gets scroll_y % 40 (tile height); one of camera_follow's two scroll coordinates (0x138ed eases [0x7f984],[0x7f980])
 0x7f984 scroll_x             # LIKELY: draw_view gets scroll_x % 32 (tile width)
-0x56060 scroll_step_x        # LIKELY: this frame's scroll_x delta ((target - scroll_x) >> 4); written only by camera_follow 0x138ed and fn_13a78 0x13a78, never read here
+0x56060 scroll_step_x        # LIKELY: this frame's scroll_x delta ((target - scroll_x) >> 4); written only by camera_follow 0x138ed and camera_ease_to 0x13a78, never read here
 0x56064 scroll_step_y        # LIKELY: the same for scroll_y
 0x1b929 sprintf              # STRONGLY SUPPORTED: the matched copy_to_strbuf and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
 0x1475f camera_start         # STRONGLY SUPPORTED: puts the camera on the player after init_objects, scroll clamped to the map (discoveries.md)
@@ -416,7 +416,7 @@
 0x11ae3 order_has            # CONFIRMED (code): 1 when the sprite is in the list
 0x11c11 nearest_colour       # CONFIRMED (code): (r, g, b) -> palette index with the smallest squared distance (shade.c)
 0x7fd38 palette              # CONFIRMED (code): 256 x RGB bytes, read by nearest_colour and trans_generate
-0x13a78 fn_13a78             # CONFIRMED (code): camera_follow's twin for a pixel position - eases scroll_x/scroll_y 1/16 toward (x, y) - view + a lead of 64/80 px following the sign of vx/vy, clamps to the map, recomputes tile_x/tile_y; called only by fn_13bb8
+0x13a78 camera_ease_to       # CONFIRMED (code): camera_follow's twin for a pixel position: eases scroll_x/scroll_y 1/16 toward (x, y) with a 64/80 px lead by the sign of vx/vy, clamps to the map, recomputes tile_x/tile_y. Only caller: step_and_draw_view, which is never called
 0x13c34 cos_sin_init         # CONFIRMED (code): cos_tbl/sin_tbl[h] = cos/sin(-(h+8)*pi/16) * 65536
 0x13cba dir_tbl_init         # CONFIRMED (code): dir_tbl[r][c] = (56 - round(atan2(c-16, r-16)*16/pi + 16)) & 31, printed with %2d
 0x13f00 turn_tbl_init        # CONFIRMED (code): turn_tbl[target][current]: one step toward target the short way
@@ -483,12 +483,12 @@
 0x1bd71 mem_images_add_set   # CONFIRMED (code): for each anim index of a -1-terminated set, mem_images_add_anim(&anim_list[i])
 0x1bda1 mem_images_add_set_half # CONFIRMED (code): as mem_images_add_set, but first gives every odd frame its even neighbour's image (frames 2k+1 = 2k), so a set pages in half the images
 0x19391 hud_count            # CONFIRMED (code): draws boosts (13) or rockets (23) as two digits at (389|494, 415); any other value draws with uninitialised locals
-0x15166 fn_15166             # CONFIRMED (code): fn_19391(13); fn_19391(23)
-0x18886 fn_18886             # CONFIRMED (code): -1 below lo, 1 above hi, else 0
-0x1aea5 fn_1aea5             # CONFIRMED (code): walks stage_table[world-1] down from the stage while entries are non-zero
+0x15166 draw_hud_counts      # CONFIRMED (code): hud_count(13) and hud_count(23), the boosts and rockets counters; called once by init_game
+0x18886 range_sign           # CONFIRMED (code): -1 below lo, 1 above hi, else 0; called twice by ground_check (0x18962, 0x18a31)
+0x1aea5 stage_is_first       # STRONGLY SUPPORTED: walks stage_table[world-1] down from the stage while entries are non-zero, 1 if it did not move: stage 0 or a non-race entry, in effect stage == 0 for a race (stage_is_last's mirror); init_game plays start.wav when it is 1
 0x1b67b check_object_nr      # CONFIRMED (code): ' %s(%d) : objectnr %d error' unless 0..255; returns n
 0x1b69d check_waypoint_nr    # CONFIRMED (code): ' %s(%d) : Waypointnr %d error' unless 0..150; returns n
-0x1696c obj_callback_1696c   # CONFIRMED (code): same body as 0x16a63/0x16ad9 with anim 7; shares their tail
+0x1696c still_smoke_tick     # CONFIRMED (code): the static-pickup tick (as boost_pickup_tick) with anim 7, the smoke cloud. Never set: no pointer to it in either object
 0x57c90 script2              # CONFIRMED: Brutus's waypoint script, 24-byte entries, 720 bytes per world (ai_script_find)
 0x5bd40 script4              # CONFIRMED: Snitch's, the same layout
 0x1ad9a next_module          # CONFIRMED: the next enabled module after the stage (discoveries.md, REKEN 0x10cad)
@@ -497,8 +497,8 @@
 0x753b0 high                 # CONFIRMED (code): 10 x 38-byte high-score entries {name[30], score, world}
 0x5fdf4 high_names           # CONFIRMED (code): 3 default names, picked by rand() % 3
 0x180d3 spawn_trail          # LIKELY: heap.c; count objects at a racer's position (anim 3, its heading as frame, life 6, callback 0x1733e)
-0x18324 fn_18324             # CONFIRMED (code): new_boost_pickup's twin with anim 9 and obj_callback_16ad9
-0x1733e fn_1733e             # CONFIRMED (code): object callback, set by spawn_trail
+0x18324 new_orb_pickup       # CONFIRMED (code): new_boost_pickup's twin with anim 9 (a spinning purple orb with red balls, RC images 36, 136-144, 106..) and orb_pickup_tick. Never called: no call/jmp and no pointer to it in either object. 'orb' is from the sprites' look; what it was meant to be is unknown
+0x1733e trail_tick           # CONFIRMED: callback of RedCat's boost after-images, set by spawn_trail (discoveries)
 0x56078 crash0               # CONFIRMED: set when the player's fuel/damage runs out (discoveries.md); switch_anims acts on it
 0x56080 crash2               # CONFIRMED: the same for Brutus (racer 2)
 0x5607c crash4               # CONFIRMED: the same for Snitch (racer 4)
@@ -521,12 +521,12 @@
 0x57b7c hud_speed            # CONFIRMED (code): the same for |speed * 11 / 20| (fixed point)
 0x57b80 hud_rockets          # CONFIRMED (code): the same for rockets (hud_count 23)
 0x57b84 hud_boosts           # CONFIRMED (code): the same for boosts (hud_count 13)
-0x13bb8 fn_13bb8             # CONFIRMED (code): a prologue after a ret; not called directly
-0x142dc on_screen            # CONFIRMED (code): 1 when (x, y) is at least 40 px inside the screen; not called directly
-0x16e46 fn_16e46             # CONFIRMED (code): object callback (its address is stored by the code)
+0x13bb8 step_and_draw_view   # CONFIRMED (code): objects_tick, camera_ease_to(racer's position and velocity), draw_view. Never called: no call/jmp and no pointer to it in either object
+0x142dc on_screen            # CONFIRMED (code): 1 when (x, y) is at least 40 px inside the screen. Never called: no call/jmp and no pointer to it in either object
+0x16e46 smoke_tick           # CONFIRMED: callback of the exhaust's anim 7 smoke (damage > 50, spawn_puffs): life - 1, drifts, settles on the ground (discoveries 'smoke')
 0x175b4 rocket_tick          # CONFIRMED: the rocket callback (discoveries.md): life, hit_test against 2, 4, 0, walls and cacti
-0x1ae20 next_module_set      # CONFIRMED (code): next_module(1, -1, -1); not called directly
-0x1ae36 next_module_of       # CONFIRMED (code): next_module(0, world, groep); not called directly
+0x1ae20 next_module_set      # CONFIRMED (code): next_module(1, -1, -1). Never called: no call/jmp and no pointer to it in either object
+0x1ae36 next_module_of       # CONFIRMED (code): next_module(0, world, groep). Never called: no call/jmp and no pointer to it in either object
 0x17e87 spawn_puffs          # CONFIRMED (code): heap.c; count exhaust/dust puffs around a racer (anim 7 / 17 by the third argument, life 6)
 0x185d4 fire_rocket          # CONFIRMED: the rocket key fires it (discoveries.md); a rocket_tick object 25 px ahead along the racer's heading, life 100
 0x55fd8 key_right            # STRONGLY SUPPORTED (code): player_tick stores key_pressed(keymap[6]) here (0x11fcd)

@@ -1,6 +1,6 @@
 /* heap.c: the race's object pool and the objects it hands out, 0x17e0b-0x18885 (the
    'heap.c' guards at 0x17e87, 0x17faa and 0x180d3; heap.c's strings follow shadeobj.c's).
-   Where the module ends is LIKELY: fn_18886 and ground_check (0x1889d) are left in rrr.c until
+   Where the module ends is LIKELY: range_sign and ground_check (0x1889d) are left in rrr.c until
    map.c's start is known. */
 
 #include "rrr.h"
@@ -49,10 +49,10 @@ int spawn_puffs(int count, int racer, int kind)
         objects[n].period = 2;
         if (kind > 50) {
             objects[n].anim = 7;
-            objects[n].callback = (void (*)(void))fn_16e46;
+            objects[n].callback = (void (*)(void))smoke_tick;
         } else {
             objects[n].anim = 17;
-            objects[n].callback = (void (*)(void))obj_callback_1709c;
+            objects[n].callback = (void (*)(void))explosion_tick;
         }
         objects[n].frame = 0;
         bodies[n].x = ((rand() & 15) - 7 << 16) + bodies[racer].x;
@@ -81,7 +81,7 @@ int explode_objects(int count, int racer)
         if (n == -1)
             return -1;
         objects[n].period = 1;
-        objects[n].callback = (void (*)(void))obj_callback_1709c;
+        objects[n].callback = (void (*)(void))explosion_tick;
         objects[n].anim = 17;
         objects[n].frame = 0;
         bodies[n].x = bodies[racer].x;
@@ -112,7 +112,7 @@ int spawn_trail(int count, int racer)
         if (n == -1)
             return -1;
         objects[n].period = 1;
-        objects[n].callback = (void (*)(void))fn_1733e;
+        objects[n].callback = (void (*)(void))trail_tick;
         objects[n].anim = 3;
         objects[n].frame = stats[bodies[racer].stats].heading;
         bodies[n].x = bodies[racer].x;
@@ -137,7 +137,7 @@ int new_boost_pickup(int x, int y)
     if (n == -1)
         return -1;
     objects[n].period = 2;
-    objects[n].callback = (void (*)(void))obj_callback_16a63;
+    objects[n].callback = (void (*)(void))boost_pickup_tick;
     objects[n].anim = 8;
     objects[n].frame = rand() % animset[objects[n].anim].count;
     bodies[n].z = 0;
@@ -176,7 +176,7 @@ int new_cactus(int x, int y)
 
 /* ---- 0x18324 -------------------------------------------------------------------------------- */
 
-int fn_18324(int x, int y)
+int new_orb_pickup(int x, int y)
 {
     int n;
 
@@ -184,7 +184,7 @@ int fn_18324(int x, int y)
     if (n == -1)
         return -1;
     objects[n].period = 2;
-    objects[n].callback = (void (*)(void))obj_callback_16ad9;
+    objects[n].callback = (void (*)(void))orb_pickup_tick;
     objects[n].anim = 9;
     objects[n].frame = rand() % animset[objects[n].anim].count;
     bodies[n].z = 0;
