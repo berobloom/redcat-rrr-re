@@ -218,6 +218,11 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   sound_init 0x1043a: each its own `return -1`).
 - **A fill loop, not memset:** `for (i = 0; i < 4; i++) tracks[i] = -1;` gives the game's `_STOSD`
   call with ECX = 4, EDX = -1; `memset` gives other registers (sound_init).
+- **`vbatch.py`'s edit lists are `(old, new)` pairs.** A bare replacement string in one is not a
+  variant: the batch dies on it part-way through, after scoring the earlier variants, so an
+  "aborted" batch line means the variants below it never compiled (`player_crash_tick` 0x19497,
+  2026-11-29).
+
 - **A local the original initialises before anything else = the game's zero register.** `player_tick`
   0x11eb5: `want = 0;` as the FIRST statement, 136 -> 121 rows. The game materialises 0 once
   (`xor ebp,ebp` 0x11ec6) and stores that one register at every `= 0` of the block (seven key globals
