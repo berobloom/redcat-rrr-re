@@ -99,7 +99,13 @@ void camera_follow(int racer)
  * leads as separate statements, a hoisted w = vw << 4, sx/sy locals, the clamps as * 32, * 5 * 8,
  * * 8 * 5, * 40u and with unsigned casts, a separate (map_w - vw) local, vw as int (both spill
  * differently) and this function compiled in an object of its own with camera_follow and
- * fn_13bb8 (camera_follow stays at its 62 rows there, the same mirror).
+ * fn_13bb8 (camera_follow stays at its 62 rows there, the same mirror). 2026-11-28, 12 more in-module
+ * variants (.work/pi/gc/v13.py, control 15): the ground_check CSE lever - `vw = view_tiles_w + 1;` /
+ * `vh = view_tiles_h + 1;` written again before the clamp that reads them (68 / 65 / 75), `t` split
+ * into two locals (16), the x limit as `* 32` (15, byte-identical), one merged short declaration
+ * (15, byte-identical), the declaration order swapped (20), each lead written with its sign term first
+ * (21 / 16 / 22), the leads as six plain statements (53), vw/vh as int (50). Nothing below 15, so the
+ * three mirrors stay Watcom's.
  * -------------------------------------------------------------------------------------------- */
 
 void fn_13a78(int x, int y, int vx, int vy)

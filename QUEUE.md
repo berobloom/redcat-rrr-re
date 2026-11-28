@@ -585,3 +585,14 @@ Rules for the agent:
     common subexpression", open question 29 closed. Q6's remaining unwalked lines: `fn_13a78` 0x13a78
     (15), `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42),
     `bull_tick` 0x12826 (50), `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight, second function of this pass): `fn_13a78` 0x13a78 stays 15 rows after 12
+    in-module vbatch spellings (`.work/pi/gc/v13.py`, control 15); `txclamplocal` (`* 32` for `<< 5`)
+    and `declmerge` (one `short vw, vh, tx, ty;`) hold 15 with byte-identical code, everything else is
+    worse, so nothing went into `src/` (`src/check.sh` 129 MATCH, 0 WRONG, DATA 9677/9677). The new
+    repeated-assignment lever is CONFIRMED inert here: writing `vw = view_tiles_w + 1;` (or the `vh`
+    one) again before the clamp that reads it costs 68 / 65 / 75 rows - this function has no product
+    CSE to lose, `vw` and `vh` are re-loaded from their own homes already (the game's `movsx eax,word
+    [esp]` at 0x13b30 vs `vw` in DX at 0x13b61). Its 15 rows stay three EAX/EBX-EDX mirrors plus the
+    copy `mov ebx,eax` (0x13aa4) the mirror costs us, which is why ours is 321 bytes and the game 320
+    (CONFIRMED by the side-by-side dump in the differs note). Its nearmiss line now starts `ON:`
+    (round 1 done). Q6's next unwalked line: `camera_follow` 0x138ed (19).

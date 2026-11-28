@@ -93,7 +93,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    `cy = (bodies[n].y >> 16) / 40;` again before the last cell lookup kills WCC's CSE of `cy * map_w`, so the
    quotient survives the branch and each lookup multiplies it into its own register - the game's 584 bytes
    (GOTCHAS "Levers", open question 29 closed). 129 of 147 (87.8%), 0 WRONG, DATA 9677/9677, 16 near misses;
-   the whole `src/map.c` 0x18886-0x1918c now MATCHes (the Q4 lead). Q6's next line: `fn_13a78` (15). Earlier in
+   the whole `src/map.c` 0x18886-0x1918c now MATCHes (the Q4 lead). Q6's next line: `camera_follow` 0x138ed (19), `fn_13a78` round 1 done. Earlier in
    `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
