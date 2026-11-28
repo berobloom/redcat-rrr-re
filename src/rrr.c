@@ -275,7 +275,20 @@ void merge_tbl_init(void)
    (`mov esi,eax`) and uses EAX for the x3 - x2 temp, ours keeps x1 in EAX and uses ESI for the
    temp. 4 bytes shorter. Tried: one expression in four operand orders, a, b locals, if/return,
    > between the products, compound assignments on y1 and x1 (this one), a copy t = x1, the two
-   halves swapped, longhand instead of compound, `y1 > x1`, temporaries for the two products. */
+   halves swapped, longhand instead of compound, `y1 > x1`, temporaries for the two products.
+   2026-11-29 (.work/pi/left_of/v.py, v2.py, 21 variants scored serially, none below 8; eleven tie
+   at 8 with our same 41 bytes): `int t = x1;`/`int t; t = x1;` used for the second product, the
+   first product in a local, the second in a local, four locals for the four differences, one
+   return expression, `(y1 - y3) * (x3 - x2) - (x1 - x3) * (y3 - y2) > 0` 22, `y1 > x1` after two
+   plain products 11, `0 < y1 - x1`, parenthesised longhand, `register int x1` on the first
+   parameter, the multiplication operands flipped in each product, x3 and y3 held in locals, the
+   subtractions flipped (`x1 = x3 - x1; x1 *= y2 - y3;`) 10, and the four statements in three
+   interleavings - `x1 -= x3;` second (8, same bytes), third (14) and last (14). What the mirror
+   costs, byte for byte (.work/pi/lo/dump.py): the game moves x1 out of its home register at entry
+   (`mov esi,eax` 0x1401e) and moves it back for the second multiply (`mov eax,esi` 0x14037), where
+   we keep x1 in EAX and give ESI to the x3 temp; that is the whole 4-byte gap. CONFIRMED on our own
+   compile: the 3rd parameter sits in EBX and the 4th in ECX here (first product reads EBX, second
+   ECX) - the same as the game's, so the C's parameter mapping is the game's. */
 int left_of(int x1, int y1, int x2, int y2, int x3, int y3)
 {
     y1 -= y3;

@@ -522,3 +522,15 @@ Rules for the agent:
     .work/src/CRASHMUIS.OBJ muis_crash_tick 0x1a42a | tail -1` says 6, `src/check.sh 2>&1 | grep -c '
     MATCH at'` = 128, `grep -c WRONG` = 0, DATA 9677 of 9677. Its nearmiss line now starts `ON:`.
     Next: `left_of` 0x1401d (8).
+  - 2026-11-29 (overnight): fourth function, `left_of` 0x1401d: stays 8 rows after 21 spellings
+    scored serially with vbatch.py (.work/pi/left_of/v.py, v2.py); eleven of them keep our same
+    41-byte code, none goes below 8, so nothing went into `src/`. The eight rows are one mirror, now
+    named byte for byte (.work/pi/lo/dump.py): the game moves x1 out of its home register at entry
+    (`mov esi,eax` 0x1401e), puts the `x3` stack load in EAX and moves x1 back for the second
+    multiply (`mov eax,esi` 0x14037); we keep x1 in EAX and give ESI to the x3 temp, which is 4 bytes
+    cheaper and is why our `pop esi`/`ret 8` (0x14042/0x14043) sit unmatched. CONFIRMED on our own
+    compile: the 3rd parameter arrives in EBX and the 4th in ECX (first product reads EBX, second
+    ECX) - the game reads them in the same order, so the C's parameter mapping is the game's and the
+    rows are not a mapping question. Check: `fndiff.py rrr .work/src/RRR.OBJ left_of 0x1401d | tail -1`
+    says 8, `src/check.sh 2>&1 | grep -c ' MATCH at'` = 128, `grep -c WRONG` = 0, DATA 9677 of 9677.
+    Its nearmiss line now starts `ON:`. Q6's next unwalked line is `spawn_dropped_object` 0x18759 (8).
