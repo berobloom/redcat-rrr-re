@@ -309,7 +309,14 @@ both switch arm orders cost (49 want / 39 f24), the vz h-chain arm order 37, the
 156, `int k` 92 and `unsigned short k` 25 (so `short k`), the second play_fx abs mirrored 28, a
 heading local 127, a speed local 59, the top_speed test mirrored 46 (line added 2026-11-28 for QUEUE
 Q6; history in QUEUE.md Q5, src/muis.c))
-42 0x19c8c bull_crash_tick  ON: 2026-11-28 32 variants (hload3, sload3, sload3post, sboth, gload,
+42 0x19c8c bull_crash_tick  ON2: 2026-11-28 15 variants (dlate, dinblock, dinline, wantisf, misint,
+declrev, declk, mlit, guardswap, headswap, demail, v7local, fint, guardnot, wantint_demail), best 42
+rows (control; demail, fint, guardswap and wantint_demail also 42) - where d is materialised, want
+merged into f or signed, the tail declaration order, m inlined, the else guard merged with the v55ff8
+test and De Morgan on the speed guard all leave the 42 alone; v7local 216, declk 124, mlit 146,
+wantisf 134, dlate 168, dinblock 145, dinline 172, headswap 44, guardnot 43. Round 2 adds nothing to
+the round-1 reading: the five ties are the allocator's.
+   ON: 2026-11-28 32 variants (hload3, sload3, sload3post, sboth, gload,
    elseelif, hswitch, dmul16, switchfield, want3first, f24_3first, load3gload, ktoint, muns, gouns,
    hshort, dabs, vzgt, waypplus, f1cgo, zerothenf1c, headafterd, speed0f, booster, mdecl, framefirst,
    zassign, speedassign, defF24, defWant, defBoth, guardne), best 42 rows (control; muns, gouns,

@@ -40,7 +40,14 @@
    confirm `short k`/`int h`; both switch arm orders cost (60/63) and the y `abs()` mirror 51;
    `default: break;` on either switch, `d * 16`, `bodies[n].vz > -0x140000`, `f1c = go`, `f24 = 3`,
    the two boost stores swapped, `int m = 0x1f` in the declaration and `unsigned m`/`unsigned go`
-   change no byte. Same tie class as open question 36 (WCC's allocator, not its scheduler).
+   change no byte. 2026-11-28 round 2, 15 more (.work/pi/bct2/v.py, v2.py: dlate, dinblock, dinline,
+   wantisf, misint, declrev, declk, mlit, guardswap, headswap, demail, v7local, fint, guardnot,
+   wantint_demail) also leave 42 (CONFIRMED, same compile path): where `d` is materialised is a real
+   choice - moving the assignment past the `period == -1` return costs 126 rows, into the
+   `!finished2 && !wait2` block 103, and inlining `fixdiv(0x1e0000, ...)` at its three uses 130 - and
+   merging `want` into `f` costs 92, `m` into its uses 104, reversing the tail declarations 37 and
+   caching v71918 in a local 174, while `int want`, `int f`, the merged else guard and the De Morgan
+   speed guard print byte-identical code. Same tie class as open question 36 (WCC's allocator, not its scheduler).
    src/nearmiss.txt. */
 int bull_crash_tick(short n)
 {
