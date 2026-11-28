@@ -89,14 +89,18 @@ Short: where the project stands, and what is next. History is in git; no diary.
    rows are one register mirror that the dispatch construct BELOW the period store decides - open
    question 36) and `follower_tick` 0x167aa holds 9 after 20 more spellings (the `frame = 32` store is
    already byte-identical; a named `int m = n;` costs 15). Both nearmiss lines now start `ON:`; counts
-   unchanged at 128 of 147. Q6's next unwalked line is `ground_check` 0x1889d (13). Earlier in
+   unchanged at 128 of 147. 2026-11-28 overnight: `ground_check` 0x1889d is a **MATCH**: writing
+   `cy = (bodies[n].y >> 16) / 40;` again before the last cell lookup kills WCC's CSE of `cy * map_w`, so the
+   quotient survives the branch and each lookup multiplies it into its own register - the game's 584 bytes
+   (GOTCHAS "Levers", open question 29 closed). 129 of 147 (87.8%), 0 WRONG, DATA 9677/9677, 16 near misses;
+   the whole `src/map.c` 0x18886-0x1918c now MATCHes (the Q4 lead). Q6's next line: `fn_13a78` (15). Earlier in
    `src/init.c`: `init_objects` 0x148db (1635 B) in front of
    `find_waypoints` 0x1517a lands the game's three jump-table pad bytes at 0x1556c, and
    `find_waypoints` with `unsigned short w` and no n local is 190 -> 0 rows (open question 30).
 2. Otherwise: a near miss (item 3). Nothing in 0x10010-0x1B915 is unwritten C any more:
    `blit_sprite` 0x11bb4 and `blit_sprite_trans` 0x17d94 carry `ASM:` lines in `src/nearmiss.txt`
    (the game's two `enter`-frame assembly modules, discoveries "Executables"), so `PROGRESS.md` reads
-   128 of 147 (87.1%), 17 near misses, 0 not written, 2 assembly, and `grep -c 'not in src/ yet'
+   129 of 147 (87.8%), 16 near misses, 0 not written, 2 assembly, and `grep -c 'not in src/ yet'
    PROGRESS.md` is 0. What follows is how that C got written: 2026-11-27 wrote the three normal
    ticks, player_tick 0x11eb5 (193 rows),
    bull_tick 0x12826 (208) and muis_tick 0x130f8 (87), into a second new module `src/drive.c`: the
@@ -232,7 +236,7 @@ Short: where the project stands, and what is next. History is in git; no diary.
    script index homed in a register so the arms re-derive the offset, and two wait bodies) at 39 rows,
    but WCC's switch tree is not the game's two cmp/jne - no spelling of the chain gives the index a
    home. See the differs note in `src/ai.c` and nearmiss.txt.
-   2026-11-28: `src/check.sh` is at 128 MATCH (128/147, 87.1%); `src/data.baseline` 9677/9677.
+   2026-11-28: `src/check.sh` is at 129 MATCH (129/147, 87.8%); `src/data.baseline` 9677/9677.
    QUEUE: Q2 (library map) and Q4 (first WLINK) are both marked READY FOR REVIEW - Q4's Accept line
    holds, `link.sh .work/link/q4check $(cat .work/link/libobjs.args11)` -> `LINK: 419179 of 419179
    file bytes identical`, every section IDENTICAL, 9909/9909 fixups identical. `muis_crash_tick`

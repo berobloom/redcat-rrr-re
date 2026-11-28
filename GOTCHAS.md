@@ -237,6 +237,17 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   in the game; `vol = dist; if (dist < 1) vol = 1;` after the test copies it after the call instead,
   and every spelling that keeps a separate local before the test is worse.
 
+- **Re-assigning a variable throws away Watcom's common subexpression built from it.** ground_check
+  0x1889d read the row `cy = (bodies[n].y >> 16) / 40;` once and used `cy * map_w` in two cell lookups
+  in different branches: 10.5 computes the product once, keeps it live in EAX across the branch and
+  reuses it - 8 bytes shorter than the game, 13 rows, all of them that one pair plus the epilogue it
+  shifts. Writing the same assignment again before the second lookup (the value cannot have changed)
+  kills the CSE: the quotient stays live and each lookup multiplies it into its own register, which
+  is exactly the game's 0x189f9 `mov edx,[map_w]; imul edx,eax` and 0x18aab `imul eax,[map_w]` ->
+  MATCH, 584 bytes. Against the single-assignment text nothing else reached that shape: holders for
+  the product, the row or the column, `map_w` cached, the division split, casts and operand orders all
+  stayed at 13 or went to 43-46 (.work/pi/gc/v.py, v2.py).
+
 - **Watcom re-associates sums; parentheses keep the game's common subexpression:**
   `(short) (((bodies[b].x + dx1) + dx2) >> 16)` and `(short) (((bodies[b].x + dx1) - dx2) >> 16)` give
   the game's one `add edx,[esp+dx1]` shared by both corners; without the inner parentheses Watcom
@@ -408,16 +419,12 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   ~5000 in-module declaration orders (3600 with the winning shape, 1400 with `h` moved into the
   tail, .work/probe/ht) each move another slot or flip x1 to a register - the slot *numbers* are
   not steerable from C.
-- **ground_check 0x1889d's last 13 rows (41 -> 15 -> 13):** setting `cy` again to the current row
-  before the second lookup fixed the d == -1 arm (2026-11-26); what is left is the second lookup's
-  kept `cy * map_w` product (ours 1 byte longer, everything after it shifted). The analysis of the
-  15-row state: which temporary survives the inner branch. The game keeps
-  `(bodies[n].y >> 16) / 40` in EAX, multiplies into a fresh register (`mov edx,[map_w]; imul
-  edx,eax; add edx,ebp; imul edi,edx,6`) and recomputes `imul eax,[map_w]` at 0x18aab; 10.5 keeps the
-  product instead and so is 9 bytes shorter. The same expression with one register less busy does
-  come out the game's way (.work/probe/gc3/Q.C q0/q1), so it is register pressure, not the text:
-  index operand orders, 720 declaration orders, ox/oy local or inline, the product as its own local,
-  an int map_w and the if/ternary/key spellings all stayed at 15.
+- **ground_check 0x1889d was not register pressure (41 -> 15 -> 13 -> MATCH 2026-11-28):** the 13
+  rows all came from one common subexpression, and the lever is in the Levers list above. What the
+  earlier sessions' "pressure, not the text" reading cost: 720 declaration orders, holders for the
+  product / row / column, casts and operand orders (`.work/probe/gc5-gcb`, `.work/gc/v1-v8`) - all
+  inert or worse. If a near miss's rows are one instruction pair plus everything after it shifted,
+  check for a repeated assignment before blaming the allocator.
 
 ## Working with agents
 

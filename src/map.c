@@ -18,29 +18,25 @@ int fn_18886(int v, int lo, int hi)
 
 /* ---- 0x1889d -------------------------------------------------------------------------------- */
 
-/* 2026-11-26: 15 -> 13 rows by reassigning cy to the current row ((bodies[n].y >> 16) / 40) before
-   the second lookup and reading it again in the third: the d == -1 arm's stats register (below)
-   comes right with it. Left: the second lookup's product only. Also tried then, all >= 13: holders
-   for the x and y quotients over d/cx/cy/new locals (45, .work/probe/gc5), operand orders of the
-   second and third index (108 + 98, gc6/gc8), product and row holders (gc7), the vx/vy stores
-   before the third lookup (gc9, 54+), and casts that make the products different expressions -
-   (int)map_w, (unsigned)cy, ... - in up to two of the four lookups (49 + 112, gca/gcb).
-   differs: 15 rows (was 41). Writing the x and y cell indices inline (no ox/oy locals) puts n in
-   ESI, the cell height h in EDI and the division by 40 in EDI, as the game has them: the ox/oy
-   locals made Watcom keep n in EDI and h in ESI, a mirror of 20+ rows. What is left:
-   - the second cell lookup (0x189ff): the game keeps (bodies[n].y >> 16) / 40 in EAX and multiplies
-     into a fresh register (`mov edx,[map_w]; imul edx,eax; add edx,ebp; imul edi,edx,6`), so its
-     third lookup recomputes `imul eax,[map_w]` at 0x18aab; 10.5 propagates the product instead
-     (`imul eax,[map_w]; add ebp,eax; imul edi,ebp,6`) and reuses it, 9 bytes shorter, which moves
-     our epilogue back. That is Watcom's choice of which temporary to keep live across the inner
-     branch, not a C spelling - open question 29. Tried: ox/oy as locals and inline (both), the
-     product as its own local, `map_w * oy` operand order (unsigned map_w turns the division into
-     `div`, 59 rows), an int map_w (same), all four index orders, reassigned cy, every declaration
-     order of the locals, and the if/ternary/key-test spellings; the game's shape does come out of
-     the same expression in a probe with one register less busy (.work/probe/gc3/Q.C q0/q1:
-     `mov esi,[map_w]; imul esi,eax`), so pressure, not the text, picks it here.
-   - in the d == -1 arm (0x1898e) the game takes bodies[n].stats into EAX (its d is dead there) and
-     we into EDX; same family, no spelling found. (Fixed 2026-11-26, see above.) */
+/* MATCH 2026-11-28 (584 bytes, the game's length): the row is NAMED TWICE - the statement
+   `cy = (bodies[n].y >> 16) / 40;` stands before the last lookup as well as before the second. The
+   second assignment redefines cy, so Watcom's CSE may not carry the product `cy * map_w` past it:
+   the quotient stays live in EAX and each lookup multiplies it into its own register
+   (`mov edx,[map_w]; imul edx,eax; add edx,ebp; imul edi,edx,6` at 0x189f9, then
+   `imul eax,[map_w]` at 0x18aab) - the game. Written once, 10.5 keeps the product instead
+   (`imul eax,[map_w]; add ebp,eax; imul edi,ebp,6`) and reuses it at the last lookup, 8 bytes
+   shorter: 13 rows, all of them that pair plus the epilogue they shift. Nothing can change
+   bodies[n].y between the two assignments (the arm that writes bodies[n].vy returns first), so the
+   second one is a shape statement, not a behavioural one.
+   Earlier: 41 -> 15 by writing the x and y cell indices inline (no ox/oy locals: inline puts n in
+   ESI and the cell height and /40 divisor in EDI, as the game has them), and 15 -> 13 on
+   2026-11-26 by the FIRST cy reassignment, which also brought the d == -1 arm's stats register
+   (0x1898e) into line. Inert or worse here (.work/pi/gc/v.py, v2.py, control 13): the product, the
+   x column or a second row local each as their own local (44-46), map_w cached in a local (44),
+   the row division split in two statements (44), the division inlined at either lookup (13/15),
+   `map_w * cy` and `cx + cy * map_w` and `6 * (..)` (13 - WCC canonicalises operand order),
+   `register int n`, three of the 24 declaration orders (43 for two of them), each else written as
+   a fall-through after `return`, and the outer test written positively. */
 int ground_check(int n)
 {
     int h, cx, cy, d;
@@ -78,6 +74,7 @@ int ground_check(int n)
                     h = 0;
                 return h;
             } else {
+                cy = (bodies[n].y >> 16) / 40;
                 h = map[(cy * map_w + (bodies[n].x >> 16) / 32) * 6 + 5];
                 bodies[n].vx = 0;
                 bodies[n].vy = 0;

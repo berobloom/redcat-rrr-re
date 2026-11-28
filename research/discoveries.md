@@ -913,6 +913,25 @@ All 32-bit programs are Watcom C, LE format, bound to DOS/4GW. Details in
   `movsx eax, word ptr [eax + 0xe]` - the same shape as the four lamps around it, whose products DO
   fold into EAX, so the game's C there differs from the text that matches the other four.
 
+## Toolchain: what kills a common subexpression
+
+- CONFIRMED (compile, 2026-11-28, ground_check 0x1889d): assigning to a variable throws away every
+  CSE'd expression built from it, so a product the compiler could have kept live in a register across
+  a branch is recomputed once per use instead. ground_check's row `cy = (bodies[n].y >> 16) / 40;`
+  feeds two cell lookups in different branches. Written once, 10.5 keeps the product `cy * map_w` in
+  EAX and reuses it at the second lookup (576 bytes, 13 rows, all of them that pair plus the shifted
+  epilogue). Repeating the same assignment before the second lookup - a value nothing in between can
+  change, the arm that writes bodies[n].vy returns first - makes WCC keep the quotient and emit
+  `mov edx,[map_w]; imul edx,eax` at 0x189f9 and `imul eax,[map_w]` at 0x18aab: the game's 584 bytes,
+  0 rows, no WRONG fixup (.work/pi/gc/v2.py `cyagain4`; the same assignment inside the index
+  expression, `cyinexpr4`, scores the same). SPECULATIVE: the other open questions in that family
+  (25, 26, 28) hold rows of the same shape and should be re-checked against this lever.
+- CONFIRMED (same compile, .work/pi/gc/v.py): WCC canonicalises commutative operands - `map_w * cy`,
+  `cx + cy * map_w` and `6 * (..)` compile byte-identical to `cy * map_w + cx` and `* 6 + 5` (13 rows,
+  bytes equal to control) - so an operand-order probe can never move a row of that kind. Writing the
+  division inline at the use site instead of reading the local is byte-identical too when the value
+  feeds one lookup (inlrow3): what crosses a branch is WCC's value numbering, not the C spelling.
+
 ## The race: drawing (draw_view 0x11526, new2io.c)
 
 - CONFIRMED: the view is drawn into an off-screen buffer and copied to the

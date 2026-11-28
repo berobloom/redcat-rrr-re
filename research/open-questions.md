@@ -207,7 +207,14 @@
     the mode/period/anim/bodies statements reordered. The rest of the function
     is byte-identical, so - as in open questions 25 and 26 - a new mechanism is
     worth more than more spellings.
-29. **Open: which temporary WCC386 keeps live across a branch.**
+29. **RESOLVED 2026-11-28: which temporary WCC386 keeps live across a branch - the source says it.**
+    ground_check 0x1889d went to MATCH (0 rows, 584 bytes) by writing
+    `cy = (bodies[n].y >> 16) / 40;` a SECOND time before the last lookup: the re-assignment kills the
+    CSE of `cy * map_w`, so the quotient is what stays live in EAX and each lookup multiplies it into
+    its own register - the game's shape below. Written once, 10.5 keeps the product and reuses it; that
+    is the 13/15-row state, and no holder, cast, operand order or declaration order reaches the game
+    (discoveries "Toolchain: what kills a common subexpression", .work/pi/gc/v.py, v2.py). What
+    follows is the reading that stood until then.
     ground_check 0x1889d's last 15 rows are that choice. In the game the
     second cell lookup preserves the division result: `mov edx,[map_w]`,
     `imul edx,eax` (EAX stays (bodies[n].y >> 16) / 40), `add edx,ebp`,

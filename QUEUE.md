@@ -563,3 +563,25 @@ Rules for the agent:
     0x1889d (13), `fn_13a78` 0x13a78 (15), `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24),
     `bull_crash_tick` 0x19c8c (42), `bull_tick` 0x12826 (50), `draw_view` 0x11526 (51),
     `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight): seventh function, `ground_check` 0x1889d -> **MATCH**, `src/check.sh 2>&1
+    | grep -c ' MATCH at'` = 129 of 147 (87.8%), 0 WRONG, DATA 9677/9677, `ground_check_ 584 bytes
+    MATCH at 0x01889d`. Its 13 rows were one pair plus the epilogue it shifts: with the row written
+    once (`cy = (bodies[n].y >> 16) / 40;` before the second of the two else-arm lookups, as the text
+    had had it since 2026-11-26), WCC CSEs `cy * map_w`, keeps the product in EAX across the `jg` and
+    reuses it at the last lookup (576 bytes); the game keeps the quotient and multiplies per lookup
+    (0x189f9 `mov edx,[map_w]; imul edx,eax`, 0x18aab `imul eax,[map_w]`, 584 bytes). Repeating that
+    same assignment before the last lookup - the value cannot change, the arm that writes
+    `bodies[n].vy` returns first - kills the CSE and lands the game's bytes: 0 rows, wrong=0, one
+    added line in `src/map.c`. CONFIRMED (vbatch, `.work/pi/gc/v.py`): `map_w * cy`, `cx + cy * map_w`
+    and `6 * (..)` compile byte-identical to the old text, and the division written inline instead of
+    through `cy` is byte-identical when it feeds one lookup - so the 2026-11-26/27 conclusion
+    "register pressure, not the text" (open question 29) was wrong: of the 24 in-module spellings
+    tried here, every one that was not the repeated assignment stayed at 13 or got worse (holders for
+    product/row/column 44-46, `cy2` 43, split division 44, `register int n` 13, three declaration
+    orders 13/43, fall-through-instead-of-else 13, positive outer test 13). Mutation that fails the
+    check: delete the added `cy = ...` line -> 13 rows again
+    (`vbatch.py ground_check 0x1889d` control), and `src/matched.baseline` 129 != 128. Lever written in
+    GOTCHAS "Levers that produced MATCHes on RRR", finding in discoveries "Toolchain: what kills a
+    common subexpression", open question 29 closed. Q6's remaining unwalked lines: `fn_13a78` 0x13a78
+    (15), `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42),
+    `bull_tick` 0x12826 (50), `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
