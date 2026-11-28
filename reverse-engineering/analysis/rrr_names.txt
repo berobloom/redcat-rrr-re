@@ -317,8 +317,8 @@
 0x3d453 __get_std_stream     # STRONGLY SUPPORTED: short module, CLIB3R.LIB module iobaddr (31 bytes) found byte for byte here
 0x3d472 fputs                # CONFIRMED: CLIB3R.LIB module fputs (123 bytes) found byte for byte here
 # sndman.c (start of the game's C)
-0x10010 fn_10010             # CONFIRMED (code): sprintf(strbuf, "%s", s), returns strbuf
-0x10029 fn_10029             # CONFIRMED (code): return fopen(name, mode) (a jmp)
+0x10010 copy_to_strbuf       # CONFIRMED (code): sprintf(strbuf, "%s", s), returns strbuf. Never called: no call/jmp and no pointer to it in either object (name from the body)
+0x10029 open_file            # CONFIRMED (code): return fopen(name, mode) (a jmp). Never called: no call/jmp and no pointer to it in either object (name from the body)
 0x1002e movie_dir_exists     # LIKELY: _dos_findfirst("d:\\MOVIE", _A_SUBDIR) == 0
 0x10052 movie_dir_make       # LIKELY: mkdir("d:\\MOVIE"), else "Couldn't create directory %s"
 0x10078 wav_lookup           # LIKELY: index of a .wav name in wav_names (stricmp) -> wav_handles[i], else -1
@@ -335,7 +335,7 @@
 0x55f47 snd_cfg_c            # LIKELY: short, 3rd
 0x55f49 snd_cfg_d            # LIKELY: short, 4th
 0x6c980 wav_handles          # LIKELY: 34 ints next to wav_names, returned by wav_lookup
-0x6ca08 strbuf               # CONFIRMED (code): fn_10010's sprintf buffer
+0x6ca08 strbuf               # CONFIRMED (code): copy_to_strbuf's sprintf buffer
 0x6fc60 snd_cfg_f            # LIKELY: short, 6th
 0x6fc62 snd_cfg_e            # LIKELY: short, 5th
 0x6fc64 snd_cfg_g            # LIKELY: short, 7th
@@ -388,7 +388,7 @@
 0x7f984 scroll_x             # LIKELY: draw_view gets scroll_x % 32 (tile width)
 0x56060 scroll_step_x        # LIKELY: this frame's scroll_x delta ((target - scroll_x) >> 4); written only by camera_follow 0x138ed and fn_13a78 0x13a78, never read here
 0x56064 scroll_step_y        # LIKELY: the same for scroll_y
-0x1b929 sprintf              # STRONGLY SUPPORTED: the matched fn_10010 and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
+0x1b929 sprintf              # STRONGLY SUPPORTED: the matched copy_to_strbuf and screenshot call it; inside the clib sprintf module at 0x1b916 (one byte differs from 10.5 CLIB3R)
 0x1475f camera_start         # STRONGLY SUPPORTED: puts the camera on the player after init_objects, scroll clamped to the map (discoveries.md)
 0x2425d draw_frame           # LIKELY: (dst, img, x, y, w, h), w and h on the stack; start_lights' lamps; -> 0x32c78 (discoveries.md HUD)
 0x55f93 finish_order         # CONFIRMED (code): int[3], racer numbers in finishing order

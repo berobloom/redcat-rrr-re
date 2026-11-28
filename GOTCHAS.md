@@ -155,7 +155,8 @@ the game go in `research/discoveries.md`); delete an entry when it stops being t
   command, and a 0-row `fndiff` whose `check.sh` prints any `WRONG` line is masked fixup bytes, not a
   match (`ai_dive`, 2026-11-28: 0 rows and 6 WRONG at once).
 - **The function list is a recursive-descent scan (~60% of the code).** Functions reached only
-  through pointers are missing until named: 0x10010 and 0x10029 are not in `rrr_funcs.tsv`.
+  through pointers, or never called at all, are missing until named: `copy_to_strbuf` 0x10010 and
+  `open_file` 0x10029 are not in `rrr_funcs.tsv` because nothing references them (dead code WLINK kept).
 - **An `e8` byte inside an immediate is not a call.** `fn_1963e` 0x1963e's only "caller" (0x18f3e)
   is `mov eax, 0x6fbe8`; it is a basic block of `player_crash_tick` 0x19497, and `entries.py` still
   calls it `loose ... own boundary`. Check the bytes around a "call" before splitting a function.

@@ -48,7 +48,7 @@ int            camera_racer = 0;                        /* 0x55faf */
 
 /* ---- 0x10010 -------------------------------------------------------------------------------- */
 
-char *fn_10010(char *s)
+char *copy_to_strbuf(char *s)
 {
     sprintf(strbuf, "%s", s);
     return strbuf;
@@ -56,7 +56,7 @@ char *fn_10010(char *s)
 
 /* ---- 0x10029 -------------------------------------------------------------------------------- */
 
-FILE *fn_10029(char *name, char *mode)
+FILE *open_file(char *name, char *mode)
 {
     return fopen(name, mode);
 }

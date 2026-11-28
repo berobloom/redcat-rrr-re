@@ -37,3 +37,6 @@ joystick_to_keys
 
 ## Saved state and scores
 rrrio_save rrrio_load high_score
+
+## Never called
+copy_to_strbuf open_file
