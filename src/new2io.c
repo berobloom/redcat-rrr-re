@@ -27,7 +27,15 @@
    2026-11-26, the start_lights lever (how many C variables carry the values): every merge of a
    sprite-loop local (cx/cy/ox/oy/ww/hh/n/e) into a tile-loop one (row/col/px/py/tx/ty) costs
    80-200 rows (48 singles, .work/probe/dv3); a tile-value local, tx/ty in the tile index and
-   moving the sx/sy saves give 62-176 (dv4). */
+   moving the sx/sy saves give 62-176 (dv4).
+   2026-11-28, 14 more spellings (.work/pi/dv/v.py, v2.py, control 51) and nothing is below 51, so
+   the two blocks where the game keeps a value in a slot and we keep it in a register are WCC's own
+   spills, not variables of the source: a local for the shared `ww - ox` (146-177 rows, in one, three
+   or all four blit calls), one `sum` local for the clamp right-hand sides `sprites[n].y +
+   sprites[n].h` / `sprites[n].x + sprites[n].w` (80-89), `switch (m)` on a local of
+   `sprites[n].mode` (184), the switch arms in the order 4/5/6 before 1/2 (105), the clamps as
+   ternaries (235), `ox = 0;` before the clip test with the else dropped (55, both clips 59), the
+   tile-loop initializers in the other order (55) and the ww clamp before the hh clamp (68). */
 void draw_view(short dy, short dx)
 {
     int cx, hh, ww, e, sx, ty, tx, sy, n, ox, oy, cy, row, col, px, py;
