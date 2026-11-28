@@ -567,3 +567,13 @@
      after the add, 168 with one holder shared by the switch value, both boost stores and the else
      guard. So the load order is reachable and the price is the arm's register homes: the tie is the
      allocator's, and it is set by the rest of the function, which no local spelling reaches.
+   - Same tie class again, 2026-11-28, and a NEW input ruled out: `muis_crash_tick` 0x1a42a's
+     finished4-arm pair (6 rows; floor after 22 more spellings, .work/pi/mct3/v.py v2.py). A
+     `#pragma aux` clobber list IS a live input to the allocator - redefining `fixmul` in that module
+     (or a `fixmul2` used by only the two vx/vy lines) scores 15 rows with `modify exact [edx]`, 12
+     with `modify exact [eax edx]` and 158 with `modify [edx ecx]` or `modify [eax ebx ecx edx]` -
+     yet every set that leaves the function's bytes alone (`modify [eax edx]`, `modify [edx ebx]`,
+     no modify clause, and the same sets on a module-local copy) keeps the arm's mirror exactly as
+     it was. So an aux clobber set can re-home this function but does not pick EAX for that `movsx`:
+     the arm's register is still decided by the other n-indexed blocks, as the 2026-11-26 deletion
+     diagnostic said.

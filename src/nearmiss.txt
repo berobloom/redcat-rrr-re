@@ -222,7 +222,7 @@ subexpression, not a variable. Same for the clamp RHS: one `sum` local for both
 `sprites[n].mode` directly, as in bull_crash_tick), switch arm order case 4/5/6 first 105, ternary
 clamps 235, `ox = 0;` before the clip test with the else dropped 55 (both blocks 59), tile-loop
 initializer order 55, ww clamp block first 68. Nothing below 51, so the C stays. SKIP: register homes only, and they never move - 190 in-place spellings (.work/probe/dv2: 128 tile-loop x clip x cx-mutations, 52 declaration-order swaps/shuffles, pointer and hoisted-subexpression locals, 9 draw_tile pragma forms); ours gives ESI to px and keeps ox/oy/ww in registers, the game gives ESI to col and keeps &sprites[n] in EBP/EDI spilling cx/ox/x+w to slots. Instruction counts (263), frame (0x2c) and spill-slot count (11) are identical on both sides, so only the homes differ; any spelling that forces px through `col * 32` or moves another home goes to 87-250 rows; 2026-11-26: merging sprite-loop locals into tile-loop ones (48, .work/probe/dv3) 80+ rows, setup/tile-index variants (dv4) 62+
-5 0x1430e hit_test  ON2: 2026-11-29 22 variants (x1beforeh, hlast, hbeforex1, hfirst, x1first,
+5 0x1430e hit_test  ON2: 2026-11-28 22 variants (x1beforeh, hlast, hbeforex1, hfirst, x1first,
    regh, regx1, regboth, regxhy1, regb, regsize, rega, decl2grp, hint1, hint2, perioifs, x2paren,
    y1paren, allparen, x1gx, t5x, declhx), best 5 rows (control; regh, regx1, regboth, regb,
    regsize, rega, perioifs, x2paren, y1paren, allparen and t5x compile byte-identical to it) -
@@ -272,7 +272,15 @@ stays. written 2026-11-25 in src/ai.c; 145 -> 64 on 2026-11-28 by content, not
    `i = j = ai_script_find(...)` and a second index local (copy-propagated into one), `h2`/`h4` per
    arm, guard clauses, `default: break;`, `int act`, `int s`, unsigned index. Open: how the game homes
    i in ECX while still dispatching with two cmp/jne.
-6 0x1a42a muis_crash_tick  ON: 2026-11-29 28 variants (zerochain, armPtr, armSpeedFirst,
+6 0x1a42a muis_crash_tick  ON2: 2026-11-28 22 variants (fxexact_redef, fxexact2, fxplain2,
+   fxnomod2, fxecx2, ifswap, ifpos, deadlocal, nintelse, zafter, r_eax_edx, r_exact_eax_edx,
+   r_edx_ecx, r_edx_ebx, r_all, r_exact_all, r_pure, r_notpure, l_eax_edx, l_edx_ecx,
+   l_exact_edx_ebx, l_pure), best 6 rows (control; fxexact2, fxplain2, fxnomod2, ifswap, deadlocal,
+   r_eax_edx, r_edx_ebx, l_eax_edx, l_exact_edx_ebx all tie at 6 with the SAME six rows) - a new
+   hidden input opened and closed: the `#pragma aux` clobber set of `fixmul` DOES move this
+   function's allocation (15 rows `modify exact [edx]`, 12 `modify exact [eax edx]`, 158
+   `modify [edx ecx]`) but never lands the game's EAX/EDX in the finished4 arm (see the note in
+   src/crashmuis.c). ON: 2026-11-29 28 variants (zerochain, armPtr, armSpeedFirst,
    armFrameFirst, armObjPtr, armChainFrame, declKFirst, declSwapFD, tailAnimSwap, tailFold16,
    tailCasts, f24Default, cosCast, sinCast, speedCast, stepCast, vzCast, xClampIfs, yClampIfs,
    lightsMerge, waitMerge, turnIf, puffIf, headingIf, frameCast, f24Cast, armMidFrame), best 6 rows

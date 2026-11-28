@@ -732,3 +732,37 @@ Rules for the agent:
     Its `src/nearmiss.txt` line now starts `ON:` (round 1 done), as does every Q6 line; only
     `dropped2_tick` 0x178f6 has `ON2:` so far, so the item's Accept line (two rounds each, or MATCH)
     is not met. Q6's remaining work is round 2 on the twelve `ON:` lines.
+  - 2026-11-28 (overnight): Q6 round 2 of `hit_test` 0x1430e: stays 5 rows after 22 in-module
+    vbatch spellings (`.work/pi/ht2/v.py`, `v3.py`, `v5.py`, control 5); eleven tie at 5 with
+    byte-identical code and none is below, so nothing went into `src/`. Two new levers, both
+    negative (CONFIRMED on the in-module compile): **`register` is inert in this compiler** -
+    `register int h`, `register int x1`, both together, and `register` on each of the three
+    parameters all compile to the control's exact bytes with the same two slots - and the local band
+    and the temporary band are separate: declaring `h` LAST moves its slot to [esp+0xc] (the temps'
+    top) at 75 rows and declaring it just before `x1` takes `x1` out of memory (84), so no order
+    inside the band gives the game's h/x1 numbering. Parentheses (`x2 = (bodies[b].x + fx) - gx`,
+    `y1 = (bodies[b].y + fy) + gy`, all four corners), the two period tests as two `if`s and test
+    5's x side as `bodies[b].x > xl` hold 5 rows byte-identical; `x1 = bodies[b].x + (fx + gx)` is
+    110, so the game really computes (x + fx) + gx. Check: `src/check.sh 2>&1 | grep -c ' MATCH
+    at'` = 129 = `src/matched.baseline`, `grep -c WRONG` = 0, `DATA: 9677 of 9677`. Its
+    `src/nearmiss.txt` line now starts `ON2:` (round 2 done).
+  - 2026-11-28 (overnight): Q6 round 2 of `muis_crash_tick` 0x1a42a: holds at 6 rows after 22 more
+    in-module vbatch spellings (`.work/pi/mct3/v.py`, `v2.py`, control 6; 5 variants did not
+    compile), nine tie at 6 - three of them dumped, all with the SAME six rows - and nothing is
+    below, so nothing went into `src/`. One new hidden input was opened and is now closed (CONFIRMED
+    in-module): **a `#pragma aux` clobber list is a live input to WCC's allocator** - redefining
+    `fixmul` inside crashmuis.c, or a module-local `fixmul2` used by only the two vx/vy lines,
+    scores 15 rows with `modify exact [edx]`, 12 with `modify exact [eax edx]` and 158 with
+    `modify [edx ecx]` or `modify [eax ebx ecx edx]` - yet every set that leaves the bytes alone
+    (`modify [eax edx]`, `modify [edx ebx]`, no modify clause, and the same sets on the local copy)
+    keeps the finished4 arm's EAX/EDX mirror untouched. Also inert at 6: swapping the two fixmul
+    lines of the if arm and an unused `int q;`; costs rows: the if/else polarity swapped 65, an
+    `int i = n;` copy used through the arm 107 (the arm's own `movsx` from SI is the game's).
+    open-questions.md 36 gained the aux bullet. Check: `fndiff.py rrr .work/src/CRASHMUIS.OBJ
+    muis_crash_tick 0x1a42a | tail -1` says 6, `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
+    `src/matched.baseline`, `grep -c WRONG` = 0, `DATA: 9677 of 9677`. Its `src/nearmiss.txt` line
+    now starts `ON2:` (round 2 done). Q6 now has three `ON2:` lines (dropped2_tick, hit_test,
+    muis_crash_tick); round 2 remains for `left_of` 0x1401d (8), `spawn_dropped_object` 0x18759 (8),
+    `follower_tick` 0x167aa (9), `fn_13a78` 0x13a78 (15), `camera_follow` 0x138ed (19),
+    `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42), `bull_tick` 0x12826 (48),
+    `draw_view` 0x11526 (51) and `ai_waypoint_action` 0x1af83 (64).

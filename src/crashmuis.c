@@ -55,6 +55,17 @@
    the frame store third in the arm 31, the y clamp as two ifs 173, the x clamp as two ifs 125, the
    vz subtraction as one expression 109, `frames[k].f8 + 16` 60, chained arm stores 60-103, the arm
    pointer locals 25-67, `short k;` first 19.
+   Round 2, 2026-11-28 (.work/pi/mct3/v.py, v2.py, 22 variants, nothing below 6): a NEW input was
+   opened and is CONFIRMED inert for this pair - the `#pragma aux` clobber set of `fixmul`. Redefining
+   it inside crashmuis.c (or a module-local `fixmul2` used only by the two vx/vy lines) scores 15
+   rows with `modify exact [edx]`, 12 with `modify exact [eax edx]`, 158 with `modify [edx ecx]` /
+   `modify [eax ebx ecx edx]`, but 6 with the SAME six rows for `modify [eax edx]`, `modify [edx
+   ebx]`, no modify clause at all and a local copy with any of those - so the aux clobber list does
+   move this function's allocation, just never into the game's EAX/EDX for the finished4 arm. Also 6
+   rows and inert: swapping the two fixmul lines of the if arm, and an unused `int q;`. Costs rows:
+   the if/else polarity swapped 65, an `int i = n;` copy used through the arm 107 (the arm's own
+   `movsx` from SI is the game's), and `purify`/`not_pure` are not accepted on an aux asm (`modify
+   [a] [b]` is a syntax error; the list goes in one bracket).
    Before that: 40 -> 32. The tail truncates both coordinates to short as the game does
    (movsx at 0x1ab26 and 0x1ab5a): `(short)(bodies[n].x >> 16)` and `(short)((bodies[n].y >> 16) -
    (bodies[n].z >> 16))`, with the declarations `short k; unsigned f, want; int d, h, go, m;`. The
