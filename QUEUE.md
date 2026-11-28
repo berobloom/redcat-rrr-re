@@ -698,3 +698,18 @@ Rules for the agent:
     .work/src/BULL.OBJ bull_tick 0x12826 | tail -1` says 48 (was 50); mutation that shows it: put the
     y `abs()` back body-first -> 50 rows. Its `src/nearmiss.txt` line now starts `ON:` with 48. Q6's
     remaining unwalked lines: `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight): Q6 round 1 of `draw_view` 0x11526: stays 51 rows after 18 in-module
+    vbatch spellings (`.work/pi/dv/v.py`, `v2.py`, control 51); nothing is below 51, so nothing went
+    into `src/` (`src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline`,
+    `grep -c WRONG` = 0, `DATA: 9677 of 9677`). Two content hypotheses were tested and CONFIRMED
+    false, both in the blocks where the game keeps a value in a stack slot where we keep it in a
+    register: (a) a local for the shared `ww - ox` (in all four blit calls 175, in the three
+    `blit_sprite_trans` calls 166, in the case-4 arm only 177, assigned inside each arm 146) - so the
+    game's `mov ecx,[esp+0x20]` + `sub ecx,ebp` + `mov [esp+4],ecx` (0x1179d-0x117a8) is WCC spilling
+    its own subexpression; (b) one `sum` local for the two clamp right-hand sides (both 89, x + w only
+    80) - so its `mov [esp],eax` (0x116ea) is also its own spill and our `cmp eax,ecx` (0x116f6)
+    against its `cmp eax,[esp]` is allocation. Also CONFIRMED: the switch value is the field, not a
+    local (184), the arms are in source order 1/2 before 4/5/6 (105 for the other order), the clamps
+    are if/else not ternaries (235), the clip arms keep their `else` (55, both 59), and the tile-loop
+    initializers (55) and the clamp block order (68) are the C's. Its `src/nearmiss.txt` line now
+    starts `ON:` (round 1 done). Q6's last unwalked line: `ai_waypoint_action` 0x1af83 (64).
