@@ -590,3 +590,17 @@
     only `default:` and `case 0:` is 12 (arm 1 keeps the switch's registers, the other two pay the
     mirror), and `default: if (kind == 0) .. else ..` inside a `switch` is 11 with `== 0` and with
     `!kind`.
+
+37. **Open: which tree is canonical when a pass sees files that no commit here holds.** Three passes
+    on 2026-11-28 each reported reading source and QUEUE text that this `.git` cannot produce: a
+    `src/physics.c` and `matched.baseline` 145 with `update_speed` (STATUS item 0), a QUEUE.md of
+    per-function items with a two-parameter `left_of` (QUEUE.md process note, 07:15), and a
+    "src/collide.c" with `entity_intersects_muis` 0x147080 plus a 51,596-byte `src/ai.c` defining
+    `ai_target_pos`/`ai_prox_dropped` (this pass). CONFIRMED about the last: `git ls-tree HEAD src/`
+    has no `collide.c`; `git log --all -S entity_intersects_muis` and `-S ai_target_pos` are empty;
+    `src/nearmiss.txt` here (365 lines) has no line for those four names; and the collide.c text as
+    shown does not compile in this tree (WCC386, `-3r -s -ox`: 20 errors in 12 lines, `E1045
+    Subscript on non-array` on `muis[ent[4]].stats`, so it is not C for `src/rrr.h` as it stands).
+    UNRESOLVED: whether the reader is inventing text, or a second tree is being read. What would
+    settle it: `git log --all -S <one symbol from the report>` plus `wc -c` on the named file from
+    the same shell that read it; if empty/absent, take the next Q6 pair whose functions really exist.
