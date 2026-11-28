@@ -82,7 +82,18 @@ int on_screen(int x, int y)
    holders for bodies[b].x/.y or (h + 0x28) & 0x1f and a dead local (ht6); racer.c compiled with
    up to eight of rrr.c's preceding and three following functions (36, ht7: always 5); h/x1 types
    (ht8); the 384 corner orders (ht9: only the natural one is 5); the four tests' operand orders
-   (625, hta).  2026-11-28 vbatch (.work/pi/d2/v3.py): `h` read after both free tests 147, the
+   (625, hta).  2026-11-29 round 2 (.work/pi/ht2/v.py, v3.py, v5.py, 22 variants): `register` is
+   INERT in this compiler - `register int h`, `register int x1`, both together, and `register` on
+   each of the three parameters all compile to the control's exact bytes with the same two slots
+   (CONFIRMED: fndiff's row text identical). `x2 = (bodies[b].x + fx) - gx`, `y1 = (bodies[b].y +
+   fy) + gy`, all four corners parenthesised, the two period tests as two `if`s and test 5's x side
+   as `bodies[b].x > xl` hold 5 rows byte-identical; `x1 = bodies[b].x + (fx + gx)` is 110, so the
+   game really does (x + fx) + gx; moving `h = ...` between the box lines or after `x = size << 16`
+   is 104/136. Band fact (CONFIRMED, same probe): the local band and the temporary band are
+   separate - declaring `h` LAST moves its slot to [esp+0xc] (temps' top) at 75 rows, declaring it
+   just before `x1` costs `x1` its slot (it stays in a register) at 84 - and none of the ten further
+   declaration orders tried here lands the game's h/x1 numbering either.  2026-11-28 vbatch
+   (.work/pi/d2/v3.py): `h` read after both free tests 147, the
    heading load moved in front of the box lines 136, `bodies[b].x + (fx + gx)` 141, `h` declared last
    75 - so the C's statement order is the game's (the game stores `h` at 0x14371, before the two
    period tests at 0x14384) - while `xl` before `xh`, `x` inlined into the four box lines, and the
