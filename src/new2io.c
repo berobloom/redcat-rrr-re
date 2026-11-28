@@ -35,7 +35,12 @@
    sprites[n].h` / `sprites[n].x + sprites[n].w` (80-89), `switch (m)` on a local of
    `sprites[n].mode` (184), the switch arms in the order 4/5/6 before 1/2 (105), the clamps as
    ternaries (235), `ox = 0;` before the clip test with the else dropped (55, both clips 59), the
-   tile-loop initializers in the other order (55) and the ww clamp before the hh clamp (68). */
+   tile-loop initializers in the other order (55) and the ww clamp before the hh clamp (68).
+   2026-11-28 round 2 (.work/pi/dv2/v.py, control 51): the locals' TYPES are not the game's either -
+   `short ox, oy` 206 rows, `short hh, ww` 164, `short n, e` 186, `unsigned row, col` 53 (CONFIRMED,
+   module compile) - every local stays `int`; and the cx clip spelled with its true arm first
+   (`if (cx >= 0) ox = 0; else { ox = -cx; if (ox < sprites[n].w) cx = 0; else continue; }`) costs 56,
+   so the clip keeps its `if (cx < 0)` form. Nothing below 51. */
 void draw_view(short dy, short dx)
 {
     int cx, hh, ww, e, sx, ty, tx, sy, n, ox, oy, cy, row, col, px, py;

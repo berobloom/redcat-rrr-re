@@ -798,3 +798,33 @@ Rules for the agent:
     `vbatch.py` (control rows 8 and 8/7), and `objdump --start-address=0x1401d` re-confirmed the
     game's own instruction sequence. Same class as the 2026-11-28 21:45 note at the top of STATUS.md.
 
+  - 2026-11-28 (overnight): Q6 round 2 of `bull_crash_tick` 0x19c8c: stays 42 rows after 15 in-module
+    vbatch spellings in two batches (`.work/pi/bct2/v.py`, `v2.py`, control 42 = `fndiff.py rrr
+    .work/src/CRASHBULL.OBJ bull_crash_tick 0x19c8c | tail -1`), so nothing went into `src/`
+    (`src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 = `src/matched.baseline`, `grep -c WRONG` = 0,
+    `DATA: 9677 of 9677`). New content evidence, CONFIRMED by the module compile: where `d =
+    fixdiv(0x1e0000, stats[bodies[n].stats].mass)` is materialised is a real choice and the C's place
+    is where it now sits - past the `period == -1` return 168 rows, inside the `!finished2 && !wait2`
+    block 145, inlined at its three uses 172; `want` merged into `f` 134, `m` inlined into its uses
+    146, the tail declarations reversed 79 and v71918 cached in a local 216, while `int want`, `int f`,
+    the else guard merged with the `v55ff8` test and `!(v56008 && speed <= top_speed)` print
+    byte-identical code (42 rows, wrong=0). Its `src/nearmiss.txt` line now starts `ON2:`.
+  - 2026-11-28 (overnight): Q6 round 2 of `draw_view` 0x11526: stays 51 rows after 5 applied in-module
+    vbatch spellings (`.work/pi/dv2/v.py`, control 51; two more never ran, their old text matched zero
+    times), so nothing went into `src/` (same three checks: 129, 0, 9677/9677). New negative evidence,
+    CONFIRMED by the module compile: the locals' types are the game's, all `int` - `short ox, oy` 206
+    rows, `short hh, ww` 164, `short n, e` 186, `unsigned row, col` 53 - and the cx clip's true arm
+    first (`if (cx >= 0) ox = 0; else {... continue;}`) costs 56, so it keeps `if (cx < 0)`. Every Q6
+    line now has `ON2:` or `MATCH`; next unwalked near-miss line in the list: `ai_waypoint_action`
+    0x1af83 (64), round 2.
+  - 2026-11-28 (overnight): process note, second instance. This pass was handed a first item naming
+    `entity_intersects_muis` 0x147080 and `player_collides` 0x1473a0 in a "src/collide.c", plus a
+    51,596-byte `src/ai.c` defining `ai_target_pos`/`ai_prox_dropped`/`ai_nearest_target`, and
+    `nearmiss.txt` lines for them. None of it is in this repository (CONFIRMED): `git ls-tree HEAD src/`
+    has no `collide.c`, `git log --all -S ai_target_pos` and `-S entity_intersects_muis` are empty, and
+    `src/nearmiss.txt` here (365 lines) has no line for any of those four names. Writing the collide.c
+    the reader showed and compiling it gives 20 errors in 12 lines (`E1045 Subscript on non-array` at
+    `muis[ent[4]].stats`), so that text is not Watcom C for `src/rrr.h`; the file was deleted, not
+    committed. Decision: took the next Q6 pair whose functions really exist (`bull_crash_tick`
+    0x19c8c, `draw_view` 0x11526) and re-measured every number with `fndiff.py`/`vbatch.py` before use.
+    Same class as the 2026-11-28 21:45 STATUS item 0 and the process note above it.
