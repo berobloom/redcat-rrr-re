@@ -155,7 +155,8 @@
    fixed by the game's bytes in the non-arm blocks (top store order, f24 switch form), so it
    cannot be copied. The 6th row (the ret) is a 1-byte length gap: ours is 1876 bytes, the
    game's 1877, so our epilogue lands 1 byte early and the ret misaligns; the missing body
-   byte is masked (fixup) in fndiff, not yet located. Known hard near-miss; revisit if a WCC
+   byte is masked (fixup) in fndiff, not yet located [2026-11-29: located - the 5-byte moffs
+   `mov eax,[@]` at 0x1a922 against the game's 6-byte `mov edx,[@]`; see the ON: line above]. Known hard near-miss; revisit if a WCC
    register-allocation model emerges.
 19 0x138ed camera_follow  SKIP 2026-11-26: two Watcom allocation ties, 62 -> 19; the C is established (see the differs note in src/rrr.c) - a declaration order either spills tx to the game's [esp+8] and mirrors vx/vy (ours EDX/ESI, the game ESI/EDX) or gets vx/vy right and keeps tx in ESI (frame 0x8); ~200 spellings incl. 50+ declaration orders; same class as draw_view 0x11526 (watcom-levers "register tie")
 0 0x1517a find_waypoints  MATCH 2026-11-27: the last thing it needed was its object's content - init_objects 0x148db (1635 B, 3 mod 4) in src/init.c makes Watcom land the game's three jump-table pad bytes at 0x1556c (open question 30). Spelling that got +0..+1009 identical: `unsigned short w` and no n local, `(w & 0xff)` written where used
@@ -188,7 +189,21 @@
    `i = j = ai_script_find(...)` and a second index local (copy-propagated into one), `h2`/`h4` per
    arm, guard clauses, `default: break;`, `int act`, `int s`, unsigned index. Open: how the game homes
    i in ECX while still dispatching with two cmp/jne.
-6 0x1a42a muis_crash_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in its src file)
+6 0x1a42a muis_crash_tick  ON: 2026-11-29 28 variants (zerochain, armPtr, armSpeedFirst,
+   armFrameFirst, armObjPtr, armChainFrame, declKFirst, declSwapFD, tailAnimSwap, tailFold16,
+   tailCasts, f24Default, cosCast, sinCast, speedCast, stepCast, vzCast, xClampIfs, yClampIfs,
+   lightsMerge, waitMerge, turnIf, puffIf, headingIf, frameCast, f24Cast, armMidFrame), best 6 rows
+   (control; armSpeedFirst, tailAnimSwap, tailCasts, f24Default, cosCast, sinCast, speedCast,
+   stepCast, waitMerge, puffIf, headingIf, lightsMerge, frameCast and f24Cast tie at 6 and compile
+   byte-identical) tie at 6 with the SAME six rows (the row text checked for seven of them), OPEN.
+   What the 6 rows are (CONFIRMED, byte dump .work/pi/mct2/dump.py): ONE
+   register pair in the finished4 arm of the vx/vy block - ours `movsx edx,si` (0x1a90d) +
+   `mov eax,[@]` (0x1a922) + `shl edx,4` (0x1a932), the game `movsx eax,si` + `mov edx,[@]` +
+   `shl eax,4`; every other instruction of the arm is the same instruction in the same place. The 6th
+   row is that mirror's encoding length, not a missing byte: `mov eax,[@]` is the 5-byte moffs form
+   `a1 disp32` and `mov edx,[@]` the 6-byte `8b 15 disp32`, so ours is 1876 bytes and its `ret` sits
+   at 0x1ab7d where the game's is at 0x1ab7e - LIKELY all six rows go with that one pair.
+   (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in its src file)
 24 0x130f8 muis_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5, src/muis.c)
 42 0x19c8c bull_crash_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in its src file)
 50 0x12826 bull_tick  OPEN (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5, src/bull.c)

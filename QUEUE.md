@@ -508,3 +508,17 @@ Rules for the agent:
     while `xl` before `xh`, `size << 16` inlined into the box lines, and the declaration split after
     `gy` all hold 5 rows without touching the two slots. Its nearmiss line now starts `ON:`. Next:
     `muis_crash_tick` 0x1a42a (6), `left_of` 0x1401d (8).
+  - 2026-11-29 (overnight): third function, `muis_crash_tick` 0x1a42a: holds at 6 rows after 28
+    spellings scored serially with vbatch.py (.work/pi/mct2/v.py, v2.py, v3.py); none below 6 and
+    fourteen tie at 6 with code byte-identical to the current text, so nothing went into `src/`.
+    What the six rows are is now named instruction by instruction (byte dump .work/pi/mct2/dump.py):
+    one register pair in the finished4 arm of the vx/vy block - ours `movsx edx,si` (0x1a90d),
+    `mov eax,[objects]` (0x1a922), `shl edx,4` (0x1a932); the game `movsx eax,si`, `mov edx,
+    [objects]`, `shl eax,4` - and the arm's other instructions are identical in the same order
+    (CONFIRMED). The 6th row is that mirror's encoding length, not a lost byte: `mov eax,[@]` is the
+    5-byte moffs form `a1 disp32` and `mov edx,[@]` the 6-byte `8b 15 disp32`, so ours is 1876 bytes,
+    its epilogue sits one byte early and the game's `ret` at 0x1ab7d has no partner (that closes the
+    2026-11-27 "missing body byte is masked, not yet located" note). Check: `fndiff.py rrr
+    .work/src/CRASHMUIS.OBJ muis_crash_tick 0x1a42a | tail -1` says 6, `src/check.sh 2>&1 | grep -c '
+    MATCH at'` = 128, `grep -c WRONG` = 0, DATA 9677 of 9677. Its nearmiss line now starts `ON:`.
+    Next: `left_of` 0x1401d (8).

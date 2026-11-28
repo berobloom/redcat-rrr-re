@@ -34,6 +34,26 @@
    the function shifts to n*40 first. So the arm's registers hang on the n-derived temporaries it
    shares with those blocks (LIKELY), not on `objects` (another pointer in the arm changes nothing)
    and not on anything in the arm's own text.
+   Third pass 2026-11-29 (serial, .work/pi/mct2/v.py v2.py v3.py, 28 variants through vbatch.py,
+   nothing below 6; fourteen of them tie at 6 and are byte-identical to the current text): the six
+   rows are ONE register pair, now named instruction by instruction (.work/pi/mct2/dump.py prints
+   both sides with bytes). Ours: `movsx edx,si` 0x1a90d, `mov eax,[@]` 0x1a922 (the 5-byte moffs
+   form `a1 disp32`), `shl edx,4` 0x1a932. The game: `movsx eax,si`, `mov edx,[@]` 0x1a922 (the
+   6-byte `8b 15 disp32`), `shl eax,4`. The rest of the arm - the ecx chain, the three
+   `[ecx*8+@]` zero stores and `mov word [edx+eax+0xa],2` - are the same instructions in the same
+   order, so the 1876-vs-1877 length gap and the `ret` row are the mirror's encoding, not a byte
+   that went missing (that closes the 2026-11-27 "masked byte, not yet located" note). Tried, none
+   below 6: the arm's stores chained (`vx = vy = speed = 0`, `vy = speed = 0`), a `struct body *`
+   and a `struct object *` local inside the arm, four store orders (the speed store first ties at 6
+   with the same bytes, the frame store first costs 36 and third 31), `0x46 + (heading >> 1)`,
+   `- (frames[k].f8 + 16)`, `(int)` casts on the cos_tbl index, on the sin_tbl index, on fixmul's
+   speed argument, on the animset step index, on the f24 switch and on `= (short)2`, `short k;`
+   declared first, `int d` before `unsigned f`, `if (lights_done && !finished4)` for the nested
+   pair, `wait4 != 0`, `v71ddc++` after the speed store, braces on the v56024 store, `default:
+   break;` on the f24 switch; and the ones that cost rows: heading test as `h != -1 && h - ...` 10,
+   the frame store third in the arm 31, the y clamp as two ifs 173, the x clamp as two ifs 125, the
+   vz subtraction as one expression 109, `frames[k].f8 + 16` 60, chained arm stores 60-103, the arm
+   pointer locals 25-67, `short k;` first 19.
    Before that: 40 -> 32. The tail truncates both coordinates to short as the game does
    (movsx at 0x1ab26 and 0x1ab5a): `(short)(bodies[n].x >> 16)` and `(short)((bodies[n].y >> 16) -
    (bodies[n].z >> 16))`, with the declarations `short k; unsigned f, want; int d, h, go, m;`. The
