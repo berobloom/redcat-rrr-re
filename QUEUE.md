@@ -766,3 +766,35 @@ Rules for the agent:
     `follower_tick` 0x167aa (9), `fn_13a78` 0x13a78 (15), `camera_follow` 0x138ed (19),
     `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42), `bull_tick` 0x12826 (48),
     `draw_view` 0x11526 (51) and `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight): Q6 round 2 of `left_of` 0x1401d (8 rows) and `spawn_dropped_object`
+    0x18759 (8 rows, floor 7); nothing went into `src/` (the 7-row shape is 1 row off, under the
+    2-row bar). left_of: 10 in-module vbatch spellings (.work/pi/lo2/v.py, control 8) - seven tie at
+    8 with byte-identical code, `mixPlainX` 9, `auxEsi` 11, `plainBothCmp` 11, and a `static
+    left_of` is not scorable (no named symbol). CONFIRMED (in-module): a `#pragma aux left_of
+    modify [esi]` / `modify exact [eax ebx ecx edx]` on the defined function, `int t = y1` or
+    copies of both accumulators, mixed compound/plain assignment in either arm,
+    `y1 -= x1; return y1 > 0;` and `short` parameters all leave the same `mov esi,eax` (0x1401e) /
+    `mov eax,esi` (0x14037) mirror, so the eight rows are not a source question (open question 36).
+    spawn_dropped_object: 8 more spellings (.work/pi/sd2/v.py 5 variants on the current text,
+    control 8; v2.py 3 on a sw2d0 base, control 7) and none is below 7: `case 2 / default / case 0`
+    again (7), the same with `default:`'s `break` dropped (7) and with the switch value in a local
+    `k = kind` (7); `if (kind == 2)` in front of a `switch (kind)` holding only `default:` and
+    `case 0:` 12, `default: if (kind == 0) .. else ..` inside the switch 11 (also 11 with `!kind`),
+    the period store moved after an if-chain 12, `switch ((short)kind)` 8. CONFIRMED: the game's
+    equality tree and its EAX-for-n<<4 registers still do not occur together at any construct
+    boundary tried. Check: `src/check.sh 2>&1 | grep -c ' MATCH at'` = 129 =
+    `src/matched.baseline`, `grep -c WRONG` = 0, `DATA: 9677 of 9677`; both `src/nearmiss.txt` lines
+    now start `ON2:`. Q6 round 2 remains for `follower_tick` 0x167aa (9), `fn_13a78` 0x13a78 (15),
+    `camera_follow` 0x138ed (19), `muis_tick` 0x130f8 (24), `bull_crash_tick` 0x19c8c (42),
+    `bull_tick` 0x12826 (48), `draw_view` 0x11526 (51), `ai_waypoint_action` 0x1af83 (64).
+  - 2026-11-28 (overnight): process note. The file reader in this pass returned text that is not in
+    the tracked files: a QUEUE.md full of per-function items (`render_text` 0x17581, `fn_11515`
+    0x11515, `player_move_input` 0x1178c, `bull_tick` "READY FOR REVIEW") plus an "Override note
+    (2026-11-28): PRIORITY ..." line that `grep -n -e "Override note" -e "CONCRETE LEADS" QUEUE.md`
+    finds zero of, and a `src/rrr.c` `left_of(int x1, int y1, int x2, int y2)` with a two-term
+    cross-product body while line 313 of the real file is the six-parameter
+    `left_of(x1, y1, x2, y2, x3, y3)` quoted above. Nothing from that reader output was used: every
+    number in this entry was re-read with `grep -n`/`sed` and rerun through `fndiff.py` and
+    `vbatch.py` (control rows 8 and 8/7), and `objdump --start-address=0x1401d` re-confirmed the
+    game's own instruction sequence. Same class as the 2026-11-28 21:45 note at the top of STATUS.md.
+

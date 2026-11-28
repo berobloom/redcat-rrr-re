@@ -321,7 +321,15 @@ int fire_rocket(int racer)
    register holds n<<4 and which holds the objects base at 0x1876f IS decided by the dispatch
    construct that follows it (same statements, switch vs if, first difference 6 instructions
    earlier). Which arm recomputes n<<4 is set by the arm order: case 2 / default / case 0 puts the
-   5-byte `mov eax,edi` + `shl eax,4` (0x18797, 0x1879f) where difflib aligns best (8 -> 7 rows). */
+   5-byte `mov eax,edi` + `shl eax,4` (0x18797, 0x1879f) where difflib aligns best (8 -> 7 rows).
+   2026-11-28 round 2 (.work/pi/sd2/v.py, v2.py: 8 variants scored - 5 on src/heap.c, control 8, and
+   3 on a sw2d0 base, control 7; none below 7): the arm order case 2 / default / case 0 (sw2d0, 7),
+   the same with default's `break` dropped (sw2d0_nobreak, 7) and the same switching on a local
+   `k = kind` (klocal2, 7); `if (kind == 2)` in front of a `switch (kind)` holding only
+   `default:` and `case 0:` 12, `default: if (kind == 0) .. else ..` inside the switch 11 (11 with
+   `!kind` too), the period store moved after a full if-chain 12, `switch ((short)kind)` 8.
+   CONFIRMED again: the equality tree comes only with the mirrored registers - the hybrid keeps the
+   switch's registers in its first arm and pays the mirror in the other two. */
 int spawn_dropped_object(int racer, int kind)
 {
     int n;

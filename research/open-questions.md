@@ -577,3 +577,16 @@
      it was. So an aux clobber set can re-home this function but does not pick EAX for that `movsx`:
      the arm's register is still decided by the other n-indexed blocks, as the 2026-11-26 deletion
      diagnostic said.
+  - Same tie class again, 2026-11-28 (Q6 round 2 on both). `left_of` 0x1401d: 10 more in-module
+    spellings (.work/pi/lo2/v.py, control 8, none below) - a `#pragma aux left_of modify [esi]`
+    (11) or `modify exact [eax ebx ecx edx]` (8) on the function itself, `int t = y1` or copies of
+    both accumulators, mixed compound/plain assignment in either arm, `y1 -= x1; return y1 > 0;`,
+    short parameters and a `register`-free `int t = x1;` placed after the first product (all 8,
+    byte-identical) - so an aux clobber list on the *defined* function is inert here, unlike the
+    `fixmul` case above, and nothing in an 8-line body moves which of EAX/ESI holds x1.
+    `spawn_dropped_object` 0x18759: 8 more (.work/pi/sd2/v.py, v2.py, floor 7) - switching on a
+    local `k = kind` and dropping `default:`'s `break` hold the 7-row arm order, and the construct
+    hybrids do not mix the two halves: an `if (kind == 2)` in front of a `switch (kind)` that holds
+    only `default:` and `case 0:` is 12 (arm 1 keeps the switch's registers, the other two pay the
+    mirror), and `default: if (kind == 0) .. else ..` inside a `switch` is 11 with `== 0` and with
+    `!kind`.

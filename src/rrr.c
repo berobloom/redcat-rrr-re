@@ -309,7 +309,14 @@ void merge_tbl_init(void)
    (`mov esi,eax` 0x1401e) and moves it back for the second multiply (`mov eax,esi` 0x14037), where
    we keep x1 in EAX and give ESI to the x3 temp; that is the whole 4-byte gap. CONFIRMED on our own
    compile: the 3rd parameter sits in EBX and the 4th in ECX here (first product reads EBX, second
-   ECX) - the same as the game's, so the C's parameter mapping is the game's. */
+   ECX) - the same as the game's, so the C's parameter mapping is the game's.
+   2026-11-28 round 2 (.work/pi/lo2/v.py, 10 variants scored, control 8, none below 8; auxExact,
+   copyY1, copyBoth, mixPlainY, diffAssign, shortParams and copyX1Use2nd tie at 8 with the same 41
+   bytes; mixPlainX 9; auxEsi 11, plainBothCmp 11; a `static left_of` is not scorable): a
+   `#pragma aux left_of modify [esi]` or `modify exact [eax ebx ecx edx]` on left_of itself, copying
+   y1 or both accumulators into locals, mixing compound and plain assignment in either arm,
+   `y1 -= x1; return y1 > 0;` and short parameters all leave the same ESI/EAX mirror. CONFIRMED
+   (in-module): nothing in this 8-line body moves which of EAX/ESI holds x1 - open question 36. */
 int left_of(int x1, int y1, int x2, int y2, int x3, int y3)
 {
     y1 -= y3;
