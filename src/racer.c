@@ -82,7 +82,11 @@ int on_screen(int x, int y)
    holders for bodies[b].x/.y or (h + 0x28) & 0x1f and a dead local (ht6); racer.c compiled with
    up to eight of rrr.c's preceding and three following functions (36, ht7: always 5); h/x1 types
    (ht8); the 384 corner orders (ht9: only the natural one is 5); the four tests' operand orders
-   (625, hta). */
+   (625, hta).  2026-11-28 vbatch (.work/pi/d2/v3.py): `h` read after both free tests 147, the
+   heading load moved in front of the box lines 136, `bodies[b].x + (fx + gx)` 141, `h` declared last
+   75 - so the C's statement order is the game's (the game stores `h` at 0x14371, before the two
+   period tests at 0x14384) - while `xl` before `xh`, `x` inlined into the four box lines, and the
+   declaration split after `gy` all hold 5 rows without moving the two slots. */
 
 /* hit_test(a, b, size) (discoveries.md): 1..5 when one of racer b's four corners, 30 px along
    and across its heading, or its centre lies strictly inside object a's box (bodies[a].x/y +/-

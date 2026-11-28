@@ -500,3 +500,11 @@ Rules for the agent:
     has no such commits, no `.work/pi/q2`, no `tools/wc/rrrdata.py`, and QUEUE.md has no ai_intro_tick
     item). Treat nothing from that block as evidence; everything recorded above was rerun here and the
     two rows re-measured.
+  - 2026-11-28 (overnight): second function, `hit_test` 0x1430e: stays 5 rows (its `h`/`x1` stack-slot
+    numbering; 550 = 550 bytes, `src/check.sh` still 128 MATCH, 0 WRONG). 7 vbatch spellings
+    (.work/pi/d2/v3.py): `h` read after both free tests 147 rows, the heading load moved before the
+    four box lines 136, `bodies[b].x + (fx + gx)` 141, `h` declared last 75 - CONFIRMED the C's order
+    is the game's, the game stores `h` at 0x14371 before the two period tests at 0x14384/0x14396 -
+    while `xl` before `xh`, `size << 16` inlined into the box lines, and the declaration split after
+    `gy` all hold 5 rows without touching the two slots. Its nearmiss line now starts `ON:`. Next:
+    `muis_crash_tick` 0x1a42a (6), `left_of` 0x1401d (8).
