@@ -41,7 +41,14 @@
    our 2-byte copy is the whole 2036-of-2037-byte gap (CONFIRMED), and no spelling tried gets it:
    the difference in a `short` local 162, two stores 135, one `(y - z) >> 16` 136 (so the two
    separate `sar 16` are the game's, CONFIRMED), the fa term before the z term 35, and a `(short)`
-   cast over the whole expression is dropped by WCC (24, byte-identical). Nothing below 24. */
+   cast over the whole expression is dropped by WCC (24, byte-identical). Nothing below 24.
+
+   2026-11-28 round 2, 6 more (.work/pi/muis_tick/v.py, control 24; labels yflip, yflip_nocast,
+   yfa_first, yshort_first, ytemp_h, ytemp_d): the game's `sub edx,eax` direction IS reachable - the
+   y line written as `(bodies[n].z >> 16) - (bodies[n].y >> 16)` holds the same 24 rows - but it does
+   not buy the `movsx edx,dx`, and with a `(short)` over it 76, `(short)(y >> 16)` first 75, the fa
+   term first 38, the difference through a `-=` temp in the dead `h` 89 (in `d` 111). SPECULATIVE:
+   that movsx is a WCC choice none of these shapes reaches. Nothing below 24. */
 int muis_tick(short n)
 {
     short k;

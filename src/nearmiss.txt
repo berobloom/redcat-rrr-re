@@ -334,7 +334,12 @@ stays. written 2026-11-25 in src/ai.c; 145 -> 64 on 2026-11-28 by content, not
    `a1 disp32` and `mov edx,[@]` the 6-byte `8b 15 disp32`, so ours is 1876 bytes and its `ret` sits
    at 0x1ab7d where the game's is at 0x1ab7e - LIKELY all six rows go with that one pair.
    (line added 2026-11-28 for QUEUE Q6; history in QUEUE.md Q5 and the differs note in its src file)
-24 0x130f8 muis_tick  ON: 2026-11-28 24 variants (shdm, shhead, shboth, headingswap, headread,
+24 0x130f8 muis_tick  ON2: 2026-11-28 (later) 6 variants (yflip, yflip_nocast, yfa_first, yshort_first,
+ytemp_h, ytemp_d), best 24 rows (control; yflip_nocast also 24): the tail's `sub` direction is
+reachable by writing the y line reversed as `(bodies[n].z >> 16) - (bodies[n].y >> 16)` but that
+ties at 24 and still does not buy the game's `movsx edx,dx`, and a `-=` temp in the dead `h` costs 89
+(in `d` 111), so no round-2 lever reaches the tail. Nothing below 24; nothing applied.
+ON: 2026-11-28 24 variants (shdm, shhead, shboth, headingswap, headread,
 tailsar, kint, topmirror, speedlocal, frameholder, f24holder, finsswap, taillocal, tailfullcast,
 tailsplit, yfirstfa, abssecond, switchwant, switchf, lightsnest, vzchain, pufftest, frameadd, uk),
 best 24 rows (control; headingswap, tailfullcast, pufftest and frameadd also 24), OPEN, nothing

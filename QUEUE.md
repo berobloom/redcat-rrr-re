@@ -916,3 +916,14 @@ Rules for the agent:
     `int vw` 62. Both nearmiss lines now start `ON2:` and still carry `ON:`, so those two functions
     meet the Accept line. Q6's remaining unwalked lines: `muis_tick` 0x130f8 (24, round 2),
     `bull_tick` 0x12826 (50, round 2), `ai_waypoint_action` 0x1af83 (64, round 2).
+  - 2026-11-28 (later, overnight): `muis_tick` 0x130f8 round 2: stays 24 rows, nothing applied. 6
+    vbatch spellings of the tail's y line only (.work/pi/muis_tick/v.py, control 24): the reversed
+    difference `(bodies[n].z >> 16) - (bodies[n].y >> 16)` 24 (ties, and still no `movsx edx,dx`),
+    the same with a `(short)` over it 76, with `(short)(y >> 16)` first 75, the fa term first 38, and
+    the difference through a `-=` temp in the dead `h` 89 (in `d` 111). So the game's `sub edx,eax`
+    at 0x138c6 IS reachable from C, but that direction is not what buys its 3-byte `movsx edx,dx` at
+    0x138cd (SPECULATIVE that no source shape reaches that movsx; every alternative tried costs or
+    ties). Check: `fndiff.py rrr .work/src/MUIS.OBJ muis_tick 0x130f8 | tail -1` says 24, `src/check.sh
+    2>&1 | grep -c ' MATCH at'` = 129 (unchanged), `grep -c WRONG` = 0, DATA 9677 of 9677. Its
+    nearmiss line now starts `ON2:` and still carries `ON:`, so muis_tick meets the Accept line.
+    Remaining unwalked: `bull_tick` 0x12826 (50, round 2), `ai_waypoint_action` 0x1af83 (64, round 2).
